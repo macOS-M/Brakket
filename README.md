@@ -7,10 +7,12 @@ Monorepo con el backend y el frontend en un solo repositorio.
 
 ```
 brakket/
-├── backend/     API REST — Spring Boot 3.5 / Java 21 / PostgreSQL / Flyway
-├── frontend/    SPA — Angular 19
-├── docs/        Documentación (plan de trabajo del equipo)
-└── .github/     CI (workflows separados para backend y frontend)
+├── backend/            API REST — Spring Boot 3.5 / Java 21 / PostgreSQL / Flyway
+├── frontend/           SPA — Angular 19
+├── docs/               Documentación (plan de trabajo del equipo)
+├── .github/workflows/  CI separada (backend-ci / frontend-ci)
+├── docker-compose.yml  PostgreSQL + backend
+└── .env.example        Variables de entorno (copiar a .env)
 ```
 
 ## Stack
@@ -20,21 +22,20 @@ brakket/
 | Frontend | Angular 19 (standalone) |
 | Backend | Java 21 + Spring Boot 3.5 (Maven) |
 | Base de datos | PostgreSQL 16 + Flyway |
-| Auth | Google OAuth 2.0 |
+| Auth | Google OAuth 2.0 → JWT propio |
 | Externos | Twitch API · servicio de IA (análisis de sentimiento) |
 | Despliegue | Docker / docker-compose |
 
 ## Arranque rápido
 
 ```bash
-git clone https://github.com/gvalverdesoma/brakket.git
+git clone https://github.com/gabovalmon-3/brakket-1.git brakket
 cd brakket
+cp .env.example .env            # completar credenciales
 
 # --- Backend (API en http://localhost:8080) ---
-cd backend
-cp .env.example .env            # completar credenciales
 docker compose up -d db         # base de datos
-./mvnw spring-boot:run          # Windows: mvnw.cmd spring-boot:run
+cd backend && ./mvnw spring-boot:run   # Windows: mvnw.cmd spring-boot:run
 
 # --- Frontend (app en http://localhost:4200) ---
 cd ../frontend

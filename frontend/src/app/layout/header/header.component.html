@@ -1,0 +1,21 @@
+<header class="navbar">
+  <a class="brand" routerLink="/">Brakket</a>
+
+  <nav class="nav-links">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+    <a routerLink="/games" routerLinkActive="active">Juegos</a>
+    <a routerLink="/leagues" routerLinkActive="active">Ligas</a>
+    <a routerLink="/tournaments" routerLinkActive="active">Torneos</a>
+  </nav>
+
+  <div class="nav-actions">
+    @if (isAuthenticated()) {
+      <a routerLink="/profile" routerLinkActive="active" class="perfil">
+        {{ usuario()?.nombre || 'Perfil' }}
+      </a>
+      <button type="button" class="btn" (click)="logout()">Salir</button>
+    } @else {
+      <button type="button" class="btn btn-primary" (click)="login()">Iniciar sesion</button>
+    }
+  </div>
+</header>

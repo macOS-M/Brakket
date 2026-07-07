@@ -1,81 +1,87 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent)
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.routes)
   },
   {
     path: '',
-    loadComponent: () =>
-      import('./shared/components/layout/layout.component').then((m) => m.LayoutComponent),
+    loadComponent: () => import('./layout/layout.component').then((m) => m.LayoutComponent),
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent)
+        loadChildren: () => import('./features/home/home.routes').then((m) => m.routes)
       },
       {
-        path: 'juegos',
-        loadComponent: () =>
-          import('./features/juegos/juegos.component').then((m) => m.JuegosComponent)
+        path: 'games',
+        loadChildren: () => import('./features/games/games.routes').then((m) => m.routes)
       },
       {
-        path: 'perfil',
+        path: 'leagues',
+        loadChildren: () => import('./features/leagues/leagues.routes').then((m) => m.routes)
+      },
+      {
+        path: 'tournaments',
+        loadChildren: () =>
+          import('./features/tournaments/tournaments.routes').then((m) => m.routes)
+      },
+      {
+        path: 'profile',
         canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/perfil/perfil.component').then((m) => m.PerfilComponent)
+        loadChildren: () => import('./features/profile/profile.routes').then((m) => m.routes)
       },
       {
-        path: 'equipos',
+        path: 'teams',
         canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/equipos/equipos.component').then((m) => m.EquiposComponent)
+        loadChildren: () => import('./features/teams/teams.routes').then((m) => m.routes)
       },
       {
-        path: 'ligas',
+        path: 'disputes',
         canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/ligas/ligas.component').then((m) => m.LigasComponent)
-      },
-      {
-        path: 'torneos',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/torneos/torneos.component').then((m) => m.TorneosComponent)
-      },
-      {
-        path: 'disputas',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/disputas/disputas.component').then((m) => m.DisputasComponent)
+        loadChildren: () => import('./features/disputes/disputes.routes').then((m) => m.routes)
       },
       {
         path: 'twitch',
         canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/twitch/twitch.component').then((m) => m.TwitchComponent)
+        loadChildren: () => import('./features/twitch/twitch.routes').then((m) => m.routes)
       },
       {
-        path: 'patrocinios',
+        path: 'analytics',
         canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/patrocinios/patrocinios.component').then((m) => m.PatrociniosComponent)
+        loadChildren: () => import('./features/analytics/analytics.routes').then((m) => m.routes)
       },
       {
-        path: 'estadisticas',
+        path: 'sponsorships',
         canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/estadisticas/estadisticas.component').then(
-            (m) => m.EstadisticasComponent
-          )
+        loadChildren: () =>
+          import('./features/sponsorships/sponsorships.routes').then((m) => m.routes)
+      },
+      {
+        path: 'notifications',
+        canActivate: [authGuard],
+        loadChildren: () =>
+          import('./features/notifications/notifications.routes').then((m) => m.routes)
+      },
+      {
+        path: 'statistics',
+        canActivate: [authGuard],
+        loadChildren: () => import('./features/statistics/statistics.routes').then((m) => m.routes)
+      },
+      {
+        path: 'progression',
+        canActivate: [authGuard],
+        loadChildren: () =>
+          import('./features/progression/progression.routes').then((m) => m.routes)
       },
       {
         path: 'admin',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/admin/admin.component').then((m) => m.AdminComponent)
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN'] },
+        loadChildren: () => import('./features/admin/admin.routes').then((m) => m.routes)
       }
     ]
   },
