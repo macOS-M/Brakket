@@ -1,0 +1,37 @@
+package cr.brakket.resultados.domain;
+
+import cr.brakket.auth.domain.Usuario;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "apelacion")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Apelacion {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "disputa_id", nullable = false)
+    private Disputa disputa;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comisionado_id")
+    private Usuario comisionado;
+
+    @Column(name = "motivo", nullable = false, length = 500)
+    private String motivo;
+
+    @Column(name = "decision_final", length = 1000)
+    private String decisionFinal;
+}

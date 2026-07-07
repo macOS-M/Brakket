@@ -1,0 +1,26 @@
+<header class="navbar">
+  <a class="brand" routerLink="/">Brakket</a>
+
+  <nav class="nav-links">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+    <a routerLink="/juegos" routerLinkActive="active">Juegos</a>
+    @for (enlace of enlaces; track enlace.ruta) {
+      <a [routerLink]="enlace.ruta" routerLinkActive="active">{{ enlace.etiqueta }}</a>
+    }
+  </nav>
+
+  <div class="nav-actions">
+    @if (isAuthenticated()) {
+      <a routerLink="/perfil" routerLinkActive="active" class="perfil">
+        {{ usuario()?.nombre || 'Perfil' }}
+      </a>
+      <button type="button" class="btn" (click)="logout()">Salir</button>
+    } @else {
+      <button type="button" class="btn btn-primary" (click)="login()">Iniciar sesion</button>
+    }
+  </div>
+</header>
+
+<main class="content">
+  <router-outlet />
+</main>

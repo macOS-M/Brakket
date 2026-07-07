@@ -1,0 +1,26 @@
+# ===== Brakket (monorepo) - ignores a nivel raíz =====
+# Cada subproyecto (backend/, frontend/) tiene además su propio .gitignore.
+
+# Secretos / entorno
+.env
+**/.env
+
+# Backend (Maven / Spring)
+backend/target/
+*.log
+
+# Frontend (Angular / Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Artefacto temporal de migración a monorepo (carpeta vieja bloqueada por Windows)
+brakket-frontend/
+brakket-backend/
+
+# IDE / SO
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
