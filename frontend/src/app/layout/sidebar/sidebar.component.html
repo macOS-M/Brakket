@@ -1,0 +1,13 @@
+<aside class="sidebar">
+  <nav>
+    @for (enlace of enlaces; track enlace.ruta) {
+      <a
+        [routerLink]="enlace.ruta"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: enlace.exact }"
+      >
+        {{ enlace.etiqueta }}
+      </a>
+    }
+  </nav>
+</aside>

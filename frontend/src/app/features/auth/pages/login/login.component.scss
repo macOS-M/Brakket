@@ -1,0 +1,53 @@
+.login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 2.5rem 2rem;
+  border-radius: 14px;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #1f2937);
+  text-align: center;
+
+  h1 {
+    margin: 0 0 0.5rem;
+    color: var(--brand-cyan, #22d3ee);
+    letter-spacing: 0.5px;
+  }
+
+  p {
+    margin: 0 0 1.75rem;
+    color: var(--text-muted, #94a3b8);
+  }
+}
+
+.btn-google {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--brand-blue, #2563eb);
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--brand-cyan, #22d3ee);
+    color: #0b1120;
+  }
+}
+
+.epic {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}

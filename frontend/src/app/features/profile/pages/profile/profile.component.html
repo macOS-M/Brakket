@@ -1,0 +1,33 @@
+<section class="page">
+  <h1>Mi perfil</h1>
+
+  @if (usuario(); as u) {
+    @if (u.authenticated) {
+      <div class="profile-card">
+        @if (u.foto) {
+          <img
+            class="avatar"
+            [src]="u.foto"
+            [alt]="u.nombre ?? 'Avatar'"
+            referrerpolicy="no-referrer"
+          />
+        }
+        <div class="info">
+          <p class="nombre">{{ u.nombre }}</p>
+          <p class="correo">{{ u.correo }}</p>
+          <div class="roles">
+            @for (rol of u.roles ?? []; track rol) {
+              <span class="rol">{{ rol }}</span>
+            } @empty {
+              <span class="sin-rol">Sin roles asignados</span>
+            }
+          </div>
+        </div>
+      </div>
+    } @else {
+      <p class="placeholder">No hay una sesion activa.</p>
+    }
+  } @else {
+    <p class="placeholder">Cargando perfil...</p>
+  }
+</section>

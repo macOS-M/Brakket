@@ -1,0 +1,9 @@
+# Perfil de producción. Activar con SPRING_PROFILES_ACTIVE=prod.
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.coffeecommits.brakket: INFO
+    org.hibernate.SQL: WARN

@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: brakket-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/brakket}
+    username: ${DB_USER:brakket}
+    password: ${DB_PASSWORD:brakket}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Flyway es dueño del esquema; Hibernate solo valida que las entidades calcen.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            # Placeholders para que la app arranque sin credenciales reales.
+            # El login con Google recién funciona al poner las verdaderas en .env
+            # (crear en https://console.cloud.google.com/apis/credentials).
+            client-id: ${GOOGLE_CLIENT_ID:changeme}
+            client-secret: ${GOOGLE_CLIENT_SECRET:changeme}
+            scope: openid,profile,email
+
+# ---------- Configuración propia de Brakket ----------
+brakket:
+  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  jwt:
+    secret: ${JWT_SECRET:cambiar-esta-clave-secreta-de-al-menos-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  twitch:
+    client-id: ${TWITCH_CLIENT_ID:}
+    client-secret: ${TWITCH_CLIENT_SECRET:}
+    channel: ${TWITCH_CHANNEL:}
+  ai:
+    api-key: ${AI_API_KEY:}
+    api-base-url: ${AI_API_BASE_URL:}
+
+# ---------- Actuator (RNF-21) ----------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ---------- Swagger / OpenAPI ----------
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

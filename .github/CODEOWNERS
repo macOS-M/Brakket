@@ -1,0 +1,34 @@
+# CODEOWNERS — Brakket (equipo Coffee&Commits)
+#
+# Define quién revisa cada parte del código. GitHub solicita automáticamente la
+# revisión del owner cuando un PR toca sus rutas.
+#
+# ⚠️ PENDIENTE: reemplazar los @usuario-github por los handles reales de cada
+# integrante. Mientras tengan un placeholder inválido, esa regla NO se aplica.
+# Para activar "requerir revisión de Code Owners", configurarlo en:
+# Settings → Branches → Branch protection rules (rama develop).
+
+# --- Default: cualquier cambio requiere al menos una revisión del mantenedor ---
+*                       @gabovalmon-3
+
+# --- Backend por módulo (reparto del PLAN-DE-TRABAJO) ---
+# Autenticación y perfiles (Matías, Camilo)
+#/backend/src/main/java/com/coffeecommits/brakket/auth/     @usuario-matias @usuario-camilo
+# Equipos y plantillas (Dereck Ch., Marcos)
+#/backend/src/main/java/com/coffeecommits/brakket/team/     @usuario-dereck @usuario-marcos
+# Ligas y torneos (Derek Carmiol, Matías)
+#/backend/src/main/java/com/coffeecommits/brakket/league/       @usuario-derek
+#/backend/src/main/java/com/coffeecommits/brakket/tournament/   @usuario-derek
+# Twitch / IA (Derek Carmiol)
+#/backend/src/main/java/com/coffeecommits/brakket/twitch/       @usuario-derek
+#/backend/src/main/java/com/coffeecommits/brakket/analytics/    @usuario-derek
+# Disputas (Dereck Chavarría — calidad)
+#/backend/src/main/java/com/coffeecommits/brakket/dispute/      @usuario-dereck
+
+# --- Frontend (Gabriel: transversal + calidad) ---
+#/frontend/                                                 @gabovalmon-3
+
+# --- Infra / CI / orquestación (Marcos: soporte) ---
+#/.github/                                                  @usuario-marcos
+#/docker-compose.yml                                        @usuario-marcos
+#/.env.example                                              @usuario-marcos
