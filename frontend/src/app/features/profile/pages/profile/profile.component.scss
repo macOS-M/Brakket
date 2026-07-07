@@ -2,7 +2,7 @@
   padding: 1.5rem 0;
 
   h1 {
-    margin: 0 0 0.75rem;
+    margin: 0 0 1rem;
   }
 
   .placeholder {
@@ -11,5 +11,67 @@
     border: 1px dashed var(--brand-cyan, #22d3ee);
     border-radius: 8px;
     color: var(--text-muted, #94a3b8);
+  }
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 480px;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 12px;
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--brand-cyan, #22d3ee);
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+
+    .nombre {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text, #e2e8f0);
+    }
+
+    .correo {
+      margin: 0;
+      color: var(--text-muted, #94a3b8);
+      word-break: break-all;
+    }
+
+    .roles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+
+      .rol {
+        padding: 0.15rem 0.6rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--brand-cyan, #22d3ee);
+        background: rgba(34, 211, 238, 0.12);
+        border: 1px solid var(--brand-cyan, #22d3ee);
+        border-radius: 999px;
+      }
+
+      .sin-rol {
+        font-size: 0.85rem;
+        color: var(--text-muted, #94a3b8);
+      }
+    }
   }
 }

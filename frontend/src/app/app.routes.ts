@@ -5,9 +5,12 @@ import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
-    path: 'login',
+    path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.routes)
   },
+  // El backend redirige a /auth/login y /auth/callback; /login se conserva por
+  // compatibilidad con el guard y el logout, que navegan a /login.
+  { path: 'login', redirectTo: 'auth/login', pathMatch: 'full' },
   {
     path: '',
     loadComponent: () => import('./layout/layout.component').then((m) => m.LayoutComponent),

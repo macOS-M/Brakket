@@ -3,10 +3,12 @@ package com.coffeecommits.brakket.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -44,6 +46,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Públicos: salud, documentación Swagger, ping y flujo OAuth.
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -52,6 +55,12 @@ public class SecurityConfig {
                 // Todo lo demás requiere JWT válido.
                 .anyRequest().authenticated()
             )
+            // API REST: ante una request sin autenticar se responde 401 (no se
+            // redirige a Google). El SPA inicia el login navegando explícitamente
+            // a /oauth2/authorization/google; el resto de rutas /api/** deben
+            // devolver 401 para que el interceptor del frontend reaccione.
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
             // Login con Google -> emite JWT y redirige al frontend.
             .oauth2Login(oauth -> oauth.successHandler(oAuth2LoginSuccessHandler))
             // Valida el JWT en cada request antes de la autenticación por usuario/clave.

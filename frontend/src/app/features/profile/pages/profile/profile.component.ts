@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+
+import { AuthService } from '../../../../core/services/auth.service';
 
 /**
- * Mi perfil. Placeholder de la feature "profile".
- * Pendiente EPIC-02.
+ * Mi perfil. Muestra los datos del usuario autenticado que devuelve el backend
+ * en GET /api/me (nombre, correo, foto y roles).
  */
 @Component({
   selector: 'app-profile',
@@ -11,4 +13,8 @@ import { Component } from '@angular/core';
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
-export class ProfileComponent {}
+export class ProfileComponent {
+  private readonly authService = inject(AuthService);
+
+  readonly usuario = this.authService.usuario;
+}

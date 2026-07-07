@@ -30,6 +30,14 @@ export class AuthService {
   /** Roles del usuario actual. */
   readonly roles = computed(() => this.usuarioSignal()?.roles ?? []);
 
+  constructor() {
+    // Al arrancar la app (o tras un F5), si hay un JWT persistido recupera el
+    // perfil para conservar el estado (nombre/roles) sin re-loguear.
+    if (this.tokenService.hasToken()) {
+      this.loadCurrentUser();
+    }
+  }
+
   /** Carga el usuario autenticado desde el backend (GET /me). */
   loadCurrentUser(): void {
     this.api.get<Usuario>('/me').subscribe({
