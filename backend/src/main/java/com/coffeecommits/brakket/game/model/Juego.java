@@ -28,4 +28,10 @@ public class Juego {
 
     @Column(name = "activo", nullable = false)
     private Boolean activo;
+
+    @Column(name = "imagen_url", length = 500)
+    private String imagenUrl;
+
+    @Column(name = "descripcion", length = 1000)
+    private String descripcion;
 }
