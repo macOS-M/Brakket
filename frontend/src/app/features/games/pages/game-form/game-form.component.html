@@ -1,0 +1,40 @@
+<section class="page">
+  <h1>{{ editando() ? 'Editar juego' : 'Nuevo juego' }}</h1>
+
+  @if (error()) {
+  <p class="mensaje-error">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+    <div class="campo">
+      <label for="nombre">Nombre *</label>
+      <input id="nombre" type="text" formControlName="nombre" />
+      @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+      <span class="error-campo">El nombre es obligatorio (máx. 120 caracteres).</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="genero">Género *</label>
+      <input id="genero" type="text" formControlName="genero" placeholder="Ej. FPS Táctico" />
+      @if (form.controls.genero.invalid && form.controls.genero.touched) {
+      <span class="error-campo">El género es obligatorio (máx. 80 caracteres).</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" formControlName="descripcion" rows="4"></textarea>
+      @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
+      <span class="error-campo">Máximo 1000 caracteres.</span>
+      }
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</section>

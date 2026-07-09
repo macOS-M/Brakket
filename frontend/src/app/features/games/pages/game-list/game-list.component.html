@@ -1,4 +1,37 @@
 <section class="page">
-  <h1>Juegos</h1>
-  <p class="placeholder">Pendiente EPIC-05.</p>
+  <div class="header">
+    <h1>Catálogo de juegos</h1>
+    <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
+  </div>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando juegos...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (juegos().length === 0) {
+  <p class="placeholder">Todavía no hay juegos registrados.</p>
+  } @else {
+  <div class="grid">
+    @for (juego of juegos(); track juego.id) {
+    <div class="juego-card">
+      @if (juego.imagenUrl) {
+      <img class="imagen" [src]="juego.imagenUrl" [alt]="juego.nombre" />
+      } @else {
+      <div class="imagen placeholder-imagen">Sin imagen</div>
+      }
+      <div class="info">
+        <p class="nombre">{{ juego.nombre }}</p>
+        <p class="genero">{{ juego.genero }}</p>
+        @if (juego.descripcion) {
+        <p class="descripcion">{{ juego.descripcion }}</p>
+        }
+      </div>
+      <div class="acciones">
+        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'editar']">Editar</a>
+        <button class="btn-danger" type="button" (click)="desactivar(juego)">Desactivar</button>
+      </div>
+    </div>
+    }
+  </div>
+  }
 </section>
