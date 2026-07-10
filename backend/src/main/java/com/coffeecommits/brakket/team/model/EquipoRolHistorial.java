@@ -8,16 +8,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
+/**
+ * Historial de cambios de rol de un integrante dentro de un equipo (RF-09).
+ */
 @Entity
-@Table(name = "miembro_equipo")
+@Table(name = "equipo_rol_historial")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MiembroEquipo {
+public class EquipoRolHistorial {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,12 +34,16 @@ public class MiembroEquipo {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @Column(name = "estado", nullable = false, length = 40)
-    private String estado;
+    @Column(name = "rol_anterior", nullable = false, length = 30)
+    private String rolAnterior;
 
-    @Column(name = "fecha_union", nullable = false)
-    private LocalDate fechaUnion;
+    @Column(name = "rol_nuevo", nullable = false, length = 30)
+    private String rolNuevo;
 
-    @Column(name = "rol", nullable = false, length = 30)
-    private String rol;
+    @Column(name = "fecha", nullable = false)
+    private LocalDateTime fecha;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsable_id", nullable = false)
+    private Usuario responsable;
 }
