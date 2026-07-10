@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -32,6 +33,14 @@ public class TeamRoleServiceImpl implements TeamRoleService {
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.usuarioRepository = usuarioRepository;
         this.historialRepository = historialRepository;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MiembroEquipoResponse> listarMiembros(Long equipoId) {
+        return miembroEquipoRepository.findByEquipoId(equipoId).stream()
+                .map(MiembroEquipoResponse::fromEntity)
+                .toList();
     }
 
     @Override

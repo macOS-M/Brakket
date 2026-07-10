@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/teams/{equipoId}/miembros")
 public class TeamRoleController {
@@ -15,6 +17,11 @@ public class TeamRoleController {
 
     public TeamRoleController(TeamRoleService teamRoleService) {
         this.teamRoleService = teamRoleService;
+    }
+
+    @GetMapping
+    public List<MiembroEquipoResponse> listar(@PathVariable Long equipoId) {
+        return teamRoleService.listarMiembros(equipoId);
     }
 
     @PatchMapping("/{usuarioId}/rol")
