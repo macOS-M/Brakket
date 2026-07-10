@@ -3,26 +3,125 @@
 
   @if (usuario(); as u) {
     @if (u.authenticated) {
-      <div class="profile-card">
-        @if (u.foto) {
-          <img
-            class="avatar"
-            [src]="u.foto"
-            [alt]="u.nombre ?? 'Avatar'"
-            referrerpolicy="no-referrer"
-          />
-        }
-        <div class="info">
-          <p class="nombre">{{ u.nombre }}</p>
-          <p class="correo">{{ u.correo }}</p>
-          <div class="roles">
-            @for (rol of u.roles ?? []; track rol) {
-              <span class="rol">{{ rol }}</span>
-            } @empty {
-              <span class="sin-rol">Sin roles asignados</span>
-            }
+      <div class="profile-grid">
+        <div class="profile-card preview-card">
+          @if (u.foto) {
+            <img
+              class="avatar"
+              [src]="u.foto"
+              [alt]="u.nombre ?? 'Avatar'"
+              referrerpolicy="no-referrer"
+            />
+          }
+          <div class="info">
+            <p class="eyebrow">{{ isPrivateVisibility() ? 'Perfil privado' : 'Perfil publico' }}</p>
+            <p class="nombre">{{ u.nombre }}</p>
+            <p class="correo">{{ u.correo }}</p>
+            <p class="biografia">{{ u.biografia || 'Aun no agregaste biografia.' }}</p>
+            <div class="chips">
+              <span class="chip">{{ profileForm.controls.visibilidadPerfil.value || u.visibilidadPerfil || 'PUBLIC' }}</span>
+              @for (rol of u.roles ?? []; track rol) {
+                <span class="chip chip-alt">{{ rol }}</span>
+              }
+            </div>
           </div>
         </div>
+
+        <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+          <div class="field-row">
+            <label>
+              Nombre visible
+              <input type="text" formControlName="nombre" />
+            </label>
+            <label>
+              Avatar URL
+              <input type="url" formControlName="foto" />
+            </label>
+          </div>
+
+          <label>
+            Biografia
+            <textarea rows="5" formControlName="biografia"></textarea>
+          </label>
+
+          <section class="panel social-panel" formGroupName="redesSociales">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Redes sociales</p>
+                <h2>Comparte tus perfiles principales</h2>
+              </div>
+              <p class="panel-note">Deja vacio cualquier canal que no uses.</p>
+            </div>
+
+            <div class="social-grid">
+              @for (network of socialNetworks; track network.key) {
+                <label class="social-field">
+                  <span>{{ network.label }}</span>
+                  <input type="url" [formControlName]="network.key" [placeholder]="network.placeholder" />
+                </label>
+              }
+            </div>
+          </section>
+
+          <section class="panel visibility-panel">
+            <div>
+              <p class="eyebrow">Visibilidad</p>
+              <h2>Controla quien ve tu perfil</h2>
+            </div>
+
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                [checked]="isPrivateVisibility()"
+                (change)="setVisibility($any($event.target).checked)"
+              />
+              <span class="toggle-track" aria-hidden="true">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-copy">
+                <span class="toggle-title">{{ isPrivateVisibility() ? 'Perfil privado' : 'Perfil publico' }}</span>
+                <span class="toggle-description">
+                  {{ isPrivateVisibility() ? 'Solo usuarios autorizados veran el contenido.' : 'Tu perfil sera visible para toda la comunidad.' }}
+                </span>
+              </span>
+            </label>
+          </section>
+
+          <fieldset class="games-fieldset">
+            <legend>
+              <span class="eyebrow">Juegos preferidos</span>
+              <span class="legend-title">Selecciona tus favoritos</span>
+            </legend>
+            <div class="games-list">
+              @for (game of games; track game.id) {
+                <label class="game-option" [class.selected]="isGameSelected(game.id)">
+                  <input
+                    type="checkbox"
+                    class="game-input"
+                    [checked]="isGameSelected(game.id)"
+                    (change)="toggleGame(game.id, $any($event.target).checked)"
+                  />
+                  <span class="game-dot" aria-hidden="true"></span>
+                  <span class="game-name">{{ game.nombre }}</span>
+                </label>
+              } @empty {
+                <p class="placeholder inline">No hay juegos disponibles por ahora.</p>
+              }
+            </div>
+          </fieldset>
+
+          @if (saveSuccess) {
+            <p class="save-status success">{{ saveSuccess }}</p>
+          }
+
+          @if (saveError) {
+            <p class="save-status error">{{ saveError }}</p>
+          }
+
+          <button type="submit" class="save-button" [disabled]="profileForm.pristine || profileForm.invalid || savingProfile">
+            {{ savingProfile ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </form>
       </div>
     } @else {
       <p class="placeholder">No hay una sesion activa.</p>

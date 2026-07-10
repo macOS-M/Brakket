@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Observable, map, tap } from 'rxjs';
 
 import { Usuario } from '../../models/usuario.model';
 import { ApiService } from './api.service';
@@ -30,20 +31,24 @@ export class AuthService {
   /** Roles del usuario actual. */
   readonly roles = computed(() => this.usuarioSignal()?.roles ?? []);
 
+  readonly perfilCompleto = computed(() => this.esPerfilCompleto(this.usuarioSignal()));
+
   constructor() {
     // Al arrancar la app (o tras un F5), si hay un JWT persistido recupera el
     // perfil para conservar el estado (nombre/roles) sin re-loguear.
     if (this.tokenService.hasToken()) {
-      this.loadCurrentUser();
+      this.loadCurrentUser().subscribe();
     }
   }
 
   /** Carga el usuario autenticado desde el backend (GET /me). */
-  loadCurrentUser(): void {
-    this.api.get<Usuario>('/me').subscribe({
-      next: (usuario) => this.usuarioSignal.set(usuario),
-      error: () => this.usuarioSignal.set({ authenticated: false })
-    });
+  loadCurrentUser(): Observable<Usuario> {
+    return this.api.get<Usuario>('/me').pipe(
+      tap({
+        next: (usuario) => this.usuarioSignal.set(usuario),
+        error: () => this.usuarioSignal.set({ authenticated: false })
+      })
+    );
   }
 
   /** Redirige al flujo de autorizacion de Google gestionado por el backend. */
@@ -57,13 +62,41 @@ export class AuthService {
    */
   handleAuthCallback(token: string): void {
     this.tokenService.setToken(token);
-    this.loadCurrentUser();
+  }
+
+  updateCurrentUser(payload: {
+    nombre: string;
+    foto: string;
+    biografia: string;
+    redesSociales?: string | null;
+    visibilidadPerfil: 'PUBLIC' | 'PRIVATE';
+    juegoIds: number[];
+  }): Observable<Usuario> {
+    return this.api.put<Usuario>('/me', payload).pipe(tap((usuario) => this.usuarioSignal.set(usuario)));
   }
 
   /** Comprueba si el usuario posee alguno de los roles indicados. */
   hasRole(...roles: string[]): boolean {
     const current = this.roles();
     return roles.some((role) => current.includes(role));
+  }
+
+  isProfileComplete(usuario: Usuario | null | undefined = this.usuarioSignal()): boolean {
+    return this.esPerfilCompleto(usuario);
+  }
+
+  private esPerfilCompleto(usuario: Usuario | null | undefined): boolean {
+    if (!usuario?.authenticated) {
+      return false;
+    }
+
+    return Boolean(
+      usuario.nombre?.trim() &&
+      usuario.foto?.trim() &&
+      usuario.biografia?.trim() &&
+      usuario.visibilidadPerfil &&
+      (usuario.juegoIds?.length ?? 0) > 0
+    );
   }
 
   /** Cierra la sesion: limpia el token y vuelve al login. */

@@ -2,6 +2,20 @@
   <div class="login-card">
     <h1>Brakket</h1>
     <p>Plataforma de gestion de ligas y torneos de esports.</p>
+    @if (loginError()) {
+      <p class="error">
+        No se pudo iniciar sesion con Google.
+        @if (oauthError()) {
+          <span> Codigo: {{ oauthError() }}.</span>
+        }
+        @if (oauthErrorDescription()) {
+          <span> {{ oauthErrorDescription() }}</span>
+        }
+        @if (errorMessage()) {
+          <span> {{ errorMessage() }}</span>
+        }
+      </p>
+    }
     <button type="button" class="btn-google" (click)="login()">
       Iniciar sesion con Google
     </button>
