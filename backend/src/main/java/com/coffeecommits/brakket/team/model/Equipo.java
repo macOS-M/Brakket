@@ -1,6 +1,7 @@
 package com.coffeecommits.brakket.team.model;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
+import com.coffeecommits.brakket.game.model.Juego;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,4 +34,8 @@ public class Equipo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "capitan_id", nullable = false)
     private Usuario capitan;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "juego_id")
+    private Juego juego;
 }

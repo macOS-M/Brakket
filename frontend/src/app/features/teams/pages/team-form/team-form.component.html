@@ -1,0 +1,61 @@
+<section class="page">
+  <h1>Nuevo equipo</h1>
+
+  @if (error()) {
+  <p class="mensaje-error">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+    <div class="campo">
+      <label for="nombre">Nombre *</label>
+      <input id="nombre" type="text" formControlName="nombre" />
+      @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+      <span class="error-campo">El nombre es obligatorio (máx. 120 caracteres).</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="juegoId">Disciplina / juego principal *</label>
+      <select id="juegoId" formControlName="juegoId">
+        <option [ngValue]="null">Selecciona un juego</option>
+        @for (juego of juegos(); track juego.id) {
+        <option [ngValue]="juego.id">{{ juego.nombre }}</option>
+        }
+      </select>
+      @if (form.controls.juegoId.invalid && form.controls.juegoId.touched) {
+      <span class="error-campo">Debes seleccionar un juego.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="logo">Logo (URL)</label>
+      <input id="logo" type="text" formControlName="logo" placeholder="https://..." />
+    </div>
+
+    <div class="campo">
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" formControlName="descripcion" rows="3"></textarea>
+      @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
+      <span class="error-campo">Máximo 500 caracteres.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label>Redes sociales</label>
+      @for (control of redesSociales.controls; track $index) {
+      <div class="red-social-item">
+        <input type="text" [formControl]="$any(control)" placeholder="https://twitter.com/..." />
+        <button type="button" class="btn-quitar" (click)="quitarRedSocial($index)">✕</button>
+      </div>
+      }
+      <button type="button" class="btn-agregar" (click)="agregarRedSocial()">+ Agregar enlace</button>
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando...' : 'Crear equipo' }}
+      </button>
+    </div>
+  </form>
+</section>
