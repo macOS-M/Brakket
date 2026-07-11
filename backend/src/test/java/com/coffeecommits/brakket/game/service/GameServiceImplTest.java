@@ -1,0 +1,133 @@
+package com.coffeecommits.brakket.game.service;
+
+import com.coffeecommits.brakket.common.exception.BusinessException;
+import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
+import com.coffeecommits.brakket.game.dto.JuegoRequest;
+import com.coffeecommits.brakket.game.dto.JuegoResponse;
+import com.coffeecommits.brakket.game.model.Juego;
+import com.coffeecommits.brakket.game.repository.JuegoRepository;
+import com.coffeecommits.brakket.league.repository.LigaRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class GameServiceImplTest {
+
+    @Mock
+    private JuegoRepository juegoRepository;
+    @Mock
+    private LigaRepository ligaRepository;
+    @InjectMocks
+    private GameServiceImpl gameService;
+
+    @Test
+    void crear_guarda_el_juego_como_activo() {
+        when(juegoRepository.findByNombre("Valorant")).thenReturn(Optional.empty());
+        when(juegoRepository.save(any(Juego.class))).thenAnswer(inv -> {
+            Juego j = inv.getArgument(0);
+            j.setId(1L);
+            return j;
+        });
+
+        JuegoResponse resp = gameService.crear(
+                new JuegoRequest("Valorant", "Shooter táctico", "Shooter 5v5 de Riot"));
+
+        assertThat(resp.id()).isEqualTo(1L);
+        assertThat(resp.nombre()).isEqualTo("Valorant");
+        assertThat(resp.activo()).isTrue();
+    }
+
+    @Test
+    void crear_falla_con_409_si_el_nombre_ya_existe() {
+        when(juegoRepository.findByNombre("Valorant"))
+                .thenReturn(Optional.of(Juego.builder().id(9L).nombre("Valorant").build()));
+
+        assertThatThrownBy(() -> gameService.crear(new JuegoRequest("Valorant", "Shooter", null)))
+                .isInstanceOf(BusinessException.class);
+        verify(juegoRepository, never()).save(any(Juego.class));
+    }
+
+    @Test
+    void editar_falla_si_el_nuevo_nombre_lo_usa_otro_juego() {
+        Juego juego = Juego.builder().id(1L).nombre("Valorant").genero("Shooter").activo(true).build();
+        when(juegoRepository.findById(1L)).thenReturn(Optional.of(juego));
+        when(juegoRepository.findByNombre("Counter-Strike 2"))
+                .thenReturn(Optional.of(Juego.builder().id(2L).nombre("Counter-Strike 2").build()));
+
+        assertThatThrownBy(() -> gameService.editar(1L, new JuegoRequest("Counter-Strike 2", "Shooter", null)))
+                .isInstanceOf(BusinessException.class);
+        verify(juegoRepository, never()).save(any(Juego.class));
+    }
+
+    @Test
+    void editar_permite_conservar_el_propio_nombre() {
+        Juego juego = Juego.builder().id(1L).nombre("Valorant").genero("Shooter").activo(true).build();
+        when(juegoRepository.findById(1L)).thenReturn(Optional.of(juego));
+        when(juegoRepository.findByNombre("Valorant")).thenReturn(Optional.of(juego));
+        when(juegoRepository.save(juego)).thenReturn(juego);
+
+        JuegoResponse resp = gameService.editar(1L, new JuegoRequest("Valorant", "FPS táctico", "Nueva descripción"));
+
+        assertThat(resp.genero()).isEqualTo("FPS táctico");
+        assertThat(resp.descripcion()).isEqualTo("Nueva descripción");
+    }
+
+    @Test
+    void desactivar_falla_si_el_juego_tiene_ligas_asociadas() {
+        when(juegoRepository.findById(1L))
+                .thenReturn(Optional.of(Juego.builder().id(1L).nombre("Valorant").activo(true).build()));
+        when(ligaRepository.existsByJuegoId(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> gameService.desactivar(1L))
+                .isInstanceOf(BusinessException.class);
+        verify(juegoRepository, never()).save(any(Juego.class));
+    }
+
+    @Test
+    void desactivar_hace_baja_logica_sin_borrar() {
+        Juego juego = Juego.builder().id(1L).nombre("Valorant").activo(true).build();
+        when(juegoRepository.findById(1L)).thenReturn(Optional.of(juego));
+        when(ligaRepository.existsByJuegoId(1L)).thenReturn(false);
+        when(juegoRepository.save(juego)).thenReturn(juego);
+
+        gameService.desactivar(1L);
+
+        assertThat(juego.getActivo()).isFalse();
+        verify(juegoRepository).save(juego);
+        verify(juegoRepository, never()).delete(any(Juego.class));
+    }
+
+    @Test
+    void obtenerPorId_lanza_404_si_no_existe() {
+        when(juegoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> gameService.obtenerPorId(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void listarActivos_mapea_los_juegos_a_dto() {
+        when(juegoRepository.findByActivoTrue()).thenReturn(List.of(
+                Juego.builder().id(1L).nombre("Valorant").genero("Shooter").activo(true).build(),
+                Juego.builder().id(2L).nombre("Rocket League").genero("Deportes").activo(true).build()));
+
+        List<JuegoResponse> resp = gameService.listarActivos();
+
+        assertThat(resp).hasSize(2);
+        assertThat(resp).extracting(JuegoResponse::nombre)
+                .containsExactly("Valorant", "Rocket League");
+    }
+}
