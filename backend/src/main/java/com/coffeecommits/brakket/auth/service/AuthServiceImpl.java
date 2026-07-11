@@ -81,10 +81,12 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
 
         usuario.setNombre(request.nombre().trim());
-        usuario.setFotoUrl(request.foto().trim());
-        usuario.setBiografia(request.biografia().trim());
-        usuario.setRedesSociales(request.redesSociales() == null ? null : request.redesSociales().trim());
-        usuario.setVisibilidadPerfil(request.visibilidadPerfil());
+        usuario.setFotoUrl(normalizar(request.foto()));
+        usuario.setBiografia(normalizar(request.biografia()));
+        usuario.setRedesSociales(normalizar(request.redesSociales()));
+        if (request.visibilidadPerfil() != null) {
+            usuario.setVisibilidadPerfil(request.visibilidadPerfil());
+        }
 
         if (request.juegoIds() != null) {
             Set<Long> juegoIds = new LinkedHashSet<>(request.juegoIds());
@@ -132,5 +134,10 @@ public class AuthServiceImpl implements AuthService {
 
     private boolean esTextoVacio(String valor) {
         return valor == null || valor.trim().isEmpty();
+    }
+
+    /** Campos opcionales del perfil: el texto en blanco se guarda como null. */
+    private String normalizar(String valor) {
+        return esTextoVacio(valor) ? null : valor.trim();
     }
 }

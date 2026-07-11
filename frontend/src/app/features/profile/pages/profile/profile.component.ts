@@ -59,8 +59,8 @@ export class ProfileComponent implements OnInit {
 
   readonly profileForm = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
-    foto: ['', [Validators.required, Validators.maxLength(500)]],
-    biografia: ['', [Validators.required, Validators.maxLength(2000)]],
+    foto: ['', [Validators.maxLength(500)]],
+    biografia: ['', [Validators.maxLength(2000)]],
     redesSociales: this.fb.nonNullable.group({
       twitch: ['', [Validators.maxLength(500)]],
       x: ['', [Validators.maxLength(500)]],
@@ -131,8 +131,8 @@ export class ProfileComponent implements OnInit {
 
     this.authService.updateCurrentUser({
       nombre: value.nombre.trim(),
-      foto: value.foto.trim(),
-      biografia: value.biografia.trim(),
+      foto: value.foto.trim() || null,
+      biografia: value.biografia.trim() || null,
       redesSociales: this.composeSocialLinks(value.redesSociales),
       visibilidadPerfil: value.visibilidadPerfil,
       juegoIds: value.juegoIds

@@ -66,8 +66,8 @@ export class AuthService {
 
   updateCurrentUser(payload: {
     nombre: string;
-    foto: string;
-    biografia: string;
+    foto?: string | null;
+    biografia?: string | null;
     redesSociales?: string | null;
     visibilidadPerfil: 'PUBLIC' | 'PRIVATE';
     juegoIds: number[];
@@ -85,18 +85,17 @@ export class AuthService {
     return this.esPerfilCompleto(usuario);
   }
 
+  /**
+   * Solo el nombre visible es obligatorio (biografia, foto y juegos son
+   * opcionales), asi que un usuario recien logueado con Google ya cuenta
+   * como perfil completo y no se le fuerza el paso por /profile.
+   */
   private esPerfilCompleto(usuario: Usuario | null | undefined): boolean {
     if (!usuario?.authenticated) {
       return false;
     }
 
-    return Boolean(
-      usuario.nombre?.trim() &&
-      usuario.foto?.trim() &&
-      usuario.biografia?.trim() &&
-      usuario.visibilidadPerfil &&
-      (usuario.juegoIds?.length ?? 0) > 0
-    );
+    return Boolean(usuario.nombre?.trim());
   }
 
   /** Cierra la sesion: limpia el token y vuelve al login. */

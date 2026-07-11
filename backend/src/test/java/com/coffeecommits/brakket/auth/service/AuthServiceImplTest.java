@@ -136,6 +136,25 @@ class AuthServiceImplTest {
         }
 
     @Test
+    void updateCurrentUser_acepta_opcionales_vacios_y_conserva_visibilidad() {
+        Usuario usuario = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg").fotoUrl("foto.png")
+            .biografia("Bio vieja").visibilidadPerfil(VisibilidadPerfil.PRIVATE).build();
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(usuario));
+        when(usuarioRolRepository.findByUsuarioId(7L)).thenReturn(List.of());
+
+        UsuarioResponse resp = authService.updateCurrentUser("ana@brakket.gg", new PerfilUsuarioRequest(
+            "Ana", "   ", null, "", null, null));
+
+        assertThat(usuario.getNombre()).isEqualTo("Ana");
+        assertThat(usuario.getFotoUrl()).isNull();
+        assertThat(usuario.getBiografia()).isNull();
+        assertThat(usuario.getRedesSociales()).isNull();
+        assertThat(usuario.getVisibilidadPerfil()).isEqualTo(VisibilidadPerfil.PRIVATE);
+        assertThat(resp.visibilidadPerfil()).isEqualTo("PRIVATE");
+        assertThat(resp.juegoIds()).isEmpty();
+    }
+
+    @Test
     void getCurrentUser_lanza_404_si_no_existe() {
         when(usuarioRepository.findByCorreo("nadie@x.com")).thenReturn(Optional.empty());
 
