@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 
 import { ProfileComponent } from './profile.component';
+import { ApiService } from '../../../../core/services/api.service';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
@@ -11,7 +13,16 @@ describe('ProfileComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProfileComponent],
-      providers: [provideHttpClient(), provideRouter([])]
+      providers: [
+        provideHttpClient(),
+        provideRouter([]),
+        {
+          provide: ApiService,
+          useValue: {
+            get: () => of([])
+          }
+        }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileComponent);

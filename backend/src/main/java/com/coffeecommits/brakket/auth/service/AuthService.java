@@ -1,5 +1,6 @@
 package com.coffeecommits.brakket.auth.service;
 
+import com.coffeecommits.brakket.auth.dto.PerfilUsuarioRequest;
 import com.coffeecommits.brakket.auth.dto.UsuarioResponse;
 import com.coffeecommits.brakket.auth.model.Usuario;
 
@@ -16,4 +17,7 @@ public interface AuthService {
 
     /** Devuelve el usuario autenticado (identificado por su correo) con sus roles. */
     UsuarioResponse getCurrentUser(String correo);
+
+    /** Actualiza el perfil del usuario autenticado. */
+    UsuarioResponse updateCurrentUser(String correo, PerfilUsuarioRequest request);
 }
