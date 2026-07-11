@@ -2,8 +2,8 @@ import { Component, OnInit, effect, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
+import { ApiService } from '../../../../core/services/api.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { GamesService } from '../../../games/services/games.service';
 
 interface GameOption {
   id: number;
@@ -39,7 +39,7 @@ interface SocialLinksValue {
 export class ProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly gamesService = inject(GamesService);
+  private readonly api = inject(ApiService);
 
   readonly usuario = this.authService.usuario;
   readonly perfilCompleto = this.authService.perfilCompleto;
@@ -88,7 +88,7 @@ export class ProfileComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.gamesService.list<GameOption[]>().subscribe({
+    this.api.get<GameOption[]>('/games').subscribe({
       next: (games) => (this.games = games),
       error: () => (this.games = [])
     });

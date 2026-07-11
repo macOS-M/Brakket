@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { ProfileComponent } from './profile.component';
-import { GamesService } from '../../../games/services/games.service';
+import { ApiService } from '../../../../core/services/api.service';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
@@ -17,9 +17,9 @@ describe('ProfileComponent', () => {
         provideHttpClient(),
         provideRouter([]),
         {
-          provide: GamesService,
+          provide: ApiService,
           useValue: {
-            list: () => of([])
+            get: () => of([])
           }
         }
       ]
