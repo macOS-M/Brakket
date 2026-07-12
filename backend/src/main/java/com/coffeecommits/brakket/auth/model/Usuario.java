@@ -47,6 +47,14 @@ public class Usuario {
     @Builder.Default
     private VisibilidadPerfil visibilidadPerfil = VisibilidadPerfil.PUBLIC;
 
+    @Column(name = "bloqueado", nullable = false)
+    @Builder.Default
+    private Boolean bloqueado = false;
+
+    @Column(name = "perfil_completo", nullable = false)
+    @Builder.Default
+    private Boolean perfilCompleto = false;
+
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
