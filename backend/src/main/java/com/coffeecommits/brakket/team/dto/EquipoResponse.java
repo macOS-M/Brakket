@@ -13,6 +13,8 @@ public record EquipoResponse(
         String juegoNombre,
         Long capitanId,
         String capitanNombre,
+        String estado,
+        String estadoPrivacidad,
         List<String> redesSociales
 ) {
 
@@ -26,6 +28,8 @@ public record EquipoResponse(
                 equipo.getJuego() != null ? equipo.getJuego().getNombre() : null,
                 equipo.getCapitan().getId(),
                 equipo.getCapitan().getNombre(),
+                equipo.getEstado(),
+                equipo.getEstadoPrivacidad(),
                 redesSociales
         );
     }

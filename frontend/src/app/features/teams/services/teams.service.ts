@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api.service';
 import { AsignarRolRequest, MiembroEquipo } from '../../../models/miembro-equipo.model';
-import { CrearEquipoRequest, Equipo } from '../../../models/equipo.model';
+import { CrearEquipoRequest, EditarEquipoRequest, Equipo } from '../../../models/equipo.model';
 
 @Injectable({ providedIn: 'root' })
 export class TeamsService {
@@ -11,6 +11,14 @@ export class TeamsService {
 
   crear(request: CrearEquipoRequest): Observable<Equipo> {
     return this.api.post<Equipo>('/teams', request);
+  }
+
+  obtenerPorId(equipoId: number): Observable<Equipo> {
+    return this.api.get<Equipo>(`/teams/${equipoId}`);
+  }
+
+  editar(equipoId: number, request: EditarEquipoRequest): Observable<Equipo> {
+    return this.api.put<Equipo>(`/teams/${equipoId}`, request);
   }
 
   listMiembros(equipoId: number): Observable<MiembroEquipo[]> {

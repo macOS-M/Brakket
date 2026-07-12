@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
@@ -18,16 +18,23 @@ export class TeamFormComponent implements OnInit {
   private readonly gamesService = inject(GamesService);
   private readonly teamsService = inject(TeamsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly juegos = signal<Juego[]>([]);
   readonly guardando = signal(false);
+  readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
+  readonly exito = signal<string | null>(null);
+
+  /** null = modo "crear"; con valor = modo "editar" ese equipo. */
+  readonly equipoId = signal<number | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
     logo: [''],
     descripcion: ['', [Validators.maxLength(500)]],
     juegoId: [null as number | null, [Validators.required]],
+    estadoPrivacidad: ['PUBLIC'],
     redesSociales: this.fb.nonNullable.array<string>([])
   });
 
@@ -35,10 +42,45 @@ export class TeamFormComponent implements OnInit {
     return this.form.get('redesSociales') as FormArray;
   }
 
+  get esEdicion(): boolean {
+    return this.equipoId() !== null;
+  }
+
   ngOnInit(): void {
     this.gamesService.listActivos().subscribe({
       next: (juegos) => this.juegos.set(juegos),
       error: () => this.error.set('No se pudo cargar el catalogo de juegos.')
+    });
+
+    const idParam = this.route.snapshot.paramMap.get('equipoId');
+    if (idParam) {
+      const id = Number(idParam);
+      this.equipoId.set(id);
+      this.cargarEquipo(id);
+    }
+  }
+
+  private cargarEquipo(id: number): void {
+    this.cargando.set(true);
+    this.teamsService.obtenerPorId(id).subscribe({
+      next: (equipo) => {
+        this.form.patchValue({
+          nombre: equipo.nombre,
+          logo: equipo.logo ?? '',
+          descripcion: equipo.descripcion ?? '',
+          juegoId: equipo.juegoId,
+          estadoPrivacidad: equipo.estadoPrivacidad
+        });
+        this.redesSociales.clear();
+        equipo.redesSociales.forEach((url) =>
+          this.redesSociales.push(this.fb.nonNullable.control(url, [Validators.required]))
+        );
+        this.cargando.set(false);
+      },
+      error: (err) => {
+        this.cargando.set(false);
+        this.error.set(err?.error?.message ?? 'No se pudo cargar la información del equipo.');
+      }
     });
   }
 
@@ -58,7 +100,29 @@ export class TeamFormComponent implements OnInit {
 
     this.guardando.set(true);
     this.error.set(null);
+    this.exito.set(null);
     const valores = this.form.getRawValue();
+
+    if (this.esEdicion) {
+      this.teamsService.editar(this.equipoId()!, {
+        nombre: valores.nombre,
+        logo: valores.logo || null,
+        descripcion: valores.descripcion || null,
+        juegoId: valores.juegoId,
+        estadoPrivacidad: valores.estadoPrivacidad,
+        redesSociales: valores.redesSociales
+      }).subscribe({
+        next: () => {
+          this.guardando.set(false);
+          this.exito.set('Cambios guardados correctamente.');
+        },
+        error: (err) => {
+          this.guardando.set(false);
+          this.error.set(err?.error?.message ?? 'No se pudo actualizar el equipo.');
+        }
+      });
+      return;
+    }
 
     this.teamsService.crear({
       nombre: valores.nombre,
