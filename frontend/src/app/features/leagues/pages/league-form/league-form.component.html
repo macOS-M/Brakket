@@ -1,0 +1,38 @@
+<section class="page">
+  <a class="back" routerLink="/leagues">← Volver a ligas</a>
+  <h1>{{ esEdicion ? 'Configurar liga' : 'Nueva liga' }}</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <label class="field">
+      <span class="label">Nombre de la liga</span>
+      <input type="text" formControlName="nombre" placeholder="Ej. Liga Universitaria 2026" />
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="field-error">El nombre es obligatorio (máx. 150 caracteres).</span>
+      }
+    </label>
+
+    <label class="field">
+      <span class="label">Juego</span>
+      <select formControlName="juegoId">
+        <option [ngValue]="null" disabled>Seleccioná un juego…</option>
+        @for (juego of games(); track juego.id) {
+          <option [ngValue]="juego.id">{{ juego.nombre }}</option>
+        }
+      </select>
+      @if (form.controls.juegoId.touched && form.controls.juegoId.invalid) {
+        <span class="field-error">Seleccioná un juego.</span>
+      }
+    </label>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Guardando…' : (esEdicion ? 'Guardar cambios' : 'Crear liga') }}
+      </button>
+      <a class="btn btn-ghost" routerLink="/leagues">Cancelar</a>
+    </div>
+  </form>
+</section>

@@ -1,0 +1,68 @@
+<section class="page">
+  <a class="back" routerLink="/leagues">← Volver a ligas</a>
+
+  @if (loading()) {
+    <p class="muted">Cargando…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (league()) {
+    @if (league(); as liga) {
+    <header class="league-head">
+      <div>
+        <h1>{{ liga.nombre }}</h1>
+        <p class="meta">{{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}</p>
+      </div>
+      <a class="btn btn-ghost" [routerLink]="['editar']">Configurar</a>
+    </header>
+
+    <div class="seasons">
+      <h2>Temporadas</h2>
+
+      @if (seasons().length === 0) {
+        <p class="empty">Esta liga aún no tiene temporadas.</p>
+      } @else {
+        <ul class="season-list">
+          @for (temporada of seasons(); track temporada.id) {
+            <li class="season-card">
+              <span class="season-name">{{ temporada.nombre }}</span>
+              <span class="season-dates">
+                {{ temporada.fechaInicio | date: 'dd/MM/yyyy' }} —
+                {{ temporada.fechaFin | date: 'dd/MM/yyyy' }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+
+      <form [formGroup]="seasonForm" (ngSubmit)="agregarTemporada()" class="season-form">
+        <h3>Agregar temporada</h3>
+        <div class="row">
+          <label class="field">
+            <span class="label">Nombre</span>
+            <input type="text" formControlName="nombre" placeholder="Ej. Temporada 1" />
+          </label>
+          <label class="field">
+            <span class="label">Inicio</span>
+            <input type="date" formControlName="fechaInicio" />
+          </label>
+          <label class="field">
+            <span class="label">Fin</span>
+            <input type="date" formControlName="fechaFin" />
+          </label>
+        </div>
+
+        @if (seasonForm.touched && seasonForm.invalid) {
+          <span class="field-error">Completá nombre, fecha de inicio y fecha de fin.</span>
+        }
+        @if (seasonError()) {
+          <p class="error">{{ seasonError() }}</p>
+        }
+
+        <button type="submit" class="btn btn-primary" [disabled]="savingSeason()">
+          {{ savingSeason() ? 'Agregando…' : '+ Agregar temporada' }}
+        </button>
+      </form>
+    </div>
+    }
+  }
+</section>
