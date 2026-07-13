@@ -38,4 +38,9 @@ public class Equipo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "juego_id")
     private Juego juego;
+
+    // ACTIVO o DISUELTO; RF-03 lo cambia al disolver y RF-05 filtra por él.
+    @Column(name = "estado", nullable = false, length = 20)
+    @Builder.Default
+    private String estado = "ACTIVO";
 }

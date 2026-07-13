@@ -1,4 +1,99 @@
 <section class="page">
-  <h1>Equipos</h1>
-  <p class="placeholder">Pendiente EPIC-04.</p>
+  <div class="header">
+    <h1>Equipos</h1>
+    <a class="btn-primary" routerLink="/teams/nuevo">+ Nuevo equipo</a>
+  </div>
+
+  <form class="filtros" [formGroup]="filtros">
+    <input
+      class="filtro texto"
+      type="search"
+      formControlName="q"
+      placeholder="Buscar por nombre..."
+      [attr.maxlength]="largoMaximoTexto"
+      aria-label="Texto de búsqueda"
+    />
+    <select class="filtro" formControlName="juegoId" aria-label="Filtrar por juego">
+      <option value="">Todos los juegos</option>
+      @for (juego of juegos(); track juego.id) {
+      <option [value]="juego.id">{{ juego.nombre }}</option>
+      }
+    </select>
+    <select class="filtro" formControlName="disciplina" aria-label="Filtrar por disciplina">
+      <option value="">Todas las disciplinas</option>
+      @for (disciplina of disciplinas(); track disciplina) {
+      <option [value]="disciplina">{{ disciplina }}</option>
+      }
+    </select>
+    <select class="filtro" formControlName="estado" aria-label="Filtrar por estado">
+      <option value="">Cualquier estado</option>
+      <option value="ACTIVO">Activo</option>
+      <option value="DISUELTO">Disuelto</option>
+    </select>
+    <button class="btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar</button>
+  </form>
+
+  @if (cargando()) {
+  <p class="placeholder">Buscando equipos...</p>
+  } @else if (error()) {
+  <div class="estado-error">
+    <p class="placeholder error">{{ error() }}</p>
+    <button class="btn-secondary" type="button" (click)="reintentar()">Reintentar</button>
+  </div>
+  } @else if (pagina() && pagina()!.items.length === 0) {
+  <p class="placeholder">No se encontraron equipos con los criterios indicados.</p>
+  } @else if (pagina()) {
+  <div class="grid">
+    @for (equipo of pagina()!.items; track equipo.id) {
+    <div class="equipo-card">
+      <div class="portada">
+        @if (equipo.logo) {
+        <img class="logo" [src]="equipo.logo" [alt]="equipo.nombre" />
+        } @else {
+        <div class="logo placeholder-logo">{{ equipo.nombre.charAt(0) }}</div>
+        }
+        <span class="estado" [class.disuelto]="equipo.estado === 'DISUELTO'">
+          {{ equipo.estado === 'DISUELTO' ? 'Disuelto' : 'Activo' }}
+        </span>
+      </div>
+      <div class="info">
+        <p class="nombre">{{ equipo.nombre }}</p>
+        @if (equipo.juegoNombre) {
+        <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+        }
+        @if (equipo.descripcion) {
+        <p class="descripcion">{{ equipo.descripcion }}</p>
+        }
+      </div>
+      <div class="acciones">
+        <a class="btn-secondary" [routerLink]="['/teams', equipo.id, 'plantilla']">Ver plantilla</a>
+      </div>
+    </div>
+    }
+  </div>
+
+  @if (pagina()!.totalPages > 1) {
+  <nav class="paginacion" aria-label="Paginación de resultados">
+    <button
+      class="btn-secondary"
+      type="button"
+      [disabled]="pagina()!.page === 0"
+      (click)="irAPagina(pagina()!.page - 1)"
+    >
+      ← Anterior
+    </button>
+    <span class="indicador">
+      Página {{ pagina()!.page + 1 }} de {{ pagina()!.totalPages }}
+      ({{ pagina()!.totalElements }} equipos)
+    </span>
+    <button
+      class="btn-secondary"
+      type="button"
+      [disabled]="pagina()!.page + 1 >= pagina()!.totalPages"
+      (click)="irAPagina(pagina()!.page + 1)"
+    >
+      Siguiente →
+    </button>
+  </nav>
+  } }
 </section>
