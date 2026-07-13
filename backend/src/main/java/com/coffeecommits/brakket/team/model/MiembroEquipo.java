@@ -36,4 +36,7 @@ public class MiembroEquipo {
 
     @Column(name = "fecha_union", nullable = false)
     private LocalDate fechaUnion;
+
+    @Column(name = "rol", nullable = false, length = 30)
+    private String rol;
 }

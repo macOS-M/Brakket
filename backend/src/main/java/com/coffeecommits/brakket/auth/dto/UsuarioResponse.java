@@ -12,6 +12,10 @@ public record UsuarioResponse(
         String nombre,
         String correo,
         String foto,
+        String biografia,
+        String redesSociales,
+        String visibilidadPerfil,
+        List<Long> juegoIds,
         List<String> roles
 ) {
 }

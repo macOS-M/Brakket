@@ -1,13 +1,17 @@
 package com.coffeecommits.brakket.auth.service;
 
+import com.coffeecommits.brakket.auth.dto.PerfilUsuarioRequest;
 import com.coffeecommits.brakket.auth.dto.UsuarioResponse;
 import com.coffeecommits.brakket.auth.model.Rol;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.model.UsuarioRol;
+import com.coffeecommits.brakket.auth.model.VisibilidadPerfil;
 import com.coffeecommits.brakket.auth.repository.RolRepository;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
+import com.coffeecommits.brakket.game.model.Juego;
+import com.coffeecommits.brakket.game.repository.JuegoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,11 +20,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +40,8 @@ class AuthServiceImplTest {
     private RolRepository rolRepository;
     @Mock
     private UsuarioRolRepository usuarioRolRepository;
+    @Mock
+    private JuegoRepository juegoRepository;
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -57,7 +66,8 @@ class AuthServiceImplTest {
 
     @Test
     void upsert_usuario_existente_con_rol_no_duplica_el_rol() {
-        Usuario existente = Usuario.builder().id(7L).googleId("g-1").correo("viejo@x.com").build();
+        Usuario existente = Usuario.builder().id(7L).googleId("g-1").correo("viejo@x.com")
+            .nombre("Perfil propio").fotoUrl("avatar-personal.png").build();
         when(usuarioRepository.findByGoogleId("g-1")).thenReturn(Optional.of(existente));
         when(usuarioRolRepository.findByUsuarioId(7L)).thenReturn(List.of(
                 UsuarioRol.builder().usuario(existente)
@@ -66,13 +76,19 @@ class AuthServiceImplTest {
         authService.upsertGoogleUser("g-1", "nuevo@x.com", "Ana", "foto.png");
 
         assertThat(existente.getCorreo()).isEqualTo("nuevo@x.com");
+        assertThat(existente.getNombre()).isEqualTo("Perfil propio");
+        assertThat(existente.getFotoUrl()).isEqualTo("avatar-personal.png");
         verify(usuarioRepository, never()).save(any(Usuario.class));
         verify(usuarioRolRepository, never()).save(any(UsuarioRol.class));
     }
 
     @Test
     void getCurrentUser_mapea_usuario_y_roles() {
-        Usuario u = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg").fotoUrl("foto.png").build();
+        Usuario u = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg").fotoUrl("foto.png")
+            .biografia("Jugador competitivo").redesSociales("https://x.com/ana")
+            .visibilidadPerfil(VisibilidadPerfil.PUBLIC)
+            .juegosPreferidos(Set.of(Juego.builder().id(1L).nombre("Valorant").build()))
+            .build();
         when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(u));
         when(usuarioRolRepository.findByUsuarioId(7L)).thenReturn(List.of(
                 UsuarioRol.builder().usuario(u).rol(Rol.builder().nombreRol("JUGADOR").build()).build()));
@@ -82,7 +98,60 @@ class AuthServiceImplTest {
         assertThat(resp.authenticated()).isTrue();
         assertThat(resp.id()).isEqualTo(7L);
         assertThat(resp.foto()).isEqualTo("foto.png");
+        assertThat(resp.biografia()).isEqualTo("Jugador competitivo");
+        assertThat(resp.redesSociales()).isEqualTo("https://x.com/ana");
+        assertThat(resp.visibilidadPerfil()).isEqualTo("PUBLIC");
+        assertThat(resp.juegoIds()).containsExactly(1L);
         assertThat(resp.roles()).containsExactly("JUGADOR");
+    }
+
+        @Test
+        void updateCurrentUser_actualiza_datos_y_juegos_preferidos() {
+        Usuario usuario = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg").fotoUrl("foto.png")
+            .visibilidadPerfil(VisibilidadPerfil.PUBLIC).build();
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(usuario));
+        doReturn(List.of(
+            Juego.builder().id(1L).nombre("Valorant").build(),
+            Juego.builder().id(2L).nombre("Rocket League").build()))
+            .when(juegoRepository).findAllById(anyIterable());
+        when(usuarioRolRepository.findByUsuarioId(7L)).thenReturn(List.of(
+            UsuarioRol.builder().usuario(usuario).rol(Rol.builder().nombreRol("JUGADOR").build()).build()));
+
+        UsuarioResponse resp = authService.updateCurrentUser("ana@brakket.gg", new PerfilUsuarioRequest(
+            "Ana Pro",
+            "avatar.png",
+            "Biografía nueva",
+            "https://x.com/ana\nhttps://twitch.tv/ana",
+            VisibilidadPerfil.PRIVATE,
+            List.of(1L, 2L)
+        ));
+
+        assertThat(usuario.getNombre()).isEqualTo("Ana Pro");
+        assertThat(usuario.getFotoUrl()).isEqualTo("avatar.png");
+        assertThat(usuario.getBiografia()).isEqualTo("Biografía nueva");
+        assertThat(usuario.getRedesSociales()).contains("twitch.tv");
+        assertThat(usuario.getVisibilidadPerfil()).isEqualTo(VisibilidadPerfil.PRIVATE);
+        assertThat(usuario.getJuegosPreferidos()).extracting(Juego::getId).containsExactlyInAnyOrder(1L, 2L);
+        assertThat(resp.juegoIds()).containsExactlyInAnyOrder(1L, 2L);
+        }
+
+    @Test
+    void updateCurrentUser_acepta_opcionales_vacios_y_conserva_visibilidad() {
+        Usuario usuario = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg").fotoUrl("foto.png")
+            .biografia("Bio vieja").visibilidadPerfil(VisibilidadPerfil.PRIVATE).build();
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(usuario));
+        when(usuarioRolRepository.findByUsuarioId(7L)).thenReturn(List.of());
+
+        UsuarioResponse resp = authService.updateCurrentUser("ana@brakket.gg", new PerfilUsuarioRequest(
+            "Ana", "   ", null, "", null, null));
+
+        assertThat(usuario.getNombre()).isEqualTo("Ana");
+        assertThat(usuario.getFotoUrl()).isNull();
+        assertThat(usuario.getBiografia()).isNull();
+        assertThat(usuario.getRedesSociales()).isNull();
+        assertThat(usuario.getVisibilidadPerfil()).isEqualTo(VisibilidadPerfil.PRIVATE);
+        assertThat(resp.visibilidadPerfil()).isEqualTo("PRIVATE");
+        assertThat(resp.juegoIds()).isEmpty();
     }
 
     @Test

@@ -12,4 +12,6 @@ public interface LigaRepository extends JpaRepository<Liga, Long> {
 
     /** Evita que un mismo comisionado repita el nombre de liga (regla de negocio RF-22). */
     boolean existsByComisionadoIdAndNombreIgnoreCase(Long comisionadoId, String nombre);
+
+    boolean existsByJuegoId(Long juegoId);
 }

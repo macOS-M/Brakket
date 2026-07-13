@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { take } from 'rxjs';
 
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -29,6 +30,21 @@ export class CallbackComponent implements OnInit {
     }
 
     this.authService.handleAuthCallback(token);
-    this.router.navigate(['/']);
+    this.authService.loadCurrentUser().pipe(take(1)).subscribe({
+      next: (usuario) => {
+        if (this.authService.hasRole('ADMIN')) {
+          this.router.navigate(['/admin']);
+          return;
+        }
+
+        if (!this.authService.isProfileComplete(usuario)) {
+          this.router.navigate(['/profile']);
+          return;
+        }
+
+        this.router.navigate(['/']);
+      },
+      error: () => this.router.navigate(['/login'])
+    });
   }
 }

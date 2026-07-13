@@ -1,0 +1,43 @@
+<section class="page">
+  <h1>Plantilla del equipo</h1>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando plantilla...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (miembros().length === 0) {
+  <p class="placeholder">Este equipo no tiene integrantes.</p>
+  } @else {
+  <table class="tabla">
+    <thead>
+    <tr>
+      <th>Integrante</th>
+      <th>Estado</th>
+      <th>Rol</th>
+    </tr>
+    </thead>
+    <tbody>
+    @for (miembro of miembros(); track miembro.id) {
+    <tr>
+      <td>{{ miembro.nombreUsuario }}</td>
+      <td>
+              <span class="badge" [class.inactivo]="miembro.estado !== 'ACTIVO'">
+                {{ miembro.estado }}
+              </span>
+      </td>
+      <td>
+        <select
+          [disabled]="miembro.estado !== 'ACTIVO' || guardandoId() === miembro.usuarioId"
+          (change)="cambiarRol(miembro, $any($event.target).value)"
+        >
+          @for (rol of roles; track rol) {
+          <option [value]="rol" [selected]="rol === miembro.rol">{{ rol }}</option>
+          }
+        </select>
+      </td>
+    </tr>
+    }
+    </tbody>
+  </table>
+  }
+</section>
