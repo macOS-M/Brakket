@@ -10,6 +10,8 @@ public interface MiembroEquipoRepository extends JpaRepository<MiembroEquipo, Lo
 
     List<MiembroEquipo> findByEquipoId(Long equipoId);
 
+    List<MiembroEquipo> findByEquipoIdAndEstado(Long equipoId, String estado);
+
     List<MiembroEquipo> findByUsuarioId(Long usuarioId);
 
     Optional<MiembroEquipo> findByEquipoIdAndUsuarioId(Long equipoId, Long usuarioId);

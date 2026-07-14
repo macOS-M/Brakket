@@ -39,4 +39,7 @@ public class MiembroEquipo {
 
     @Column(name = "rol", nullable = false, length = 30)
     private String rol;
+
+    @Version
+    private Long version;
 }

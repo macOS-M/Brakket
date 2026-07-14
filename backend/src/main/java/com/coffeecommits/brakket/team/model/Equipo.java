@@ -38,4 +38,11 @@ public class Equipo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "juego_id")
     private Juego juego;
+
+    @Column(name = "estado", nullable = false, length = 40)
+    @Builder.Default
+    private String estado = "ACTIVO";
+
+    @Version
+    private Long version;
 }

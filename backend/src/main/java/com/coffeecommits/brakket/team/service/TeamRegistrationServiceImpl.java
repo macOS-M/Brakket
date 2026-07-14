@@ -2,11 +2,14 @@ package com.coffeecommits.brakket.team.service;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
+import com.coffeecommits.brakket.admin.model.LogAuditoria;
+import com.coffeecommits.brakket.admin.repository.LogAuditoriaRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
 import com.coffeecommits.brakket.team.dto.CrearEquipoRequest;
+import com.coffeecommits.brakket.team.dto.ActualizarEquipoRequest;
 import com.coffeecommits.brakket.team.dto.EquipoResponse;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.EquipoRedSocial;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,17 +33,20 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
     private final JuegoRepository juegoRepository;
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final EquipoRedSocialRepository redSocialRepository;
+    private final LogAuditoriaRepository logAuditoriaRepository;
 
     public TeamRegistrationServiceImpl(EquipoRepository equipoRepository,
                                        UsuarioRepository usuarioRepository,
                                        JuegoRepository juegoRepository,
                                        MiembroEquipoRepository miembroEquipoRepository,
-                                       EquipoRedSocialRepository redSocialRepository) {
+                                       EquipoRedSocialRepository redSocialRepository,
+                                       LogAuditoriaRepository logAuditoriaRepository) {
         this.equipoRepository = equipoRepository;
         this.usuarioRepository = usuarioRepository;
         this.juegoRepository = juegoRepository;
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.redSocialRepository = redSocialRepository;
+        this.logAuditoriaRepository = logAuditoriaRepository;
     }
 
     @Override
@@ -94,5 +101,50 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                 .toList();
 
         return EquipoResponse.fromEntity(equipoGuardado, redesGuardadas);
+    }
+
+    @Override
+    @Transactional
+    public EquipoResponse actualizar(Long equipoId, ActualizarEquipoRequest request, String solicitanteCorreo) {
+        Usuario solicitante = usuarioRepository.findByCorreo(solicitanteCorreo)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", solicitanteCorreo));
+        Equipo equipo = equipoRepository.findById(equipoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
+
+        if (!equipo.getCapitan().getId().equals(solicitante.getId())) {
+            throw new BusinessException("Solo el capitan del equipo puede editar el perfil");
+        }
+        if (!equipo.getVersion().equals(request.version())) {
+            throw new BusinessException("El perfil fue actualizado por otro usuario. Recargue la pagina e intente de nuevo");
+        }
+        if (equipoRepository.existsByNombreAndIdNot(request.nombre(), equipoId)) {
+            throw new BusinessException("Ya existe un equipo con el nombre '%s'".formatted(request.nombre()));
+        }
+
+        Juego juego = juegoRepository.findById(request.juegoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Juego", request.juegoId()));
+        if (!Boolean.TRUE.equals(juego.getActivo())) {
+            throw new BusinessException("El juego seleccionado no esta activo");
+        }
+
+        equipo.setNombre(request.nombre());
+        equipo.setLogo(request.logo());
+        equipo.setDescripcion(request.descripcion());
+        equipo.setJuego(juego);
+        equipoRepository.saveAndFlush(equipo);
+
+        redSocialRepository.deleteByEquipoId(equipoId);
+        List<String> redes = request.redesSociales() == null ? List.of() : request.redesSociales();
+        List<String> redesGuardadas = redes.stream()
+                .filter(url -> url != null && !url.isBlank())
+                .map(url -> redSocialRepository.save(EquipoRedSocial.builder().equipo(equipo).url(url).build()))
+                .map(EquipoRedSocial::getUrl)
+                .toList();
+
+        logAuditoriaRepository.save(LogAuditoria.builder()
+                .usuario(solicitante).accion("ACTUALIZAR_PERFIL_EQUIPO").entidad("EQUIPO")
+                .entidadId(equipoId).fecha(LocalDateTime.now()).build());
+
+        return EquipoResponse.fromEntity(equipo, redesGuardadas);
     }
 }

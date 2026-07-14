@@ -1,6 +1,7 @@
 package com.coffeecommits.brakket.team.controller;
 
 import com.coffeecommits.brakket.team.dto.CrearEquipoRequest;
+import com.coffeecommits.brakket.team.dto.ActualizarEquipoRequest;
 import com.coffeecommits.brakket.team.dto.EquipoResponse;
 import com.coffeecommits.brakket.team.service.TeamRegistrationService;
 import jakarta.validation.Valid;
@@ -23,5 +24,12 @@ public class TeamRegistrationController {
     public EquipoResponse crear(@Valid @RequestBody CrearEquipoRequest request,
                                 Authentication authentication) {
         return teamRegistrationService.crear(request, authentication.getName());
+    }
+
+    @PutMapping("/{equipoId}")
+    public EquipoResponse actualizar(@PathVariable Long equipoId,
+                                     @Valid @RequestBody ActualizarEquipoRequest request,
+                                     Authentication authentication) {
+        return teamRegistrationService.actualizar(equipoId, request, authentication.getName());
     }
 }

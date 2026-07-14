@@ -5,6 +5,11 @@ import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
+    path: 'team-profile/:equipoId',
+    loadComponent: () => import('./features/teams/pages/team-public-profile/team-public-profile.component')
+      .then((m) => m.TeamPublicProfileComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.routes)
   },
@@ -39,7 +44,6 @@ export const routes: Routes = [
       },
       {
         path: 'teams',
-        canActivate: [authGuard],
         loadChildren: () => import('./features/teams/teams.routes').then((m) => m.routes)
       },
       {

@@ -8,4 +8,6 @@ import java.util.List;
 public interface EquipoRedSocialRepository extends JpaRepository<EquipoRedSocial, Long> {
 
     List<EquipoRedSocial> findByEquipoId(Long equipoId);
+
+    void deleteByEquipoId(Long equipoId);
 }
