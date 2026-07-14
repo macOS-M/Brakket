@@ -14,6 +14,11 @@ export const routes: Routes = [
       import('./pages/team-form/team-form.component').then((m) => m.TeamFormComponent)
   },
   {
+    path: ':equipoId/editar',
+    loadComponent: () =>
+      import('./pages/team-form/team-form.component').then((m) => m.TeamFormComponent)
+  },
+  {
     path: ':equipoId/plantilla',
     canActivate: [authGuard],
     loadComponent: () =>

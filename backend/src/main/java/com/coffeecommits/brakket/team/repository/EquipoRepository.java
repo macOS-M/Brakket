@@ -12,6 +12,9 @@ public interface EquipoRepository extends JpaRepository<Equipo, Long> {
 
     Optional<Equipo> findByNombre(String nombre);
 
+    /** Búsqueda case-insensitive: "Fnatic" y "fnatic" cuentan como el mismo nombre. */
+    Optional<Equipo> findByNombreIgnoreCase(String nombre);
+
     /**
      * Listado público por nombre con el juego ya cargado en la misma query
      * (el resumen siempre muestra el nombre del juego).

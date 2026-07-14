@@ -1,6 +1,19 @@
 <section class="page">
   <h1>Plantilla del equipo</h1>
 
+  @if (equipoDisuelto(); as equipo) {
+  <div class="banner-disuelto">
+    <p class="titulo">Equipo disuelto</p>
+    <p>
+      "{{ equipo.nombre }}" fue disuelto y ya no aparecerá entre los equipos activos.
+      Su historial se conserva para consultas.
+    </p>
+    @if (equipo.motivoDisolucion) {
+    <p class="motivo">Motivo: {{ equipo.motivoDisolucion }}</p>
+    }
+  </div>
+  }
+
   @if (cargando()) {
   <p class="placeholder">Cargando plantilla...</p>
   } @else if (error()) {
@@ -27,7 +40,7 @@
       </td>
       <td>
         <select
-          [disabled]="miembro.estado !== 'ACTIVO' || guardandoId() === miembro.usuarioId"
+          [disabled]="miembro.estado !== 'ACTIVO' || guardandoId() === miembro.usuarioId || equipoDisuelto() !== null"
           (change)="cambiarRol(miembro, $any($event.target).value)"
         >
           @for (rol of roles; track rol) {
@@ -39,5 +52,58 @@
     }
     </tbody>
   </table>
+  }
+
+  @if (!cargando() && !error() && !equipoDisuelto()) {
+  <section class="zona-peligro">
+    <h2>Disolver equipo</h2>
+    <p class="advertencia">
+      Esta acción cierra formalmente la participación del equipo y no se puede deshacer desde
+      la plataforma. Consecuencias:
+    </p>
+    <ul class="consecuencias">
+      <li>El equipo pasa a estado <strong>DISUELTO</strong> y deja de aparecer en búsquedas de equipos activos.</li>
+      <li>Su historial y su plantilla se conservan para consultas históricas.</li>
+      <li>No podrá inscribirse en ligas ni torneos.</li>
+      <li>Se registran la fecha y el responsable de la disolución.</li>
+    </ul>
+    <p class="advertencia">
+      No es posible disolver un equipo con inscripciones activas o partidas pendientes;
+      en ese caso hay que resolverlas o pedir autorización administrativa.
+    </p>
+
+    <label class="campo-motivo">
+      Motivo (opcional, máx. 500 caracteres)
+      <textarea
+        rows="3"
+        maxlength="500"
+        placeholder="Ej. El equipo deja de competir esta temporada"
+        [value]="motivoDisolucion()"
+        (input)="motivoDisolucion.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    <label class="confirmacion">
+      <input
+        type="checkbox"
+        [checked]="confirmaDisolucion()"
+        (change)="confirmaDisolucion.set($any($event.target).checked)"
+      />
+      Confirmo que quiero disolver este equipo definitivamente.
+    </label>
+
+    @if (errorDisolucion()) {
+    <p class="error-disolucion">{{ errorDisolucion() }}</p>
+    }
+
+    <button
+      type="button"
+      class="btn-disolver"
+      [disabled]="!confirmaDisolucion() || disolviendo()"
+      (click)="disolverEquipo()"
+    >
+      {{ disolviendo() ? 'Disolviendo...' : 'Disolver equipo' }}
+    </button>
+  </section>
   }
 </section>
