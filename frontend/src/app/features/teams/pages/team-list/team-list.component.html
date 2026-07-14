@@ -1,4 +1,14 @@
 <section class="page">
-  <h1>Equipos</h1>
-  <p class="placeholder">Pendiente EPIC-04.</p>
+  <div class="encabezado"><div><p class="eyebrow">Comunidad competitiva</p><h1>Equipos</h1><p>Explora perfiles, integrantes y trayectoria competitiva.</p></div><a class="crear" routerLink="/teams/nuevo">Crear equipo</a></div>
+  <label class="buscador"><span>Buscar equipo</span><input #criterio type="search" placeholder="Nombre del equipo" (input)="buscar(criterio.value)" /></label>
+  @if (cargando()) { <p class="placeholder">Cargando equipos...</p> }
+  @else if (error()) { <p class="placeholder">{{ error() }}</p> }
+  @else if (!equipos().length) { <p class="placeholder">No hay equipos registrados.</p> }
+  @else {
+    <ul class="equipos" aria-label="Resultados de equipos">
+      @for (equipo of equipos(); track equipo.id) {
+        <li><a [routerLink]="['/team-profile', equipo.id]"><span class="avatar">{{ equipo.nombre.slice(0, 2).toUpperCase() }}</span><span><strong>{{ equipo.nombre }}</strong><small>{{ equipo.juegoNombre || 'Sin juego principal' }} · {{ equipo.integrantesActivos }} integrantes</small></span><span class="ver">Ver perfil →</span></a></li>
+      }
+    </ul>
+  }
 </section>

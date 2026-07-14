@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '../../core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -8,6 +9,7 @@ export const routes: Routes = [
   },
   {
     path: 'nuevo',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/team-form/team-form.component').then((m) => m.TeamFormComponent)
   },
@@ -18,6 +20,7 @@ export const routes: Routes = [
   },
   {
     path: ':equipoId/plantilla',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/team-roster/team-roster.component').then((m) => m.TeamRosterComponent)
   }

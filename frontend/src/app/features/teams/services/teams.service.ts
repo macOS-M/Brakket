@@ -9,6 +9,7 @@ import {
   Equipo
 } from '../../../models/equipo.model';
 import { AsignarRolRequest, MiembroEquipo } from '../../../models/miembro-equipo.model';
+import { EquipoResumenPublico, PerfilEquipoPublico } from '../../../models/perfil-equipo-publico.model';
 
 @Injectable({ providedIn: 'root' })
 export class TeamsService {
@@ -16,6 +17,15 @@ export class TeamsService {
 
   crear(request: CrearEquipoRequest): Observable<Equipo> {
     return this.api.post<Equipo>('/teams', request);
+  }
+
+  listarPublicos(criterio = ''): Observable<EquipoResumenPublico[]> {
+    return this.api.get<EquipoResumenPublico[]>(`/public/teams?criterio=${encodeURIComponent(criterio)}`);
+  }
+
+  consultarPerfilPublico(equipoId: number, juegoId?: number): Observable<PerfilEquipoPublico> {
+    const filtro = juegoId ? `?juegoId=${juegoId}` : '';
+    return this.api.get<PerfilEquipoPublico>(`/public/teams/${equipoId}${filtro}`);
   }
 
   obtenerPorId(equipoId: number): Observable<Equipo> {

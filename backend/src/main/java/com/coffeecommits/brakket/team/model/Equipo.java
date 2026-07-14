@@ -44,7 +44,8 @@ public class Equipo {
     /**
      * Ciclo de vida del equipo (RF-02/RF-03): ACTIVO, BLOQUEADO (disputa o
      * revisión administrativa activa), DISUELTO. La disolución es lógica —
-     * el equipo nunca se borra de la base.
+     * el equipo nunca se borra de la base. El perfil público (RF-04) lo usa
+     * para mostrar el aviso de equipo disuelto.
      */
     @Column(name = "estado", nullable = false, length = 20)
     @Builder.Default
