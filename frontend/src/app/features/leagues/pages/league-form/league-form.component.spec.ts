@@ -3,24 +3,28 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 
-import { LeagueListComponent } from './league-list.component';
+import { LeagueFormComponent } from './league-form.component';
 
-describe('LeagueListComponent', () => {
-  let component: LeagueListComponent;
-  let fixture: ComponentFixture<LeagueListComponent>;
+describe('LeagueFormComponent', () => {
+  let component: LeagueFormComponent;
+  let fixture: ComponentFixture<LeagueFormComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LeagueListComponent],
+      imports: [LeagueFormComponent],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(LeagueListComponent);
+    fixture = TestBed.createComponent(LeagueFormComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('el formulario es inválido cuando está vacío', () => {
+    expect(component.form.valid).toBeFalse();
   });
 });
