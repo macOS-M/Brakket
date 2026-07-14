@@ -8,4 +8,7 @@ import java.util.Optional;
 public interface EquipoRepository extends JpaRepository<Equipo, Long> {
 
     Optional<Equipo> findByNombre(String nombre);
+
+    /** Búsqueda case-insensitive: "Fnatic" y "fnatic" cuentan como el mismo nombre. */
+    Optional<Equipo> findByNombreIgnoreCase(String nombre);
 }

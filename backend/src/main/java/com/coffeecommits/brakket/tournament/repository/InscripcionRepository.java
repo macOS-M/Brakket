@@ -11,6 +11,8 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     List<Inscripcion> findByTorneoId(Long torneoId);
 
+    List<Inscripcion> findByEquipoId(Long equipoId);
+
     /**
      * RF-03: inscripciones que impiden disolver un equipo. Se consideran
      * cerradas las RECHAZADA/CANCELADA/FINALIZADA (convención pendiente de
