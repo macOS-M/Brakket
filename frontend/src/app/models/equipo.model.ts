@@ -17,7 +17,3 @@ export interface CrearEquipoRequest {
   juegoId: number;
   redesSociales: string[];
 }
-
-export interface ActualizarEquipoRequest extends CrearEquipoRequest {
-  version: number;
-}

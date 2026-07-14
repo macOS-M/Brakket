@@ -1,5 +1,6 @@
 package com.coffeecommits.brakket.team.service;
 
+import com.coffeecommits.brakket.team.dto.EquipoResumenPublicoResponse;
 import com.coffeecommits.brakket.team.dto.PerfilEquipoPublicoResponse;
 
 import java.util.List;
@@ -7,5 +8,6 @@ import java.util.List;
 public interface TeamPublicProfileService {
     PerfilEquipoPublicoResponse consultarPerfil(Long equipoId, Long juegoId);
 
-    List<PerfilEquipoPublicoResponse> buscarEquipos(String criterio);
+    /** Listado liviano: solo lo que la lista pública muestra. */
+    List<EquipoResumenPublicoResponse> buscarEquipos(String criterio);
 }

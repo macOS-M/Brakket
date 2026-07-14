@@ -3,6 +3,7 @@ package com.coffeecommits.brakket.team.service;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.statistics.model.EstadisticaJugador;
 import com.coffeecommits.brakket.statistics.repository.EstadisticaJugadorRepository;
+import com.coffeecommits.brakket.team.dto.EquipoResumenPublicoResponse;
 import com.coffeecommits.brakket.team.dto.PerfilEquipoPublicoResponse;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.repository.EquipoRedSocialRepository;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
@@ -43,11 +46,31 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
         return construirPerfil(equipo, juegoId);
     }
 
+    /**
+     * El listado NO arma el perfil completo (miembros, torneos y estadísticas
+     * por integrante multiplicaban las queries por equipo): trae los equipos
+     * con su juego en una query y los conteos de miembros activos en otra.
+     */
     @Override
     @Transactional(readOnly = true)
-    public List<PerfilEquipoPublicoResponse> buscarEquipos(String criterio) {
-        return equipoRepository.findByNombreContainingIgnoreCase(criterio == null ? "" : criterio.trim()).stream()
-                .map(equipo -> construirPerfil(equipo, equipo.getJuego() == null ? null : equipo.getJuego().getId()))
+    public List<EquipoResumenPublicoResponse> buscarEquipos(String criterio) {
+        List<Equipo> equipos = equipoRepository.buscarPorNombreConJuego(
+                criterio == null ? "" : criterio.trim());
+        if (equipos.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Long> activosPorEquipo = miembroRepository
+                .contarActivosPorEquipo(equipos.stream().map(Equipo::getId).toList()).stream()
+                .collect(Collectors.toMap(fila -> (Long) fila[0], fila -> (Long) fila[1]));
+
+        return equipos.stream()
+                .map(equipo -> new EquipoResumenPublicoResponse(
+                        equipo.getId(),
+                        equipo.getNombre(),
+                        equipo.getLogo(),
+                        equipo.getJuego() == null ? null : equipo.getJuego().getNombre(),
+                        activosPorEquipo.getOrDefault(equipo.getId(), 0L)))
                 .toList();
     }
 
@@ -77,7 +100,7 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
                 !estadisticas.isEmpty());
 
         return new PerfilEquipoPublicoResponse(equipo.getId(), equipo.getNombre(), equipo.getLogo(),
-                equipo.getDescripcion(), equipo.getEstado(), equipo.getCapitan().getId(), equipo.getVersion(), juegoSeleccionado,
+                equipo.getDescripcion(), equipo.getEstado(), equipo.getCapitan().getId(), juegoSeleccionado,
                 equipo.getJuego() == null ? null : equipo.getJuego().getNombre(),
                 redSocialRepository.findByEquipoId(equipo.getId()).stream().map(r -> r.getUrl()).toList(),
                 plantilla, torneos, resumen);

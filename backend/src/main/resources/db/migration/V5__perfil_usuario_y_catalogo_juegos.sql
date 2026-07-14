@@ -1,11 +1,11 @@
 -- Perfil extendido para usuarios y catálogo inicial de juegos.
 
 ALTER TABLE usuario
-    ADD COLUMN IF NOT EXISTS biografia TEXT,
-    ADD COLUMN IF NOT EXISTS redes_sociales TEXT,
-    ADD COLUMN IF NOT EXISTS visibilidad_perfil VARCHAR(20) NOT NULL DEFAULT 'PUBLIC';
+    ADD COLUMN biografia TEXT,
+    ADD COLUMN redes_sociales TEXT,
+    ADD COLUMN visibilidad_perfil VARCHAR(20) NOT NULL DEFAULT 'PUBLIC';
 
-CREATE TABLE IF NOT EXISTS usuario_juego_preferido (
+CREATE TABLE usuario_juego_preferido (
     usuario_id BIGINT NOT NULL REFERENCES usuario(id) ON DELETE CASCADE,
     juego_id   BIGINT NOT NULL REFERENCES juego(id) ON DELETE CASCADE,
     PRIMARY KEY (usuario_id, juego_id)

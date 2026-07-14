@@ -30,6 +30,7 @@ export const routes: Routes = [
       },
       {
         path: 'leagues',
+        canActivate: [authGuard],
         loadChildren: () => import('./features/leagues/leagues.routes').then((m) => m.routes)
       },
       {

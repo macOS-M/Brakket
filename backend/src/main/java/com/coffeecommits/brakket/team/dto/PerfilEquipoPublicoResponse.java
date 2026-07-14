@@ -11,7 +11,6 @@ public record PerfilEquipoPublicoResponse(
         String descripcion,
         String estado,
         Long capitanId,
-        Long version,
         Long juegoId,
         String juegoNombre,
         List<String> redesSociales,

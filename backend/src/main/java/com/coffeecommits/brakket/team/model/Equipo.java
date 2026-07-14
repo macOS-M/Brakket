@@ -39,10 +39,11 @@ public class Equipo {
     @JoinColumn(name = "juego_id")
     private Juego juego;
 
-    @Column(name = "estado", nullable = false, length = 40)
+    /**
+     * Ciclo de vida del equipo (lo introduce RF-03): ACTIVO / DISUELTO.
+     * El perfil público lo usa para mostrar el aviso de equipo disuelto.
+     */
+    @Column(name = "estado", nullable = false, length = 20)
     @Builder.Default
     private String estado = "ACTIVO";
-
-    @Version
-    private Long version;
 }

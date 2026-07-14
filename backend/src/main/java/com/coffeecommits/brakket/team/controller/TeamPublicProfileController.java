@@ -1,5 +1,6 @@
 package com.coffeecommits.brakket.team.controller;
 
+import com.coffeecommits.brakket.team.dto.EquipoResumenPublicoResponse;
 import com.coffeecommits.brakket.team.dto.PerfilEquipoPublicoResponse;
 import com.coffeecommits.brakket.team.service.TeamPublicProfileService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +21,7 @@ public class TeamPublicProfileController {
     }
 
     @GetMapping
-    public List<PerfilEquipoPublicoResponse> buscar(@RequestParam(defaultValue = "") String criterio) {
+    public List<EquipoResumenPublicoResponse> buscar(@RequestParam(defaultValue = "") String criterio) {
         return profileService.buscarEquipos(criterio);
     }
 

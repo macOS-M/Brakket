@@ -4,7 +4,6 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { PerfilEquipoPublico } from '../../../../models/perfil-equipo-publico.model';
 import { TeamsService } from '../../services/teams.service';
-import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-team-public-profile',
@@ -16,7 +15,6 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class TeamPublicProfileComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly teamsService = inject(TeamsService);
-  readonly auth = inject(AuthService);
 
   readonly perfil = signal<PerfilEquipoPublico | null>(null);
   readonly cargando = signal(true);
@@ -45,9 +43,5 @@ export class TeamPublicProfileComponent implements OnInit {
   porcentajeVictorias(victorias: number, derrotas: number): string {
     const total = victorias + derrotas;
     return total ? `${Math.round((victorias / total) * 100)}%` : '—';
-  }
-
-  puedeEditar(capitanId: number): boolean {
-    return Number(this.auth.usuario()?.id) === capitanId;
   }
 }

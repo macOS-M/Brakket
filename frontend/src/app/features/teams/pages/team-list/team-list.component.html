@@ -7,7 +7,7 @@
   @else {
     <ul class="equipos" aria-label="Resultados de equipos">
       @for (equipo of equipos(); track equipo.id) {
-        <li><a [routerLink]="['/team-profile', equipo.id]"><span class="avatar">{{ equipo.nombre.slice(0, 2).toUpperCase() }}</span><span><strong>{{ equipo.nombre }}</strong><small>{{ equipo.juegoNombre || 'Sin juego principal' }} · {{ equipo.plantilla.length }} integrantes</small></span><span class="ver">Ver perfil →</span></a></li>
+        <li><a [routerLink]="['/team-profile', equipo.id]"><span class="avatar">{{ equipo.nombre.slice(0, 2).toUpperCase() }}</span><span><strong>{{ equipo.nombre }}</strong><small>{{ equipo.juegoNombre || 'Sin juego principal' }} · {{ equipo.integrantesActivos }} integrantes</small></span><span class="ver">Ver perfil →</span></a></li>
       }
     </ul>
   }
