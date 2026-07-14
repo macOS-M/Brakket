@@ -8,6 +8,9 @@ export interface Equipo {
   capitanId: number;
   capitanNombre: string;
   redesSociales: string[];
+  estado: string;
+  fechaDisolucion: string | null;
+  motivoDisolucion: string | null;
 }
 
 export interface CrearEquipoRequest {
@@ -16,4 +19,9 @@ export interface CrearEquipoRequest {
   descripcion: string | null;
   juegoId: number;
   redesSociales: string[];
+}
+
+export interface DisolverEquipoRequest {
+  confirmacion: boolean;
+  motivo: string | null;
 }

@@ -2,6 +2,7 @@ package com.coffeecommits.brakket.team.dto;
 
 import com.coffeecommits.brakket.team.model.Equipo;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record EquipoResponse(
@@ -13,8 +14,15 @@ public record EquipoResponse(
         String juegoNombre,
         Long capitanId,
         String capitanNombre,
-        List<String> redesSociales
+        List<String> redesSociales,
+        String estado,
+        LocalDateTime fechaDisolucion,
+        String motivoDisolucion
 ) {
+
+    public static EquipoResponse fromEntity(Equipo equipo) {
+        return fromEntity(equipo, List.of());
+    }
 
     public static EquipoResponse fromEntity(Equipo equipo, List<String> redesSociales) {
         return new EquipoResponse(
@@ -26,7 +34,10 @@ public record EquipoResponse(
                 equipo.getJuego() != null ? equipo.getJuego().getNombre() : null,
                 equipo.getCapitan().getId(),
                 equipo.getCapitan().getNombre(),
-                redesSociales
+                redesSociales,
+                equipo.getEstado(),
+                equipo.getFechaDisolucion(),
+                equipo.getMotivoDisolucion()
         );
     }
 }
