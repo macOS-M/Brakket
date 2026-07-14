@@ -41,7 +41,7 @@ public class AutoridadesService {
 
         Set<GrantedAuthority> autoridades = new LinkedHashSet<>();
 
-        usuarioRolRepository.findByUsuarioId(usuarioOpt.get().getId()).forEach(ur -> {
+        usuarioRolRepository.findConRolYPermisosByUsuarioId(usuarioOpt.get().getId()).forEach(ur -> {
             autoridades.add(new SimpleGrantedAuthority(
                     "ROLE_" + ur.getRol().getNombreRol().toUpperCase()));
             ur.getRol().getPermisos().forEach(p ->
@@ -53,5 +53,13 @@ public class AutoridadesService {
         }
 
         return Optional.of(List.copyOf(autoridades));
+    }
+
+    /** Distingue la cuenta bloqueada del usuario inexistente (para responder 403 y no 401). */
+    @Transactional(readOnly = true)
+    public boolean esCuentaBloqueada(String correo) {
+        return usuarioRepository.findByCorreo(correo)
+                .map(u -> Boolean.TRUE.equals(u.getBloqueado()))
+                .orElse(false);
     }
 }

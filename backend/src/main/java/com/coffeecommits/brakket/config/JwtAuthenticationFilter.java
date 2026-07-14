@@ -41,13 +41,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtService.isValid(token)) {
                 String correo = jwtService.extractSubject(token);
                 // Roles y permisos reales desde la BD (RF-19). Si el Optional
-                // viene vacío (cuenta bloqueada o inexistente), NO se autentica
-                // y la request terminará en 401.
-                autoridadesService.cargarAutoridades(correo).ifPresent(autoridades -> {
-                    var auth = new UsernamePasswordAuthenticationToken(correo, null, autoridades);
+                // viene vacío el usuario no existe (terminará en 401) o la
+                // cuenta está bloqueada (403 con mensaje claro, RF-19).
+                var autoridadesOpt = autoridadesService.cargarAutoridades(correo);
+                if (autoridadesOpt.isPresent()) {
+                    var auth = new UsernamePasswordAuthenticationToken(correo, null, autoridadesOpt.get());
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(auth);
-                });
+                } else if (autoridadesService.esCuentaBloqueada(correo)) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write(
+                            "{\"success\":false,\"message\":\"La cuenta está bloqueada. Contacte a un administrador.\"}");
+                    return;
+                }
             }
         }
         filterChain.doFilter(request, response);

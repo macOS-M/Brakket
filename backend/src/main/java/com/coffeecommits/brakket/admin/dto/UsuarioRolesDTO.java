@@ -14,7 +14,6 @@ public class UsuarioRolesDTO {
 
     private Long usuarioId;
     private String correo;
-    private Boolean perfilCompleto;
     private List<String> roles;
     private List<String> permisos;
 
@@ -32,7 +31,6 @@ public class UsuarioRolesDTO {
         return UsuarioRolesDTO.builder()
                 .usuarioId(usuario.getId())
                 .correo(usuario.getCorreo())
-                .perfilCompleto(usuario.getPerfilCompleto())
                 .roles(roles)
                 .permisos(List.copyOf(permisos))
                 .build();

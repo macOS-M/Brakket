@@ -11,6 +11,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -42,7 +44,16 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String fotoUrl = user.getAttribute("picture");
 
         // Alta/actualización del usuario y asignación de rol base (RF-17).
-        authService.upsertGoogleUser(googleId, correo, nombre, fotoUrl);
+        var usuario = authService.upsertGoogleUser(googleId, correo, nombre, fotoUrl);
+
+        // Cuenta bloqueada (RF-19): no se emite JWT; se devuelve al login con el motivo.
+        if (Boolean.TRUE.equals(usuario.getBloqueado())) {
+            String mensaje = URLEncoder.encode(
+                    "La cuenta está bloqueada. Contacte a un administrador.", StandardCharsets.UTF_8);
+            getRedirectStrategy().sendRedirect(request, response,
+                    frontendUrl + "/login?error=cuenta_bloqueada&error_message=" + mensaje);
+            return;
+        }
 
         String token = jwtService.generateToken(correo, Map.of("name", nombre == null ? "" : nombre));
 

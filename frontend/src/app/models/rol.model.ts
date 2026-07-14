@@ -12,7 +12,6 @@ export interface RolDTO {
 export interface UsuarioRolesDTO {
   usuarioId: number;
   correo: string;
-  perfilCompleto: boolean;
   roles: string[];
   permisos: string[];
 }

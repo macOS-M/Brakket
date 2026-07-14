@@ -31,6 +31,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RolPermisoService {
 
+    private static final String PERMISO_GESTIONAR_ROLES = "GESTIONAR_ROLES";
+
     private final RolRepository rolRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioRolRepository usuarioRolRepository;
@@ -113,6 +115,17 @@ public class RolPermisoService {
                 .findByUsuarioIdAndRolId(usuarioObjetivoId, rolId)
                 .orElseThrow(() -> new BusinessException(
                         "El usuario no tiene asignado el rol " + rol.getNombreRol() + "."));
+
+        // No dejar la plataforma sin nadie que pueda administrar roles:
+        // si el rol a revocar otorga GESTIONAR_ROLES y esta es la última
+        // asignación con ese permiso, la revocación se bloquea.
+        boolean otorgaGestionDeRoles = rol.getPermisos().stream()
+                .anyMatch(p -> PERMISO_GESTIONAR_ROLES.equals(p.getCodigo()));
+        if (otorgaGestionDeRoles
+                && usuarioRolRepository.contarAsignacionesConPermiso(PERMISO_GESTIONAR_ROLES) <= 1) {
+            throw new BusinessException(
+                    "No se puede revocar: es el último usuario con permiso para gestionar roles.");
+        }
 
         usuarioRolRepository.delete(asignacion);
 

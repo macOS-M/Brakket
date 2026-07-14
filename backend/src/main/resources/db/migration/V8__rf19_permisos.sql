@@ -64,3 +64,24 @@ SELECT r.id, p.id FROM rol r JOIN permiso p ON (
         OR (r.nombre_rol = 'PATROCINADOR' AND p.codigo IN (
                                                            'GESTIONAR_PATROCINIOS','VER_METRICAS_AUDIENCIA'))
     );
+-- ---------------------------------------------------------------------
+-- Primeros administradores de la plataforma (miembros del equipo).
+-- Solo aplica a cuentas que ya existan al correr la migración; a quien
+-- inicie sesión después se le puede asignar ADMIN desde el panel (RF-19).
+-- ---------------------------------------------------------------------
+INSERT INTO usuario_rol (usuario_id, rol_id)
+SELECT u.id, r.id
+FROM usuario u
+         JOIN rol r ON r.nombre_rol = 'ADMIN'
+WHERE lower(u.correo) IN (
+                          'gvalverdem@ucenfotec.ac.cr',
+                          'dchavarriam@ucenfotec.ac.cr',
+                          'mmoralesc@ucenfotec.ac.cr',
+                          'mcalvoe@ucenfotec.ac.cr',
+                          'ccespedesc@ucenfotec.ac.cr',
+                          'dcarmiola@ucenfotec.ac.cr'
+    )
+  AND NOT EXISTS (SELECT 1
+                  FROM usuario_rol ur
+                  WHERE ur.usuario_id = u.id
+                    AND ur.rol_id = r.id);
