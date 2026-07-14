@@ -1,4 +1,25 @@
 <section class="page">
-  <h1>Ligas</h1>
-  <p class="placeholder">Pendiente EPIC-06.</p>
+  <header class="page-head">
+    <h1>Ligas</h1>
+    <a class="btn btn-primary" routerLink="nuevo">+ Nueva liga</a>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Cargando ligas…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (leagues().length === 0) {
+    <p class="empty">Aún no hay ligas. Creá la primera con <strong>Nueva liga</strong>.</p>
+  } @else {
+    <ul class="league-list">
+      @for (liga of leagues(); track liga.id) {
+        <li class="league-card">
+          <a [routerLink]="[liga.id]" class="league-link">
+            <span class="league-name">{{ liga.nombre }}</span>
+            <span class="league-meta">{{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
 </section>

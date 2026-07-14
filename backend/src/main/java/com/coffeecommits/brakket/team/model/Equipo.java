@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "equipo")
 @Getter
@@ -39,8 +41,37 @@ public class Equipo {
     @JoinColumn(name = "juego_id")
     private Juego juego;
 
-    // ACTIVO o DISUELTO; RF-03 lo cambia al disolver y RF-05 filtra por él.
+    /**
+     * Ciclo de vida del equipo (RF-02/RF-03): ACTIVO, BLOQUEADO (disputa o
+     * revisión administrativa activa), DISUELTO. La disolución es lógica —
+     * el equipo nunca se borra de la base. El perfil público (RF-04) lo usa
+     * para mostrar el aviso de equipo disuelto.
+     */
     @Column(name = "estado", nullable = false, length = 20)
     @Builder.Default
     private String estado = "ACTIVO";
+
+    /** Visibilidad del perfil público del equipo: PUBLIC / PRIVATE. */
+    @Column(name = "estado_privacidad", nullable = false, length = 20)
+    @Builder.Default
+    private String estadoPrivacidad = "PUBLIC";
+
+    /**
+     * Control de concurrencia optimista. JPA la gestiona automáticamente:
+     * incrementa en cada UPDATE y lanza OptimisticLockingFailureException
+     * si la fila fue modificada por otra transacción entre medio.
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
+    @Column(name = "fecha_disolucion")
+    private LocalDateTime fechaDisolucion;
+
+    @Column(name = "motivo_disolucion", length = 500)
+    private String motivoDisolucion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "disuelto_por")
+    private Usuario disueltoPor;
 }

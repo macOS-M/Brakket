@@ -1,0 +1,69 @@
+<section class="page">
+  <a class="volver" routerLink="/teams">← Volver a equipos</a>
+  @if (cargando()) {
+    <div class="estado-pagina">Cargando perfil del equipo...</div>
+  } @else if (error()) {
+    <div class="estado-pagina error">{{ error() }}</div>
+  } @else {
+    @if (perfil(); as equipo) {
+      <article class="perfil">
+        <header class="hero">
+          <div class="logo" [class.sin-logo]="!equipo.logo">
+            @if (equipo.logo) { <img [src]="equipo.logo" [alt]="'Logo de ' + equipo.nombre" /> }
+            @else { <span>{{ iniciales(equipo.nombre) }}</span> }
+          </div>
+          <div class="hero-info"><p class="eyebrow">Perfil público de equipo</p><h1>{{ equipo.nombre }}</h1><p class="juego">{{ equipo.juegoNombre || 'Sin juego principal definido' }}</p></div>
+          <div class="hero-actions"><span class="estado" [class.restringido]="equipo.estado !== 'ACTIVO'">{{ equipo.estado }}</span></div>
+        </header>
+
+        @if (equipo.estado === 'DISUELTO') {
+          <p class="aviso">Este equipo se encuentra disuelto. Se conserva su información histórica.</p>
+        } @else if (equipo.estado !== 'ACTIVO') {
+          <p class="aviso">Este equipo tiene una restricción administrativa o una disputa activa.</p>
+        }
+
+        <div class="contenido">
+          <section class="tarjeta descripcion"><p class="eyebrow">Acerca del equipo</p><h2>Trayectoria</h2><p>{{ equipo.descripcion || 'El equipo todavía no ha agregado una descripción pública.' }}</p></section>
+
+          <section class="tarjeta estadisticas">
+            <div class="seccion-titulo"><div><p class="eyebrow">Rendimiento en {{ equipo.juegoNombre || 'el juego seleccionado' }}</p><h2>Estadísticas generales</h2></div><a [routerLink]="['/statistics']" [queryParams]="{ equipoId: equipo.id, juegoId: equipo.juegoId }">Ver detalle</a></div>
+            @if (equipo.estadisticas.disponibles) {
+              <div class="metricas">
+                <div><strong>{{ equipo.estadisticas.victorias }}</strong><span>Victorias</span></div>
+                <div><strong>{{ equipo.estadisticas.derrotas }}</strong><span>Derrotas</span></div>
+                <div><strong>{{ porcentajeVictorias(equipo.estadisticas.victorias, equipo.estadisticas.derrotas) }}</strong><span>Tasa de victoria</span></div>
+                <div><strong>{{ equipo.estadisticas.torneosJugados }}</strong><span>Torneos jugados</span></div>
+              </div>
+            } @else { <p class="sin-datos">No hay datos competitivos históricos para el juego seleccionado.</p> }
+          </section>
+
+          <section class="tarjeta plantilla">
+            <div class="seccion-titulo"><div><p class="eyebrow">Integrantes activos</p><h2>Plantilla actual</h2></div><span>{{ equipo.plantilla.length }} integrantes</span></div>
+            @if (equipo.plantilla.length) {
+              <div class="miembros">
+                @for (miembro of equipo.plantilla; track miembro.usuarioId) {
+                  <div class="miembro"><span class="avatar">{{ iniciales(miembro.nombre) }}</span><div><strong>{{ miembro.nombre }}</strong><small>Desde {{ miembro.fechaUnion | date:'mediumDate' }}</small></div><span class="rol">{{ miembro.rol }}</span></div>
+                }
+              </div>
+            } @else { <p class="sin-datos">Este equipo no tiene integrantes activos visibles.</p> }
+          </section>
+
+          <section class="tarjeta torneos">
+            <div class="seccion-titulo"><div><p class="eyebrow">Historial competitivo</p><h2>Torneos relacionados</h2></div><a [routerLink]="['/tournaments']" [queryParams]="{ equipoId: equipo.id }">Ver torneos</a></div>
+            @if (equipo.torneos.length) {
+              <div class="torneos-lista">
+                @for (torneo of equipo.torneos; track torneo.id) {
+                  <div class="torneo"><div><strong>{{ torneo.nombre }}</strong><small>{{ torneo.fechaInicio | date:'mediumDate' }} — {{ torneo.fechaFin | date:'mediumDate' }}</small></div><div><span class="etiqueta">{{ torneo.estado }}</span><small>Inscripción: {{ torneo.estadoInscripcion }}</small></div></div>
+                }
+              </div>
+            } @else { <p class="sin-datos">No hay torneos relacionados visibles.</p> }
+          </section>
+
+          @if (equipo.redesSociales.length) {
+            <section class="tarjeta enlaces"><p class="eyebrow">Comunidad</p><h2>Enlaces oficiales</h2><div>@for (red of equipo.redesSociales; track red) { <a [href]="red" target="_blank" rel="noopener noreferrer">{{ red }}</a> }</div></section>
+          }
+        </div>
+      </article>
+    }
+  }
+</section>
