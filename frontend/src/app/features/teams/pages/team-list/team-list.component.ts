@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap, takeUntil } from 'rxjs';
 
 import { EquipoBusqueda, Pagina } from '../../../../models/equipo.model';
 import { Juego } from '../../../../models/juego.model';
@@ -27,6 +27,8 @@ export class TeamListComponent implements OnInit, OnDestroy {
   private readonly gamesService = inject(GamesService);
   private readonly fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
+  /** Página solicitada; switchMap cancela el request anterior si llega otro. */
+  private readonly busqueda$ = new Subject<number>();
 
   readonly largoMaximoTexto = LARGO_MAXIMO_TEXTO;
 
@@ -45,6 +47,40 @@ export class TeamListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarJuegos();
+
+    // Un único stream de búsqueda: cada emisión cancela el request en vuelo,
+    // así una respuesta vieja nunca pisa a una más reciente.
+    this.busqueda$
+      .pipe(
+        switchMap((page) => {
+          this.cargando.set(true);
+          this.error.set(null);
+          const { q, juegoId, disciplina, estado } = this.filtros.getRawValue();
+          return this.teamsService
+            .buscar({
+              q: q.trim() || undefined,
+              juegoId: juegoId ? Number(juegoId) : undefined,
+              disciplina: disciplina || undefined,
+              estado: estado || undefined,
+              page,
+              size: TAMANO_PAGINA
+            })
+            .pipe(
+              map((pagina) => ({ pagina, fallo: false })),
+              catchError(() => of({ pagina: null, fallo: true }))
+            );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(({ pagina, fallo }) => {
+        if (fallo) {
+          this.error.set('No se pudo realizar la búsqueda de equipos.');
+        } else {
+          this.pagina.set(pagina);
+        }
+        this.cargando.set(false);
+      });
+
     this.buscar(0);
     this.filtros.valueChanges
       .pipe(
@@ -61,28 +97,7 @@ export class TeamListComponent implements OnInit, OnDestroy {
   }
 
   buscar(page: number): void {
-    this.cargando.set(true);
-    this.error.set(null);
-    const { q, juegoId, disciplina, estado } = this.filtros.getRawValue();
-    this.teamsService
-      .buscar({
-        q: q.trim() || undefined,
-        juegoId: juegoId ? Number(juegoId) : undefined,
-        disciplina: disciplina || undefined,
-        estado: estado || undefined,
-        page,
-        size: TAMANO_PAGINA
-      })
-      .subscribe({
-        next: (pagina) => {
-          this.pagina.set(pagina);
-          this.cargando.set(false);
-        },
-        error: () => {
-          this.error.set('No se pudo realizar la búsqueda de equipos.');
-          this.cargando.set(false);
-        }
-      });
+    this.busqueda$.next(page);
   }
 
   reintentar(): void {

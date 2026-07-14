@@ -69,9 +69,21 @@ public class TeamSearchServiceImpl implements TeamSearchService {
                                                   String disciplina,
                                                   String estado) {
         List<Specification<Equipo>> condiciones = new ArrayList<>();
+
+        // El DTO siempre proyecta datos del juego: se trae con fetch en la
+        // misma query (evita un select extra por cada equipo de la página).
+        // La query de conteo no admite fetch, por eso se excluye.
+        condiciones.add((root, query, cb) -> {
+            if (query != null && !Long.class.equals(query.getResultType())) {
+                root.fetch("juego", JoinType.LEFT);
+            }
+            return cb.conjunction();
+        });
+
         if (texto != null) {
+            String patron = "%" + escaparComodinesLike(texto) + "%";
             condiciones.add((root, query, cb) ->
-                    cb.like(cb.lower(root.get("nombre")), "%" + texto + "%"));
+                    cb.like(cb.lower(root.get("nombre")), patron, '\\'));
         }
         if (juegoId != null) {
             condiciones.add((root, query, cb) ->
@@ -85,6 +97,14 @@ public class TeamSearchServiceImpl implements TeamSearchService {
             condiciones.add((root, query, cb) -> cb.equal(root.get("estado"), estado));
         }
         return Specification.allOf(condiciones);
+    }
+
+    /**
+     * Escapa los comodines de LIKE para que se busquen literales: sin esto,
+     * "_" matchea cualquier carácter y "%" cualquier secuencia.
+     */
+    private static String escaparComodinesLike(String texto) {
+        return texto.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     private String normalizarTexto(String texto) {
