@@ -12,7 +12,9 @@
         <h1>{{ liga.nombre }}</h1>
         <p class="meta">{{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}</p>
       </div>
-      <a class="btn btn-ghost" [routerLink]="['editar']">Configurar</a>
+      @if (esComisionado()) {
+        <a class="btn btn-ghost" [routerLink]="['editar']">Configurar</a>
+      }
     </header>
 
     <div class="seasons">
@@ -34,6 +36,7 @@
         </ul>
       }
 
+      @if (esComisionado()) {
       <form [formGroup]="seasonForm" (ngSubmit)="agregarTemporada()" class="season-form">
         <h3>Agregar temporada</h3>
         <div class="row">
@@ -62,6 +65,7 @@
           {{ savingSeason() ? 'Agregando…' : '+ Agregar temporada' }}
         </button>
       </form>
+      }
     </div>
     }
   }

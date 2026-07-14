@@ -2,6 +2,9 @@
   <a class="back" routerLink="/leagues">← Volver a ligas</a>
   <h1>{{ esEdicion ? 'Configurar liga' : 'Nueva liga' }}</h1>
 
+  @if (sinPermiso()) {
+    <p class="error">Solo el comisionado puede configurar esta liga.</p>
+  } @else {
   <form [formGroup]="form" (ngSubmit)="submit()" class="form">
     <label class="field">
       <span class="label">Nombre de la liga</span>
@@ -35,4 +38,5 @@
       <a class="btn btn-ghost" routerLink="/leagues">Cancelar</a>
     </div>
   </form>
+  }
 </section>

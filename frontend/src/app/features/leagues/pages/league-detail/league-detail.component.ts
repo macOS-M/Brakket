@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { AuthService } from '../../../../core/services/auth.service';
 import { League, Season, SeasonRequest } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
 
@@ -21,6 +22,7 @@ export class LeagueDetailComponent {
   private readonly fb = inject(FormBuilder);
   private readonly leaguesService = inject(LeaguesService);
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
 
   readonly league = signal<League | null>(null);
   readonly seasons = signal<Season[]>([]);
@@ -28,6 +30,13 @@ export class LeagueDetailComponent {
   readonly error = signal<string | null>(null);
   readonly savingSeason = signal(false);
   readonly seasonError = signal<string | null>(null);
+
+  /** Solo el comisionado ve las acciones de configuración (el backend igual las protege). */
+  readonly esComisionado = computed(() => {
+    const liga = this.league();
+    const usuario = this.auth.usuario();
+    return !!liga && !!usuario?.id && Number(usuario.id) === liga.comisionadoId;
+  });
 
   private ligaId!: number;
 

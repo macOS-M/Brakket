@@ -1,7 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { AuthService } from '../../../../core/services/auth.service';
 import { GameOption, League, LeagueRequest } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
 
@@ -21,11 +22,20 @@ export class LeagueFormComponent {
   private readonly leaguesService = inject(LeaguesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   readonly games = signal<GameOption[]>([]);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly leagueId = signal<number | null>(null);
+  private readonly ligaCargada = signal<League | null>(null);
+
+  /** En modo edición, si el usuario actual no es el comisionado se bloquea el form. */
+  readonly sinPermiso = computed(() => {
+    const liga = this.ligaCargada();
+    const usuario = this.auth.usuario();
+    return !!liga && !!usuario?.id && Number(usuario.id) !== liga.comisionadoId;
+  });
 
   readonly form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(150)]],
@@ -43,8 +53,10 @@ export class LeagueFormComponent {
       const id = Number(idParam);
       this.leagueId.set(id);
       this.leaguesService.getById(id).subscribe({
-        next: (liga: League) =>
-          this.form.patchValue({ nombre: liga.nombre, juegoId: liga.juegoId }),
+        next: (liga: League) => {
+          this.ligaCargada.set(liga);
+          this.form.patchValue({ nombre: liga.nombre, juegoId: liga.juegoId });
+        },
         error: () => this.error.set('No se pudo cargar la liga.')
       });
     }

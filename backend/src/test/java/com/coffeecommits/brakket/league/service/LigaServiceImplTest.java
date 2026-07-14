@@ -3,11 +3,14 @@ package com.coffeecommits.brakket.league.service;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
+import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
+import com.coffeecommits.brakket.league.dto.ActualizarLigaRequest;
 import com.coffeecommits.brakket.league.dto.CrearLigaRequest;
 import com.coffeecommits.brakket.league.dto.CrearTemporadaRequest;
+import com.coffeecommits.brakket.league.dto.JuegoOpcionResponse;
 import com.coffeecommits.brakket.league.dto.LigaResponse;
 import com.coffeecommits.brakket.league.dto.TemporadaResponse;
 import com.coffeecommits.brakket.league.model.Liga;
@@ -20,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -137,7 +141,88 @@ class LigaServiceImplTest {
                 "Temporada 1", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1));
 
         assertThatThrownBy(() -> ligaService.crearTemporada(50L, "beto@brakket.gg", req))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(ForbiddenException.class);
         verify(temporadaRepository, never()).save(any());
+    }
+
+    @Test
+    void crearLiga_rechaza_juego_inactivo() {
+        Juego inactivo = Juego.builder().id(4L).nombre("Juego Viejo").genero("MOBA").activo(false).build();
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
+        when(juegoRepository.findById(4L)).thenReturn(Optional.of(inactivo));
+
+        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 4L)))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(ligaRepository, never()).save(any(Liga.class));
+    }
+
+    @Test
+    void crearTemporada_rechaza_fechas_solapadas_con_otra_temporada() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
+        when(temporadaRepository.existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
+                50L, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 8, 1))).thenReturn(true);
+
+        CrearTemporadaRequest req = new CrearTemporadaRequest(
+                "Temporada 2", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1));
+
+        assertThatThrownBy(() -> ligaService.crearTemporada(50L, CORREO, req))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("solapan");
+        verify(temporadaRepository, never()).save(any());
+    }
+
+    @Test
+    void actualizarLiga_bloquea_a_quien_no_es_comisionado() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        Usuario otro = Usuario.builder().id(2L).nombre("Beto").correo("beto@brakket.gg").build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo("beto@brakket.gg")).thenReturn(Optional.of(otro));
+
+        assertThatThrownBy(() -> ligaService.actualizarLiga(
+                50L, "beto@brakket.gg", new ActualizarLigaRequest("Otro nombre", 3L)))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void actualizarLiga_rechaza_nombre_duplicado_al_renombrar() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
+        when(ligaRepository.existsByComisionadoIdAndNombreIgnoreCase(1L, "Liga Elite")).thenReturn(true);
+
+        assertThatThrownBy(() -> ligaService.actualizarLiga(
+                50L, CORREO, new ActualizarLigaRequest("Liga Elite", 3L)))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void actualizarLiga_permite_renombrar_cambiando_solo_mayusculas() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
+        when(juegoRepository.findById(3L)).thenReturn(Optional.of(juego()));
+
+        LigaResponse resp = ligaService.actualizarLiga(
+                50L, CORREO, new ActualizarLigaRequest("LIGA PRO", 3L));
+
+        assertThat(resp.nombre()).isEqualTo("LIGA PRO");
+        verify(ligaRepository, never()).existsByComisionadoIdAndNombreIgnoreCase(any(), any());
+    }
+
+    @Test
+    void listarJuegosDisponibles_filtra_juegos_inactivos() {
+        Juego inactivo = Juego.builder().id(4L).nombre("Juego Viejo").genero("MOBA").activo(false).build();
+        when(juegoRepository.findAll()).thenReturn(List.of(juego(), inactivo));
+
+        List<JuegoOpcionResponse> opciones = ligaService.listarJuegosDisponibles();
+
+        assertThat(opciones).hasSize(1);
+        assertThat(opciones.get(0).nombre()).isEqualTo("Valorant");
     }
 }

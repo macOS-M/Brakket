@@ -3,6 +3,7 @@ package com.coffeecommits.brakket.league.service;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
+import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
@@ -110,6 +111,10 @@ public class LigaServiceImpl implements LigaService {
         if (!request.fechaFin().isAfter(request.fechaInicio())) {
             throw new BusinessException("La fecha de fin debe ser posterior a la fecha de inicio");
         }
+        if (temporadaRepository.existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
+                ligaId, request.fechaFin(), request.fechaInicio())) {
+            throw new BusinessException("Las fechas se solapan con otra temporada de esta liga");
+        }
 
         Temporada temporada = temporadaRepository.save(Temporada.builder()
                 .liga(liga)
@@ -142,13 +147,18 @@ public class LigaServiceImpl implements LigaService {
     }
 
     private Juego buscarJuego(Long juegoId) {
-        return juegoRepository.findById(juegoId)
+        Juego juego = juegoRepository.findById(juegoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Juego", juegoId));
+        if (!Boolean.TRUE.equals(juego.getActivo())) {
+            throw new IllegalArgumentException(
+                    "El juego '%s' no está disponible para ligas".formatted(juego.getNombre()));
+        }
+        return juego;
     }
 
     private void asegurarEsComisionado(Liga liga, Usuario usuario) {
         if (!liga.getComisionado().getId().equals(usuario.getId())) {
-            throw new BusinessException("Solo el comisionado puede configurar esta liga");
+            throw new ForbiddenException("Solo el comisionado puede configurar esta liga");
         }
     }
 }
