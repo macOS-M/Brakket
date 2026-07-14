@@ -12,6 +12,8 @@ export interface Equipo {
   /** Versión para control de concurrencia optimista; se reenvía en el PUT. */
   version: number;
   redesSociales: string[];
+  fechaDisolucion: string | null;
+  motivoDisolucion: string | null;
 }
 
 export interface CrearEquipoRequest {
@@ -35,4 +37,9 @@ export interface EditarEquipoRequest {
   estadoPrivacidad?: string | null;
   /** Versión leída en el GET; el backend responde 409 si alguien guardó entre medio. */
   version?: number;
+}
+
+export interface DisolverEquipoRequest {
+  confirmacion: boolean;
+  motivo: string | null;
 }

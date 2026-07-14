@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
+import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
 import { TeamsService } from '../../services/teams.service';
 
@@ -20,6 +21,13 @@ export class TeamRosterComponent implements OnInit {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly guardandoId = signal<number | null>(null);
+
+  // RF-03: disolución del equipo (solo el capitán; el backend lo valida).
+  readonly confirmaDisolucion = signal(false);
+  readonly motivoDisolucion = signal('');
+  readonly disolviendo = signal(false);
+  readonly errorDisolucion = signal<string | null>(null);
+  readonly equipoDisuelto = signal<Equipo | null>(null);
 
   private equipoId!: number;
 
@@ -58,6 +66,27 @@ export class TeamRosterComponent implements OnInit {
         const mensaje = err?.error?.message ?? 'No se pudo cambiar el rol.';
         alert(mensaje);
         this.cargarMiembros();
+      }
+    });
+  }
+
+  disolverEquipo(): void {
+    if (!this.confirmaDisolucion() || this.disolviendo() || this.equipoDisuelto()) {
+      return;
+    }
+    this.disolviendo.set(true);
+    this.errorDisolucion.set(null);
+    this.teamsService.disolver(this.equipoId, {
+      confirmacion: true,
+      motivo: this.motivoDisolucion().trim() || null
+    }).subscribe({
+      next: (equipo) => {
+        this.disolviendo.set(false);
+        this.equipoDisuelto.set(equipo);
+      },
+      error: (err) => {
+        this.disolviendo.set(false);
+        this.errorDisolucion.set(err?.error?.message ?? 'No se pudo disolver el equipo.');
       }
     });
   }

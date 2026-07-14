@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "equipo")
 @Getter
@@ -41,7 +43,8 @@ public class Equipo {
 
     /**
      * Ciclo de vida del equipo (RF-02/RF-03): ACTIVO, BLOQUEADO (disputa o
-     * revisión administrativa activa), DISUELTO.
+     * revisión administrativa activa), DISUELTO. La disolución es lógica —
+     * el equipo nunca se borra de la base.
      */
     @Column(name = "estado", nullable = false, length = 20)
     @Builder.Default
@@ -60,4 +63,14 @@ public class Equipo {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    @Column(name = "fecha_disolucion")
+    private LocalDateTime fechaDisolucion;
+
+    @Column(name = "motivo_disolucion", length = 500)
+    private String motivoDisolucion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "disuelto_por")
+    private Usuario disueltoPor;
 }
