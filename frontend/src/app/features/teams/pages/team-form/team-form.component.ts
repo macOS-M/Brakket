@@ -29,6 +29,9 @@ export class TeamFormComponent implements OnInit {
   /** null = modo "crear"; con valor = modo "editar" ese equipo. */
   readonly equipoId = signal<number | null>(null);
 
+  /** Versión del equipo leída en el GET; viaja en el PUT (concurrencia optimista). */
+  private readonly version = signal<number | null>(null);
+
   readonly form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
     logo: [''],
@@ -64,6 +67,7 @@ export class TeamFormComponent implements OnInit {
     this.cargando.set(true);
     this.teamsService.obtenerPorId(id).subscribe({
       next: (equipo) => {
+        this.version.set(equipo.version);
         this.form.patchValue({
           nombre: equipo.nombre,
           logo: equipo.logo ?? '',
@@ -104,15 +108,19 @@ export class TeamFormComponent implements OnInit {
     const valores = this.form.getRawValue();
 
     if (this.esEdicion) {
+      // logo/descripción viajan tal cual: el string vacío le indica al
+      // backend que borre el campo (null significaría "no tocar").
       this.teamsService.editar(this.equipoId()!, {
         nombre: valores.nombre,
-        logo: valores.logo || null,
-        descripcion: valores.descripcion || null,
+        logo: valores.logo.trim(),
+        descripcion: valores.descripcion.trim(),
         juegoId: valores.juegoId,
         estadoPrivacidad: valores.estadoPrivacidad,
-        redesSociales: valores.redesSociales
+        redesSociales: valores.redesSociales,
+        version: this.version() ?? undefined
       }).subscribe({
-        next: () => {
+        next: (equipo) => {
+          this.version.set(equipo.version);
           this.guardando.set(false);
           this.exito.set('Cambios guardados correctamente.');
         },

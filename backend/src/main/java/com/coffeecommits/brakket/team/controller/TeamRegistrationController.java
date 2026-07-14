@@ -32,10 +32,10 @@ public class TeamRegistrationController {
     }
 
     /**
-     * RF-02: edición parcial de equipo. La autorización (solo el capitán
-     * puede editar) se valida dentro del servicio, comparando el usuario
-     * autenticado contra Equipo.capitan — no es un permiso global de
-     * plataforma, sino sobre ese equipo puntual.
+     * RF-02: edición parcial de equipo. La autorización (solo un capitán
+     * activo puede editar) se valida dentro del servicio contra
+     * miembro_equipo.rol, la misma fuente de verdad que usa RF-09 — no es
+     * un permiso global de plataforma, sino sobre ese equipo puntual.
      */
     @PutMapping("/{equipoId}")
     public EquipoResponse editar(@PathVariable Long equipoId,

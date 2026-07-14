@@ -20,6 +20,7 @@ import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +28,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TeamRegistrationServiceImpl implements TeamRegistrationService {
+
+    /** Estados de inscripción que ya no comprometen al equipo (convención de RF-03). */
+    private static final Set<String> INSCRIPCION_ESTADOS_CERRADOS =
+            Set.of("RECHAZADA", "CANCELADA", "FINALIZADA");
 
     private final EquipoRepository equipoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -141,7 +147,13 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         Usuario actor = usuarioRepository.findByCorreo(actorCorreo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", actorCorreo));
 
-        if (!equipo.getCapitan().getId().equals(actor.getId())) {
+        // La capitanía vigente vive en miembro_equipo (RF-09 permite transferirla
+        // y tener más de un capitán); equipo.capitan solo registra al fundador.
+        boolean esCapitanActivo = miembroEquipoRepository
+                .findByEquipoIdAndUsuarioId(equipoId, actor.getId())
+                .filter(m -> "CAPITAN".equals(m.getRol()) && "ACTIVO".equals(m.getEstado()))
+                .isPresent();
+        if (!esCapitanActivo) {
             throw new AccessDeniedException("Solo el capitán del equipo puede editar su información.");
         }
 
@@ -153,9 +165,16 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                     "El equipo está bloqueado por una revisión administrativa o disputa activa.");
         }
 
+        // Concurrencia optimista (RF-02): el cliente manda la versión que leyó
+        // en el GET; si otro usuario guardó entre medio, se rechaza con 409 en
+        // vez de pisar sus cambios en silencio.
+        if (request.version() != null && !request.version().equals(equipo.getVersion())) {
+            throw new ObjectOptimisticLockingFailureException(Equipo.class, equipoId);
+        }
+
         if (request.nombre() != null && !request.nombre().isBlank()
                 && !request.nombre().equals(equipo.getNombre())) {
-            equipoRepository.findByNombre(request.nombre()).ifPresent(existente -> {
+            equipoRepository.findByNombreIgnoreCase(request.nombre()).ifPresent(existente -> {
                 if (!existente.getId().equals(equipoId)) {
                     throw new BusinessException(
                             "Ya existe un equipo con el nombre '%s'".formatted(request.nombre()));
@@ -164,12 +183,14 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
             equipo.setNombre(request.nombre());
         }
 
+        // Contrato de edición parcial: null = no tocar; string vacío = borrar
+        // (es la única forma que tiene el formulario de limpiar un campo).
         if (request.logo() != null) {
-            equipo.setLogo(request.logo());
+            equipo.setLogo(request.logo().isBlank() ? null : request.logo());
         }
 
         if (request.descripcion() != null) {
-            equipo.setDescripcion(request.descripcion());
+            equipo.setDescripcion(request.descripcion().isBlank() ? null : request.descripcion());
         }
 
         if (request.estadoPrivacidad() != null) {
@@ -201,13 +222,10 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                     redSocialRepository.save(EquipoRedSocial.builder().equipo(equipo).url(url).build()));
         }
 
-        final Equipo equipoActualizado;
-        try {
-            equipoActualizado = equipoRepository.save(equipo);
-        } catch (DataIntegrityViolationException e) {
-            throw new BusinessException(
-                    "Ya existe un equipo con el nombre '%s'".formatted(request.nombre()));
-        }
+        // La entidad es managed: el UPDATE se difiere al commit, así que un
+        // try/catch de integridad aquí nunca atraparía nada. La carrera de
+        // nombre duplicado la cubre el UNIQUE de la BD.
+        Equipo equipoActualizado = equipoRepository.save(equipo);
 
         logAuditoriaRepository.save(LogAuditoria.builder()
                 .usuario(actor)
@@ -225,17 +243,19 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
     }
 
     /**
-     * "Activo" se determina por rango de fechas del torneo (fechaInicio <=
-     * hoy <= fechaFin), ya que el módulo tournament aún no define valores
-     * canónicos para Torneo.estado. Revisar esta lógica cuando ese módulo
-     * tenga su propio servicio con estados formalizados.
+     * "Activo" = torneo vigente o futuro (fechaFin >= hoy) con una inscripción
+     * que no esté cerrada. Un torneo que empieza mañana también bloquea el
+     * cambio de disciplina: el equipo ya está comprometido con ese juego.
+     * Los estados cerrados siguen la misma convención que RF-03; revisar
+     * cuando el módulo tournament formalice sus estados.
      */
     private boolean participaEnTorneoActivo(Long equipoId) {
         LocalDate hoy = LocalDate.now();
         List<Inscripcion> inscripciones = inscripcionRepository.findByEquipoId(equipoId);
         return inscripciones.stream()
+                .filter(inscripcion -> inscripcion.getEstado() == null
+                        || !INSCRIPCION_ESTADOS_CERRADOS.contains(inscripcion.getEstado().toUpperCase()))
                 .map(Inscripcion::getTorneo)
-                .anyMatch(torneo -> !hoy.isBefore(torneo.getFechaInicio())
-                        && !hoy.isAfter(torneo.getFechaFin()));
+                .anyMatch(torneo -> !hoy.isAfter(torneo.getFechaFin()));
     }
 }

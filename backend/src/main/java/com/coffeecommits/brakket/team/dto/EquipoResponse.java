@@ -15,6 +15,7 @@ public record EquipoResponse(
         String capitanNombre,
         String estado,
         String estadoPrivacidad,
+        Long version,
         List<String> redesSociales
 ) {
 
@@ -30,6 +31,7 @@ public record EquipoResponse(
                 equipo.getCapitan().getNombre(),
                 equipo.getEstado(),
                 equipo.getEstadoPrivacidad(),
+                equipo.getVersion(),
                 redesSociales
         );
     }

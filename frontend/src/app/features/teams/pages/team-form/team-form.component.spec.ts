@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { TeamFormComponent } from './team-form.component';
@@ -14,13 +14,16 @@ describe('TeamFormComponent', () => {
     const gamesServiceMock = { listActivos: () => of([]) };
     const teamsServiceMock = { crear: () => of({ id: 1 }) };
     const routerMock = { navigate: () => Promise.resolve(true) };
+    // Sin equipoId en la ruta: el form arranca en modo "crear".
+    const routeMock = { snapshot: { paramMap: { get: () => null } } };
 
     await TestBed.configureTestingModule({
       imports: [TeamFormComponent],
       providers: [
         { provide: GamesService, useValue: gamesServiceMock },
         { provide: TeamsService, useValue: teamsServiceMock },
-        { provide: Router, useValue: routerMock }
+        { provide: Router, useValue: routerMock },
+        { provide: ActivatedRoute, useValue: routeMock }
       ]
     }).compileComponents();
 
