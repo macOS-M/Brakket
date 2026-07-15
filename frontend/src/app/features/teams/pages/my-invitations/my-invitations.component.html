@@ -1,0 +1,45 @@
+<section class="page">
+  <h1>Mis invitaciones</h1>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando invitaciones...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (invitaciones().length === 0) {
+  <p class="placeholder">No tienes invitaciones pendientes.</p>
+  } @else {
+  <div class="lista">
+    @for (inv of invitaciones(); track inv.id) {
+    <div class="invitacion-card">
+      <div class="info">
+        <p class="equipo">{{ inv.equipoNombre }}</p>
+        <p class="detalle">
+          {{ inv.creadoPorNombre }} te invitó como <strong>{{ inv.rolPropuesto }}</strong>
+        </p>
+        @if (inv.mensaje) {
+        <p class="mensaje">"{{ inv.mensaje }}"</p>
+        }
+      </div>
+      <div class="acciones">
+        <button
+          type="button"
+          class="btn-aceptar"
+          [disabled]="respondiendoId() === inv.id"
+          (click)="responder(inv, true)"
+        >
+          Aceptar
+        </button>
+        <button
+          type="button"
+          class="btn-rechazar"
+          [disabled]="respondiendoId() === inv.id"
+          (click)="responder(inv, false)"
+        >
+          Rechazar
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</section>
