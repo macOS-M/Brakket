@@ -15,5 +15,11 @@ export const routes: Routes = [
     path: ':id/editar',
     loadComponent: () =>
       import('./pages/game-form/game-form.component').then((m) => m.GameFormComponent)
+  },
+  {
+    path: ':juegoId/perfil-competitivo',
+    loadComponent: () =>
+      import('./pages/competitive-profile-form/competitive-profile-form.component')
+        .then((m) => m.CompetitiveProfileFormComponent)
   }
 ];

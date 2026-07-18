@@ -27,8 +27,11 @@
         }
       </div>
       <div class="acciones">
+        @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'perfil-competitivo']">Perfil competitivo</a>
         <a class="btn-secondary" [routerLink]="['/games', juego.id, 'editar']">Editar</a>
         <button class="btn-danger" type="button" (click)="desactivar(juego)">Desactivar</button>
+        }
       </div>
     </div>
     }
