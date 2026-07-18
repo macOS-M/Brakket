@@ -1,10 +1,19 @@
 <section class="page">
-  <h1>Nuevo equipo</h1>
+  <h1>{{ esEdicion ? 'Editar equipo' : 'Nuevo equipo' }}</h1>
+
+  @if (cargando()) {
+  <p class="placeholder inline">Cargando información del equipo...</p>
+  }
 
   @if (error()) {
   <p class="mensaje-error">{{ error() }}</p>
   }
 
+  @if (exito()) {
+  <p class="mensaje-exito">{{ exito() }}</p>
+  }
+
+  @if (!cargando()) {
   <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
     <div class="campo">
       <label for="nombre">Nombre *</label>
@@ -40,6 +49,16 @@
       }
     </div>
 
+    @if (esEdicion) {
+    <div class="campo">
+      <label for="estadoPrivacidad">Visibilidad del equipo</label>
+      <select id="estadoPrivacidad" formControlName="estadoPrivacidad">
+        <option value="PUBLIC">Público</option>
+        <option value="PRIVATE">Privado</option>
+      </select>
+    </div>
+    }
+
     <div class="campo">
       <label>Redes sociales</label>
       @for (control of redesSociales.controls; track $index) {
@@ -54,8 +73,9 @@
     <div class="acciones">
       <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
       <button type="submit" class="btn-primary" [disabled]="guardando()">
-        {{ guardando() ? 'Guardando...' : 'Crear equipo' }}
+        {{ guardando() ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Crear equipo') }}
       </button>
     </div>
   </form>
+  }
 </section>

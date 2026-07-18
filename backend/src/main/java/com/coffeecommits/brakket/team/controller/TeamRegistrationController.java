@@ -1,6 +1,7 @@
 package com.coffeecommits.brakket.team.controller;
 
 import com.coffeecommits.brakket.team.dto.CrearEquipoRequest;
+import com.coffeecommits.brakket.team.dto.EditarEquipoRequest;
 import com.coffeecommits.brakket.team.dto.EquipoResponse;
 import com.coffeecommits.brakket.team.service.TeamRegistrationService;
 import jakarta.validation.Valid;
@@ -23,5 +24,23 @@ public class TeamRegistrationController {
     public EquipoResponse crear(@Valid @RequestBody CrearEquipoRequest request,
                                 Authentication authentication) {
         return teamRegistrationService.crear(request, authentication.getName());
+    }
+
+    @GetMapping("/{equipoId}")
+    public EquipoResponse obtenerPorId(@PathVariable Long equipoId) {
+        return teamRegistrationService.obtenerPorId(equipoId);
+    }
+
+    /**
+     * RF-02: edición parcial de equipo. La autorización (solo un capitán
+     * activo puede editar) se valida dentro del servicio contra
+     * miembro_equipo.rol, la misma fuente de verdad que usa RF-09 — no es
+     * un permiso global de plataforma, sino sobre ese equipo puntual.
+     */
+    @PutMapping("/{equipoId}")
+    public EquipoResponse editar(@PathVariable Long equipoId,
+                                 @Valid @RequestBody EditarEquipoRequest request,
+                                 Authentication authentication) {
+        return teamRegistrationService.editar(equipoId, request, authentication.getName());
     }
 }

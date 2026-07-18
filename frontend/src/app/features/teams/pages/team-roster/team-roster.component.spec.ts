@@ -1,116 +1,110 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { of } from 'rxjs';
 
-import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
+import { TeamRosterComponent } from './team-roster.component';
 import { TeamsService } from '../../services/teams.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
-@Component({
-  selector: 'app-team-roster',
-  standalone: true,
-  imports: [ReactiveFormsModule],
-  templateUrl: './team-roster.component.html',
-  styleUrl: './team-roster.component.scss'
-})
-export class TeamRosterComponent implements OnInit {
-  private readonly route = inject(ActivatedRoute);
-  private readonly teamsService = inject(TeamsService);
-  private readonly authService = inject(AuthService);
-  private readonly fb = inject(FormBuilder);
+describe('TeamRosterComponent', () => {
+  let component: TeamRosterComponent;
+  let fixture: ComponentFixture<TeamRosterComponent>;
+  let teamsService: TeamsService;
 
-  readonly roles = ROLES_EQUIPO;
-  readonly miembros = signal<MiembroEquipo[]>([]);
-  readonly cargando = signal(true);
-  readonly error = signal<string | null>(null);
-  readonly guardandoId = signal<number | null>(null);
+  const equipoDisuelto = {
+    id: 1,
+    nombre: 'Coffee&Commits',
+    logo: null,
+    descripcion: null,
+    estado: 'DISUELTO',
+    fechaDisolucion: '2026-07-10T12:00:00',
+    motivoDisolucion: 'Fin de temporada'
+  };
 
-  readonly invitando = signal(false);
-  readonly errorInvitar = signal<string | null>(null);
-  readonly invitacionEnviada = signal(false);
-  readonly esCapitan = signal(false);
+  beforeEach(async () => {
+    const teamsServiceMock = {
+      listMiembros: () => of([]),
+      cambiarRol: () => of({}),
+      disolver: () => of(equipoDisuelto),
+      invitar: () => of({})
+    };
 
-  private equipoId!: number;
+    const authServiceMock = {
+      usuario: () => ({ id: 1 })
+    };
 
-  readonly invitarForm = this.fb.nonNullable.group({
-    jugadorId: [null as number | null, [Validators.required]],
-    rolPropuesto: ['TITULAR', [Validators.required]],
-    mensaje: ['']
+    await TestBed.configureTestingModule({
+      imports: [TeamRosterComponent],
+      providers: [
+        { provide: TeamsService, useValue: teamsServiceMock },
+        { provide: AuthService, useValue: authServiceMock },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: { get: () => '1' } } }
+        }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(TeamRosterComponent);
+    component = fixture.componentInstance;
+    teamsService = TestBed.inject(TeamsService);
+    fixture.detectChanges();
   });
 
-  ngOnInit(): void {
-    this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
-    this.cargarMiembros();
-  }
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 
-  cargarMiembros(): void {
-    this.cargando.set(true);
-    this.error.set(null);
-    this.teamsService.listMiembros(this.equipoId).subscribe({
-      next: (miembros) => {
-        this.miembros.set(miembros);
-        this.cargando.set(false);
-        this.actualizarEsCapitan();
-      },
-      error: () => {
-        this.error.set('No se pudo cargar la plantilla del equipo.');
-        this.cargando.set(false);
-      }
-    });
-  }
+  it('should load an empty roster without error', () => {
+    expect(component.miembros().length).toBe(0);
+    expect(component.error()).toBeNull();
+  });
 
-  private actualizarEsCapitan(): void {
-    const miId = Number(this.authService.usuario()?.id);
-    const soyCapitan = this.miembros().some(
-      (m) => m.usuarioId === miId && m.rol === 'CAPITAN' && m.estado === 'ACTIVO'
-    );
-    this.esCapitan.set(soyCapitan);
-  }
+  it('should not dissolve the team without explicit confirmation', () => {
+    const spy = spyOn(teamsService, 'disolver').and.callThrough();
 
-  cambiarRol(miembro: MiembroEquipo, nuevoRol: string): void {
-    if (nuevoRol === miembro.rol) {
-      return;
-    }
-    this.guardandoId.set(miembro.usuarioId);
-    this.teamsService.cambiarRol(this.equipoId, miembro.usuarioId, { nuevoRol }).subscribe({
-      next: () => {
-        this.guardandoId.set(null);
-        this.cargarMiembros();
-      },
-      error: (err) => {
-        this.guardandoId.set(null);
-        const mensaje = err?.error?.message ?? 'No se pudo cambiar el rol.';
-        alert(mensaje);
-        this.cargarMiembros();
-      }
-    });
-  }
+    component.disolverEquipo();
 
-  invitar(): void {
-    if (this.invitarForm.invalid) {
-      this.invitarForm.markAllAsTouched();
-      return;
-    }
+    expect(spy).not.toHaveBeenCalled();
+    expect(component.equipoDisuelto()).toBeNull();
+  });
 
-    this.invitando.set(true);
-    this.errorInvitar.set(null);
-    this.invitacionEnviada.set(false);
-    const valores = this.invitarForm.getRawValue();
+  it('should dissolve the team when confirmed, sending the trimmed optional reason', () => {
+    const spy = spyOn(teamsService, 'disolver').and.callThrough();
+    component.confirmaDisolucion.set(true);
+    component.motivoDisolucion.set('  Fin de temporada  ');
 
-    this.teamsService.invitar(this.equipoId, {
-      jugadorId: valores.jugadorId!,
-      rolPropuesto: valores.rolPropuesto,
-      mensaje: valores.mensaje || null
-    }).subscribe({
-      next: () => {
-        this.invitando.set(false);
-        this.invitacionEnviada.set(true);
-        this.invitarForm.reset({ jugadorId: null, rolPropuesto: 'TITULAR', mensaje: '' });
-      },
-      error: (err) => {
-        this.invitando.set(false);
-        this.errorInvitar.set(err?.error?.message ?? 'No se pudo enviar la invitacion.');
-      }
-    });
-  }
-}
+    component.disolverEquipo();
+
+    expect(spy).toHaveBeenCalledWith(1, { confirmacion: true, motivo: 'Fin de temporada' });
+    expect(component.equipoDisuelto()?.estado).toBe('DISUELTO');
+  });
+
+  it('should send a null reason when the reason is left empty', () => {
+    const spy = spyOn(teamsService, 'disolver').and.callThrough();
+    component.confirmaDisolucion.set(true);
+
+    component.disolverEquipo();
+
+    expect(spy).toHaveBeenCalledWith(1, { confirmacion: true, motivo: null });
+  });
+
+  it('should not send an invitation when the form is invalid', () => {
+    const spy = spyOn(teamsService, 'invitar').and.callThrough();
+
+    component.invitar();
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(component.invitarForm.touched).toBeTrue();
+  });
+
+  it('should send an invitation with the proposed role and null message when empty', () => {
+    const spy = spyOn(teamsService, 'invitar').and.callThrough();
+    component.invitarForm.setValue({ jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: '' });
+
+    component.invitar();
+
+    expect(spy).toHaveBeenCalledWith(1, { jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: null });
+    expect(component.invitacionEnviada()).toBeTrue();
+  });
+});

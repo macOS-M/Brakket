@@ -1,4 +1,91 @@
 <section class="page">
-  <h1>Administracion</h1>
-  <p class="placeholder">Pendiente EPIC-15.</p>
+  <h1>Panel de administración</h1>
+
+  @if (usuarioActual; as u) {
+  <div class="panel session-panel">
+    <p class="eyebrow">Mi sesión</p>
+    <p class="nombre">{{ u.correo }}</p>
+    <div class="chips">
+      @for (rol of u.roles; track rol) {
+      <span class="chip">{{ rol }}</span>
+      }
+    </div>
+  </div>
+  }
+
+  <div class="panel">
+    <p class="eyebrow">Catálogo de roles</p>
+    <h2>Roles reconocidos por el sistema</h2>
+
+    <div class="role-list">
+      @for (rol of catalogo; track rol.id) {
+      <div class="role-card">
+        <div class="role-card__top">
+          <span class="role-card__nombre">{{ rol.nombreRol }}</span>
+          <span class="chip chip-alt">Nivel {{ rol.nivel }}</span>
+        </div>
+        <div class="chips">
+          @for (permiso of rol.permisos; track permiso) {
+          <span class="chip chip-alt">{{ permiso }}</span>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="eyebrow">Gestión</p>
+    <h2>Roles de un usuario</h2>
+
+    <div class="field-row">
+      <label>
+        ID de usuario
+        <input type="number" [(ngModel)]="usuarioIdBuscado" placeholder="Ej: 1" />
+      </label>
+      <button type="button" class="save-button" (click)="buscarUsuario()" [disabled]="cargando">
+        Buscar
+      </button>
+    </div>
+
+    @if (mensajeError) {
+    <p class="save-status error">{{ mensajeError }}</p>
+    }
+    @if (mensajeExito) {
+    <p class="save-status success">{{ mensajeExito }}</p>
+    }
+
+    @if (usuarioConsultado; as uc) {
+    <p class="nombre">{{ uc.correo }}</p>
+
+    <p class="eyebrow">Roles actuales</p>
+    @if (uc.roles.length) {
+    <div class="chips">
+      @for (rol of uc.roles; track rol) {
+      <span class="chip chip-removable">
+              {{ rol }}
+              <button type="button" class="chip-remove" (click)="revocarRol(rol)" [disabled]="cargando">✕</button>
+            </span>
+      }
+    </div>
+    } @else {
+    <p class="placeholder inline">Sin roles asignados.</p>
+    }
+
+    <div class="field-row">
+      <label>
+        Asignar rol
+        <select [(ngModel)]="rolSeleccionadoId">
+          <option [ngValue]="null">-- Seleccionar --</option>
+          @for (rol of catalogo; track rol.id) {
+          <option [ngValue]="rol.id">{{ rol.nombreRol }}</option>
+          }
+        </select>
+      </label>
+      <button type="button" class="save-button" (click)="asignarRol()" [disabled]="cargando || !rolSeleccionadoId">
+        + Asignar
+      </button>
+    </div>
+    }
+  </div>
 </section>

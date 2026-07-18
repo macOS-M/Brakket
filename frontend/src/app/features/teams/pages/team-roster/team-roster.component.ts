@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
 import { TeamsService } from '../../services/teams.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -29,6 +30,13 @@ export class TeamRosterComponent implements OnInit {
   readonly errorInvitar = signal<string | null>(null);
   readonly invitacionEnviada = signal(false);
   readonly esCapitan = signal(false);
+
+  // RF-03: disolución del equipo (solo el capitán; el backend lo valida).
+  readonly confirmaDisolucion = signal(false);
+  readonly motivoDisolucion = signal('');
+  readonly disolviendo = signal(false);
+  readonly errorDisolucion = signal<string | null>(null);
+  readonly equipoDisuelto = signal<Equipo | null>(null);
 
   private equipoId!: number;
 
@@ -110,6 +118,27 @@ export class TeamRosterComponent implements OnInit {
       error: (err) => {
         this.invitando.set(false);
         this.errorInvitar.set(err?.error?.message ?? 'No se pudo enviar la invitacion.');
+      }
+    });
+  }
+
+  disolverEquipo(): void {
+    if (!this.confirmaDisolucion() || this.disolviendo() || this.equipoDisuelto()) {
+      return;
+    }
+    this.disolviendo.set(true);
+    this.errorDisolucion.set(null);
+    this.teamsService.disolver(this.equipoId, {
+      confirmacion: true,
+      motivo: this.motivoDisolucion().trim() || null
+    }).subscribe({
+      next: (equipo) => {
+        this.disolviendo.set(false);
+        this.equipoDisuelto.set(equipo);
+      },
+      error: (err) => {
+        this.disolviendo.set(false);
+        this.errorDisolucion.set(err?.error?.message ?? 'No se pudo disolver el equipo.');
       }
     });
   }
