@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../services/games.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 /**
  * Catalogo de juegos (RF-20).
@@ -16,6 +17,7 @@ import { GamesService } from '../../services/games.service';
 })
 export class GameListComponent implements OnInit {
   private readonly gamesService = inject(GamesService);
+  readonly auth = inject(AuthService);
 
   readonly juegos = signal<Juego[]>([]);
   readonly cargando = signal(true);
