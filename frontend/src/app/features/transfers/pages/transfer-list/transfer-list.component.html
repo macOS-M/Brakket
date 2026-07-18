@@ -1,0 +1,107 @@
+<section class="page">
+  <div class="header">
+    <h1>Transferencias</h1>
+    <a class="btn-primary" routerLink="/transfers/nueva">+ Solicitar transferencia</a>
+  </div>
+
+  @if (mensaje()) {
+  <p class="aviso">{{ mensaje() }}</p>
+  }
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando solicitudes...</p>
+  } @else if (error()) {
+  <div class="estado-error">
+    <p class="placeholder error">{{ error() }}</p>
+    <button class="btn-secondary" type="button" (click)="cargar()">Reintentar</button>
+  </div>
+  } @else {
+
+  <h2>Pendientes de mi respuesta</h2>
+  @if (pendientes().length === 0) {
+  <p class="placeholder">No tienes solicitudes pendientes por responder.</p>
+  } @else {
+  <ul class="lista">
+    @for (t of pendientes(); track t.id) {
+    <li class="tarjeta">
+      <div class="fila-principal">
+        <div>
+          <p class="titulo">
+            {{ t.jugadorNombre }}
+            <span class="detalle">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
+          </p>
+          <p class="sub">
+            Rol propuesto: {{ t.rolPropuesto }} · Solicitada por {{ t.solicitanteNombre }} el
+            {{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+          @if (t.justificacion) {
+          <p class="justificacion">"{{ t.justificacion }}"</p>
+          }
+        </div>
+        <div class="botones-respuesta">
+          <button
+            class="btn-aceptar"
+            type="button"
+            [disabled]="respondiendo() !== null"
+            (click)="responder(t, 'ACEPTAR')"
+          >
+            {{ respondiendo() === t.id ? 'Enviando...' : 'Aceptar' }}
+          </button>
+          <button
+            class="btn-rechazar"
+            type="button"
+            [disabled]="respondiendo() !== null"
+            (click)="responder(t, 'RECHAZAR')"
+          >
+            Rechazar
+          </button>
+        </div>
+      </div>
+      <div class="aprobaciones">
+        <span>Jugador: <strong>{{ etiquetaAprobacion(t.aprobacionJugador) }}</strong></span>
+        <span>Capitán origen: <strong>{{ etiquetaAprobacion(t.aprobacionCapitanOrigen) }}</strong></span>
+      </div>
+    </li>
+    }
+  </ul>
+  }
+
+  <h2>Solicitudes enviadas</h2>
+  @if (enviadas().length === 0) {
+  <p class="placeholder">Aún no has enviado solicitudes de transferencia.</p>
+  } @else {
+  <ul class="lista">
+    @for (t of enviadas(); track t.id) {
+    <li class="tarjeta">
+      <div class="fila-principal">
+        <div>
+          <p class="titulo">
+            {{ t.jugadorNombre }}
+            <span class="detalle">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
+          </p>
+          <p class="sub">
+            Rol propuesto: {{ t.rolPropuesto }} · Solicitada el
+            {{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+          @if (t.justificacion) {
+          <p class="justificacion">"{{ t.justificacion }}"</p>
+          }
+        </div>
+        <span
+          class="estado"
+          [class.aprobada]="t.estado === 'APROBADA'"
+          [class.rechazada]="t.estado === 'RECHAZADA'"
+        >
+          {{ etiquetaEstado(t.estado) }}
+        </span>
+      </div>
+      <div class="aprobaciones">
+        <span>Jugador: <strong>{{ etiquetaAprobacion(t.aprobacionJugador) }}</strong></span>
+        <span>Capitán origen: <strong>{{ etiquetaAprobacion(t.aprobacionCapitanOrigen) }}</strong></span>
+      </div>
+    </li>
+    }
+  </ul>
+  }
+  }
+</section>

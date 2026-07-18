@@ -48,6 +48,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/teams/teams.routes').then((m) => m.routes)
       },
       {
+        path: 'transfers',
+        canActivate: [authGuard],
+        loadChildren: () => import('./features/transfers/transfers.routes').then((m) => m.routes)
+      },
+      {
         path: 'disputes',
         canActivate: [authGuard],
         loadChildren: () => import('./features/disputes/disputes.routes').then((m) => m.routes)

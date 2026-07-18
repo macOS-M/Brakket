@@ -11,4 +11,7 @@ public interface JuegoRepository extends JpaRepository<Juego, Long> {
     Optional<Juego> findByNombre(String nombre);
 
     List<Juego> findByActivoTrue();
+
+    /** Valida el filtro de disciplina de la búsqueda de equipos (RF-05). */
+    boolean existsByGeneroIgnoreCase(String genero);
 }
