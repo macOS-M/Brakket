@@ -28,11 +28,13 @@ public class TransferResponseController {
         this.transferResponseService = transferResponseService;
     }
 
+    /** Bandeja de solicitudes pendientes donde el usuario debe responder. */
     @GetMapping("/pendientes")
     public List<TransferenciaResponse> pendientes(Authentication authentication) {
         return transferResponseService.listarPendientes(authentication.getName());
     }
 
+    /** Registra la aceptación o el rechazo de una parte autorizada. */
     @PostMapping("/{id}/responder")
     public TransferenciaResponse responder(@PathVariable Long id,
                                            @Valid @RequestBody ResponderTransferenciaRequest request,

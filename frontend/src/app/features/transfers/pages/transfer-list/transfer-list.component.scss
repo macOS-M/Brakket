@@ -13,8 +13,23 @@
   }
 
   h2 {
-    margin: 0 0 0.75rem;
+    margin: 1.25rem 0 0.75rem;
     font-size: 1.05rem;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  .aviso {
+    display: inline-block;
+    padding: 0.6rem 1rem;
+    margin: 0 0 1rem;
+    border: 1px solid rgba(74, 222, 128, 0.4);
+    border-radius: 8px;
+    background: rgba(74, 222, 128, 0.08);
+    color: #4ade80;
+    font-size: 0.88rem;
   }
 
   .placeholder {
@@ -104,6 +119,37 @@
 
     &.rechazada {
       background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+    }
+  }
+
+  .botones-respuesta {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+
+    .btn-aceptar,
+    .btn-rechazar {
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      background: transparent;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+    }
+
+    .btn-aceptar {
+      border: 1px solid rgba(74, 222, 128, 0.5);
+      color: #4ade80;
+    }
+
+    .btn-rechazar {
+      border: 1px solid rgba(248, 113, 113, 0.5);
       color: #f87171;
     }
   }

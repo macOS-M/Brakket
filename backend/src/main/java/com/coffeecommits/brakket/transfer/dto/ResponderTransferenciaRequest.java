@@ -11,6 +11,7 @@ public record ResponderTransferenciaRequest(
         @Pattern(regexp = "ACEPTAR|RECHAZAR", message = "La decisión debe ser ACEPTAR o RECHAZAR")
         String decision
 ) {
+
     public boolean esRechazo() {
         return "RECHAZAR".equals(decision);
     }

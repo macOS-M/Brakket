@@ -12,8 +12,10 @@ import java.util.List;
  */
 public interface TransferResponseService {
 
+    /** Solicitudes pendientes donde el usuario es parte autorizada. */
     List<TransferenciaResponse> listarPendientes(String correo);
 
+    /** Registra la respuesta de una parte autorizada y resuelve si corresponde. */
     TransferenciaResponse responder(String correo, Long solicitudId,
                                     ResponderTransferenciaRequest request);
 }
