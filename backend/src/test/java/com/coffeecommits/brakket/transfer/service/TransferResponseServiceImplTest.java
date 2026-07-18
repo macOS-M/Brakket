@@ -50,6 +50,8 @@ class TransferResponseServiceImplTest {
     private UsuarioRepository usuarioRepository;
     @Mock
     private NotificacionRepository notificacionRepository;
+    @Mock
+    private HistorialTransferenciaService historialTransferenciaService; // RF-14
     @InjectMocks
     private TransferResponseServiceImpl service;
 

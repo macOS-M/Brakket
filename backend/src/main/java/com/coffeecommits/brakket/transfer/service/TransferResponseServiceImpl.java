@@ -36,15 +36,18 @@ public class TransferResponseServiceImpl implements TransferResponseService {
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final UsuarioRepository usuarioRepository;
     private final NotificacionRepository notificacionRepository;
+    private final HistorialTransferenciaService historialTransferenciaService; // RF-14
 
     public TransferResponseServiceImpl(SolicitudTransferenciaRepository transferenciaRepository,
                                        MiembroEquipoRepository miembroEquipoRepository,
                                        UsuarioRepository usuarioRepository,
-                                       NotificacionRepository notificacionRepository) {
+                                       NotificacionRepository notificacionRepository,
+                                       HistorialTransferenciaService historialTransferenciaService) { // RF-14
         this.transferenciaRepository = transferenciaRepository;
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.usuarioRepository = usuarioRepository;
         this.notificacionRepository = notificacionRepository;
+        this.historialTransferenciaService = historialTransferenciaService; // RF-14
     }
 
     @Override
@@ -101,6 +104,7 @@ public class TransferResponseServiceImpl implements TransferResponseService {
                     && APROBACION_ACEPTADA.equals(solicitud.getAprobacionCapitanOrigen())) {
                 ejecutarTransferencia(solicitud);
                 resolver(solicitud, ESTADO_APROBADA, usuario);
+                historialTransferenciaService.registrar(solicitud, usuario); // RF-14
                 notificarPartes(solicitud, "TRANSFERENCIA_APROBADA",
                         "Transferencia completada: %s pasa de %s a %s."
                                 .formatted(solicitud.getJugador().getNombre(),
