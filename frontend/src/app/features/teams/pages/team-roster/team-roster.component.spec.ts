@@ -1,29 +1,50 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { TeamRosterComponent } from './team-roster.component';
 import { TeamsService } from '../../services/teams.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { MiembroEquipo } from '../../../../models/miembro-equipo.model';
+import { Equipo } from '../../../../models/equipo.model';
 
 describe('TeamRosterComponent', () => {
   let component: TeamRosterComponent;
   let fixture: ComponentFixture<TeamRosterComponent>;
   let teamsService: TeamsService;
 
-  const equipoDisuelto = {
+  const equipoActivo = {
     id: 1,
     nombre: 'Coffee&Commits',
     logo: null,
     descripcion: null,
+    estado: 'ACTIVO',
+    fechaDisolucion: null,
+    motivoDisolucion: null
+  };
+
+  const equipoDisuelto = {
+    ...equipoActivo,
     estado: 'DISUELTO',
     fechaDisolucion: '2026-07-10T12:00:00',
     motivoDisolucion: 'Fin de temporada'
   };
 
+  const miembro = (over: Partial<MiembroEquipo>): MiembroEquipo => ({
+    id: 1,
+    equipoId: 1,
+    usuarioId: 1,
+    nombreUsuario: 'Jugador',
+    rol: 'TITULAR',
+    estado: 'ACTIVO',
+    fechaUnion: '2026-07-01',
+    ...over
+  });
+
   beforeEach(async () => {
     const teamsServiceMock = {
       listMiembros: () => of([]),
+      obtenerPorId: () => of(equipoActivo),
       cambiarRol: () => of({}),
       disolver: () => of(equipoDisuelto),
       invitar: () => of({})
@@ -48,19 +69,71 @@ describe('TeamRosterComponent', () => {
     fixture = TestBed.createComponent(TeamRosterComponent);
     component = fixture.componentInstance;
     teamsService = TestBed.inject(TeamsService);
-    fixture.detectChanges();
   });
 
+  const init = () => fixture.detectChanges();
+
   it('should create', () => {
+    init();
     expect(component).toBeTruthy();
   });
 
   it('should load an empty roster without error', () => {
+    init();
     expect(component.miembros().length).toBe(0);
     expect(component.error()).toBeNull();
   });
 
+  // RF-08: la plantilla se ordena con el capitán primero y los inactivos al final.
+  it('should order the roster: captain first, inactive members last', () => {
+    spyOn(teamsService, 'listMiembros').and.returnValue(of([
+      miembro({ id: 3, usuarioId: 3, nombreUsuario: 'Suplente', rol: 'SUPLENTE' }),
+      miembro({ id: 4, usuarioId: 4, nombreUsuario: 'Inactivo', rol: 'TITULAR', estado: 'INACTIVO' }),
+      miembro({ id: 2, usuarioId: 2, nombreUsuario: 'Capi', rol: 'CAPITAN' }),
+      miembro({ id: 5, usuarioId: 5, nombreUsuario: 'Titular', rol: 'TITULAR' })
+    ]));
+    init();
+
+    expect(component.miembrosOrdenados().map((m) => m.nombreUsuario))
+      .toEqual(['Capi', 'Titular', 'Suplente', 'Inactivo']);
+  });
+
+  // RF-08: si el equipo está disuelto, la plantilla es una vista histórica.
+  it('should mark the view as historical when the team is dissolved', () => {
+    spyOn(teamsService, 'obtenerPorId').and.returnValue(of(equipoDisuelto as unknown as Equipo));
+    init();
+
+    expect(component.vistaHistorica()).toBeTrue();
+  });
+
+  it('should not mark the view as historical for an active team', () => {
+    init();
+    expect(component.vistaHistorica()).toBeFalse();
+  });
+
+  // RF-08: el equipo consultado debe existir.
+  it('should show a specific message when the team does not exist', () => {
+    spyOn(teamsService, 'listMiembros').and.returnValue(throwError(() => ({ status: 404 })));
+    init();
+
+    expect(component.error()).toBe('El equipo consultado no existe.');
+  });
+
+  // RF-08: ante un error de carga se puede reintentar.
+  it('should reload the roster when retrying after an error', () => {
+    const spy = spyOn(teamsService, 'listMiembros').and.returnValue(throwError(() => ({ status: 500 })));
+    init();
+    expect(component.error()).toBe('No se pudo cargar la plantilla del equipo.');
+
+    spy.and.returnValue(of([miembro({})]));
+    component.reintentar();
+
+    expect(component.error()).toBeNull();
+    expect(component.miembros().length).toBe(1);
+  });
+
   it('should not dissolve the team without explicit confirmation', () => {
+    init();
     const spy = spyOn(teamsService, 'disolver').and.callThrough();
 
     component.disolverEquipo();
@@ -70,6 +143,7 @@ describe('TeamRosterComponent', () => {
   });
 
   it('should dissolve the team when confirmed, sending the trimmed optional reason', () => {
+    init();
     const spy = spyOn(teamsService, 'disolver').and.callThrough();
     component.confirmaDisolucion.set(true);
     component.motivoDisolucion.set('  Fin de temporada  ');
@@ -81,6 +155,7 @@ describe('TeamRosterComponent', () => {
   });
 
   it('should send a null reason when the reason is left empty', () => {
+    init();
     const spy = spyOn(teamsService, 'disolver').and.callThrough();
     component.confirmaDisolucion.set(true);
 
@@ -90,6 +165,7 @@ describe('TeamRosterComponent', () => {
   });
 
   it('should not send an invitation when the form is invalid', () => {
+    init();
     const spy = spyOn(teamsService, 'invitar').and.callThrough();
 
     component.invitar();
@@ -99,6 +175,7 @@ describe('TeamRosterComponent', () => {
   });
 
   it('should send an invitation with the proposed role and null message when empty', () => {
+    init();
     const spy = spyOn(teamsService, 'invitar').and.callThrough();
     component.invitarForm.setValue({ jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: '' });
 

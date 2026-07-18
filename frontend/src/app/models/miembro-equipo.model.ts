@@ -5,6 +5,8 @@ export interface MiembroEquipo {
   nombreUsuario: string;
   rol: string;
   estado: string;
+  /** Fecha de incorporación a la plantilla (RF-08). */
+  fechaUnion: string | null;
 }
 
 export interface AsignarRolRequest {
