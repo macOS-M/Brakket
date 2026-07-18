@@ -13,4 +13,9 @@ export interface AsignarRolRequest {
   nuevoRol: string;
 }
 
+/** RF-10: la causa de la expulsión es obligatoria. */
+export interface ExpulsarIntegranteRequest {
+  causa: string;
+}
+
 export const ROLES_EQUIPO = ['CAPITAN', 'TITULAR', 'SUPLENTE', 'COACH'] as const;

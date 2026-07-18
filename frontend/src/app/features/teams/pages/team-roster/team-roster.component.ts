@@ -56,6 +56,12 @@ export class TeamRosterComponent implements OnInit {
   readonly invitacionEnviada = signal(false);
   readonly esCapitan = signal(false);
 
+  // RF-10: expulsión de integrantes (solo el capitán; el backend lo valida).
+  readonly miembroAExpulsar = signal<MiembroEquipo | null>(null);
+  readonly causaExpulsion = signal('');
+  readonly expulsando = signal(false);
+  readonly errorExpulsion = signal<string | null>(null);
+
   // RF-03: disolución del equipo (solo el capitán; el backend lo valida).
   readonly confirmaDisolucion = signal(false);
   readonly motivoDisolucion = signal('');
@@ -162,6 +168,45 @@ export class TeamRosterComponent implements OnInit {
       error: (err) => {
         this.invitando.set(false);
         this.errorInvitar.set(err?.error?.message ?? 'No se pudo enviar la invitacion.');
+      }
+    });
+  }
+
+  /** RF-10: abre la confirmación de expulsión para un integrante activo. */
+  iniciarExpulsion(miembro: MiembroEquipo): void {
+    this.miembroAExpulsar.set(miembro);
+    this.causaExpulsion.set('');
+    this.errorExpulsion.set(null);
+  }
+
+  /** RF-10: cancelar la confirmación no realiza la baja. */
+  cancelarExpulsion(): void {
+    this.miembroAExpulsar.set(null);
+    this.causaExpulsion.set('');
+    this.errorExpulsion.set(null);
+  }
+
+  confirmarExpulsion(): void {
+    const miembro = this.miembroAExpulsar();
+    if (!miembro || this.expulsando()) {
+      return;
+    }
+    const causa = this.causaExpulsion().trim();
+    if (!causa) {
+      this.errorExpulsion.set('La causa de la expulsión es obligatoria.');
+      return;
+    }
+    this.expulsando.set(true);
+    this.errorExpulsion.set(null);
+    this.teamsService.expulsar(this.equipoId, miembro.usuarioId, { causa }).subscribe({
+      next: () => {
+        this.expulsando.set(false);
+        this.cancelarExpulsion();
+        this.cargarMiembros();
+      },
+      error: (err) => {
+        this.expulsando.set(false);
+        this.errorExpulsion.set(err?.error?.message ?? 'No se pudo expulsar al integrante.');
       }
     });
   }

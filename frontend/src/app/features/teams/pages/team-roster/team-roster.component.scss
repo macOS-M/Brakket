@@ -80,6 +80,107 @@
   }
 }
 
+// RF-10: expulsión de integrantes
+.celda-acciones {
+  text-align: right;
+}
+
+.btn-expulsar {
+  padding: 0.35rem 0.8rem;
+  background: transparent;
+  border: 1px solid #f87171;
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.expulsion-box {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.04);
+  max-width: 480px;
+
+  h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+    color: #f87171;
+  }
+
+  .advertencia {
+    margin: 0 0 0.9rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.9rem;
+  }
+
+  .campo-causa {
+    display: grid;
+    gap: 0.35rem;
+    margin-bottom: 0.9rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.88rem;
+
+    textarea {
+      padding: 0.6rem 0.75rem;
+      background: var(--surface, #111827);
+      border: 1px solid var(--border, #334155);
+      border-radius: 8px;
+      color: var(--text, #e2e8f0);
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+
+      &:focus {
+        outline: none;
+        border-color: #f87171;
+      }
+    }
+  }
+
+  .acciones {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .btn-confirmar-expulsion {
+    padding: 0.5rem 1.1rem;
+    border: 1px solid #f87171;
+    border-radius: 8px;
+    background: #f87171;
+    color: #111827;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-cancelar {
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--border, #334155);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text, #e2e8f0);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+}
+
 .invitar-box {
   margin-top: 2rem;
   padding: 1.25rem;
