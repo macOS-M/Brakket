@@ -42,6 +42,7 @@ public class Torneo {
     @Column(name = "fecha_fin", nullable = false)
     private LocalDate fechaFin;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 40)
-    private String estado;
+    private EstadoTorneo estado;
 }

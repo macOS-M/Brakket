@@ -65,6 +65,12 @@ public class GlobalExceptionHandler {
                         "La información del equipo fue modificada por otro usuario. Actualice la página e intente de nuevo."));
     }
 
+    @ExceptionHandler(jakarta.persistence.OptimisticLockException.class)
+    public ResponseEntity<ApiResponse<Void>> handleJpaOptimisticLocking(jakarta.persistence.OptimisticLockException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("La temporada fue modificada por otro usuario. Actualice la pagina e intente de nuevo."));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)

@@ -6,6 +6,8 @@ import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
+import com.coffeecommits.brakket.game.model.FormatoCompetitivo;
+import com.coffeecommits.brakket.game.repository.FormatoCompetitivoRepository;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
 import com.coffeecommits.brakket.league.dto.ActualizarLigaRequest;
 import com.coffeecommits.brakket.league.dto.CrearLigaRequest;
@@ -16,6 +18,7 @@ import com.coffeecommits.brakket.league.dto.TemporadaResponse;
 import com.coffeecommits.brakket.league.model.Liga;
 import com.coffeecommits.brakket.league.repository.LigaRepository;
 import com.coffeecommits.brakket.league.repository.TemporadaRepository;
+import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,6 +47,10 @@ class LigaServiceImplTest {
     private JuegoRepository juegoRepository;
     @Mock
     private UsuarioRepository usuarioRepository;
+    @Mock
+    private FormatoCompetitivoRepository formatoRepository;
+    @Mock
+    private TorneoRepository torneoRepository;
     @InjectMocks
     private LigaServiceImpl ligaService;
 
@@ -55,6 +62,10 @@ class LigaServiceImplTest {
 
     private Juego juego() {
         return Juego.builder().id(3L).nombre("Valorant").genero("FPS").activo(true).build();
+    }
+
+    private FormatoCompetitivo formato() {
+        return FormatoCompetitivo.builder().id(7L).nombre("Eliminacion directa").activo(true).build();
     }
 
     @Test
@@ -118,9 +129,11 @@ class LigaServiceImplTest {
         when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
         when(temporadaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(formatoRepository.findById(7L)).thenReturn(Optional.of(formato()));
 
         CrearTemporadaRequest req = new CrearTemporadaRequest(
-                "Temporada 1", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1));
+                "Temporada 1", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1),
+                "Reglas", "PLANIFICADA", 8, 7L);
 
         TemporadaResponse resp = ligaService.crearTemporada(50L, CORREO, req);
 
