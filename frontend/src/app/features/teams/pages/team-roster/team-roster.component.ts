@@ -1,9 +1,13 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
+import { JugadorDisponible } from '../../../../models/jugador-disponible.model';
+import { Juego } from '../../../../models/juego.model';
 import { TeamsService } from '../../services/teams.service';
+import { GamesService } from '../../../games/services/games.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-team-roster',
@@ -15,12 +19,20 @@ import { TeamsService } from '../../services/teams.service';
 export class TeamRosterComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly teamsService = inject(TeamsService);
+  private readonly gamesService = inject(GamesService);
+  private readonly authService = inject(AuthService);
 
   readonly roles = ROLES_EQUIPO;
   readonly miembros = signal<MiembroEquipo[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly guardandoId = signal<number | null>(null);
+  readonly esCapitan = computed(() => {
+    const miId = Number(this.authService.usuario()?.id);
+    return this.miembros().some(
+      (m) => m.usuarioId === miId && m.rol === 'CAPITAN' && m.estado === 'ACTIVO'
+    );
+  });
 
   // RF-03: disolución del equipo (solo el capitán; el backend lo valida).
   readonly confirmaDisolucion = signal(false);
@@ -29,11 +41,25 @@ export class TeamRosterComponent implements OnInit {
   readonly errorDisolucion = signal<string | null>(null);
   readonly equipoDisuelto = signal<Equipo | null>(null);
 
+  // RF-11: buscar jugadores disponibles.
+  readonly juegos = signal<Juego[]>([]);
+  readonly textoBusqueda = signal('');
+  readonly juegoIdBusqueda = signal<number | null>(null);
+  readonly soloDisponibles = signal(false);
+  readonly buscando = signal(false);
+  readonly errorBusqueda = signal<string | null>(null);
+  readonly resultados = signal<JugadorDisponible[] | null>(null);
+  readonly invitandoId = signal<number | null>(null);
+  readonly invitadoOkId = signal<number | null>(null);
+
   private equipoId!: number;
 
   ngOnInit(): void {
     this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
     this.cargarMiembros();
+    this.gamesService.listActivos().subscribe({
+      next: (juegos) => this.juegos.set(juegos)
+    });
   }
 
   cargarMiembros(): void {
@@ -90,4 +116,42 @@ export class TeamRosterComponent implements OnInit {
       }
     });
   }
+
+  buscarJugadores(): void {
+    this.buscando.set(true);
+    this.errorBusqueda.set(null);
+    this.teamsService.buscarJugadores(
+      this.equipoId, this.textoBusqueda().trim(), this.juegoIdBusqueda(), this.soloDisponibles()
+    ).subscribe({
+      next: (resultados) => {
+        this.resultados.set(resultados);
+        this.buscando.set(false);
+      },
+      error: (err) => {
+        this.buscando.set(false);
+        this.errorBusqueda.set(err?.error?.message ?? 'No se pudo completar la busqueda.');
+      }
+    });
+  }
+
+  invitar(jugador: JugadorDisponible): void {
+    this.invitandoId.set(jugador.id);
+    this.teamsService.invitar(this.equipoId, {
+      jugadorId: jugador.id,
+      rolPropuesto: 'TITULAR',
+      mensaje: null
+    }).subscribe({
+      next: () => {
+        this.invitandoId.set(null);
+        this.invitadoOkId.set(jugador.id);
+      },
+      error: (err) => {
+        this.invitandoId.set(null);
+        alert(err?.error?.message ?? 'No se pudo enviar la invitacion.');
+      }
+    });
+  }
 }
+
+
+

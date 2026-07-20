@@ -54,6 +54,80 @@
   </table>
   }
 
+  @if (esCapitan() && !equipoDisuelto()) {
+  <section class="buscar-jugadores">
+    <h2>Buscar jugadores disponibles</h2>
+
+    <div class="filtros-busqueda">
+      <input
+        type="text"
+        placeholder="Buscar por nombre..."
+        [value]="textoBusqueda()"
+        (input)="textoBusqueda.set($any($event.target).value)"
+      />
+      <select
+        [value]="juegoIdBusqueda() ?? ''"
+        (change)="juegoIdBusqueda.set($any($event.target).value ? +$any($event.target).value : null)"
+      >
+        <option value="">Todos los juegos</option>
+        @for (juego of juegos(); track juego.id) {
+        <option [value]="juego.id">{{ juego.nombre }}</option>
+        }
+      </select>
+      <label class="check-disponibles">
+        <input
+          type="checkbox"
+          [checked]="soloDisponibles()"
+          (change)="soloDisponibles.set($any($event.target).checked)"
+        />
+        Solo invitación directa
+      </label>
+      <button type="button" class="btn-buscar" [disabled]="buscando()" (click)="buscarJugadores()">
+        {{ buscando() ? 'Buscando...' : 'Buscar' }}
+      </button>
+    </div>
+
+    @if (errorBusqueda()) {
+    <p class="error-busqueda">{{ errorBusqueda() }}</p>
+    }
+
+    @if (resultados() !== null) {
+    @if (resultados()!.length === 0) {
+    <p class="placeholder">No hay jugadores disponibles con esos filtros.</p>
+    } @else {
+    <div class="resultados-lista">
+      @for (jugador of resultados()!; track jugador.id) {
+      <div class="resultado-item">
+        <div class="info-jugador">
+          <p class="nombre">{{ jugador.nombre }}</p>
+          @if (jugador.requiereTransferencia) {
+          <span class="badge-transferencia">
+                  Requiere transferencia · actualmente en {{ jugador.equipoActualNombre }}
+                </span>
+          } @else {
+          <span class="badge-directo">Disponible para invitación directa</span>
+          }
+        </div>
+        @if (invitadoOkId() === jugador.id) {
+        <span class="invitado-ok">Invitación enviada</span>
+        } @else {
+        <button
+          type="button"
+          class="btn-invitar"
+          [disabled]="invitandoId() === jugador.id"
+          (click)="invitar(jugador)"
+        >
+          {{ invitandoId() === jugador.id ? 'Enviando...' : 'Invitar' }}
+        </button>
+        }
+      </div>
+      }
+    </div>
+    }
+    }
+  </section>
+  }
+
   @if (!cargando() && !error() && !equipoDisuelto()) {
   <section class="zona-peligro">
     <h2>Disolver equipo</h2>
