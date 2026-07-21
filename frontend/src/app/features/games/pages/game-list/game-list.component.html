@@ -77,6 +77,13 @@
   <div class="grid">
     @for (juego of juegosFiltrados(); track juego.id) {
     <article class="juego-card">
+      <!-- El enlace cubre toda la tarjeta vía ::after, así el objetivo de
+           clic es la tarjeta entera y no solo el título. Los botones de
+           acción van por encima con z-index. -->
+      <a class="enlace-juego" [routerLink]="['/games', juego.id, 'perfil-competitivo']">
+        <span class="sr-only">Ver perfil competitivo de {{ juego.nombre }}</span>
+      </a>
+
       <div class="cabecera">
         @if (juego.imagenUrl) {
         <img class="monograma" [src]="juego.imagenUrl" [alt]="" />

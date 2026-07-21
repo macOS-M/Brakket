@@ -25,7 +25,10 @@ $border-soft: rgba(148, 163, 184, 0.18);
 // ----- Texto -----
 $text: #e2e8f0;
 $text-muted: #94a3b8;
-$text-subtle: #64748b;
+// #64748b daba 3.3:1 sobre el chip y 3.7:1 sobre superficie: por debajo del
+// 4.5:1 que exige AA. Este valor llega a 6.0:1 sobre superficie, 6.1:1 sobre
+// la barra lateral y 5.2:1 sobre el relleno neutro de los chips.
+$text-subtle: #8496ad;
 
 // ----- Estados -----
 $danger: #ef4444;

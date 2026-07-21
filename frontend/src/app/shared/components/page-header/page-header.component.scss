@@ -19,9 +19,12 @@
 
 h1 {
   margin: 0;
-  font-size: 1.5rem;
+  // Paso "display". Antes usaba 1.5rem, que lo dejaba a un solo escalón
+  // del título de tarjeta (1.0625rem) y aplanaba la jerarquía de la página.
+  font-size: 2rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
 }
 
 .subtitulo {

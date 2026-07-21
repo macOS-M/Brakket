@@ -25,13 +25,15 @@
 .valor {
   margin: 0.3rem 0 0;
   color: var(--acento);
+  // Paso "data": Barlow Condensed. Es el lugar para el que se carga la
+  // variante condensada — cifras anchas en poco espacio.
+  font-family: var(--font-data);
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.1;
-  // Cifras de ancho fijo para que una fila de tarjetas no baile
-  // cuando los valores cambian.
+  // Ancho fijo para que una fila de tarjetas no baile al cambiar los valores.
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .nota {

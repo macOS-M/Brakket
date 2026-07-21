@@ -12,7 +12,7 @@ colors:
   border: "#334155"
   ink: "#e2e8f0"
   ink-muted: "#94a3b8"
-  ink-subtle: "#64748b"
+  ink-subtle: "#8496ad"
   danger: "#ef4444"
   danger-ink: "#f87171"
   success: "#22c55e"
@@ -178,7 +178,7 @@ Paleta fría de trabajo prolongado: azules profundos como base, un cyan que marc
 - **Borde** (`#334155`): separación explícita entre controles.
 - **Tinta** (`#e2e8f0`): texto de cuerpo y títulos.
 - **Tinta apagada** (`#94a3b8`): texto secundario, descripciones, etiquetas de campo.
-- **Tinta tenue** (`#64748b`): metadatos, marcas de tiempo, texto de placeholder, secciones aún no disponibles.
+- **Tinta tenue** (`#8496ad`): metadatos, marcas de tiempo, texto de placeholder, secciones aún no disponibles. Es el gris más claro permitido para texto; cualquier valor por debajo incumple AA sobre las superficies del sistema.
 
 ### Tertiary
 Colores de estado. Cada uno existe en tres variantes: **base** para bordes y acentos sólidos, **-ink** para texto sobre fondo oscuro, y un relleno tenue al 12% de opacidad para chips y banners.
@@ -295,7 +295,7 @@ La sombra existe, pero es **respuesta a una acción**, no propiedad de un objeto
 ### Inputs / Fields
 - **Style:** fondo de superficie, borde de `1px`, radio `8px`, `9px 12px`, texto de cuerpo. Los campos de búsqueda llevan una lupa de `16px` en tinta tenue a la izquierda, con el relleno izquierdo aumentado a `34px`.
 - **Focus:** el borde pasa a cyan de señal; el anillo global de foco cubre la accesibilidad.
-- **Placeholder:** tinta tenue (`#64748b`) — el mismo mínimo de contraste que el texto de cuerpo, nunca un gris más claro "por elegancia".
+- **Placeholder:** tinta tenue. No es una elección estética: la tinta tenue está calibrada para superar 4.5:1 sobre las superficies del sistema, y por eso puede usarse en texto. Bajarla "por elegancia" rompe AA.
 - **Error:** borde y mensaje en tinta de peligro, con el mensaje debajo del campo y asociado por `aria-describedby`.
 
 ### Navigation

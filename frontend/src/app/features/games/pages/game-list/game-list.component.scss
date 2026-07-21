@@ -97,6 +97,7 @@
 }
 
 .juego-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   padding: 1rem 1.1rem 1.1rem;
@@ -108,6 +109,26 @@
   &:hover {
     border-color: var(--border, #334155);
     transform: translateY(-2px);
+  }
+
+  // El foco del enlace invisible tiene que verse en la tarjeta, que es
+  // lo que el usuario percibe como el objetivo.
+  &:has(.enlace-juego:focus-visible) {
+    outline: 2px solid var(--brand-cyan, #22d3ee);
+    outline-offset: 2px;
+  }
+}
+
+// Objetivo de clic de toda la tarjeta. El elemento en sí no ocupa espacio;
+// su ::after es el que cubre la superficie.
+.enlace-juego {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+
+  &:focus-visible {
+    outline: none; // lo dibuja la tarjeta, arriba
   }
 }
 
@@ -180,6 +201,10 @@
 }
 
 .acciones {
+  // Por encima del enlace que cubre la tarjeta, para que los botones
+  // sigan siendo clicables.
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
