@@ -77,21 +77,21 @@
   <div class="grid">
     @for (juego of juegosFiltrados(); track juego.id) {
     <article class="juego-card">
-      <div class="portada">
+      <div class="cabecera">
         @if (juego.imagenUrl) {
-        <img [src]="juego.imagenUrl" [alt]="" />
+        <img class="monograma" [src]="juego.imagenUrl" [alt]="" />
         } @else {
-        <span class="inicial" aria-hidden="true">{{ inicial(juego) }}</span>
+        <span class="monograma sin-imagen" aria-hidden="true">{{ inicial(juego) }}</span>
         }
+        <div class="identidad">
+          <h2 class="nombre">{{ juego.nombre }}</h2>
+          <p class="genero">{{ juego.genero }}</p>
+        </div>
       </div>
 
-      <div class="info">
-        <h2 class="nombre">{{ juego.nombre }}</h2>
-        <p class="genero">{{ juego.genero }}</p>
-        @if (juego.descripcion) {
-        <p class="descripcion">{{ juego.descripcion }}</p>
-        }
-      </div>
+      @if (juego.descripcion) {
+      <p class="descripcion">{{ juego.descripcion }}</p>
+      }
 
       @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
       <div class="acciones">

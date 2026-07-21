@@ -1,22 +1,118 @@
 .login {
   display: grid;
-  place-items: center;
+  grid-template-columns: 1fr 1fr;
   min-height: 100vh;
-  padding: 1.5rem;
 }
 
+// ----- Panel de marca -----
+
+.panel-marca {
+  display: grid;
+  place-items: center;
+  padding: 3rem;
+  background: var(--surface-3, #0d1526);
+  border-right: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
+
+.panel-contenido {
+  max-width: 30rem;
+}
+
+.marca-grande {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 2rem;
+  color: var(--text, #e2e8f0);
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+
+  .logo {
+    width: 28px;
+    height: 28px;
+    fill: none;
+    stroke: var(--brand-cyan, #22d3ee);
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+  }
+}
+
+.claim {
+  margin: 0 0 1.75rem;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.capacidades {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding-left: 1.4rem;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.875rem;
+    line-height: 1.5;
+
+    // Viñeta propia: el marcador nativo no se alinea con texto de dos líneas.
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.5rem;
+      width: 6px;
+      height: 6px;
+      border-radius: var(--radius-pill, 999px);
+      background: var(--brand-cyan, #22d3ee);
+    }
+  }
+}
+
+// ----- Tarjeta de acceso -----
+
 .login-card {
+  place-self: center;
   width: 100%;
   max-width: 380px;
   padding: 2.25rem 2rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
-  border-radius: var(--radius-lg, 16px);
   text-align: center;
 }
 
+@media (max-width: 900px) {
+  .login {
+    grid-template-columns: 1fr;
+    place-items: center;
+    padding: 1.5rem;
+  }
+
+  // En móvil el objetivo es entrar; el panel de marca sobra.
+  .panel-marca {
+    display: none;
+  }
+
+  .login-card {
+    background: var(--surface, #111827);
+    border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+    border-radius: var(--radius-lg, 16px);
+  }
+
+  .marca {
+    display: flex;
+  }
+}
+
+// La marca ya la carga el panel izquierdo; repetirla acá es redundante.
+// Reaparece por debajo de 900px, donde el panel se oculta.
 .marca {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;

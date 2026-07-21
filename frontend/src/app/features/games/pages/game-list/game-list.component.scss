@@ -99,10 +99,10 @@
 .juego-card {
   display: flex;
   flex-direction: column;
+  padding: 1rem 1.1rem 1.1rem;
   background: var(--surface, #111827);
   border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
   border-radius: var(--radius-md, 12px);
-  overflow: hidden;
   transition: border-color 0.15s ease, transform 0.15s ease;
 
   &:hover {
@@ -111,64 +111,79 @@
   }
 }
 
-.portada {
+// Antes había una portada de 120px con la inicial al 50% de opacidad.
+// Sin imagen real se leía como una imagen rota y ocupaba un tercio de la
+// tarjeta sin aportar nada; se reemplaza por un monograma en línea, igual
+// que en la lista de equipos.
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+.monograma {
   display: grid;
   place-items: center;
-  height: 120px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(34, 211, 238, 0.12));
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm, 8px);
+  object-fit: cover;
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .inicial {
-    color: var(--text, #e2e8f0);
-    font-size: 2rem;
-    font-weight: 800;
-    opacity: 0.5;
+  &.sin-imagen {
+    background: var(--info-bg, rgba(59, 130, 246, 0.12));
+    color: var(--info-text, #60a5fa);
+    font-size: 1.0625rem;
+    font-weight: 700;
   }
 }
 
-.info {
+.identidad {
   flex: 1;
-  padding: 0.9rem 1rem 0.6rem;
+  min-width: 0;
 
   .nombre {
-    margin: 0 0 0.2rem;
+    margin: 0;
     font-size: 1.0625rem;
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .genero {
-    margin: 0 0 0.5rem;
+    margin: 0.15rem 0 0;
     color: var(--brand-cyan, #22d3ee);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-
-  .descripcion {
-    margin: 0;
-    color: var(--text-muted, #94a3b8);
-    font-size: 0.8125rem;
-    line-height: 1.45;
-    // Recorta a 3 líneas para que las tarjetas de la grilla queden parejas.
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+}
+
+.descripcion {
+  flex: 1;
+  margin: 0 0 0.9rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  // Recorta a 3 líneas para que las tarjetas de la grilla queden parejas.
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .acciones {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  padding: 0.75rem 1rem 1rem;
+  margin-top: auto;
 
   .confirmacion {
     width: 100%;
