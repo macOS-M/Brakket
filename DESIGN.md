@@ -25,6 +25,9 @@ colors:
   accent-purple-ink: "#c4b5fd"
   accent-gold: "#eab308"
   accent-gold-ink: "#facc15"
+  on-brand: "#ffffff"
+  google-surface: "#ffffff"
+  google-ink: "#1f1f1f"
 typography:
   display:
     fontFamily: "Barlow, system-ui, sans-serif"
@@ -50,12 +53,24 @@ typography:
     fontWeight: 400
     lineHeight: 1.55
     letterSpacing: "normal"
+  small:
+    fontFamily: "Barlow, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: "normal"
   label:
     fontFamily: "Barlow, system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: "0.02em"
+  micro:
+    fontFamily: "Barlow, system-ui, sans-serif"
+    fontSize: "0.6875rem"
+    fontWeight: 700
+    lineHeight: 1.4
+    letterSpacing: "0.04em"
   data:
     fontFamily: "Barlow Condensed, Barlow, sans-serif"
     fontSize: "1.75rem"
@@ -63,6 +78,7 @@ typography:
     lineHeight: 1.1
     fontFeature: "tabular-nums"
 rounded:
+  xs: "4px"
   sm: "8px"
   md: "12px"
   lg: "16px"
@@ -174,6 +190,9 @@ Colores de estado. Cada uno existe en tres variantes: **base** para bordes y ace
 - **Púrpura de cierre** (`#8b5cf6` / tinta `#c4b5fd`): finalizado. Un estado terminal merece un color que no compita con los activos.
 - **Oro de podio** (`#eab308` / tinta `#facc15`): primer puesto, logros, distinciones. Nunca como acento genérico.
 
+### Marca externa
+- **Superficie Google** (`#ffffff`) y **tinta Google** (`#1f1f1f`): exclusivos del botón "Continuar con Google". Google exige fondo claro con su logo a color, así que es la única superficie del sistema que rompe el tema oscuro. La familiaridad del control vale más que la coherencia cromática; usarlos en cualquier otro lugar está prohibido.
+
 ### Tema claro
 
 El frontmatter es normativo para el tema oscuro, que es el predeterminado. El tema claro reasigna los neutros; los colores de marca y de estado conservan su base y bajan la variante `-ink` para mantener contraste sobre fondo claro.
@@ -214,10 +233,18 @@ El frontmatter es normativo para el tema oscuro, que es el predeterminado. El te
 - **Headline** (700, `1.5rem`, 1.2, `-0.015em`): encabezado de sección mayor.
 - **Title** (600, `1.0625rem`, 1.3): título de tarjeta o bloque.
 - **Body** (400, `0.875rem`, 1.55): texto general, celdas de tabla, descripciones. Prosa larga a 65–75ch; tablas y datos pueden correr más densos.
+- **Small** (400, `0.8125rem`, 1.5): texto de apoyo dentro de una fila densa — fechas, notas al pie de una tarjeta, metadatos.
 - **Label** (600, `0.75rem`, `0.02em`): etiquetas de campo, chips de estado, encabezados de columna.
+- **Micro** (700, `0.6875rem`, `0.04em`): el paso más chico permitido. Encabezados de grupo en la navegación y chips auxiliares.
 - **Data** (Barlow Condensed 700, `1.75rem`, cifras tabulares): valores de métrica, marcadores, posiciones.
 
 La escala es fija en `rem`, no fluida. Los usuarios trabajan a DPI constante y un título que encoge dentro de un panel se ve peor, no mejor.
+
+Ocho pasos parecen muchos frente a los cinco de un sistema editorial, pero una interfaz densa los necesita: entre una etiqueta de columna y el texto de una celda hay una diferencia real de rol. Lo que no está permitido es inventar un noveno.
+
+### Named Rules
+
+**La Regla del Piso de 11px.** `0.6875rem` es el tamaño más chico del sistema. Nada baja de ahí — ni un chip, ni una marca de tiempo, ni una nota al pie. Por debajo de 11px el texto deja de ser leíble para buena parte de los usuarios, y "se ve más prolijo" no es una razón.
 
 ### Named Rules
 

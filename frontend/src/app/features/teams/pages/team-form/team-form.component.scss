@@ -13,7 +13,7 @@
   border: 1px solid #f87171;
   border-radius: 8px;
   color: #f87171;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .form {
@@ -28,7 +28,7 @@
   gap: 0.4rem;
 
   label {
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text, #e2e8f0);
   }
@@ -42,7 +42,7 @@
     border-radius: 8px;
     color: var(--text, #e2e8f0);
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
 
     &:focus {
       outline: none;
@@ -55,7 +55,7 @@
   }
 
   .error-campo {
-    font-size: 0.78rem;
+    font-size: 0.8125rem;
     color: #f87171;
   }
 }
@@ -86,7 +86,7 @@
   border: 1px dashed var(--brand-cyan, #22d3ee);
   border-radius: 8px;
   color: var(--brand-cyan, #22d3ee);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 
@@ -100,7 +100,7 @@
 .btn-primary,
 .btn-secondary {
   padding: 0.55rem 1.2rem;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
   border-radius: 8px;
   border: 1px solid transparent;

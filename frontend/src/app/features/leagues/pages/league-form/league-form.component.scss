@@ -10,7 +10,7 @@
 .back {
   color: var(--text-muted, #94a3b8);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 
   &:hover {
     color: var(--brand-cyan, #22d3ee);
@@ -28,7 +28,7 @@
 
   .label {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 
   input,
@@ -38,7 +38,7 @@
     border-radius: 8px;
     background: transparent;
     color: inherit;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
 
     &:focus {
       outline: none;
@@ -49,7 +49,7 @@
 
 .field-error {
   color: #ef4444;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .error {

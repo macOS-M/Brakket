@@ -25,11 +25,11 @@
   margin-bottom: 1.25rem;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.7));
   border: 1px solid var(--border, #334155);
-  border-radius: 14px;
+  border-radius: 16px;
 
   h2 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.0625rem;
     color: var(--text, #e2e8f0);
   }
 }
@@ -40,7 +40,7 @@
 
 .eyebrow {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--brand-cyan, #22d3ee);
@@ -48,7 +48,7 @@
 
 .nombre {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: var(--text, #e2e8f0);
 }
@@ -64,7 +64,7 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.15rem 0.6rem;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--brand-cyan, #22d3ee);
@@ -86,16 +86,16 @@
   width: 1.1rem;
   height: 1.1rem;
   padding: 0;
-  font-size: 0.7rem;
+  font-size: 0.6875rem;
   line-height: 1;
-  color: #fca5a5;
+  color: var(--danger-text, #f87171);
   background: none;
   border: none;
   border-radius: 50%;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: rgba(252, 165, 165, 0.15);
+    background: var(--danger-bg, rgba(239, 68, 68, 0.12));
   }
 
   &:disabled {
@@ -148,7 +148,7 @@
     color: var(--text, #e2e8f0);
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid rgba(148, 163, 184, 0.25);
-    border-radius: 10px;
+    border-radius: 12px;
   }
 }
 
@@ -157,7 +157,7 @@
   padding: 0.85rem 1.2rem;
   color: #08111f;
   font-weight: 700;
-  background: linear-gradient(90deg, #22d3ee, #7dd3fc);
+  background: linear-gradient(90deg, #22d3ee, var(--brand-cyan, #22d3ee));
   border: 0;
   border-radius: 999px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
@@ -178,15 +178,15 @@
 
 .save-status {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 0.875rem;
   font-weight: 600;
 
   &.success {
-    color: #34d399;
+    color: var(--success-text, #4ade80);
   }
 
   &.error {
-    color: #fca5a5;
+    color: var(--danger-text, #f87171);
   }
 }
 

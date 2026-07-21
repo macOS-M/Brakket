@@ -58,7 +58,7 @@
 
 .league-card {
   border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: border-color 0.15s ease;
 
   &:hover {
@@ -77,10 +77,10 @@
 
 .league-name {
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 1.0625rem;
 }
 
 .league-meta {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--text-muted, #94a3b8);
 }
