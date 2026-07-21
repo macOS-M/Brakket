@@ -14,7 +14,7 @@ import {
 import { AsignarRolRequest, MiembroEquipo } from '../../../models/miembro-equipo.model';
 import { Invitacion, InvitarJugadorRequest, ResponderInvitacionRequest } from '../../../models/invitacion.model';
 import { EquipoResumenPublico, PerfilEquipoPublico } from '../../../models/perfil-equipo-publico.model';
-import { InvitarJugadorRequest, JugadorDisponible } from '../../../models/jugador-disponible.model';
+import { JugadorDisponible } from '../../../models/jugador-disponible.model';
 
 @Injectable({ providedIn: 'root' })
 export class TeamsService {
@@ -89,9 +89,5 @@ export class TeamsService {
     }
     params.set('soloDisponibles', String(soloDisponibles));
     return this.api.get<JugadorDisponible[]>(`/teams/${equipoId}/jugadores-disponibles?${params.toString()}`);
-  }
-
-  invitar(equipoId: number, request: InvitarJugadorRequest): Observable<unknown> {
-    return this.api.post<unknown>(`/teams/${equipoId}/invitaciones`, request);
   }
 }
