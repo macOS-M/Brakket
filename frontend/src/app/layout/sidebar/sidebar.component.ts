@@ -74,14 +74,14 @@ export class SidebarComponent {
       enlaces: [
         {
           ruta: '/statistics',
-          etiqueta: 'Estadisticas',
+          etiqueta: 'Estadísticas',
           icono: 'chart',
           exact: false,
           proximamente: true
         },
         {
           ruta: '/progression',
-          etiqueta: 'Progresion',
+          etiqueta: 'Progresión',
           icono: 'star',
           exact: false,
           proximamente: true
@@ -103,7 +103,7 @@ export class SidebarComponent {
       ]
     },
     {
-      titulo: 'Gestion',
+      titulo: 'Gestión',
       enlaces: [
         {
           ruta: '/sponsorships',
@@ -114,14 +114,14 @@ export class SidebarComponent {
         },
         {
           ruta: '/analytics',
-          etiqueta: 'Analitica',
+          etiqueta: 'Analítica',
           icono: 'pulse',
           exact: false,
           proximamente: true
         },
         {
           ruta: '/admin',
-          etiqueta: 'Administracion',
+          etiqueta: 'Administración',
           icono: 'settings',
           exact: false,
           roles: ['ADMIN']
