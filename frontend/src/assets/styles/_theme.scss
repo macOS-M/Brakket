@@ -57,6 +57,10 @@
   --shadow-card: #{v.$shadow-card};
   --shadow-modal: #{v.$shadow-modal};
 
+  // Tipografía
+  --font-ui: #{v.$font-ui};
+  --font-data: #{v.$font-data};
+
   // Layout
   --sidebar-width: #{v.$sidebar-width};
   --content-max: #{v.$content-max};
@@ -75,8 +79,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -94,6 +97,32 @@ h2,
 h3,
 h4 {
   color: var(--text);
+  // Barlow es ligeramente ancha; a tamaños de título necesita cerrarse
+  // un poco. El piso es -0.04em: más apretado y las letras se tocan.
+  letter-spacing: -0.015em;
+}
+
+// Reparte las líneas de forma pareja en vez de dejar una palabra huérfana.
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+// Cifras de ancho fijo: sin esto las columnas de marcadores, puntos y
+// porcentajes bailan de fila en fila. Es la razón principal por la que
+// una tabla de posiciones se ve amateur.
+table,
+.dato {
+  font-variant-numeric: tabular-nums;
+}
+
+// Números que compiten por atención en poco ancho: marcadores, posiciones,
+// contadores de métricas.
+.dato-condensado {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 ::selection {

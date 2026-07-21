@@ -56,6 +56,16 @@ $accent-gold: #eab308;
 $accent-gold-text: #facc15;
 $accent-gold-bg: rgba(234, 179, 8, 0.12);
 
+// ----- Tipografía -----
+// Barlow es una grotesca de baja modulación diseñada para señalética
+// deportiva: tiene carácter competitivo sin caer en lo estridente, y
+// aguanta bien tamaños chicos en interfaces densas.
+$font-ui: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+  sans-serif;
+// La variante condensada se reserva para datos tabulares (marcadores,
+// posiciones, contadores), donde el ancho de columna es escaso.
+$font-data: 'Barlow Condensed', 'Barlow', 'Segoe UI', sans-serif;
+
 // ----- Radios y sombras -----
 $radius-sm: 8px;
 $radius-md: 12px;
