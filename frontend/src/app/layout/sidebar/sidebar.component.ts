@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 export interface EnlaceNav {
   ruta: string;
@@ -32,9 +33,23 @@ export interface GrupoNav {
 })
 export class SidebarComponent {
   private readonly authService = inject(AuthService);
+  private readonly themeService = inject(ThemeService);
 
   readonly usuario = this.authService.usuario;
   readonly abiertoEnMovil = signal(false);
+  readonly tema = this.themeService.tema;
+
+  /** Etiqueta accesible del control de tema, según el estado actual. */
+  readonly etiquetaTema = computed(() => {
+    switch (this.tema()) {
+      case 'claro':
+        return 'Tema claro. Cambiar a oscuro';
+      case 'oscuro':
+        return 'Tema oscuro. Cambiar a automático';
+      default:
+        return 'Tema automático. Cambiar a claro';
+    }
+  });
 
   private readonly grupos: GrupoNav[] = [
     {
@@ -158,6 +173,10 @@ export class SidebarComponent {
 
   cerrarMenu(): void {
     this.abiertoEnMovil.set(false);
+  }
+
+  alternarTema(): void {
+    this.themeService.alternar();
   }
 
   login(): void {

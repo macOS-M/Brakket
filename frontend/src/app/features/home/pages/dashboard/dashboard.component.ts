@@ -15,7 +15,6 @@ import { League } from '../../../../models/league.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 
 /**
  * Panel principal.
@@ -33,8 +32,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
     DatePipe,
     PageHeaderComponent,
     StatCardComponent,
-    EmptyStateComponent,
-    StatusBadgeComponent
+    EmptyStateComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

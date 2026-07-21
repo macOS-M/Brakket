@@ -131,6 +131,49 @@
   letter-spacing: 0.04em;
 }
 
+// ----- Control de tema -----
+
+.btn-tema {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  // 44px de alto: mínimo de objetivo táctil de WCAG 2.5.5.
+  min-height: 44px;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+  }
+}
+
+.texto-tema {
+  flex: 1;
+  text-align: left;
+}
+
 // ----- Tarjeta de usuario -----
 
 .usuario {

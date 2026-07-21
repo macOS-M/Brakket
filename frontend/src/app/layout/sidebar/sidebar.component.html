@@ -80,6 +80,29 @@
     }
   </nav>
 
+  <button
+    type="button"
+    class="btn-tema"
+    [attr.aria-label]="etiquetaTema()"
+    [title]="etiquetaTema()"
+    (click)="alternarTema()"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      @switch (tema()) { @case ('claro') {
+      <circle cx="12" cy="12" r="4.5" />
+      <path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+      } @case ('oscuro') {
+      <path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.8 6.8 0 0 0 9.5 9.5z" />
+      } @default {
+      <path d="M12 3a9 9 0 0 0 0 18z" />
+      <circle cx="12" cy="12" r="9" />
+      } }
+    </svg>
+    <span class="texto-tema">
+      @switch (tema()) { @case ('claro') { Claro } @case ('oscuro') { Oscuro } @default { Automático } }
+    </span>
+  </button>
+
   @if (usuario()?.authenticated) {
   <div class="usuario">
     <a class="usuario-info" routerLink="/profile" (click)="cerrarMenu()">

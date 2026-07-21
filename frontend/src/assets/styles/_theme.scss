@@ -1,8 +1,47 @@
 @use 'variables' as v;
 
+// Solo se redefine lo que cambia entre temas. La marca, los radios, la
+// tipografía y las medidas de layout son las mismas en ambos.
+@mixin tema-claro {
+  color-scheme: light;
+
+  --bg: #{v.$l-bg};
+  --surface: #{v.$l-surface};
+  --surface-2: #{v.$l-surface-2};
+  --surface-3: #{v.$l-surface-3};
+  --border: #{v.$l-border};
+  --border-soft: #{v.$l-border-soft};
+
+  --text: #{v.$l-text};
+  --text-muted: #{v.$l-text-muted};
+  --text-subtle: #{v.$l-text-subtle};
+  --color-text-muted: #{v.$l-text-muted};
+
+  // El cyan de marca no es legible como texto sobre blanco.
+  --brand-cyan: #{v.$l-brand-cyan};
+
+  --danger-text: #{v.$l-danger-text};
+  --danger-bg: #{v.$l-danger-bg};
+  --success-text: #{v.$l-success-text};
+  --success-bg: #{v.$l-success-bg};
+  --warning-text: #{v.$l-warning-text};
+  --warning-bg: #{v.$l-warning-bg};
+  --info-text: #{v.$l-info-text};
+  --info-bg: #{v.$l-info-bg};
+  --accent-purple-text: #{v.$l-accent-purple-text};
+  --accent-purple-bg: #{v.$l-accent-purple-bg};
+  --accent-gold-text: #{v.$l-accent-gold-text};
+  --accent-gold-bg: #{v.$l-accent-gold-bg};
+  --neutral-bg: #{v.$l-neutral-bg};
+
+  --shadow-card: #{v.$l-shadow-card};
+  --shadow-modal: #{v.$l-shadow-modal};
+}
+
 // Exponemos la paleta como custom properties para que los componentes
 // (que usan var(--brand-blue, ...)) puedan consumirla.
 :root {
+  color-scheme: dark;
   // Marca
   --brand-blue: #{v.$brand-blue};
   --brand-blue-hover: #{v.$brand-blue-hover};
@@ -68,6 +107,18 @@
   // Alias heredado: algún componente usa --color-text-muted por error.
   // Se mantiene definido para que no caiga al fallback mientras se migra.
   --color-text-muted: #{v.$text-muted};
+}
+
+// Preferencia del sistema, salvo que el usuario haya elegido oscuro a mano.
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    @include tema-claro;
+  }
+}
+
+// Elección explícita del usuario: gana siempre sobre la del sistema.
+:root[data-theme='light'] {
+  @include tema-claro;
 }
 
 html,

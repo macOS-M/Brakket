@@ -197,20 +197,25 @@ Colores de estado. Cada uno existe en tres variantes: **base** para bordes y ace
 
 El frontmatter es normativo para el tema oscuro, que es el predeterminado. El tema claro reasigna los neutros; los colores de marca y de estado conservan su base y bajan la variante `-ink` para mantener contraste sobre fondo claro.
 
-| Rol | Oscuro | Claro |
-|---|---|---|
-| Fondo de sala | `#0b1120` | `#f8fafc` |
-| Superficie | `#111827` | `#ffffff` |
-| Superficie elevada | `#1f2937` | `#f1f5f9` |
-| Superficie hundida | `#0d1526` | `#f1f5f9` |
-| Borde | `#334155` | `#cbd5e1` |
-| Tinta | `#e2e8f0` | `#0f172a` |
-| Tinta apagada | `#94a3b8` | `#475569` |
-| Tinta tenue | `#64748b` | `#64748b` |
-| Peligro (tinta) | `#f87171` | `#dc2626` |
-| Éxito (tinta) | `#4ade80` | `#15803d` |
-| Aviso (tinta) | `#fbbf24` | `#b45309` |
-| Información (tinta) | `#60a5fa` | `#1d4ed8` |
+| Rol | Oscuro | Claro | Contraste en claro |
+|---|---|---|---|
+| Fondo de sala | `#0b1120` | `#f8fafc` | — |
+| Superficie | `#111827` | `#ffffff` | — |
+| Superficie elevada | `#1f2937` | `#f1f5f9` | — |
+| Superficie hundida | `#0d1526` | `#f1f5f9` | — |
+| Borde | `#334155` | `#cbd5e1` | — |
+| Tinta | `#e2e8f0` | `#0f172a` | 17.9:1 |
+| Tinta apagada | `#94a3b8` | `#475569` | 7.6:1 |
+| Tinta tenue | `#8496ad` | `#5a677a` | 5.5:1 |
+| **Cyan de señal** | `#22d3ee` | `#0e7490` | 5.4:1 |
+| Peligro (tinta) | `#f87171` | `#dc2626` | 4.8:1 |
+| Éxito (tinta) | `#4ade80` | `#15803d` | 5.0:1 |
+| Aviso (tinta) | `#fbbf24` | `#b45309` | 5.0:1 |
+| Información (tinta) | `#60a5fa` | `#1d4ed8` | 6.7:1 |
+
+**El cyan de marca es inusable como texto sobre blanco** — `#22d3ee` da 1.8:1. Por eso el tema claro lo reemplaza por una variante oscura que conserva el matiz. Es el único color de marca que cambia entre temas, y cambia por obligación, no por gusto.
+
+El tema por defecto es **automático**: sigue a `prefers-color-scheme`, porque el contexto de uso varía por rol — los organizadores trabajan de día y los jugadores de noche. El usuario puede forzar claro u oscuro desde la barra lateral, y esa elección gana sobre la del sistema y se recuerda entre sesiones.
 
 ### Named Rules
 

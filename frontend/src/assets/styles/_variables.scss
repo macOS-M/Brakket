@@ -59,6 +59,47 @@ $accent-gold: #eab308;
 $accent-gold-text: #facc15;
 $accent-gold-bg: rgba(234, 179, 8, 0.12);
 
+// ============================================================
+// Tema claro
+// ------------------------------------------------------------
+// Los neutros se invierten; la marca y los estados conservan su
+// identidad pero bajan de luminosidad para contrastar sobre blanco.
+// Todos los valores están verificados a 4.5:1 mínimo sobre la
+// superficie donde se usan.
+// ============================================================
+
+$l-bg: #f8fafc;
+$l-surface: #ffffff;
+$l-surface-2: #f1f5f9;
+$l-surface-3: #f1f5f9;
+$l-border: #cbd5e1;
+$l-border-soft: rgba(100, 116, 139, 0.2);
+
+$l-text: #0f172a; // 17.9:1
+$l-text-muted: #475569; // 7.6:1
+$l-text-subtle: #5a677a; // 5.5:1 — #64748b daba 4.55, demasiado justo
+
+// El cyan de marca es inusable como texto sobre blanco (1.8:1).
+// Esta variante oscura conserva el matiz y llega a 5.4:1.
+$l-brand-cyan: #0e7490;
+
+$l-danger-text: #dc2626; // 4.8:1
+$l-danger-bg: rgba(220, 38, 38, 0.1);
+$l-success-text: #15803d; // 5.0:1
+$l-success-bg: rgba(21, 128, 61, 0.1);
+$l-warning-text: #b45309; // 5.0:1
+$l-warning-bg: rgba(180, 83, 9, 0.1);
+$l-info-text: #1d4ed8; // 6.7:1
+$l-info-bg: rgba(29, 78, 216, 0.1);
+$l-accent-purple-text: #6d28d9;
+$l-accent-purple-bg: rgba(109, 40, 217, 0.1);
+$l-accent-gold-text: #a16207;
+$l-accent-gold-bg: rgba(161, 98, 7, 0.12);
+$l-neutral-bg: rgba(100, 116, 139, 0.1);
+
+$l-shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08);
+$l-shadow-modal: 0 24px 80px rgba(15, 23, 42, 0.18);
+
 // ----- Tipografía -----
 // Barlow es una grotesca de baja modulación diseñada para señalética
 // deportiva: tiene carácter competitivo sin caer en lo estridente, y
