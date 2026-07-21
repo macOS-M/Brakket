@@ -1,0 +1,56 @@
+.stat {
+  position: relative;
+  padding: 0.9rem 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+
+  // Franja de color superior (como en el diseño).
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: var(--acento);
+  }
+}
+
+.etiqueta {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+}
+
+.valor {
+  margin: 0.3rem 0 0;
+  color: var(--acento);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.nota {
+  margin: 0.3rem 0 0;
+  color: var(--text-subtle, #64748b);
+  font-size: 0.72rem;
+}
+
+.tono-azul {
+  --acento: var(--info-text, #60a5fa);
+}
+.tono-cyan {
+  --acento: var(--brand-cyan, #22d3ee);
+}
+.tono-verde {
+  --acento: var(--success-text, #4ade80);
+}
+.tono-ambar {
+  --acento: var(--warning-text, #fbbf24);
+}
+.tono-rojo {
+  --acento: var(--danger-text, #f87171);
+}
+.tono-morado {
+  --acento: var(--accent-purple-text, #c4b5fd);
+}

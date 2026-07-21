@@ -1,8 +1,27 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
+import { AuthService } from '../../core/services/auth.service';
+
+export interface EnlaceNav {
+  ruta: string;
+  etiqueta: string;
+  icono: string;
+  exact: boolean;
+  /** La pantalla sigue siendo un placeholder; se marca para no prometer de más. */
+  proximamente?: boolean;
+  /** Solo visible para quien tenga alguno de estos roles. */
+  roles?: string[];
+}
+
+export interface GrupoNav {
+  titulo: string | null;
+  enlaces: EnlaceNav[];
+}
+
 /**
- * Navegacion lateral con acceso a las distintas features del producto.
+ * Navegacion lateral. Agrupa las secciones por area y marca las que
+ * todavia no tienen backend, para que la demo no parezca rota.
  */
 @Component({
   selector: 'app-sidebar',
@@ -12,20 +31,148 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent {
-  readonly enlaces = [
-    { ruta: '/', etiqueta: 'Inicio', exact: true },
-    { ruta: '/teams', etiqueta: 'Equipos', exact: false },
-    { ruta: '/transfers', etiqueta: 'Transferencias', exact: false },
-    { ruta: '/games', etiqueta: 'Juegos', exact: false },
-    { ruta: '/leagues', etiqueta: 'Ligas', exact: false },
-    { ruta: '/tournaments', etiqueta: 'Torneos', exact: false },
-    { ruta: '/disputes', etiqueta: 'Disputas', exact: false },
-    { ruta: '/twitch', etiqueta: 'Twitch', exact: false },
-    { ruta: '/analytics', etiqueta: 'Analitica', exact: false },
-    { ruta: '/sponsorships', etiqueta: 'Patrocinios', exact: false },
-    { ruta: '/notifications', etiqueta: 'Notificaciones', exact: false },
-    { ruta: '/statistics', etiqueta: 'Estadisticas', exact: false },
-    { ruta: '/progression', etiqueta: 'Progresion', exact: false },
-    { ruta: '/admin', etiqueta: 'Admin', exact: false }
+  private readonly authService = inject(AuthService);
+
+  readonly usuario = this.authService.usuario;
+  readonly abiertoEnMovil = signal(false);
+
+  private readonly grupos: GrupoNav[] = [
+    {
+      titulo: null,
+      enlaces: [{ ruta: '/', etiqueta: 'Inicio', icono: 'home', exact: true }]
+    },
+    {
+      titulo: 'Competencia',
+      enlaces: [
+        { ruta: '/leagues', etiqueta: 'Ligas', icono: 'trophy', exact: false },
+        {
+          ruta: '/tournaments',
+          etiqueta: 'Torneos',
+          icono: 'swords',
+          exact: false,
+          proximamente: true
+        },
+        { ruta: '/games', etiqueta: 'Juegos', icono: 'gamepad', exact: false }
+      ]
+    },
+    {
+      titulo: 'Mi equipo',
+      enlaces: [
+        { ruta: '/teams', etiqueta: 'Equipos', icono: 'users', exact: false },
+        { ruta: '/transfers', etiqueta: 'Transferencias', icono: 'exchange', exact: false },
+        {
+          ruta: '/disputes',
+          etiqueta: 'Disputas',
+          icono: 'shield',
+          exact: false,
+          proximamente: true
+        }
+      ]
+    },
+    {
+      titulo: 'Seguimiento',
+      enlaces: [
+        {
+          ruta: '/statistics',
+          etiqueta: 'Estadisticas',
+          icono: 'chart',
+          exact: false,
+          proximamente: true
+        },
+        {
+          ruta: '/progression',
+          etiqueta: 'Progresion',
+          icono: 'star',
+          exact: false,
+          proximamente: true
+        },
+        {
+          ruta: '/notifications',
+          etiqueta: 'Notificaciones',
+          icono: 'bell',
+          exact: false,
+          proximamente: true
+        },
+        {
+          ruta: '/twitch',
+          etiqueta: 'Transmisiones',
+          icono: 'video',
+          exact: false,
+          proximamente: true
+        }
+      ]
+    },
+    {
+      titulo: 'Gestion',
+      enlaces: [
+        {
+          ruta: '/sponsorships',
+          etiqueta: 'Patrocinios',
+          icono: 'briefcase',
+          exact: false,
+          proximamente: true
+        },
+        {
+          ruta: '/analytics',
+          etiqueta: 'Analitica',
+          icono: 'pulse',
+          exact: false,
+          proximamente: true
+        },
+        {
+          ruta: '/admin',
+          etiqueta: 'Administracion',
+          icono: 'settings',
+          exact: false,
+          roles: ['ADMIN']
+        }
+      ]
+    }
   ];
+
+  /** Oculta los enlaces cuyo rol el usuario no tiene. */
+  readonly gruposVisibles = computed<GrupoNav[]>(() =>
+    this.grupos
+      .map((grupo) => ({
+        ...grupo,
+        enlaces: grupo.enlaces.filter((enlace) => this.puedeVer(enlace))
+      }))
+      .filter((grupo) => grupo.enlaces.length > 0)
+  );
+
+  readonly iniciales = computed(() => {
+    const nombre = this.usuario()?.nombre?.trim();
+    if (!nombre) {
+      return '?';
+    }
+    return nombre
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((parte) => parte.charAt(0).toUpperCase())
+      .join('');
+  });
+
+  alternarMenu(): void {
+    this.abiertoEnMovil.update((abierto) => !abierto);
+  }
+
+  cerrarMenu(): void {
+    this.abiertoEnMovil.set(false);
+  }
+
+  login(): void {
+    this.authService.login();
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
+
+  private puedeVer(enlace: EnlaceNav): boolean {
+    if (!enlace.roles) {
+      return true;
+    }
+    const roles = this.authService.roles();
+    return enlace.roles.some((rol) => roles.includes(rol));
+  }
 }

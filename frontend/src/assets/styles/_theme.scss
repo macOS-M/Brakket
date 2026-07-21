@@ -3,17 +3,67 @@
 // Exponemos la paleta como custom properties para que los componentes
 // (que usan var(--brand-blue, ...)) puedan consumirla.
 :root {
+  // Marca
   --brand-blue: #{v.$brand-blue};
+  --brand-blue-hover: #{v.$brand-blue-hover};
   --brand-cyan: #{v.$brand-cyan};
+
+  // Superficies
   --bg: #{v.$bg};
   --surface: #{v.$surface};
   --surface-2: #{v.$surface-2};
+  --surface-3: #{v.$surface-3};
   --border: #{v.$border};
+  --border-soft: #{v.$border-soft};
+
+  // Texto
   --text: #{v.$text};
   --text-muted: #{v.$text-muted};
+  --text-subtle: #{v.$text-subtle};
+
+  // Estados
   --danger: #{v.$danger};
+  --danger-text: #{v.$danger-text};
+  --danger-bg: #{v.$danger-bg};
+
   --success: #{v.$success};
+  --success-text: #{v.$success-text};
+  --success-bg: #{v.$success-bg};
+
   --warning: #{v.$warning};
+  --warning-text: #{v.$warning-text};
+  --warning-bg: #{v.$warning-bg};
+
+  --info: #{v.$info};
+  --info-text: #{v.$info-text};
+  --info-bg: #{v.$info-bg};
+
+  --neutral-bg: #{v.$neutral-bg};
+
+  // Acentos de competencia (rangos, rarezas, podio)
+  --accent-purple: #{v.$accent-purple};
+  --accent-purple-text: #{v.$accent-purple-text};
+  --accent-purple-bg: #{v.$accent-purple-bg};
+
+  --accent-gold: #{v.$accent-gold};
+  --accent-gold-text: #{v.$accent-gold-text};
+  --accent-gold-bg: #{v.$accent-gold-bg};
+
+  // Radios y sombras
+  --radius-sm: #{v.$radius-sm};
+  --radius-md: #{v.$radius-md};
+  --radius-lg: #{v.$radius-lg};
+  --radius-pill: #{v.$radius-pill};
+  --shadow-card: #{v.$shadow-card};
+  --shadow-modal: #{v.$shadow-modal};
+
+  // Layout
+  --sidebar-width: #{v.$sidebar-width};
+  --content-max: #{v.$content-max};
+
+  // Alias heredado: algún componente usa --color-text-muted por error.
+  // Se mantiene definido para que no caiga al fallback mientras se migra.
+  --color-text-muted: #{v.$text-muted};
 }
 
 html,
@@ -49,4 +99,40 @@ h4 {
 ::selection {
   background: var(--brand-blue);
   color: #fff;
+}
+
+// ----- Accesibilidad -----
+
+// Foco visible y consistente. Sin esto, navegar con teclado sobre el
+// tema oscuro es prácticamente imposible.
+:focus-visible {
+  outline: 2px solid var(--brand-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+// Respeta a quien configuró menos animación a nivel de sistema.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Texto solo para lectores de pantalla: nombra controles que
+// visualmente se entienden por contexto.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

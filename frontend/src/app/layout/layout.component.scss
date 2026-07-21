@@ -1,27 +1,30 @@
 .shell {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
   background: var(--bg, #0b1120);
   color: var(--text, #e2e8f0);
 }
 
-.body {
+.columna {
   display: flex;
+  flex-direction: column;
   flex: 1;
-  min-height: 0;
+  // Sin esto, una tabla ancha estira el flex item y rompe el layout
+  // en lugar de hacer scroll dentro de su propio contenedor.
+  min-width: 0;
 }
 
 .content {
   flex: 1;
-  padding: 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
+  max-width: var(--content-max, 1280px);
+  margin: 0 auto;
+  padding: 1.75rem 2rem;
 }
 
-@media (max-width: 768px) {
-  .body {
-    flex-direction: column;
+@media (max-width: 900px) {
+  .content {
+    // Deja aire para el botón hamburguesa, que va fijo arriba a la izquierda.
+    padding: 4rem 1rem 1.5rem;
   }
 }
