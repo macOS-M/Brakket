@@ -1,39 +1,122 @@
 <section class="page">
-  <div class="header">
-    <h1>Catálogo de juegos</h1>
+  <app-page-header
+    titulo="Catálogo de juegos"
+    subtitulo="Los títulos disponibles para crear ligas y torneos"
+  >
+    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
     <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
+    }
+  </app-page-header>
+
+  @if (!cargando() && !error() && juegos().length > 0) {
+  <div class="filtros">
+    <label class="buscador">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input
+        type="search"
+        placeholder="Buscar juego…"
+        [value]="busqueda()"
+        (input)="busqueda.set($any($event.target).value)"
+      />
+      <span class="sr-only">Buscar juego por nombre</span>
+    </label>
+
+    <div class="chips" role="group" aria-label="Filtrar por género">
+      <button
+        type="button"
+        class="chip"
+        [class.activo]="generoActivo() === null"
+        (click)="filtrarPorGenero(null)"
+      >
+        Todos
+      </button>
+      @for (genero of generos(); track genero) {
+      <button
+        type="button"
+        class="chip"
+        [class.activo]="generoActivo() === genero"
+        (click)="filtrarPorGenero(genero)"
+      >
+        {{ genero }}
+      </button>
+      }
+    </div>
   </div>
+  }
+
+  @if (errorAccion()) {
+  <p class="error-accion" role="alert">{{ errorAccion() }}</p>
+  }
 
   @if (cargando()) {
-  <p class="placeholder">Cargando juegos...</p>
+  <app-empty-state modo="cargando" mensaje="Cargando juegos…" />
   } @else if (error()) {
-  <p class="placeholder error">{{ error() }}</p>
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()!">
+    <button type="button" class="btn-secondary" (click)="cargarJuegos()">Reintentar</button>
+  </app-empty-state>
   } @else if (juegos().length === 0) {
-  <p class="placeholder">Todavía no hay juegos registrados.</p>
+  <app-empty-state
+    titulo="Todavía no hay juegos"
+    mensaje="Registrá el primer título para poder crear ligas y torneos sobre él."
+  >
+    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+    <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
+    }
+  </app-empty-state>
+  } @else if (juegosFiltrados().length === 0) {
+  <app-empty-state
+    titulo="Sin resultados"
+    mensaje="Ningún juego coincide con los filtros aplicados."
+  >
+    <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </app-empty-state>
   } @else {
   <div class="grid">
-    @for (juego of juegos(); track juego.id) {
-    <div class="juego-card">
-      @if (juego.imagenUrl) {
-      <img class="imagen" [src]="juego.imagenUrl" [alt]="juego.nombre" />
-      } @else {
-      <div class="imagen placeholder-imagen">Sin imagen</div>
-      }
+    @for (juego of juegosFiltrados(); track juego.id) {
+    <article class="juego-card">
+      <div class="portada">
+        @if (juego.imagenUrl) {
+        <img [src]="juego.imagenUrl" [alt]="" />
+        } @else {
+        <span class="inicial" aria-hidden="true">{{ inicial(juego) }}</span>
+        }
+      </div>
+
       <div class="info">
-        <p class="nombre">{{ juego.nombre }}</p>
+        <h2 class="nombre">{{ juego.nombre }}</h2>
         <p class="genero">{{ juego.genero }}</p>
         @if (juego.descripcion) {
         <p class="descripcion">{{ juego.descripcion }}</p>
         }
       </div>
+
+      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
       <div class="acciones">
-        @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
-        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'perfil-competitivo']">Perfil competitivo</a>
+        @if (confirmandoId() === juego.id) {
+        <p class="confirmacion">¿Desactivar {{ juego.nombre }}?</p>
+        <div class="botones">
+          <button type="button" class="btn-danger" (click)="confirmarDesactivar(juego)">
+            Sí, desactivar
+          </button>
+          <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+            Cancelar
+          </button>
+        </div>
+        } @else {
+        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'perfil-competitivo']">
+          Perfil competitivo
+        </a>
         <a class="btn-secondary" [routerLink]="['/games', juego.id, 'editar']">Editar</a>
-        <button class="btn-danger" type="button" (click)="desactivar(juego)">Desactivar</button>
+        <button type="button" class="btn-ghost-danger" (click)="pedirConfirmacion(juego)">
+          Desactivar
+        </button>
         }
       </div>
-    </div>
+      }
+    </article>
     }
   </div>
   }

@@ -32,6 +32,8 @@ import { Component, Input } from '@angular/core';
 })
 export class PageHeaderComponent {
   @Input({ required: true }) titulo = '';
-  @Input() subtitulo?: string;
-  @Input() eyebrow?: string;
+  // Acepta null porque es habitual alimentarlo con un DatePipe, que
+  // devuelve string | null.
+  @Input() subtitulo?: string | null;
+  @Input() eyebrow?: string | null;
 }

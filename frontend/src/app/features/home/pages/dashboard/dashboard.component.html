@@ -1,4 +1,120 @@
 <section class="page">
-  <h1>Panel principal</h1>
-  <p class="placeholder">Pendiente EPIC-03.</p>
+  <app-page-header [titulo]="saludo()" [subtitulo]="hoy | date: 'EEEE, d \'de\' MMMM \'de\' y'" />
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando tu panel…" />
+  } @else if (errorGeneral()) {
+  <app-empty-state
+    modo="error"
+    titulo="No se pudo cargar el panel"
+    mensaje="No hubo respuesta del servidor. Revisá que el backend esté corriendo."
+  >
+    <button type="button" class="btn-secondary" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else {
+
+  <div class="stats">
+    <app-stat-card
+      etiqueta="Invitaciones pendientes"
+      [valor]="invitaciones().length"
+      nota="Esperan tu respuesta"
+      tono="cyan"
+    />
+    <app-stat-card
+      etiqueta="Transferencias por resolver"
+      [valor]="transferencias().length"
+      nota="Requieren tu aprobación"
+      tono="ambar"
+    />
+    <app-stat-card etiqueta="Ligas" [valor]="ligas().length" nota="Registradas" tono="verde" />
+    <app-stat-card
+      etiqueta="Juegos"
+      [valor]="totalJuegos()"
+      nota="En el catálogo"
+      tono="morado"
+    />
+  </div>
+
+  <div class="columnas">
+    <!-- Pendientes accionables -->
+    <section class="bloque">
+      <div class="bloque-titulo">
+        <h2>Requieren tu atención</h2>
+      </div>
+
+      @if (sinPendientes()) {
+      <app-empty-state
+        titulo="Todo al día"
+        mensaje="No tenés invitaciones ni transferencias esperando respuesta."
+      />
+      } @else {
+      <ul class="lista">
+        @for (invitacion of invitaciones(); track invitacion.id) {
+        <li class="item">
+          <span class="marca marca-cyan" aria-hidden="true"></span>
+          <div class="item-cuerpo">
+            <p class="item-titulo">Invitación de {{ invitacion.equipoNombre }}</p>
+            <p class="item-detalle">
+              Rol propuesto: {{ invitacion.rolPropuesto }} · enviada por
+              {{ invitacion.creadoPorNombre }}
+            </p>
+          </div>
+          <a class="btn-secondary" routerLink="/teams/invitaciones">Responder</a>
+        </li>
+        }
+        @for (transferencia of transferencias(); track transferencia.id) {
+        <li class="item">
+          <span class="marca marca-ambar" aria-hidden="true"></span>
+          <div class="item-cuerpo">
+            <p class="item-titulo">
+              Transferencia de {{ transferencia.jugadorNombre }}
+            </p>
+            <p class="item-detalle">
+              {{ transferencia.equipoOrigenNombre }} → {{ transferencia.equipoDestinoNombre }}
+            </p>
+          </div>
+          <a class="btn-secondary" routerLink="/transfers">Revisar</a>
+        </li>
+        }
+      </ul>
+      }
+    </section>
+
+    <!-- Ligas -->
+    <section class="bloque">
+      <div class="bloque-titulo">
+        <h2>Ligas</h2>
+        <a class="ver-todos" routerLink="/leagues">Ver todas →</a>
+      </div>
+
+      @if (ligas().length === 0) {
+      <app-empty-state
+        titulo="Sin ligas todavía"
+        mensaje="Creá una liga para empezar a organizar temporadas."
+      >
+        <a class="btn-primary" routerLink="/leagues">Ir a ligas</a>
+      </app-empty-state>
+      } @else {
+      <ul class="lista">
+        @for (liga of ligasRecientes(); track liga.id) {
+        <li class="item">
+          <span class="marca marca-verde" aria-hidden="true"></span>
+          <div class="item-cuerpo">
+            <p class="item-titulo">{{ liga.nombre }}</p>
+            <p class="item-detalle">
+              {{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}
+            </p>
+          </div>
+          <a class="btn-secondary" [routerLink]="['/leagues', liga.id]">Abrir</a>
+        </li>
+        }
+      </ul>
+      }
+    </section>
+  </div>
+
+  <p class="nota-alcance">
+    Torneos, resultados y estadísticas aparecerán acá cuando se implementen sus módulos.
+  </p>
+  }
 </section>

@@ -1,17 +1,24 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../services/games.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 /**
  * Catalogo de juegos (RF-20).
+ *
+ * Los filtros se apoyan en datos que existen de verdad (nombre y genero).
+ * El diseno mostraba ademas "N torneos activos" por juego, pero el modulo
+ * de torneos todavia no tiene backend, asi que ese contador se omite en
+ * lugar de inventarlo.
  */
 @Component({
   selector: 'app-game-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './game-list.component.html',
   styleUrl: './game-list.component.scss'
 })
@@ -22,6 +29,36 @@ export class GameListComponent implements OnInit {
   readonly juegos = signal<Juego[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+
+  readonly busqueda = signal('');
+  readonly generoActivo = signal<string | null>(null);
+
+  /** Juego cuya desactivacion se esta confirmando en linea. */
+  readonly confirmandoId = signal<number | null>(null);
+  readonly errorAccion = signal<string | null>(null);
+
+  /** Generos presentes en el catalogo, para armar los chips de filtro. */
+  readonly generos = computed(() => {
+    const vistos = new Set<string>();
+    for (const juego of this.juegos()) {
+      if (juego.genero?.trim()) {
+        vistos.add(juego.genero.trim());
+      }
+    }
+    return [...vistos].sort((a, b) => a.localeCompare(b));
+  });
+
+  readonly juegosFiltrados = computed(() => {
+    const texto = this.busqueda().trim().toLowerCase();
+    const genero = this.generoActivo();
+    return this.juegos().filter((juego) => {
+      const calzaTexto = !texto || juego.nombre.toLowerCase().includes(texto);
+      const calzaGenero = !genero || juego.genero?.trim() === genero;
+      return calzaTexto && calzaGenero;
+    });
+  });
+
+  readonly hayFiltros = computed(() => !!this.busqueda().trim() || this.generoActivo() !== null);
 
   ngOnInit(): void {
     this.cargarJuegos();
@@ -42,17 +79,39 @@ export class GameListComponent implements OnInit {
     });
   }
 
-  desactivar(juego: Juego): void {
-    const confirmado = confirm(`¿Desactivar el juego "${juego.nombre}"?`);
-    if (!confirmado) {
-      return;
-    }
+  filtrarPorGenero(genero: string | null): void {
+    this.generoActivo.set(this.generoActivo() === genero ? null : genero);
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda.set('');
+    this.generoActivo.set(null);
+  }
+
+  pedirConfirmacion(juego: Juego): void {
+    this.errorAccion.set(null);
+    this.confirmandoId.set(juego.id);
+  }
+
+  cancelarConfirmacion(): void {
+    this.confirmandoId.set(null);
+  }
+
+  confirmarDesactivar(juego: Juego): void {
     this.gamesService.desactivar(juego.id).subscribe({
-      next: () => this.cargarJuegos(),
+      next: () => {
+        this.confirmandoId.set(null);
+        this.cargarJuegos();
+      },
       error: (err) => {
-        const mensaje = err?.error?.message ?? 'No se pudo desactivar el juego.';
-        alert(mensaje);
+        this.confirmandoId.set(null);
+        this.errorAccion.set(err?.error?.message ?? 'No se pudo desactivar el juego.');
       }
     });
+  }
+
+  /** Inicial del juego, para la portada cuando no hay imagen. */
+  inicial(juego: Juego): string {
+    return juego.nombre?.charAt(0).toUpperCase() ?? '?';
   }
 }

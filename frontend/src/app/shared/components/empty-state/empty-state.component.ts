@@ -37,6 +37,6 @@ import { Component, Input } from '@angular/core';
 })
 export class EmptyStateComponent {
   @Input() modo: 'vacio' | 'cargando' | 'error' = 'vacio';
-  @Input() titulo?: string;
-  @Input() mensaje?: string;
+  @Input() titulo?: string | null;
+  @Input() mensaje?: string | null;
 }
