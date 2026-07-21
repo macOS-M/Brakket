@@ -15,6 +15,7 @@ export class SidebarComponent {
   readonly enlaces = [
     { ruta: '/', etiqueta: 'Inicio', exact: true },
     { ruta: '/teams', etiqueta: 'Equipos', exact: false },
+    { ruta: '/transfers', etiqueta: 'Transferencias', exact: false },
     { ruta: '/games', etiqueta: 'Juegos', exact: false },
     { ruta: '/leagues', etiqueta: 'Ligas', exact: false },
     { ruta: '/tournaments', etiqueta: 'Torneos', exact: false },

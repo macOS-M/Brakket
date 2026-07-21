@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 
 import { TeamRosterComponent } from './team-roster.component';
 import { TeamsService } from '../../services/teams.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 describe('TeamRosterComponent', () => {
   let component: TeamRosterComponent;
@@ -24,13 +25,19 @@ describe('TeamRosterComponent', () => {
     const teamsServiceMock = {
       listMiembros: () => of([]),
       cambiarRol: () => of({}),
-      disolver: () => of(equipoDisuelto)
+      disolver: () => of(equipoDisuelto),
+      invitar: () => of({})
+    };
+
+    const authServiceMock = {
+      usuario: () => ({ id: 1 })
     };
 
     await TestBed.configureTestingModule({
       imports: [TeamRosterComponent],
       providers: [
         { provide: TeamsService, useValue: teamsServiceMock },
+        { provide: AuthService, useValue: authServiceMock },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => '1' } } }
@@ -80,5 +87,24 @@ describe('TeamRosterComponent', () => {
     component.disolverEquipo();
 
     expect(spy).toHaveBeenCalledWith(1, { confirmacion: true, motivo: null });
+  });
+
+  it('should not send an invitation when the form is invalid', () => {
+    const spy = spyOn(teamsService, 'invitar').and.callThrough();
+
+    component.invitar();
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(component.invitarForm.touched).toBeTrue();
+  });
+
+  it('should send an invitation with the proposed role and null message when empty', () => {
+    const spy = spyOn(teamsService, 'invitar').and.callThrough();
+    component.invitarForm.setValue({ jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: '' });
+
+    component.invitar();
+
+    expect(spy).toHaveBeenCalledWith(1, { jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: null });
+    expect(component.invitacionEnviada()).toBeTrue();
   });
 });

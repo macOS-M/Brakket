@@ -1,0 +1,78 @@
+<section class="page">
+  <div class="header">
+    <h1>Solicitar transferencia</h1>
+    <a class="btn-secondary" routerLink="/transfers">Volver</a>
+  </div>
+
+  <p class="ayuda">
+    Como capitán del equipo destino puedes solicitar la incorporación de un jugador
+    de otro equipo. El jugador y el capitán del equipo de origen recibirán una
+    notificación y deberán aceptar para completar la transferencia.
+  </p>
+
+  @if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  }
+
+  <form class="formulario" [formGroup]="form" (ngSubmit)="guardar()">
+    <label>
+      <span>Equipo de origen</span>
+      <select formControlName="equipoOrigenId">
+        <option value="">Seleccionar equipo...</option>
+        @for (equipo of equipos(); track equipo.id) {
+        <option [value]="equipo.id">{{ equipo.nombre }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Jugador a transferir</span>
+      <select formControlName="jugadorId">
+        <option value="">
+          {{ cargandoMiembros() ? 'Cargando integrantes...' : 'Seleccionar jugador...' }}
+        </option>
+        @for (miembro of miembrosOrigen(); track miembro.id) {
+        <option [value]="miembro.usuarioId">{{ miembro.nombreUsuario }} ({{ miembro.rol }})</option>
+        }
+      </select>
+      @if (form.controls.equipoOrigenId.value && !cargandoMiembros() && miembrosOrigen().length === 0) {
+      <small class="nota">Este equipo no tiene jugadores transferibles.</small>
+      }
+    </label>
+
+    <label>
+      <span>Equipo destino (debes ser su capitán)</span>
+      <select formControlName="equipoDestinoId">
+        <option value="">Seleccionar equipo...</option>
+        @for (equipo of equipos(); track equipo.id) {
+        <option [value]="equipo.id">{{ equipo.nombre }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Rol propuesto</span>
+      <select formControlName="rolPropuesto">
+        @for (rol of rolesPropuestos; track rol) {
+        <option [value]="rol">{{ rol }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Justificación (opcional)</span>
+      <textarea
+        formControlName="justificacion"
+        rows="3"
+        maxlength="500"
+        placeholder="Motivo de la solicitud..."
+      ></textarea>
+    </label>
+
+    <div class="acciones">
+      <button class="btn-primary" type="submit" [disabled]="form.invalid || enviando()">
+        {{ enviando() ? 'Enviando...' : 'Enviar solicitud' }}
+      </button>
+    </div>
+  </form>
+</section>

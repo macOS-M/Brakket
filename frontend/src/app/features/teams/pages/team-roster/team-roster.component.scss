@@ -1,84 +1,88 @@
-.page {
-  padding: 1.5rem 0;
-
-  h1 {
-    margin: 0 0 1.25rem;
-  }
-
-  .placeholder {
-    display: inline-block;
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--brand-cyan, #22d3ee);
-    border-radius: 8px;
-    color: var(--text-muted, #94a3b8);
-
-    &.error {
-      border-color: #f87171;
-      color: #f87171;
-    }
-  }
-}
-
-.tabla {
-  width: 100%;
-  border-collapse: collapse;
+.invitar-box {
+  margin-top: 2rem;
+  padding: 1.25rem;
   background: var(--surface, #111827);
   border: 1px solid var(--border, #334155);
   border-radius: 12px;
-  overflow: hidden;
+  max-width: 400px;
 
-  th,
-  td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border, #334155);
-    font-size: 0.9rem;
-  }
-
-  th {
-    color: var(--text-muted, #94a3b8);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-
-  td {
-    color: var(--text, #e2e8f0);
-  }
-
-  tr:last-child td {
-    border-bottom: none;
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
   }
 }
 
-.badge {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: rgba(34, 211, 238, 0.15);
+.mensaje-exito {
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--brand-cyan, #22d3ee);
+  border-radius: 8px;
   color: var(--brand-cyan, #22d3ee);
-
-  &.inactivo {
-    background: rgba(148, 163, 184, 0.15);
-    color: var(--text-muted, #94a3b8);
-  }
+  font-size: 0.85rem;
 }
 
-select {
-  padding: 0.4rem 0.6rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border, #334155);
-  border-radius: 6px;
-  color: var(--text, #e2e8f0);
-  font-family: inherit;
+.mensaje-error {
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #f87171;
+  border-radius: 8px;
+  color: #f87171;
   font-size: 0.85rem;
-  cursor: pointer;
+}
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.form-invitar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text, #e2e8f0);
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 0.5rem 0.65rem;
+      background: var(--surface, #111827);
+      border: 1px solid var(--border, #334155);
+      border-radius: 8px;
+      color: var(--text, #e2e8f0);
+      font-family: inherit;
+      font-size: 0.85rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--brand-cyan, #22d3ee);
+      }
+    }
+
+    textarea {
+      resize: vertical;
+    }
+  }
+
+  .btn-primary {
+    align-self: flex-start;
+    padding: 0.5rem 1.1rem;
+    background: var(--brand-blue, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 }
 

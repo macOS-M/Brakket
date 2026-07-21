@@ -1,0 +1,97 @@
+.page {
+  padding: 1.5rem 0;
+
+  h1 {
+    margin: 0 0 1.25rem;
+  }
+
+  .placeholder {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    border: 1px dashed var(--brand-cyan, #22d3ee);
+    border-radius: 8px;
+    color: var(--text-muted, #94a3b8);
+
+    &.error {
+      border-color: #f87171;
+      color: #f87171;
+    }
+  }
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 500px;
+}
+
+.invitacion-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 12px;
+
+  .info {
+    .equipo {
+      margin: 0 0 0.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text, #e2e8f0);
+    }
+
+    .detalle {
+      margin: 0 0 0.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted, #94a3b8);
+
+      strong {
+        color: var(--brand-cyan, #22d3ee);
+      }
+    }
+
+    .mensaje {
+      margin: 0;
+      font-size: 0.8rem;
+      font-style: italic;
+      color: var(--text-muted, #94a3b8);
+    }
+  }
+
+  .acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+}
+
+.btn-aceptar,
+.btn-rechazar {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-aceptar {
+  background: var(--brand-blue, #2563eb);
+  color: #fff;
+}
+
+.btn-rechazar {
+  background: transparent;
+  border-color: #f87171;
+  color: #f87171;
+}

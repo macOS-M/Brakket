@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
@@ -12,7 +13,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-team-roster',
   standalone: true,
-  imports: [],
+  imports: [ReactiveFormsModule],
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })
@@ -21,6 +22,7 @@ export class TeamRosterComponent implements OnInit {
   private readonly teamsService = inject(TeamsService);
   private readonly gamesService = inject(GamesService);
   private readonly authService = inject(AuthService);
+  private readonly fb = inject(FormBuilder);
 
   readonly roles = ROLES_EQUIPO;
   readonly miembros = signal<MiembroEquipo[]>([]);
@@ -33,6 +35,10 @@ export class TeamRosterComponent implements OnInit {
       (m) => m.usuarioId === miId && m.rol === 'CAPITAN' && m.estado === 'ACTIVO'
     );
   });
+
+  readonly invitando = signal(false);
+  readonly errorInvitar = signal<string | null>(null);
+  readonly invitacionEnviada = signal(false);
 
   // RF-03: disolución del equipo (solo el capitán; el backend lo valida).
   readonly confirmaDisolucion = signal(false);
@@ -49,10 +55,14 @@ export class TeamRosterComponent implements OnInit {
   readonly buscando = signal(false);
   readonly errorBusqueda = signal<string | null>(null);
   readonly resultados = signal<JugadorDisponible[] | null>(null);
-  readonly invitandoId = signal<number | null>(null);
-  readonly invitadoOkId = signal<number | null>(null);
 
   private equipoId!: number;
+
+  readonly invitarForm = this.fb.nonNullable.group({
+    jugadorId: [null as number | null, [Validators.required]],
+    rolPropuesto: ['TITULAR', [Validators.required]],
+    mensaje: ['']
+  });
 
   ngOnInit(): void {
     this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
@@ -96,6 +106,34 @@ export class TeamRosterComponent implements OnInit {
     });
   }
 
+  invitar(): void {
+    if (this.invitarForm.invalid) {
+      this.invitarForm.markAllAsTouched();
+      return;
+    }
+
+    this.invitando.set(true);
+    this.errorInvitar.set(null);
+    this.invitacionEnviada.set(false);
+    const valores = this.invitarForm.getRawValue();
+
+    this.teamsService.invitar(this.equipoId, {
+      jugadorId: valores.jugadorId!,
+      rolPropuesto: valores.rolPropuesto,
+      mensaje: valores.mensaje || null
+    }).subscribe({
+      next: () => {
+        this.invitando.set(false);
+        this.invitacionEnviada.set(true);
+        this.invitarForm.reset({ jugadorId: null, rolPropuesto: 'TITULAR', mensaje: '' });
+      },
+      error: (err) => {
+        this.invitando.set(false);
+        this.errorInvitar.set(err?.error?.message ?? 'No se pudo enviar la invitacion.');
+      }
+    });
+  }
+
   disolverEquipo(): void {
     if (!this.confirmaDisolucion() || this.disolviendo() || this.equipoDisuelto()) {
       return;
@@ -134,24 +172,7 @@ export class TeamRosterComponent implements OnInit {
     });
   }
 
-  invitar(jugador: JugadorDisponible): void {
-    this.invitandoId.set(jugador.id);
-    this.teamsService.invitar(this.equipoId, {
-      jugadorId: jugador.id,
-      rolPropuesto: 'TITULAR',
-      mensaje: null
-    }).subscribe({
-      next: () => {
-        this.invitandoId.set(null);
-        this.invitadoOkId.set(jugador.id);
-      },
-      error: (err) => {
-        this.invitandoId.set(null);
-        alert(err?.error?.message ?? 'No se pudo enviar la invitacion.');
-      }
-    });
+  usarEnFormulario(jugador: JugadorDisponible): void {
+    this.invitarForm.patchValue({ jugadorId: jugador.id });
   }
 }
-
-
-

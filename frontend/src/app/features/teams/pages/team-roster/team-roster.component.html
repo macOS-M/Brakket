@@ -108,24 +108,55 @@
           <span class="badge-directo">Disponible para invitación directa</span>
           }
         </div>
-        @if (invitadoOkId() === jugador.id) {
-        <span class="invitado-ok">Invitación enviada</span>
-        } @else {
         <button
           type="button"
           class="btn-invitar"
-          [disabled]="invitandoId() === jugador.id"
-          (click)="invitar(jugador)"
+          (click)="usarEnFormulario(jugador)"
         >
-          {{ invitandoId() === jugador.id ? 'Enviando...' : 'Invitar' }}
+          Usar este jugador
         </button>
-        }
       </div>
       }
     </div>
     }
     }
   </section>
+
+  <div class="invitar-box">
+    <h2>Invitar jugador</h2>
+
+    @if (invitacionEnviada()) {
+    <p class="mensaje-exito">Invitación enviada correctamente.</p>
+    }
+    @if (errorInvitar()) {
+    <p class="mensaje-error">{{ errorInvitar() }}</p>
+    }
+
+    <form [formGroup]="invitarForm" (ngSubmit)="invitar()" class="form-invitar">
+      <div class="campo">
+        <label for="jugadorId">ID del jugador *</label>
+        <input id="jugadorId" type="number" formControlName="jugadorId" />
+      </div>
+
+      <div class="campo">
+        <label for="rolPropuesto">Rol propuesto *</label>
+        <select id="rolPropuesto" formControlName="rolPropuesto">
+          @for (rol of roles; track rol) {
+          <option [value]="rol">{{ rol }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="mensaje">Mensaje (opcional)</label>
+        <textarea id="mensaje" formControlName="mensaje" rows="2"></textarea>
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="invitando()">
+        {{ invitando() ? 'Enviando...' : 'Enviar invitación' }}
+      </button>
+    </form>
+  </div>
   }
 
   @if (!cargando() && !error() && !equipoDisuelto()) {
