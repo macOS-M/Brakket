@@ -29,6 +29,7 @@
         type="button"
         class="chip"
         [class.activo]="generoActivo() === null"
+        [attr.aria-pressed]="generoActivo() === null"
         (click)="filtrarPorGenero(null)"
       >
         Todos
@@ -38,6 +39,7 @@
         type="button"
         class="chip"
         [class.activo]="generoActivo() === genero"
+        [attr.aria-pressed]="generoActivo() === genero"
         (click)="filtrarPorGenero(genero)"
       >
         {{ genero }}
