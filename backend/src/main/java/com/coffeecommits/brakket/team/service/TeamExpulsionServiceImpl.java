@@ -5,15 +5,14 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
-import com.coffeecommits.brakket.notification.service.NotificationService;
 import com.coffeecommits.brakket.team.dto.ExpulsarIntegranteRequest;
 import com.coffeecommits.brakket.team.dto.MiembroEquipoResponse;
+import com.coffeecommits.brakket.team.event.IntegranteExpulsadoEvent;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 import com.coffeecommits.brakket.team.repository.EquipoRepository;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +20,6 @@ import java.time.LocalDateTime;
 
 @Service
 public class TeamExpulsionServiceImpl implements TeamExpulsionService {
-
-    private static final Logger log = LoggerFactory.getLogger(TeamExpulsionServiceImpl.class);
 
     private static final String ESTADO_ACTIVO = "ACTIVO";
     private static final String ESTADO_EXPULSADO = "EXPULSADO";
@@ -32,16 +29,16 @@ public class TeamExpulsionServiceImpl implements TeamExpulsionService {
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final UsuarioRepository usuarioRepository;
     private final EquipoRepository equipoRepository;
-    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public TeamExpulsionServiceImpl(MiembroEquipoRepository miembroEquipoRepository,
                                     UsuarioRepository usuarioRepository,
                                     EquipoRepository equipoRepository,
-                                    NotificationService notificationService) {
+                                    ApplicationEventPublisher eventPublisher) {
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.usuarioRepository = usuarioRepository;
         this.equipoRepository = equipoRepository;
-        this.notificationService = notificationService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -85,19 +82,11 @@ public class TeamExpulsionServiceImpl implements TeamExpulsionService {
         objetivo.setResponsableBaja(solicitante);
         miembroEquipoRepository.save(objetivo);
 
-        // RF-10: si la notificacion falla, la baja queda registrada igualmente.
-        try {
-            notificationService.notificar(
-                    objetivo.getUsuario(),
-                    "EXPULSION_EQUIPO",
-                    "Fuiste removido del equipo '%s'. Causa: %s".formatted(
-                            equipo.getNombre(), request.causa().trim()),
-                    "MiembroEquipo",
-                    objetivo.getId());
-        } catch (RuntimeException ex) {
-            log.warn("No se pudo notificar la expulsion del usuario {} del equipo {}: {}",
-                    usuarioId, equipoId, ex.getMessage());
-        }
+        // RF-10: la notificación se emite al confirmarse la baja (AFTER_COMMIT),
+        // no dentro de esta transacción. Así un fallo al notificar no puede
+        // marcar la transacción para rollback y deshacer la expulsión.
+        eventPublisher.publishEvent(new IntegranteExpulsadoEvent(
+                objetivo.getId(), objetivo.getUsuario(), equipo.getNombre(), request.causa().trim()));
 
         return MiembroEquipoResponse.fromEntity(objetivo);
     }

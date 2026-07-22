@@ -5,27 +5,26 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
-import com.coffeecommits.brakket.notification.service.NotificationService;
 import com.coffeecommits.brakket.team.dto.ExpulsarIntegranteRequest;
 import com.coffeecommits.brakket.team.dto.MiembroEquipoResponse;
+import com.coffeecommits.brakket.team.event.IntegranteExpulsadoEvent;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 import com.coffeecommits.brakket.team.repository.EquipoRepository;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,7 +39,7 @@ class TeamExpulsionServiceImplTest {
     @Mock
     private EquipoRepository equipoRepository;
     @Mock
-    private NotificationService notificationService;
+    private ApplicationEventPublisher eventPublisher;
     @InjectMocks
     private TeamExpulsionServiceImpl service;
 
@@ -80,21 +79,24 @@ class TeamExpulsionServiceImplTest {
         assertThat(objetivo.getCausaBaja()).isEqualTo("Inasistencia reiterada");
         assertThat(objetivo.getResponsableBaja()).isEqualTo(capitan);
         verify(miembroEquipoRepository).save(objetivo);
-        verify(notificationService).notificar(any(), anyString(), anyString(), anyString(), anyLong());
     }
 
     @Test
-    void la_baja_queda_registrada_aunque_falle_la_notificacion() {
+    void publica_el_evento_de_expulsion_para_notificar_tras_el_commit() {
         prepararCapitan();
         MiembroEquipo objetivo = miembro(jugador, "TITULAR", "ACTIVO");
         when(miembroEquipoRepository.findByEquipoIdAndUsuarioId(10L, 2L)).thenReturn(Optional.of(objetivo));
-        doThrow(new RuntimeException("smtp caido"))
-                .when(notificationService).notificar(any(), anyString(), anyString(), anyString(), anyLong());
 
-        MiembroEquipoResponse resp = service.expulsar(10L, 2L, request, "cap@x.com");
+        service.expulsar(10L, 2L, request, "cap@x.com");
 
-        assertThat(resp.estado()).isEqualTo("EXPULSADO");
-        verify(miembroEquipoRepository).save(objetivo);
+        // La notificación no va en esta transacción: se emite un evento que se
+        // atiende AFTER_COMMIT, para que un fallo al notificar no deshaga la baja.
+        ArgumentCaptor<IntegranteExpulsadoEvent> evento =
+                ArgumentCaptor.forClass(IntegranteExpulsadoEvent.class);
+        verify(eventPublisher).publishEvent(evento.capture());
+        assertThat(evento.getValue().destinatario()).isEqualTo(jugador);
+        assertThat(evento.getValue().equipoNombre()).isEqualTo("Coffee&Commits");
+        assertThat(evento.getValue().causa()).isEqualTo("Inasistencia reiterada");
     }
 
     @Test
