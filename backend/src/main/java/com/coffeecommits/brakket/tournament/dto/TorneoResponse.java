@@ -27,7 +27,8 @@ public record TorneoResponse(
         Long inscritos,
         LocalDateTime fechaInicio,
         String estado,
-        Boolean publico
+        Boolean publico,
+        String premio
 ) {
     public static TorneoResponse from(Torneo torneo, long inscritos) {
         boolean deLiga = torneo.getTemporada() != null;
@@ -50,7 +51,8 @@ public record TorneoResponse(
                 inscritos,
                 torneo.getFechaInicio(),
                 torneo.getEstado(),
-                torneo.getPublico()
+                torneo.getPublico(),
+                torneo.getPremio()
         );
     }
 }

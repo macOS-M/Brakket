@@ -19,6 +19,7 @@ export interface Torneo {
   fechaInicio: string;
   estado: string;
   publico: boolean;
+  premio: string | null;
 }
 
 export interface JugadorInscrito {
@@ -55,4 +56,5 @@ export interface CrearTorneoRequest {
   fechaInicio: string;
   publico: boolean;
   descripcion: string | null;
+  premio: string | null;
 }

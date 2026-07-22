@@ -116,6 +116,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .fechaInicio(request.fechaInicio())
                 .estado(Torneo.ESTADO_ABIERTO)
                 .publico(request.publico() == null || request.publico())
+                .premio(normalizar(request.premio()))
                 .build());
         return TorneoResponse.from(torneo, 0);
     }

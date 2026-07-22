@@ -30,6 +30,14 @@
   </ol>
 
   <div class="cuerpo">
+    @if (ligaId() === null) {
+    <!-- Aviso estilo referencia: torneo comunitario vs hospedado en liga. -->
+    <p class="info-banner">
+      Estás creando un torneo comunitario. Para darle más estructura (temporadas,
+      historial), hospedalo en una de tus ligas.
+    </p>
+    }
+
     @switch (paso()) { @case (1) {
     <div class="campo">
       <label for="w-nombre">Nombre *</label>
@@ -92,14 +100,6 @@
       ></textarea>
     </div>
 
-    <label class="check">
-      <input
-        type="checkbox"
-        [checked]="publico()"
-        (change)="publico.set($any($event.target).checked)"
-      />
-      Torneo público (se lista y cualquier capitán puede inscribir a su equipo)
-    </label>
     } @case (2) {
     <div class="campo">
       <label>Jugadores por equipo *</label>
@@ -120,12 +120,23 @@
     </div>
 
     <div class="campo">
-      <label for="w-formato">Formato *</label>
-      <select id="w-formato" (change)="formato.set($any($event.target).value)">
+      <label>Formato *</label>
+      <!-- Tarjetas con descripción, como el "Select bracket template". -->
+      <div class="formatos" role="radiogroup" aria-label="Formato del torneo">
         @for (f of formatos(); track f) {
-        <option [value]="f" [selected]="formato() === f">{{ f }}</option>
+        <button
+          type="button"
+          class="formato-opcion"
+          role="radio"
+          [attr.aria-checked]="formato() === f"
+          [class.activo]="formato() === f"
+          (click)="formato.set(f)"
+        >
+          <span class="formato-nombre">{{ etiquetaDe(f) }}</span>
+          <span class="formato-descripcion">{{ descripcionDe(f) }}</span>
+        </button>
         }
-      </select>
+      </div>
     </div>
 
     <div class="campo">
@@ -150,9 +161,34 @@
       }
     </div>
 
+    <!-- Configuración avanzada (referencia CM): visibilidad y premio. -->
+    <details class="avanzada">
+      <summary>Configuración avanzada</summary>
+      <label class="check">
+        <input
+          type="checkbox"
+          [checked]="!publico()"
+          (change)="publico.set(!$any($event.target).checked)"
+        />
+        No listado (oculto: solo vos lo ves; las invitaciones llegan pronto)
+      </label>
+      <div class="campo">
+        <label for="w-premio">Premio personalizado</label>
+        <input
+          id="w-premio"
+          type="text"
+          maxlength="200"
+          placeholder="Ej. ₡50 000 + skin del battle pass"
+          [value]="premio()"
+          (input)="premio.set($any($event.target).value)"
+        />
+      </div>
+    </details>
+
     <p class="resumen">
-      <strong>{{ nombre() }}</strong> · {{ tamano() }}v{{ tamano() }} · {{ formato() }} ·
-      {{ cupo() }} equipos · {{ publico() ? 'Público' : 'Privado' }}
+      <strong>{{ nombre() }}</strong> · {{ tamano() }}v{{ tamano() }} · {{ etiquetaDe(formato()) }} ·
+      {{ cupo() }} equipos · {{ publico() ? 'Público' : 'No listado' }}
+      @if (premio().trim()) { · 🏆 {{ premio() }} }
     </p>
     } }
 

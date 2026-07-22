@@ -111,6 +111,11 @@
     background: var(--warning-bg, rgba(245, 158, 11, 0.12));
     color: var(--warning-text, #fbbf24);
   }
+
+  &.premio {
+    background: var(--accent-gold-bg, rgba(234, 179, 8, 0.12));
+    color: var(--accent-gold-text, #facc15);
+  }
 }
 
 // ----- Tabs -----

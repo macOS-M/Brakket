@@ -75,4 +75,8 @@ public class Torneo {
     /** Público: se lista y acepta inscripciones; privado: solo lo ve su organizador. */
     @Column(name = "publico", nullable = false)
     private Boolean publico;
+
+    /** Premio personalizado (texto libre del organizador). */
+    @Column(name = "premio", length = 200)
+    private String premio;
 }

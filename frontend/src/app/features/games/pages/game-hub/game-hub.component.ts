@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { Juego } from '../../../../models/juego.model';
@@ -13,7 +14,7 @@ import { TorneoCardComponent } from '../../../tournaments/components/torneo-card
 import { TournamentWizardComponent } from '../../../tournaments/components/tournament-wizard/tournament-wizard.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
-type TabHub = 'resumen' | 'torneos';
+type TabHub = 'descripcion' | 'torneos';
 
 /**
  * Hub publico de un juego (referencia Challenger Mode): banner con el arte,
@@ -25,7 +26,7 @@ type TabHub = 'resumen' | 'torneos';
 @Component({
   selector: 'app-game-hub',
   standalone: true,
-  imports: [RouterLink, EmptyStateComponent, TorneoCardComponent, TournamentWizardComponent],
+  imports: [RouterLink, DatePipe, EmptyStateComponent, TorneoCardComponent, TournamentWizardComponent],
   templateUrl: './game-hub.component.html',
   styleUrl: './game-hub.component.scss'
 })
@@ -41,7 +42,13 @@ export class GameHubComponent {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
-  readonly tab = signal<TabHub>('resumen');
+  readonly tab = signal<TabHub>('descripcion');
+
+  /** Torneo destacado de la descripción: el próximo del juego. */
+  readonly destacado = computed(() => this.torneos()[0] ?? null);
+
+  /** El resto de torneos recientes para la fila de tarjetas. */
+  readonly otrosTorneos = computed(() => this.torneos().slice(1, 4));
 
   /** Ligas del catalogo cuyo juego es este (se filtra en el cliente). */
   readonly ligas = signal<League[]>([]);

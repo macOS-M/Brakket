@@ -33,6 +33,9 @@
         <span class="stat">{{ torneo.formato }}</span>
         <span class="stat">{{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
         <span class="stat resaltado">{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos</span>
+        @if (torneo.premio) {
+        <span class="stat premio">🏆 {{ torneo.premio }}</span>
+        }
         @if (!torneo.publico) {
         <span class="stat privado">Privado</span>
         }

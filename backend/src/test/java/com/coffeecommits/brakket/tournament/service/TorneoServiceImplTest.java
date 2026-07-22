@@ -70,7 +70,7 @@ class TorneoServiceImplTest {
 
     private CrearTorneoRequest request(Long temporadaId, LocalDateTime fecha) {
         return new CrearTorneoRequest(
-                "Copa Nocturna", 3L, temporadaId, "Eliminación directa", 5, 8, fecha, true, null);
+                "Copa Nocturna", 3L, temporadaId, "Eliminación directa", 5, 8, fecha, true, null, null);
     }
 
     private Torneo torneoAbierto() {

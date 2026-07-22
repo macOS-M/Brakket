@@ -49,8 +49,9 @@ export class TournamentWizardComponent implements OnInit {
   readonly tamano = signal(5);
   readonly cupo = signal(8);
 
-  // Paso 3 — Fecha
+  // Paso 3 — Fecha y configuración avanzada
   readonly fechaInicio = signal('');
+  readonly premio = signal('');
 
   readonly misLigas = signal<League[]>([]);
   readonly temporadas = signal<Season[]>([]);
@@ -66,6 +67,30 @@ export class TournamentWizardComponent implements OnInit {
 
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
+
+  /**
+   * Descripciones de los formatos (referencia "Select bracket template" de
+   * Challenger Mode). Se resuelven por coincidencia laxa sobre el nombre
+   * que venga del catálogo.
+   */
+  private static readonly DESCRIPCIONES: [RegExp, string][] = [
+    [/doble/i, 'Los perdedores siguen en la llave inferior; se queda fuera quien pierde dos veces.'],
+    [/grupo/i, 'Fase de grupos y los mejores avanzan a una llave eliminatoria.'],
+    [/robin/i, 'Todos contra todos: cada equipo enfrenta al resto de su grupo.'],
+    [/suizo/i, 'Sin eliminación: cada ronda empareja rivales con marcas similares.'],
+    [/elim/i, 'El formato clásico: quien pierde queda eliminado, hasta coronar al campeón.']
+  ];
+
+  descripcionDe(formato: string): string {
+    const par = TournamentWizardComponent.DESCRIPCIONES.find(([regex]) => regex.test(formato));
+    return par ? par[1] : 'Formato competitivo del catálogo de la plataforma.';
+  }
+
+  /** DOBLE_ELIMINACION → Doble eliminación (por si el catálogo viene crudo). */
+  etiquetaDe(formato: string): string {
+    const texto = formato.replaceAll('_', ' ').toLowerCase();
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
 
   /** El paso actual está completo y se puede avanzar. */
   readonly pasoValido = computed(() => {
@@ -158,7 +183,8 @@ export class TournamentWizardComponent implements OnInit {
       maxEquipos: this.cupo(),
       fechaInicio: this.fechaInicio(),
       publico: this.publico(),
-      descripcion: this.descripcion().trim() || null
+      descripcion: this.descripcion().trim() || null,
+      premio: this.premio().trim() || null
     };
 
     this.tournamentsService.crear(request).subscribe({

@@ -43,6 +43,9 @@ public record CrearTorneoRequest(
         Boolean publico,
 
         @Size(max = 1000, message = "La descripción no puede superar los 1000 caracteres")
-        String descripcion
+        String descripcion,
+
+        @Size(max = 200, message = "El premio no puede superar los 200 caracteres")
+        String premio
 ) {
 }
