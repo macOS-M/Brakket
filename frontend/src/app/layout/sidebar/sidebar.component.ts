@@ -13,7 +13,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class SidebarComponent {
   readonly enlaces = [
-    { ruta: '/', etiqueta: 'Inicio', exact: true },
+    { ruta: '/inicio', etiqueta: 'Inicio', exact: true },
     { ruta: '/teams', etiqueta: 'Equipos', exact: false },
     { ruta: '/transfers', etiqueta: 'Transferencias', exact: false },
     { ruta: '/games', etiqueta: 'Juegos', exact: false },
