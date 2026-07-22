@@ -74,6 +74,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/leagues/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tournaments/*/equipos-elegibles").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // Todo lo demás requiere JWT válido.
                         .anyRequest().authenticated()
                 )

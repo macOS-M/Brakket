@@ -1,6 +1,6 @@
 <section class="page">
-  <app-page-header titulo="Ligas" subtitulo="Administrá tus ligas y abrí su detalle">
-    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+  <app-page-header titulo="Ligas" subtitulo="Las competencias organizadas por la comunidad">
+    @if (auth.isAuthenticated()) {
     <a class="btn-primary" routerLink="nuevo">+ Nueva liga</a>
     }
   </app-page-header>
@@ -13,12 +13,12 @@
   <app-empty-state
     titulo="Aún no hay ligas"
     [mensaje]="
-      auth.hasRole('ADMIN', 'COMISIONADO')
+      auth.isAuthenticated()
         ? 'Creá la primera liga para empezar a organizar temporadas y torneos.'
-        : 'Cuando un comisionado cree la primera liga vas a verla acá.'
+        : 'Iniciá sesión y creá la primera liga de la comunidad.'
     "
   >
-    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+    @if (auth.isAuthenticated()) {
     <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
     }
   </app-empty-state>

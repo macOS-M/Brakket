@@ -52,6 +52,12 @@ export class LeagueFormComponent {
       error: () => this.error.set('No se pudieron cargar los juegos disponibles.')
     });
 
+    // Venir desde el hub de un juego preselecciona ese juego (?juegoId=).
+    const juegoParam = this.route.snapshot.queryParamMap.get('juegoId');
+    if (juegoParam) {
+      this.form.patchValue({ juegoId: Number(juegoParam) });
+    }
+
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       const id = Number(idParam);

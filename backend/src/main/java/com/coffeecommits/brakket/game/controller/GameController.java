@@ -69,20 +69,20 @@ public class GameController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('GESTIONAR_TORNEOS')")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public JuegoResponse crear(@Valid @RequestBody JuegoRequest request) {
         return gameService.crear(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('GESTIONAR_TORNEOS')")
+    @PreAuthorize("hasRole('ADMIN')")
     public JuegoResponse editar(@PathVariable Long id, @Valid @RequestBody JuegoRequest request) {
         return gameService.editar(id, request);
     }
 
     @PatchMapping("/{id}/desactivar")
-    @PreAuthorize("hasAuthority('GESTIONAR_TORNEOS')")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void desactivar(@PathVariable Long id) {
         gameService.desactivar(id);

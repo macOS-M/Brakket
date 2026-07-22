@@ -70,8 +70,7 @@ export class SidebarComponent {
           ruta: '/tournaments',
           etiqueta: 'Torneos',
           icono: 'swords',
-          exact: false,
-          proximamente: true
+          exact: false
         },
         { ruta: '/games', etiqueta: 'Juegos', icono: 'gamepad', exact: false }
       ]

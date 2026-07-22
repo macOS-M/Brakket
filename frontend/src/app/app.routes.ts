@@ -34,6 +34,7 @@ export const routes: Routes = [
         loadChildren: () => import('./features/leagues/leagues.routes').then((m) => m.routes)
       },
       {
+        // Lectura pública de torneos; crear/inscribir piden sesión al actuar.
         path: 'tournaments',
         loadChildren: () =>
           import('./features/tournaments/tournaments.routes').then((m) => m.routes)

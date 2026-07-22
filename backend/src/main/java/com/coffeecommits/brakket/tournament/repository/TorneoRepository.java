@@ -11,9 +11,18 @@ public interface TorneoRepository extends JpaRepository<Torneo, Long> {
 
     List<Torneo> findByTemporadaId(Long temporadaId);
 
+    /** Torneos públicos de un juego, próximos primero. */
+    List<Torneo> findByJuegoIdAndPublicoTrueOrderByFechaInicioAsc(Long juegoId);
+
+    /** Todos los torneos públicos (listado global), próximos primero. */
+    List<Torneo> findByPublicoTrueOrderByFechaInicioAsc();
+
+    /** Torneos organizados por un usuario (incluye privados), próximos primero. */
+    List<Torneo> findByOrganizadorIdOrderByFechaInicioAsc(Long organizadorId);
+
     @Query("""
             select count(t) > 0 from Torneo t
-            where t.temporada.liga.juego.id = :juegoId
+            where t.juego.id = :juegoId
               and upper(t.estado) not in ('FINALIZADO', 'CANCELADO')
             """)
     boolean existsActivoByJuegoId(@Param("juegoId") Long juegoId);

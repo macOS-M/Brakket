@@ -1,4 +1,59 @@
-<app-coming-soon
-  titulo="Torneos"
-  descripcion="Creá torneos, generá fixtures y brackets, y seguí los resultados en vivo."
-/>
+<section class="page">
+  <app-page-header
+    titulo="Torneos"
+    subtitulo="Los torneos públicos de la comunidad; creá el tuyo desde la página de un juego"
+  >
+    <a class="btn-primary" routerLink="/games">Elegir juego</a>
+  </app-page-header>
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando torneos…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()!">
+    <button type="button" class="btn-secondary" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else if (torneos().length === 0) {
+  <app-empty-state
+    titulo="Todavía no hay torneos"
+    mensaje="Entrá a la página de un juego y creá el primero: cualquier usuario puede organizar."
+  >
+    <a class="btn-primary" routerLink="/games">Ir a juegos</a>
+  </app-empty-state>
+  } @else {
+
+  <div class="chips" role="group" aria-label="Filtrar por jugadores por equipo">
+    <button
+      type="button"
+      class="chip"
+      [class.activo]="tamanoActivo() === null"
+      [attr.aria-pressed]="tamanoActivo() === null"
+      (click)="filtrar(null)"
+    >
+      Todos
+    </button>
+    @for (n of tamanos; track n) {
+    <button
+      type="button"
+      class="chip"
+      [class.activo]="tamanoActivo() === n"
+      [attr.aria-pressed]="tamanoActivo() === n"
+      (click)="filtrar(n)"
+    >
+      {{ n }}v{{ n }}
+    </button>
+    }
+  </div>
+
+  @if (filtrados().length === 0) {
+  <app-empty-state titulo="Sin torneos de ese tamaño" mensaje="Probá con otro filtro.">
+    <button type="button" class="btn-secondary" (click)="filtrar(null)">Ver todos</button>
+  </app-empty-state>
+  } @else {
+  <div class="lista">
+    @for (torneo of filtrados(); track torneo.id) {
+    <app-torneo-card [torneo]="torneo" />
+    }
+  </div>
+  }
+  }
+</section>

@@ -2,7 +2,8 @@
 
 .banner {
   position: relative;
-  overflow: hidden;
+  // Sin overflow hidden: el menú "Crear" (dropdown absoluto) debe poder
+  // salirse del banner. El recorte redondeado lo llevan las capas de arte.
   min-height: 240px;
   display: flex;
   flex-direction: column;
@@ -17,6 +18,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: var(--radius-xl, 20px);
 }
 
 // Velo para que el título mantenga contraste sobre cualquier arte.
@@ -24,6 +26,7 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, rgba(4, 8, 18, 0.88) 0%, rgba(4, 8, 18, 0.35) 55%, rgba(4, 8, 18, 0.15) 100%);
+  border-radius: var(--radius-xl, 20px);
 }
 
 .volver {
@@ -107,10 +110,134 @@
   letter-spacing: 0.05em;
 }
 
-.acciones-admin {
+.acciones-banner {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+// ----- Menú "Crear" (modelo abierto: Liga / Torneo) -----
+
+.crear {
+  position: relative;
+}
+
+.btn-crear {
+  padding: 0.5rem 1.2rem;
+  background: var(--accent, #ff5500);
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.menu-crear {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 50;
+  width: 300px;
+  padding: 0.4rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-modal, 0 24px 80px rgba(0, 0, 0, 0.55));
+
+  button {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm, 8px);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface-2, #1f2937);
+    }
+  }
+
+  .titulo-opcion {
+    color: var(--text, #e2e8f0);
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  .detalle-opcion {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.75rem;
+  }
+}
+
+// ----- Afordancia "Crear torneo" (fila punteada de la referencia) -----
+
+.crear-torneo {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: transparent;
+  border: 1px dashed var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent-text, #ff6a1f);
+  }
+
+  .mas {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill, 999px);
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .crear-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    strong {
+      color: var(--text, #e2e8f0);
+      font-size: 0.875rem;
+    }
+
+    span {
+      color: var(--text-muted, #94a3b8);
+      font-size: 0.8125rem;
+    }
+  }
+}
+
+.torneos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 760px;
 }
 
 // ----- Confirmación de desactivación -----

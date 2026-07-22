@@ -1,0 +1,29 @@
+<a class="card" [routerLink]="['/tournaments', torneo().id]">
+  <div class="arte" [style.background]="arte() ? undefined : gradiente()">
+    @if (arte()) {
+    <img [src]="arte()" alt="" loading="lazy" />
+    }
+  </div>
+
+  <div class="cuerpo">
+    <p class="fecha">{{ torneo().fechaInicio | date: "EEE d 'de' MMM, HH:mm" }}</p>
+    <h3 class="nombre">{{ torneo().nombre }}</h3>
+    <p class="meta">
+      Organizado por <strong>{{ torneo().organizadorNombre }}</strong>
+      · {{ torneo().formato }}
+      · {{ torneo().tamanoEquipo }}v{{ torneo().tamanoEquipo }}
+      · {{ torneo().inscritos }}/{{ torneo().maxEquipos }} equipos
+    </p>
+    <div class="badges">
+      <span class="badge" [class]="'badge tono-' + badge().tono">{{ badge().texto }}</span>
+      @if (torneo().ligaNombre) {
+      <span class="badge tono-neutro">{{ torneo().ligaNombre }}</span>
+      } @else {
+      <span class="badge tono-neutro">Comunitario</span>
+      }
+      @if (!torneo().publico) {
+      <span class="badge tono-ambar">Privado</span>
+      }
+    </div>
+  </div>
+</a>

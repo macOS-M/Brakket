@@ -26,12 +26,12 @@ import java.util.List;
 /**
  * API de ligas y temporadas (RF-22, EPIC-07).
  *
- * <p>Las lecturas son públicas (ver {@code SecurityConfig}); las escrituras
- * exigen el permiso {@code GESTIONAR_LIGAS} (ADMIN y COMISIONADO). Además,
- * el service valida la propiedad: solo el comisionado de la liga puede
- * modificarla (el ADMIN puede eliminar cualquier liga). El usuario se
- * resuelve del JWT ({@code Authentication#getName()} = correo), no del
- * cuerpo de la petición.</p>
+ * <p>Modelo abierto de organizadores (decisión de diseño, ver
+ * docs/decisiones-diseno.md): cualquier usuario autenticado crea ligas y
+ * queda como su comisionado; editar y gestionar valida propiedad en el
+ * service (el ADMIN puede eliminar cualquier liga). Las lecturas son
+ * públicas (ver {@code SecurityConfig}). El usuario se resuelve del JWT
+ * ({@code Authentication#getName()} = correo), no del cuerpo.</p>
  */
 @RestController
 @RequestMapping("/api/leagues")
@@ -45,7 +45,7 @@ public class LigaController {
 
     /** Crea una liga; el usuario autenticado queda como comisionado. */
     @PostMapping
-    @PreAuthorize("hasAuthority('GESTIONAR_LIGAS')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public LigaResponse crear(@Valid @RequestBody CrearLigaRequest request,
                               Authentication authentication) {
@@ -72,7 +72,7 @@ public class LigaController {
 
     /** Configura/edita una liga (solo su comisionado). */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('GESTIONAR_LIGAS')")
+    @PreAuthorize("isAuthenticated()")
     public LigaResponse actualizar(@PathVariable Long id,
                                    @Valid @RequestBody ActualizarLigaRequest request,
                                    Authentication authentication) {
@@ -84,7 +84,7 @@ public class LigaController {
      * comisionado o un ADMIN de la plataforma.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('GESTIONAR_LIGAS')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id, Authentication authentication) {
         boolean esAdmin = authentication.getAuthorities().stream()
@@ -100,7 +100,7 @@ public class LigaController {
 
     /** Agrega una temporada a la liga (solo su comisionado). */
     @PostMapping("/{id}/seasons")
-    @PreAuthorize("hasAuthority('GESTIONAR_LIGAS')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public TemporadaResponse crearTemporada(@PathVariable Long id,
                                             @Valid @RequestBody CrearTemporadaRequest request,
