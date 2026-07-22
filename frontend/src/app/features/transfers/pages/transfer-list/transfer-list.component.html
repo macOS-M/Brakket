@@ -1,107 +1,140 @@
 <section class="page">
-  <div class="header">
-    <h1>Transferencias</h1>
+  <app-page-header
+    titulo="Transferencias"
+    subtitulo="Respondé las solicitudes que te llegan y seguí las que enviaste."
+  >
     <a class="btn-primary" routerLink="/transfers/nueva">+ Solicitar transferencia</a>
-  </div>
+  </app-page-header>
 
   @if (mensaje()) {
-  <p class="aviso">{{ mensaje() }}</p>
+  <p class="aviso" role="status">{{ mensaje() }}</p>
   }
 
   @if (cargando()) {
-  <p class="placeholder">Cargando solicitudes...</p>
+  <app-empty-state modo="cargando" mensaje="Cargando solicitudes…" />
   } @else if (error()) {
-  <div class="estado-error">
-    <p class="placeholder error">{{ error() }}</p>
+  <app-empty-state modo="error" titulo="No se pudieron cargar las solicitudes" [mensaje]="error()">
     <button class="btn-secondary" type="button" (click)="cargar()">Reintentar</button>
-  </div>
+  </app-empty-state>
   } @else {
 
-  <h2>Pendientes de mi respuesta</h2>
-  @if (pendientes().length === 0) {
-  <p class="placeholder">No tienes solicitudes pendientes por responder.</p>
-  } @else {
-  <ul class="lista">
-    @for (t of pendientes(); track t.id) {
-    <li class="tarjeta">
-      <div class="fila-principal">
-        <div>
-          <p class="titulo">
-            {{ t.jugadorNombre }}
-            <span class="detalle">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
-          </p>
-          <p class="sub">
-            Rol propuesto: {{ t.rolPropuesto }} · Solicitada por {{ t.solicitanteNombre }} el
-            {{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}
-          </p>
-          @if (t.justificacion) {
-          <p class="justificacion">"{{ t.justificacion }}"</p>
-          }
-        </div>
-        <div class="botones-respuesta">
-          <button
-            class="btn-aceptar"
-            type="button"
-            [disabled]="respondiendo() !== null"
-            (click)="responder(t, 'ACEPTAR')"
-          >
-            {{ respondiendo() === t.id ? 'Enviando...' : 'Aceptar' }}
-          </button>
-          <button
-            class="btn-rechazar"
-            type="button"
-            [disabled]="respondiendo() !== null"
-            (click)="responder(t, 'RECHAZAR')"
-          >
-            Rechazar
-          </button>
-        </div>
-      </div>
-      <div class="aprobaciones">
-        <span>Jugador: <strong>{{ etiquetaAprobacion(t.aprobacionJugador) }}</strong></span>
-        <span>Capitán origen: <strong>{{ etiquetaAprobacion(t.aprobacionCapitanOrigen) }}</strong></span>
-      </div>
-    </li>
-    }
-  </ul>
-  }
+  <!-- Pendientes de mi respuesta -->
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Pendientes de mi respuesta</h2>
+      @if (pendientes().length) {
+      <span class="conteo">{{ pendientes().length }}</span>
+      }
+    </div>
 
-  <h2>Solicitudes enviadas</h2>
-  @if (enviadas().length === 0) {
-  <p class="placeholder">Aún no has enviado solicitudes de transferencia.</p>
-  } @else {
-  <ul class="lista">
-    @for (t of enviadas(); track t.id) {
-    <li class="tarjeta">
-      <div class="fila-principal">
-        <div>
-          <p class="titulo">
-            {{ t.jugadorNombre }}
-            <span class="detalle">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
-          </p>
-          <p class="sub">
-            Rol propuesto: {{ t.rolPropuesto }} · Solicitada el
-            {{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}
-          </p>
-          @if (t.justificacion) {
-          <p class="justificacion">"{{ t.justificacion }}"</p>
-          }
+    @if (pendientes().length === 0) {
+    <app-empty-state
+      titulo="Sin solicitudes por responder"
+      mensaje="Cuando alguien proponga una transferencia que requiera tu visto bueno, aparecerá acá."
+    />
+    } @else {
+    <ul class="lista">
+      @for (t of pendientes(); track t.id) {
+      <li class="item">
+        <div class="item-cabecera">
+          <div class="item-cuerpo">
+            <p class="item-titulo">
+              {{ t.jugadorNombre }}
+              <span class="ruta">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
+            </p>
+            <p class="item-meta">
+              Rol propuesto: {{ t.rolPropuesto }} · Solicitada por {{ t.solicitanteNombre }} el
+              <time class="dato">{{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}</time>
+            </p>
+            @if (t.justificacion) {
+            <p class="justificacion">"{{ t.justificacion }}"</p>
+            }
+          </div>
+          <div class="acciones">
+            <button
+              class="btn-aceptar"
+              type="button"
+              [disabled]="respondiendo() !== null"
+              (click)="responder(t, 'ACEPTAR')"
+            >
+              {{ respondiendo() === t.id ? 'Enviando…' : 'Aceptar' }}
+            </button>
+            <button
+              class="btn-rechazar"
+              type="button"
+              [disabled]="respondiendo() !== null"
+              (click)="responder(t, 'RECHAZAR')"
+            >
+              Rechazar
+            </button>
+          </div>
         </div>
-        <span
-          class="estado"
-          [class.aprobada]="t.estado === 'APROBADA'"
-          [class.rechazada]="t.estado === 'RECHAZADA'"
-        >
-          {{ etiquetaEstado(t.estado) }}
-        </span>
-      </div>
-      <div class="aprobaciones">
-        <span>Jugador: <strong>{{ etiquetaAprobacion(t.aprobacionJugador) }}</strong></span>
-        <span>Capitán origen: <strong>{{ etiquetaAprobacion(t.aprobacionCapitanOrigen) }}</strong></span>
-      </div>
-    </li>
+        <div class="aprobaciones">
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Jugador</span>
+            <app-status-badge [estado]="t.aprobacionJugador" [texto]="etiquetaAprobacion(t.aprobacionJugador)" />
+          </span>
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Capitán origen</span>
+            <app-status-badge [estado]="t.aprobacionCapitanOrigen" [texto]="etiquetaAprobacion(t.aprobacionCapitanOrigen)" />
+          </span>
+        </div>
+      </li>
+      }
+    </ul>
     }
-  </ul>
-  }
+  </section>
+
+  <!-- Solicitudes enviadas -->
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Solicitudes enviadas</h2>
+      @if (enviadas().length) {
+      <span class="conteo">{{ enviadas().length }}</span>
+      }
+    </div>
+
+    @if (enviadas().length === 0) {
+    <app-empty-state
+      titulo="Todavía no enviaste solicitudes"
+      mensaje="Solicitá el traspaso de un jugador para empezar a seguir su estado acá."
+    >
+      <a class="btn-secondary" routerLink="/transfers/nueva">Solicitar transferencia</a>
+    </app-empty-state>
+    } @else {
+    <ul class="lista">
+      @for (t of enviadas(); track t.id) {
+      <li class="item">
+        <div class="item-cabecera">
+          <div class="item-cuerpo">
+            <p class="item-titulo">
+              {{ t.jugadorNombre }}
+              <span class="ruta">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
+            </p>
+            <p class="item-meta">
+              Rol propuesto: {{ t.rolPropuesto }} · Solicitada el
+              <time class="dato">{{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}</time>
+            </p>
+            @if (t.justificacion) {
+            <p class="justificacion">"{{ t.justificacion }}"</p>
+            }
+          </div>
+          <app-status-badge [estado]="t.estado" [texto]="etiquetaEstado(t.estado)" />
+        </div>
+        <div class="aprobaciones">
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Jugador</span>
+            <app-status-badge [estado]="t.aprobacionJugador" [texto]="etiquetaAprobacion(t.aprobacionJugador)" />
+          </span>
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Capitán origen</span>
+            <app-status-badge [estado]="t.aprobacionCapitanOrigen" [texto]="etiquetaAprobacion(t.aprobacionCapitanOrigen)" />
+          </span>
+        </div>
+      </li>
+      }
+    </ul>
+    }
+  </section>
   }
 </section>

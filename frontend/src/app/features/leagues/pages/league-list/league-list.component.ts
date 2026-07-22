@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 
 import { League } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 /**
  * Listado de ligas (RF-22). Punto de entrada de la feature: muestra las ligas
@@ -11,7 +13,7 @@ import { LeaguesService } from '../../services/leagues.service';
 @Component({
   selector: 'app-league-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './league-list.component.html',
   styleUrl: './league-list.component.scss'
 })

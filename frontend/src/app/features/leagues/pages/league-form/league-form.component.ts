@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { GameOption, League, LeagueRequest } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 /**
  * Formulario para crear una liga o configurar (editar) una existente (RF-22).
@@ -13,7 +14,7 @@ import { LeaguesService } from '../../services/leagues.service';
 @Component({
   selector: 'app-league-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent],
   templateUrl: './league-form.component.html',
   styleUrl: './league-form.component.scss'
 })

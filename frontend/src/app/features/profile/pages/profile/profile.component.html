@@ -1,132 +1,173 @@
 <section class="page">
-  <h1>Mi perfil</h1>
+  <app-page-header
+    titulo="Mi perfil"
+    subtitulo="Gestiona cómo te ve el resto de la comunidad."
+  />
 
   @if (usuario(); as u) {
     @if (u.authenticated) {
-      <div class="profile-grid">
-        <div class="profile-card preview-card">
-          @if (u.foto) {
-            <img
-              class="avatar"
-              [src]="u.foto"
-              [alt]="u.nombre ?? 'Avatar'"
-              referrerpolicy="no-referrer"
-            />
-          }
-          <div class="info">
-            <p class="eyebrow">{{ isPrivateVisibility() ? 'Perfil privado' : 'Perfil publico' }}</p>
-            <p class="nombre">{{ u.nombre }}</p>
-            <p class="correo">{{ u.correo }}</p>
-            <p class="biografia">{{ u.biografia || 'Aun no agregaste biografia.' }}</p>
-            <div class="chips">
-              <span class="chip">{{ profileForm.controls.visibilidadPerfil.value || u.visibilidadPerfil || 'PUBLIC' }}</span>
-              @for (rol of u.roles ?? []; track rol) {
-                <span class="chip chip-alt">{{ rol }}</span>
+      <div class="columnas">
+        <div class="principal">
+          <form class="formulario" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <section class="bloque">
+              <div class="bloque-titulo">
+                <h2>Datos básicos</h2>
+              </div>
+
+              <div class="campos">
+                <div class="campo-fila">
+                  <label class="campo">
+                    <span class="campo-etiqueta">Nombre visible</span>
+                    <input type="text" formControlName="nombre" />
+                  </label>
+                  <label class="campo">
+                    <span class="campo-etiqueta">Avatar (URL)</span>
+                    <input type="url" formControlName="foto" placeholder="https://…" />
+                  </label>
+                </div>
+
+                <label class="campo">
+                  <span class="campo-etiqueta">Biografía</span>
+                  <textarea rows="5" formControlName="biografia"></textarea>
+                </label>
+              </div>
+            </section>
+
+            <section class="bloque" formGroupName="redesSociales">
+              <div class="bloque-titulo">
+                <h2>Redes sociales</h2>
+                <span class="conteo">Deja vacío el canal que no uses</span>
+              </div>
+
+              <div class="redes-grid">
+                @for (network of socialNetworks; track network.key) {
+                  <label class="campo">
+                    <span class="campo-etiqueta">{{ network.label }}</span>
+                    <input
+                      type="url"
+                      [formControlName]="network.key"
+                      [placeholder]="network.placeholder"
+                    />
+                  </label>
+                }
+              </div>
+            </section>
+
+            <section class="bloque">
+              <div class="bloque-titulo">
+                <h2>Visibilidad</h2>
+              </div>
+
+              <label class="toggle-fila">
+                <input
+                  type="checkbox"
+                  [checked]="isPrivateVisibility()"
+                  (change)="setVisibility($any($event.target).checked)"
+                />
+                <span class="toggle-track" aria-hidden="true">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-copy">
+                  <span class="toggle-title">
+                    {{ isPrivateVisibility() ? 'Perfil privado' : 'Perfil público' }}
+                  </span>
+                  <span class="toggle-description">
+                    {{ isPrivateVisibility()
+                      ? 'Solo usuarios autorizados verán el contenido.'
+                      : 'Tu perfil será visible para toda la comunidad.' }}
+                  </span>
+                </span>
+              </label>
+            </section>
+
+            <section class="bloque">
+              <div class="bloque-titulo">
+                <h2>Juegos preferidos</h2>
+                <span class="conteo">{{ profileForm.controls.juegoIds.value.length }} seleccionados</span>
+              </div>
+
+              @if (games.length) {
+                <div class="juegos-grid">
+                  @for (game of games; track game.id) {
+                    <label class="juego" [class.seleccionado]="isGameSelected(game.id)">
+                      <input
+                        type="checkbox"
+                        class="juego-input"
+                        [checked]="isGameSelected(game.id)"
+                        (change)="toggleGame(game.id, $any($event.target).checked)"
+                      />
+                      <span class="juego-dot" aria-hidden="true"></span>
+                      <span class="juego-nombre">{{ game.nombre }}</span>
+                    </label>
+                  }
+                </div>
+              } @else {
+                <app-empty-state mensaje="No hay juegos disponibles por ahora." />
               }
+            </section>
+
+            <div class="acciones">
+              @if (saveSuccess) {
+                <p class="estado-guardado exito" role="status">{{ saveSuccess }}</p>
+              }
+              @if (saveError) {
+                <p class="estado-guardado error" role="alert">{{ saveError }}</p>
+              }
+
+              <button
+                type="submit"
+                class="btn-primario"
+                [disabled]="profileForm.pristine || profileForm.invalid || savingProfile"
+              >
+                {{ savingProfile ? 'Guardando…' : 'Guardar cambios' }}
+              </button>
             </div>
-          </div>
+          </form>
         </div>
 
-        <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-          <div class="field-row">
-            <label>
-              Nombre visible
-              <input type="text" formControlName="nombre" />
-            </label>
-            <label>
-              Avatar URL
-              <input type="url" formControlName="foto" />
-            </label>
-          </div>
-
-          <label>
-            Biografia
-            <textarea rows="5" formControlName="biografia"></textarea>
-          </label>
-
-          <section class="panel social-panel" formGroupName="redesSociales">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Redes sociales</p>
-                <h2>Comparte tus perfiles principales</h2>
-              </div>
-              <p class="panel-note">Deja vacio cualquier canal que no uses.</p>
-            </div>
-
-            <div class="social-grid">
-              @for (network of socialNetworks; track network.key) {
-                <label class="social-field">
-                  <span>{{ network.label }}</span>
-                  <input type="url" [formControlName]="network.key" [placeholder]="network.placeholder" />
-                </label>
-              }
-            </div>
-          </section>
-
-          <section class="panel visibility-panel">
-            <div>
-              <p class="eyebrow">Visibilidad</p>
-              <h2>Controla quien ve tu perfil</h2>
-            </div>
-
-            <label class="toggle-switch">
-              <input
-                type="checkbox"
-                [checked]="isPrivateVisibility()"
-                (change)="setVisibility($any($event.target).checked)"
-              />
-              <span class="toggle-track" aria-hidden="true">
-                <span class="toggle-thumb"></span>
-              </span>
-              <span class="toggle-copy">
-                <span class="toggle-title">{{ isPrivateVisibility() ? 'Perfil privado' : 'Perfil publico' }}</span>
-                <span class="toggle-description">
-                  {{ isPrivateVisibility() ? 'Solo usuarios autorizados veran el contenido.' : 'Tu perfil sera visible para toda la comunidad.' }}
+        <aside class="lateral">
+          <section class="bloque preview">
+            <div class="preview-cabecera">
+              @if (u.foto) {
+                <img
+                  class="avatar"
+                  [src]="u.foto"
+                  [alt]="u.nombre ?? 'Avatar'"
+                  referrerpolicy="no-referrer"
+                />
+              } @else {
+                <span class="avatar sin-foto" aria-hidden="true">
+                  {{ (u.nombre || '?').charAt(0).toUpperCase() }}
                 </span>
-              </span>
-            </label>
-          </section>
+              }
+              <div class="preview-identidad">
+                <p class="preview-nombre">{{ u.nombre }}</p>
+                <p class="preview-correo">{{ u.correo }}</p>
+              </div>
+            </div>
 
-          <fieldset class="games-fieldset">
-            <legend>
-              <span class="eyebrow">Juegos preferidos</span>
-              <span class="legend-title">Selecciona tus favoritos</span>
-            </legend>
-            <div class="games-list">
-              @for (game of games; track game.id) {
-                <label class="game-option" [class.selected]="isGameSelected(game.id)">
-                  <input
-                    type="checkbox"
-                    class="game-input"
-                    [checked]="isGameSelected(game.id)"
-                    (change)="toggleGame(game.id, $any($event.target).checked)"
-                  />
-                  <span class="game-dot" aria-hidden="true"></span>
-                  <span class="game-name">{{ game.nombre }}</span>
-                </label>
-              } @empty {
-                <p class="placeholder inline">No hay juegos disponibles por ahora.</p>
+            <p class="preview-bio">{{ u.biografia || 'Aún no agregaste una biografía.' }}</p>
+
+            <div class="preview-chips">
+              <app-status-badge
+                [estado]="isPrivateVisibility() ? 'privado' : 'publico'"
+                [texto]="isPrivateVisibility() ? 'Perfil privado' : 'Perfil público'"
+                [tono]="isPrivateVisibility() ? 'neutral' : 'info'"
+              />
+              @for (rol of u.roles ?? []; track rol) {
+                <app-status-badge [estado]="rol" tono="neutral" />
               }
             </div>
-          </fieldset>
-
-          @if (saveSuccess) {
-            <p class="save-status success">{{ saveSuccess }}</p>
-          }
-
-          @if (saveError) {
-            <p class="save-status error">{{ saveError }}</p>
-          }
-
-          <button type="submit" class="save-button" [disabled]="profileForm.pristine || profileForm.invalid || savingProfile">
-            {{ savingProfile ? 'Guardando...' : 'Guardar cambios' }}
-          </button>
-        </form>
+          </section>
+        </aside>
       </div>
     } @else {
-      <p class="placeholder">No hay una sesion activa.</p>
+      <app-empty-state
+        titulo="Sin sesión activa"
+        mensaje="Iniciá sesión para ver y editar tu perfil."
+      />
     }
   } @else {
-    <p class="placeholder">Cargando perfil...</p>
+    <app-empty-state modo="cargando" mensaje="Cargando perfil…" />
   }
 </section>

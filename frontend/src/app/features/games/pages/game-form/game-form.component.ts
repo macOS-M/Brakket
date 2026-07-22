@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { GamesService } from '../../services/games.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 /**
  * Formulario de creacion/edicion de juego (RF-20).
@@ -10,7 +11,7 @@ import { GamesService } from '../../services/games.service';
 @Component({
   selector: 'app-game-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PageHeaderComponent],
   templateUrl: './game-form.component.html',
   styleUrl: './game-form.component.scss'
 })

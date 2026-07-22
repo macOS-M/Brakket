@@ -7,6 +7,7 @@ import { MiembroEquipo } from '../../../../models/miembro-equipo.model';
 import { ROLES_PROPUESTOS } from '../../../../models/transferencia.model';
 import { TeamsService } from '../../../teams/services/teams.service';
 import { TransfersService } from '../../services/transfers.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 /**
  * Solicitar la transferencia de un jugador de otro equipo (RF-12).
@@ -16,7 +17,7 @@ import { TransfersService } from '../../services/transfers.service';
 @Component({
   selector: 'app-transfer-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent],
   templateUrl: './transfer-form.component.html',
   styleUrl: './transfer-form.component.scss'
 })

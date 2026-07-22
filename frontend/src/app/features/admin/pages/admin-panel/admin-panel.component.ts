@@ -4,11 +4,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { RolesService } from '../../services/roles.service';
 import { ApiErrorBody, RolDTO, UsuarioRolesDTO } from '../../../../models/rol.model';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-admin-panel',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent],
   templateUrl: './admin-panel.component.html',
   styleUrl: './admin-panel.component.scss'
 })

@@ -1,25 +1,21 @@
 .page {
-  padding: 1.5rem 0;
   max-width: 480px;
-
-  h1 {
-    margin: 0 0 1.25rem;
-  }
 }
 
 .mensaje-error {
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid #f87171;
-  border-radius: 8px;
-  color: #f87171;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--danger-text, #f87171);
   font-size: 0.875rem;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1.0625rem;
 }
 
 .campo {
@@ -28,20 +24,25 @@
   gap: 0.4rem;
 
   label {
-    font-size: 0.875rem;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text, #e2e8f0);
+    letter-spacing: 0.02em;
   }
 
   input,
   textarea {
-    padding: 0.6rem 0.75rem;
+    padding: 0.55rem 0.75rem;
     background: var(--surface, #111827);
     border: 1px solid var(--border, #334155);
-    border-radius: 8px;
+    border-radius: var(--radius-sm, 8px);
     color: var(--text, #e2e8f0);
     font-family: inherit;
     font-size: 0.875rem;
+
+    &::placeholder {
+      color: var(--text-subtle, #64748b);
+    }
 
     &:focus {
       outline: none;
@@ -51,11 +52,12 @@
 
   textarea {
     resize: vertical;
+    line-height: 1.55;
   }
 
   .error-campo {
+    color: var(--danger-text, #f87171);
     font-size: 0.8125rem;
-    color: #f87171;
   }
 }
 
@@ -68,21 +70,31 @@
 
 .btn-primary,
 .btn-secondary {
-  padding: 0.55rem 1.2rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.1rem;
   border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .btn-primary {
   background: var(--brand-blue, #2563eb);
   color: #fff;
 
+  &:hover:not(:disabled) {
+    background: var(--brand-blue-hover, #3b82f6);
+  }
+
   &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+    opacity: 0.4;
+    cursor: default;
   }
 }
 
@@ -90,4 +102,8 @@
   background: transparent;
   border-color: var(--border, #334155);
   color: var(--text, #e2e8f0);
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+  }
 }

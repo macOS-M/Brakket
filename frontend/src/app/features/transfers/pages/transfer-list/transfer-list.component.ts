@@ -4,6 +4,9 @@ import { RouterLink } from '@angular/router';
 
 import { Transferencia } from '../../../../models/transferencia.model';
 import { TransfersService } from '../../services/transfers.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 
 /**
  * Transferencias: bandeja de solicitudes pendientes por responder (RF-13)
@@ -12,7 +15,7 @@ import { TransfersService } from '../../services/transfers.service';
 @Component({
   selector: 'app-transfer-list',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
   templateUrl: './transfer-list.component.html',
   styleUrl: './transfer-list.component.scss'
 })

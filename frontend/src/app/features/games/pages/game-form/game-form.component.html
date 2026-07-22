@@ -1,5 +1,8 @@
 <section class="page">
-  <h1>{{ editando() ? 'Editar juego' : 'Nuevo juego' }}</h1>
+  <app-page-header
+    [titulo]="editando() ? 'Editar juego' : 'Nuevo juego'"
+    subtitulo="Definí los datos del título que se usará en ligas y torneos"
+  ></app-page-header>
 
   @if (error()) {
   <p class="mensaje-error">{{ error() }}</p>

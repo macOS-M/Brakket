@@ -1,25 +1,41 @@
 <section class="page">
-  <header class="page-head">
-    <h1>Ligas</h1>
-    <a class="btn btn-primary" routerLink="nuevo">+ Nueva liga</a>
-  </header>
+  <app-page-header titulo="Ligas" subtitulo="Administrá tus ligas y abrí su detalle">
+    <a class="btn-primary" routerLink="nuevo">+ Nueva liga</a>
+  </app-page-header>
 
   @if (loading()) {
-    <p class="muted">Cargando ligas…</p>
+  <app-empty-state modo="cargando" mensaje="Cargando ligas…" />
   } @else if (error()) {
-    <p class="error">{{ error() }}</p>
+  <app-empty-state modo="error" titulo="No se pudieron cargar" [mensaje]="error()">
+    <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
+  </app-empty-state>
   } @else if (leagues().length === 0) {
-    <p class="empty">Aún no hay ligas. Creá la primera con <strong>Nueva liga</strong>.</p>
+  <app-empty-state
+    titulo="Aún no hay ligas"
+    mensaje="Creá la primera liga para empezar a organizar temporadas y torneos."
+  >
+    <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
+  </app-empty-state>
   } @else {
-    <ul class="league-list">
-      @for (liga of leagues(); track liga.id) {
-        <li class="league-card">
-          <a [routerLink]="[liga.id]" class="league-link">
-            <span class="league-name">{{ liga.nombre }}</span>
-            <span class="league-meta">{{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}</span>
-          </a>
-        </li>
-      }
-    </ul>
+  <div class="grid">
+    @for (liga of leagues(); track liga.id) {
+    <a class="liga-card" [routerLink]="[liga.id]">
+      <div class="cabecera">
+        <span class="marca" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
+        <div class="identidad">
+          @if (liga.juegoNombre) {
+          <p class="juego">{{ liga.juegoNombre }}</p>
+          }
+          <h2 class="nombre">{{ liga.nombre }}</h2>
+        </div>
+      </div>
+
+      <dl class="meta">
+        <dt>Comisionado</dt>
+        <dd>{{ liga.comisionadoNombre }}</dd>
+      </dl>
+    </a>
+    }
+  </div>
   }
 </section>
