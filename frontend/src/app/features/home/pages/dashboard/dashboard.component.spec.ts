@@ -31,12 +31,13 @@ describe('DashboardComponent', () => {
     }
   }
 
-  /** El panel consulta cuatro fuentes en paralelo al iniciar (con sesión). */
+  /** El panel consulta cinco fuentes en paralelo al iniciar (con sesión). */
   function responderCargaInicial(): void {
     httpMock.expectOne(`${environment.apiUrl}/invitaciones/pendientes`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/transfers/pendientes`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/games`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/tournaments`).flush([]);
   }
 
   beforeEach(async () => {
@@ -72,10 +73,11 @@ describe('DashboardComponent', () => {
     httpMock.expectOne(`${environment.apiUrl}/transfers/pendientes`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/games`).flush([{ id: 1, nombre: 'LoL' }]);
+    httpMock.expectOne(`${environment.apiUrl}/tournaments`).flush([]);
 
     expect(component.errorGeneral()).toBeFalse();
     expect(component.invitaciones()).toEqual([]);
-    expect(component.totalJuegos()).toBe(1);
+    expect(component.juegos().length).toBe(1);
   });
 
   it('marca error general solo si fallan todas las fuentes', () => {
@@ -85,6 +87,7 @@ describe('DashboardComponent', () => {
     httpMock.expectOne(`${environment.apiUrl}/transfers/pendientes`).flush(null, fallo);
     httpMock.expectOne(`${environment.apiUrl}/leagues`).flush(null, fallo);
     httpMock.expectOne(`${environment.apiUrl}/games`).flush(null, fallo);
+    httpMock.expectOne(`${environment.apiUrl}/tournaments`).flush(null, fallo);
 
     expect(component.errorGeneral()).toBeTrue();
   });
@@ -95,6 +98,7 @@ describe('DashboardComponent', () => {
     // 401 y el interceptor expulsaría al visitante hacia el login.
     httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/games`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/tournaments`).flush([]);
     httpMock.expectNone(`${environment.apiUrl}/invitaciones/pendientes`);
     httpMock.expectNone(`${environment.apiUrl}/transfers/pendientes`);
 

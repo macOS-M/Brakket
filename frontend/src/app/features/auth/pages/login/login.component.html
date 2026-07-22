@@ -42,6 +42,66 @@
     </p>
     }
 
+    <!-- Cuenta local (DD-04): correo y contraseña, estilo referencia. -->
+    <div class="modos" role="tablist" aria-label="Forma de entrar">
+      <button
+        type="button"
+        class="modo"
+        [class.activo]="modo() === 'login'"
+        (click)="cambiarModo('login')"
+      >
+        Iniciar sesión
+      </button>
+      <button
+        type="button"
+        class="modo"
+        [class.activo]="modo() === 'registro'"
+        (click)="cambiarModo('registro')"
+      >
+        Registrarse
+      </button>
+    </div>
+
+    <form class="form-local" [formGroup]="form" (ngSubmit)="enviarLocal()" novalidate>
+      @if (modo() === 'registro') {
+      <label class="campo">
+        <span>Nombre</span>
+        <input type="text" formControlName="nombre" autocomplete="name" />
+        @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="error-campo">Poné tu nombre.</span>
+        }
+      </label>
+      }
+      <label class="campo">
+        <span>Correo</span>
+        <input type="email" formControlName="correo" autocomplete="email" />
+        @if (form.controls.correo.touched && form.controls.correo.invalid) {
+        <span class="error-campo">Poné un correo válido.</span>
+        }
+      </label>
+      <label class="campo">
+        <span>Contraseña</span>
+        <input
+          type="password"
+          formControlName="password"
+          [attr.autocomplete]="modo() === 'registro' ? 'new-password' : 'current-password'"
+        />
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+        <span class="error-campo">Mínimo 8 caracteres.</span>
+        }
+      </label>
+
+      @if (errorLocal()) {
+      <p class="error" role="alert">{{ errorLocal() }}</p>
+      }
+
+      <button type="submit" class="btn-local" [disabled]="enviando()">
+        {{ enviando() ? 'Un momento…' : modo() === 'registro' ? 'Crear cuenta gratis' : 'Entrar' }}
+      </button>
+    </form>
+
+    <div class="divisor" aria-hidden="true"><span>o</span></div>
+
     <button type="button" class="btn-google" (click)="login()">
       <svg class="icono-google" viewBox="0 0 18 18" aria-hidden="true">
         <path

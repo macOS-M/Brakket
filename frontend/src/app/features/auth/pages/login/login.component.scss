@@ -160,6 +160,113 @@
   text-align: left;
 }
 
+// ----- Cuenta local (DD-04) -----
+
+.modos {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.25rem;
+  background: var(--surface-2, #1f2937);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.modo {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &.activo {
+    background: var(--accent, #ff5500);
+    color: #fff;
+  }
+}
+
+.form-local {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  span {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  input {
+    padding: 0.55rem 0.75rem;
+    background: var(--surface-2, #1f2937);
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.875rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #ff5500);
+    }
+  }
+}
+
+.error-campo {
+  color: var(--danger-text, #f87171);
+  font-size: 0.75rem;
+}
+
+.btn-local {
+  padding: 0.65rem 1rem;
+  background: var(--accent, #ff5500);
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover, #ff6a1f);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.divisor {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.1rem 0;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.75rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-soft, rgba(148, 163, 184, 0.18));
+  }
+}
+
 .btn-google {
   display: flex;
   align-items: center;

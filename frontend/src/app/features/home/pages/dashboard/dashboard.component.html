@@ -13,101 +13,74 @@
   </app-empty-state>
   } @else {
 
-  <div class="stats">
-    @if (auth.isAuthenticated() && !auth.hasRole('PATROCINADOR')) {
-    <app-stat-card
-      etiqueta="Invitaciones pendientes"
-      [valor]="invitaciones().length"
-      nota="Esperan tu respuesta"
-      tono="cyan"
-    />
-    <app-stat-card
-      etiqueta="Transferencias por resolver"
-      [valor]="transferencias().length"
-      nota="Requieren tu aprobación"
-      tono="ambar"
-    />
-    }
-    <app-stat-card etiqueta="Ligas" [valor]="ligas().length" nota="Registradas" tono="verde" />
-    <app-stat-card
-      etiqueta="Juegos"
-      [valor]="totalJuegos()"
-      nota="En el catálogo"
-      tono="morado"
-    />
-  </div>
-
-  <!-- Panel de gestión: solo para quien administra la competencia o la
-       plataforma. Un jugador no ve nada de esto. -->
-  @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
-  <section class="bloque gestion">
-    <div class="bloque-titulo">
-      <h2>Gestión</h2>
-    </div>
-    <div class="accesos">
-      <a class="acceso" routerLink="/leagues/nuevo">
-        <span class="acceso-titulo">Crear liga</span>
-        <span class="acceso-detalle">Nueva competencia con temporadas y formatos</span>
-      </a>
-      <a class="acceso" routerLink="/games">
-        <span class="acceso-titulo">Catálogo de juegos</span>
-        <span class="acceso-detalle">Títulos disponibles y perfiles competitivos</span>
-      </a>
-      <a class="acceso" routerLink="/sponsorships">
-        <span class="acceso-titulo">Patrocinios</span>
-        <span class="acceso-detalle">Marcas y espacios publicitarios</span>
-      </a>
-      @if (auth.hasRole('ADMIN')) {
-      <a class="acceso" routerLink="/admin">
-        <span class="acceso-titulo">Administración</span>
-        <span class="acceso-detalle">Usuarios, roles y permisos de la plataforma</span>
+  <div class="tablero">
+    <div class="columna-principal">
+      <!-- Héroe: el juego destacado del catálogo (referencia dashboard). -->
+      @if (heroJuego(); as hero) {
+      <a
+        class="hero"
+        [routerLink]="['/games', hero.id]"
+        [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+      >
+        @if (foto(hero)) {
+        <img [src]="foto(hero)" alt="" />
+        }
+        <div class="hero-velo" aria-hidden="true"></div>
+        <div class="hero-texto">
+          <h2>{{ hero.nombre }}</h2>
+          @if (hero.descripcion) {
+          <p>{{ hero.descripcion }}</p>
+          } @else {
+          <p>Mirá los torneos y ligas de este título, o creá el tuyo.</p>
+          }
+          <span class="hero-cta">Ver juego →</span>
+        </div>
       </a>
       }
-    </div>
-  </section>
-  }
 
-  <div class="columnas">
-    @if (auth.hasRole('PATROCINADOR')) {
-    <!-- Portal de marca (ACT-06): el patrocinador no participa de la
-         competencia; su bloque central es el panel comercial (RF-44). -->
-    <section class="bloque">
-      <div class="bloque-titulo">
-        <h2>Mi marca</h2>
+      <!-- Fila de juegos top, como los pósters de la referencia. -->
+      @if (topJuegos().length > 0) {
+      <h2 class="seccion">Juegos top</h2>
+      <div class="top-juegos">
+        @for (juego of topJuegos(); track juego.id) {
+        <a
+          class="poster"
+          [routerLink]="['/games', juego.id]"
+          [style.background]="foto(juego) ? undefined : gradiente(juego.nombre)"
+        >
+          @if (foto(juego)) {
+          <img [src]="foto(juego)" alt="" />
+          }
+          <div class="poster-velo" aria-hidden="true"></div>
+          <span class="poster-nombre">{{ juego.nombre }}</span>
+        </a>
+        }
       </div>
-      <app-empty-state
-        titulo="Panel comercial en camino"
-        mensaje="Acá vas a auditar la audiencia, la interacción y el sentimiento del público de las competencias que patrocinás."
-      >
-        <a class="btn-secondary" routerLink="/analytics">Ver panel</a>
-      </app-empty-state>
-    </section>
-    } @else if (!auth.isAuthenticated()) {
-    <!-- Visitante sin sesión: el panel es navegable, la acción pide entrar. -->
-    <section class="bloque">
-      <div class="bloque-titulo">
-        <h2>Competí en Brakket</h2>
-      </div>
-      <app-empty-state
-        titulo="Entrá para competir"
-        mensaje="Con tu cuenta de Google podés crear un equipo, responder invitaciones y participar en las ligas."
-      >
-        <button type="button" class="btn-primary" (click)="auth.login()">Iniciar sesión</button>
-      </app-empty-state>
-    </section>
-    } @else {
-    <!-- Pendientes accionables -->
-    <section class="bloque">
-      <div class="bloque-titulo">
-        <h2>Requieren tu atención</h2>
-      </div>
+      }
 
-      @if (sinPendientes()) {
-      <app-empty-state
-        titulo="Todo al día"
-        mensaje="No tenés invitaciones ni transferencias esperando respuesta."
-      />
-      } @else {
+      <!-- Pendientes accionables / invitación a entrar -->
+      @if (auth.hasRole('PATROCINADOR')) {
+      <section class="bloque-suave">
+        <h2 class="seccion">Mi marca</h2>
+        <app-empty-state
+          titulo="Panel comercial en camino"
+          mensaje="Acá vas a auditar la audiencia, la interacción y el sentimiento del público de las competencias que patrocinás."
+        >
+          <a class="btn-secondary" routerLink="/analytics">Ver panel</a>
+        </app-empty-state>
+      </section>
+      } @else if (!auth.isAuthenticated()) {
+      <section class="bloque-suave">
+        <h2 class="seccion">Competí en Brakket</h2>
+        <app-empty-state
+          titulo="Entrá para competir"
+          mensaje="Creá tu cuenta en segundos: armá un equipo, inscribite a torneos u organizá el tuyo."
+        >
+          <button type="button" class="btn-primary" (click)="auth.login()">Iniciar sesión</button>
+        </app-empty-state>
+      </section>
+      } @else if (!sinPendientes()) {
+      <h2 class="seccion">Requieren tu atención</h2>
       <ul class="lista">
         @for (invitacion of invitaciones(); track invitacion.id) {
         <li class="item">
@@ -134,9 +107,7 @@
             </svg>
           </span>
           <div class="item-cuerpo">
-            <p class="item-titulo">
-              Transferencia de {{ transferencia.jugadorNombre }}
-            </p>
+            <p class="item-titulo">Transferencia de {{ transferencia.jugadorNombre }}</p>
             <p class="item-detalle">
               {{ transferencia.equipoOrigenNombre }} → {{ transferencia.equipoDestinoNombre }}
             </p>
@@ -146,53 +117,66 @@
         }
       </ul>
       }
-    </section>
-    }
 
-    <!-- Ligas -->
-    <section class="bloque">
-      <div class="bloque-titulo">
-        <h2>Ligas</h2>
-        <a class="ver-todos" routerLink="/leagues">Ver todas →</a>
-      </div>
-
-      @if (ligas().length === 0) {
-      <app-empty-state
-        titulo="Sin ligas todavía"
-        mensaje="Creá una liga para empezar a organizar temporadas."
-      >
-        <a class="btn-primary" routerLink="/leagues">Ir a ligas</a>
-      </app-empty-state>
-      } @else {
-      <!-- Tarjetas con portada fotográfica, como en la lista de ligas:
-           la foto del juego de la liga o un gradiente determinístico. -->
-      <div class="ligas-grid">
-        @for (liga of ligasRecientes(); track liga.id) {
-        <a class="liga-tile" [routerLink]="['/leagues', liga.id]">
-          <div
-            class="tile-portada"
-            [style.background]="fotoLiga(liga) ? undefined : gradienteLiga(liga)"
-          >
-            @if (fotoLiga(liga)) {
-            <img [src]="fotoLiga(liga)" [alt]="" />
-            }
-            @if (liga.juegoNombre) {
-            <span class="tile-chip">{{ liga.juegoNombre }}</span>
-            }
-          </div>
-          <div class="tile-cuerpo">
-            <p class="tile-nombre">{{ liga.nombre }}</p>
-            <p class="tile-meta">{{ liga.comisionadoNombre }}</p>
-          </div>
+      <!-- Gestión de plataforma: solo administración. -->
+      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+      <h2 class="seccion">Gestión</h2>
+      <div class="accesos">
+        <a class="acceso" routerLink="/games">
+          <span class="acceso-titulo">Catálogo de juegos</span>
+          <span class="acceso-detalle">Curaduría de títulos y perfiles competitivos</span>
+        </a>
+        <a class="acceso" routerLink="/sponsorships">
+          <span class="acceso-titulo">Patrocinios</span>
+          <span class="acceso-detalle">Marcas y espacios publicitarios</span>
+        </a>
+        @if (auth.hasRole('ADMIN')) {
+        <a class="acceso" routerLink="/admin">
+          <span class="acceso-titulo">Administración</span>
+          <span class="acceso-detalle">Usuarios, roles y permisos de la plataforma</span>
         </a>
         }
       </div>
       }
-    </section>
-  </div>
+    </div>
 
-  <p class="nota-alcance">
-    Torneos, resultados y estadísticas aparecerán acá cuando se implementen sus módulos.
-  </p>
+    <!-- Rail derecho: próximos torneos (referencia "Upcoming Tournaments"). -->
+    <aside class="rail" aria-label="Próximos torneos">
+      <div class="rail-titulo">
+        <h2>Próximos torneos</h2>
+        <a routerLink="/tournaments">Ver más →</a>
+      </div>
+
+      @if (proximosTorneos().length === 0) {
+      <p class="rail-vacio">
+        Todavía no hay torneos programados. Entrá a un juego y creá el primero.
+      </p>
+      } @else {
+      <ul class="rail-lista">
+        @for (torneo of proximosTorneos(); track torneo.id) {
+        <li>
+          <a class="rail-torneo" [routerLink]="['/tournaments', torneo.id]">
+            <span class="rail-arte" [style.background]="fotoTorneo(torneo) ? undefined : gradiente(torneo.juegoNombre)">
+              @if (fotoTorneo(torneo)) {
+              <img [src]="fotoTorneo(torneo)" alt="" />
+              }
+            </span>
+            <span class="rail-info">
+              <span class="rail-nombre">{{ torneo.nombre }}</span>
+              @if (torneo.premio) {
+              <span class="rail-premio">🏆 {{ torneo.premio }}</span>
+              }
+              <span class="rail-meta">
+                {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos ·
+                {{ torneo.fechaInicio | date: 'd/MM HH:mm' }}
+              </span>
+            </span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+    </aside>
+  </div>
   }
 </section>

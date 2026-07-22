@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
+                        // Registro y login locales (DD-04): públicos por diseño.
+                        .requestMatchers(HttpMethod.POST, "/api/auth/registro", "/api/auth/login").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Lecturas públicas: el catálogo, las ligas y la búsqueda de
