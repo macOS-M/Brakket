@@ -6,6 +6,7 @@ import { GamesService } from '../../services/games.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
  * Catalogo de juegos (RF-20).
@@ -113,5 +114,10 @@ export class GameListComponent implements OnInit {
   /** Inicial del juego, para la portada cuando no hay imagen. */
   inicial(juego: Juego): string {
     return juego.nombre?.charAt(0).toUpperCase() ?? '?';
+  }
+
+  /** Portada determinística: mismo juego, mismo gradiente, siempre. */
+  portada(juego: Juego): string {
+    return portadaGradiente(juego.nombre);
   }
 }

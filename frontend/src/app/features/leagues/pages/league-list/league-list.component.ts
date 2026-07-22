@@ -5,6 +5,7 @@ import { League } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
  * Listado de ligas (RF-22). Punto de entrada de la feature: muestra las ligas
@@ -26,6 +27,11 @@ export class LeagueListComponent {
 
   constructor() {
     this.cargar();
+  }
+
+  /** Portada determinística por nombre de liga (ver shared/utils/cover). */
+  portada(nombre: string): string {
+    return portadaGradiente(nombre);
   }
 
   private cargar(): void {

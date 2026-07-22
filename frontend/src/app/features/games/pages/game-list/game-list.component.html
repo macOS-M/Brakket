@@ -86,21 +86,24 @@
         <span class="sr-only">Ver perfil competitivo de {{ juego.nombre }}</span>
       </a>
 
-      <div class="cabecera">
+      <!-- Portada al estilo de las plataformas de torneos: cuando no hay
+           imagen real, un gradiente determinístico por nombre con el
+           monograma en grande. Cada juego tiene su color propio. -->
+      <div class="portada" [style.background]="juego.imagenUrl ? undefined : portada(juego)">
         @if (juego.imagenUrl) {
-        <img class="monograma" [src]="juego.imagenUrl" [alt]="" />
+        <img [src]="juego.imagenUrl" [alt]="" />
         } @else {
-        <span class="monograma sin-imagen" aria-hidden="true">{{ inicial(juego) }}</span>
+        <span class="monograma-grande" aria-hidden="true">{{ inicial(juego) }}</span>
         }
-        <div class="identidad">
-          <h2 class="nombre">{{ juego.nombre }}</h2>
-          <p class="genero">{{ juego.genero }}</p>
-        </div>
+        <span class="genero-chip">{{ juego.genero }}</span>
       </div>
 
-      @if (juego.descripcion) {
-      <p class="descripcion">{{ juego.descripcion }}</p>
-      }
+      <div class="cuerpo">
+        <h2 class="nombre">{{ juego.nombre }}</h2>
+        @if (juego.descripcion) {
+        <p class="descripcion">{{ juego.descripcion }}</p>
+        }
+      </div>
 
       @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
       <div class="acciones">

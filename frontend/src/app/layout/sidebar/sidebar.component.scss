@@ -70,14 +70,13 @@
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.5rem 0.7rem;
-  border-radius: var(--radius-sm, 8px);
+  padding: 0.55rem 0.7rem;
+  // Píldora (referencia Aquament): el ítem activo se rellena con el
+  // acento y la tinta navy, en vez de la barra lateral de 3px.
+  border-radius: var(--radius-pill, 999px);
   color: var(--text-muted, #94a3b8);
   text-decoration: none;
   font-size: 0.875rem;
-  // El borde va siempre presente en transparente: si solo apareciera en
-  // .active, el contenido se correría 3px al navegar.
-  border-left: 3px solid transparent;
   transition: background 0.15s ease, color 0.15s ease;
 
   &:hover {
@@ -86,12 +85,17 @@
   }
 
   &.active {
-    background: var(--surface-2, #1f2937);
-    color: var(--accent-text, #ff6a1f);
-    border-left-color: var(--accent, #ff5500);
+    background: var(--accent, #ff5500);
+    color: var(--accent-ink, #0b1120);
+    font-weight: 700;
 
     .icono {
-      stroke: var(--accent-text, #ff6a1f);
+      stroke: var(--accent-ink, #0b1120);
+    }
+
+    .chip-pronto {
+      background: rgba(11, 17, 32, 0.18);
+      color: var(--accent-ink, #0b1120);
     }
   }
 

@@ -17,23 +17,28 @@
     <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
   </app-empty-state>
   } @else {
+  <!-- Banner promocional (referencia Aquament) con el conteo real. -->
+  <div class="banner">
+    <span class="banner-numero">{{ leagues().length }}</span>
+    <div class="banner-texto">
+      <p class="banner-titulo">{{ leagues().length === 1 ? 'liga te espera' : 'ligas te esperan' }}</p>
+      <p class="banner-detalle">Abrí una para ver sus temporadas y su calendario.</p>
+    </div>
+  </div>
+
   <div class="grid">
     @for (liga of leagues(); track liga.id) {
     <a class="liga-card" [routerLink]="[liga.id]">
-      <div class="cabecera">
-        <span class="marca" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
-        <div class="identidad">
-          @if (liga.juegoNombre) {
-          <p class="juego">{{ liga.juegoNombre }}</p>
-          }
-          <h2 class="nombre">{{ liga.nombre }}</h2>
-        </div>
+      <div class="portada" [style.background]="portada(liga.nombre)">
+        <span class="monograma-grande" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
+        @if (liga.juegoNombre) {
+        <span class="juego-chip">{{ liga.juegoNombre }}</span>
+        }
       </div>
-
-      <dl class="meta">
-        <dt>Comisionado</dt>
-        <dd>{{ liga.comisionadoNombre }}</dd>
-      </dl>
+      <div class="cuerpo">
+        <h2 class="nombre">{{ liga.nombre }}</h2>
+        <p class="meta">Comisionado: {{ liga.comisionadoNombre }}</p>
+      </div>
     </a>
     }
   </div>

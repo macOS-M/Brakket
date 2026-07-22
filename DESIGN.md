@@ -311,9 +311,15 @@ La sombra existe, pero es **respuesta a una acción**, no propiedad de un objeto
 
 ### Navigation
 - **Style:** barra lateral fija de `232px` sobre superficie hundida, agrupada por área con encabezados de `0.68rem` en versalitas y tinta tenue.
-- **Estados:** reposo en tinta apagada; hover rellena con superficie elevada y sube a tinta; activo suma texto cyan y una barra izquierda de `3px` en azul de mando. La barra izquierda existe siempre en transparente, para que activar un ítem no desplace el contenido.
+- **Estados:** reposo en tinta apagada; hover rellena con superficie elevada y sube a tinta; el activo es una **píldora rellena con el acento** y tinta navy (referencia Aquament). La píldora reemplazó a la barra izquierda de 3px.
 - **Mobile:** por debajo de `900px` la barra sale del flujo y se despliega desde la izquierda sobre un fondo oscurecido, con un botón hamburguesa fijo.
 - **Secciones no disponibles:** llevan un chip "pronto" en tinta tenue. Una sección que no funciona se marca; no se esconde ni se finge.
+
+### Portada determinística *(componente distintivo)*
+Las tarjetas de juegos, ligas y torneos llevan una portada de arte generado: un gradiente diagonal cuyo matiz se deriva del nombre de la entidad (`shared/utils/cover.ts`), con el monograma en Barlow Condensed gigante encima y un chip contextual. Mismo nombre → misma portada, siempre. Resuelve dos cosas a la vez: las grillas dejan de ser tarjetas idénticas, y no se embebe arte de juegos con copyright ni imágenes inventadas. Cuando la entidad tenga imagen real cargada, la imagen reemplaza al gradiente.
+
+### Banner promocional *(componente distintivo)*
+Franja de acento pleno con un número real en Barlow Condensed grande y su contexto ("N ligas te esperan"). Solo con datos que existen: si el conteo es cero, el banner no se muestra — el estado vacío ya cumple ese rol.
 
 ### Stat card *(componente distintivo)*
 Tarjeta de métrica con una franja de `2px` del color de su categoría en el borde superior. La cifra va en Barlow Condensed a `1.75rem` con cifras tabulares y toma el color de la franja; la etiqueta va arriba en tinta apagada y la nota debajo en tinta tenue. Es el único lugar del sistema donde un número domina visualmente, y solo porque la métrica es el contenido.
@@ -340,7 +346,7 @@ Un solo componente cubre carga, vacío y error. Carga muestra un anillo giratori
 - **Don't** usar neones, degradados violeta-azul, tipografía angulosa ni texturas: el **gamer llamativo de los 2000** es anti-referencia explícita.
 - **Don't** construir pantallas con número gigante y etiqueta chiquita, testimonios o aire vacío donde debería haber información — eso es **landing de SaaS**, y Brakket es un producto.
 - **Don't** entregar tablas crudas y formularios sin jerarquía: el **panel de admin sin diseñar** es anti-referencia, aunque funcione.
-- **Don't** usar `border-left` o `border-right` mayor a `1px` como franja de acento en tarjetas o alertas. La única barra lateral permitida es el indicador de `3px` de la navegación, que marca posición, no decora.
+- **Don't** usar `border-left` o `border-right` mayor a `1px` como franja de acento en tarjetas o alertas.
 - **Don't** aplicar degradado sobre texto (`background-clip: text`).
 - **Don't** anidar tarjetas dentro de tarjetas, nunca.
 - **Don't** poner sombra en superficies en reposo.
