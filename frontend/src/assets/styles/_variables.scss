@@ -10,6 +10,16 @@
 // ============================================================
 
 // ----- Marca -----
+// El acento de acción es el naranja de competencia (dirección FACEIT):
+// carga la identidad sobre el azul marino neutro. El texto sobre acento
+// es el navy del fondo, no blanco: #fff sobre #ff5500 no llega a AA.
+$accent: #ff5500;
+$accent-hover: #ff6a1f;
+$accent-ink: #0b1120; // texto sobre superficies naranjas (5.6:1)
+$accent-text: #ff6a1f; // naranja como texto sobre fondo oscuro (5.9:1)
+
+// El azul y el cyan quedan para estados informativos y compatibilidad;
+// ya no son el color de acción.
 $brand-blue: #2563eb;
 $brand-blue-hover: #3b82f6;
 $brand-cyan: #22d3ee;
@@ -78,6 +88,10 @@ $l-border-soft: rgba(100, 116, 139, 0.2);
 $l-text: #0f172a; // 17.9:1
 $l-text-muted: #475569; // 7.6:1
 $l-text-subtle: #5a677a; // 5.5:1 — #64748b daba 4.55, demasiado justo
+
+// El naranja pleno no es legible como texto sobre blanco (3.1:1); esta
+// variante oscura conserva el matiz y llega a 4.9:1.
+$l-accent-text: #c2410c;
 
 // El cyan de marca es inusable como texto sobre blanco (1.8:1).
 // Esta variante oscura conserva el matiz y llega a 5.4:1.

@@ -44,7 +44,7 @@
 
     &:focus {
       outline: none;
-      border-color: var(--brand-cyan, #22d3ee);
+      border-color: var(--accent-text, #ff6a1f);
     }
   }
 }
@@ -72,9 +72,9 @@
   }
 
   &.activo {
-    background: var(--brand-blue, #2563eb);
-    border-color: var(--brand-blue, #2563eb);
-    color: #fff;
+    background: var(--accent, #ff5500);
+    border-color: var(--accent, #ff5500);
+    color: var(--accent-ink, #0b1120);
   }
 }
 
@@ -114,7 +114,7 @@
   // El foco del enlace invisible tiene que verse en la tarjeta, que es
   // lo que el usuario percibe como el objetivo.
   &:has(.enlace-juego:focus-visible) {
-    outline: 2px solid var(--brand-cyan, #22d3ee);
+    outline: 2px solid var(--accent-text, #ff6a1f);
     outline-offset: 2px;
   }
 }
@@ -175,7 +175,7 @@
 
   .genero {
     margin: 0.15rem 0 0;
-    color: var(--brand-cyan, #22d3ee);
+    color: var(--accent-text, #ff6a1f);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -246,11 +246,11 @@
 }
 
 .btn-primary {
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
 
   &:hover {
-    background: var(--brand-blue-hover, #3b82f6);
+    background: var(--accent-hover, #ff6a1f);
   }
 }
 

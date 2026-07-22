@@ -174,7 +174,7 @@
 
     &:focus {
       outline: none;
-      border-color: var(--brand-cyan, #22d3ee);
+      border-color: var(--accent-text, #ff6a1f);
     }
   }
 }
@@ -255,7 +255,7 @@
 
     &:focus {
       outline: none;
-      border-color: var(--brand-cyan, #22d3ee);
+      border-color: var(--accent-text, #ff6a1f);
     }
   }
 }
@@ -300,11 +300,11 @@
 }
 
 .btn-primary {
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
 
   &:hover:not(:disabled) {
-    background: var(--brand-blue-hover, #3b82f6);
+    background: var(--accent-hover, #ff6a1f);
   }
 
   &:disabled {

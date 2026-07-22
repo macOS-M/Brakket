@@ -28,7 +28,7 @@
     width: 22px;
     height: 22px;
     fill: none;
-    stroke: var(--brand-cyan, #22d3ee);
+    stroke: var(--accent-text, #ff6a1f);
     stroke-width: 1.8;
     stroke-linejoin: round;
   }
@@ -87,11 +87,11 @@
 
   &.active {
     background: var(--surface-2, #1f2937);
-    color: var(--brand-cyan, #22d3ee);
-    border-left-color: var(--brand-blue, #2563eb);
+    color: var(--accent-text, #ff6a1f);
+    border-left-color: var(--accent, #ff5500);
 
     .icono {
-      stroke: var(--brand-cyan, #22d3ee);
+      stroke: var(--accent-text, #ff6a1f);
     }
   }
 
@@ -267,10 +267,10 @@
   width: 100%;
   margin-top: 0.75rem;
   padding: 0.6rem 0.9rem;
-  background: var(--brand-blue, #2563eb);
+  background: var(--accent, #ff5500);
   border: none;
   border-radius: var(--radius-sm, 8px);
-  color: #fff;
+  color: var(--accent-ink, #0b1120);
   font-size: 0.875rem;
   font-weight: 600;
   font-family: inherit;
@@ -288,7 +288,7 @@
   }
 
   &:hover {
-    background: var(--brand-blue-hover, #3b82f6);
+    background: var(--accent-hover, #ff6a1f);
   }
 }
 

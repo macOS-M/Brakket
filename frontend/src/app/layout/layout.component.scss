@@ -6,8 +6,8 @@
   z-index: 1100; // por encima del sidebar móvil y su backdrop
   padding: 0.55rem 0.9rem;
   transform: translateY(-150%);
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;

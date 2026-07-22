@@ -2,6 +2,10 @@
 name: Brakket
 description: Plataforma de administración de ligas y torneos de esports
 colors:
+  accent: "#ff5500"
+  accent-hover: "#ff6a1f"
+  accent-text: "#ff6a1f"
+  accent-text-light: "#c2410c"
   brand-blue: "#2563eb"
   brand-blue-hover: "#3b82f6"
   brand-cyan: "#22d3ee"
@@ -164,11 +168,11 @@ Este sistema rechaza explícitamente: la estética de proyecto de curso (cards i
 Paleta fría de trabajo prolongado: azules profundos como base, un cyan que marca lo activo, y una familia de estados que hace todo el trabajo semántico. El acento se reserva para acción y selección; jamás decora.
 
 ### Primary
-- **Azul de mando** (`#2563eb`): acciones primarias — crear, guardar, confirmar, enviar. Un solo botón azul por pantalla; si hay dos, uno no era primario.
-- **Azul de mando claro** (`#3b82f6`): estado hover del anterior. Nunca se usa como color de reposo.
+- **Naranja de salida** (`#ff5500`): el color de acción y de identidad — botones primarios, ítem de navegación activo, foco del teclado, selección. Es el naranja de la línea de largada: sobre el azul marino neutro, una sola familia cálida carga toda la energía competitiva. La tinta sobre él es siempre el navy del fondo (`#0b1120`, 5.6:1), nunca blanco (3.1:1, no llega a AA).
+- **Naranja hover** (`#ff6a1f`): estado hover del anterior, y también la variante de texto sobre fondo oscuro (5.9:1). En tema claro el texto naranja baja a `#c2410c` (4.9:1).
 
 ### Secondary
-- **Cyan de señal** (`#22d3ee`): marca lo que está activo o seleccionado — el ítem de navegación actual, el foco del teclado, un enlace. Es un indicador de posición, no un color de marca decorativo.
+- **Azul de mando** (`#2563eb`) y **cyan de señal** (`#22d3ee`): degradados a rol informativo y de compatibilidad. Ya no son el color de acción; sobreviven en los estados de información y en pantallas aún no migradas (las que tocan otros PRs).
 
 ### Neutral
 - **Fondo de sala** (`#0b1120`): el lienzo de la aplicación.
@@ -207,7 +211,8 @@ El frontmatter es normativo para el tema oscuro, que es el predeterminado. El te
 | Tinta | `#e2e8f0` | `#0f172a` | 17.9:1 |
 | Tinta apagada | `#94a3b8` | `#475569` | 7.6:1 |
 | Tinta tenue | `#8496ad` | `#5a677a` | 5.5:1 |
-| **Cyan de señal** | `#22d3ee` | `#0e7490` | 5.4:1 |
+| **Naranja (texto)** | `#ff6a1f` | `#c2410c` | 4.9:1 |
+| **Cyan de señal** (legado) | `#22d3ee` | `#0e7490` | 5.4:1 |
 | Peligro (tinta) | `#f87171` | `#dc2626` | 4.8:1 |
 | Éxito (tinta) | `#4ade80` | `#15803d` | 5.0:1 |
 | Aviso (tinta) | `#fbbf24` | `#b45309` | 5.0:1 |
@@ -219,11 +224,11 @@ El tema por defecto es **automático**: sigue a `prefers-color-scheme`, porque e
 
 ### Named Rules
 
-**La Regla del Único Azul.** El azul de mando aparece una vez por pantalla, en la acción primaria. Un segundo botón azul convierte a los dos en secundarios.
+**La Regla de la Única Acción.** El naranja de salida aparece en una sola acción primaria por pantalla. Un segundo botón naranja convierte a los dos en secundarios.
 
 **La Regla del Color Que No Habla Solo.** Ningún estado se comunica únicamente por color. Todo chip de estado lleva su texto; toda fila con significado lleva además un icono o una etiqueta. Un usuario con daltonismo tiene que poder operar la plataforma completa.
 
-**La Regla del Acento Escaso.** Azul y cyan juntos no superan el 10% de la superficie de una pantalla. Su función es dirigir la mirada; si están en todas partes, no dirigen nada.
+**La Regla del Acento Escaso.** El naranja no supera el 10% de la superficie de una pantalla. Su función es dirigir la mirada; si está en todas partes, no dirige nada. La energía extra viene del contraste y la tipografía, no de más naranja.
 
 ## 3. Typography
 
@@ -234,6 +239,7 @@ El tema por defecto es **automático**: sigue a `prefers-color-scheme`, porque e
 **Character:** Barlow es una grotesca de baja modulación diseñada para señalética deportiva: tiene la firmeza de una fuente de cancha sin la estridencia de una tipografía gamer. Una sola familia carga toda la interfaz — títulos, cuerpo, botones, etiquetas y datos — porque un producto denso con dos familias compitiendo se vuelve ruido. La variante condensada entra solo donde el ancho escasea y las cifras mandan.
 
 ### Hierarchy
+- **Hero** (800, `2.75rem`, 1.05, mayúsculas): solo portadas (login, futuras landing). Barlow en caja alta lee como señalética de estadio; el acento va en una sola palabra del titular.
 - **Display** (700, `2rem`, 1.15, `-0.015em`): título de página. Uno por pantalla.
 - **Headline** (700, `1.5rem`, 1.2, `-0.015em`): encabezado de sección mayor.
 - **Title** (600, `1.0625rem`, 1.3): título de tarjeta o bloque.

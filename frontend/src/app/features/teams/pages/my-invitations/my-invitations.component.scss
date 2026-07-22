@@ -102,11 +102,11 @@
 }
 
 .btn-primary {
-  background: var(--brand-blue, #2563eb);
+  background: var(--accent, #ff5500);
   color: var(--on-brand, #fff);
 
   &:not(:disabled):hover {
-    background: var(--brand-blue-hover, #3b82f6);
+    background: var(--accent-hover, #ff6a1f);
   }
 }
 

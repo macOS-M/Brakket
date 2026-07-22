@@ -20,6 +20,9 @@
   // El cyan de marca no es legible como texto sobre blanco.
   --brand-cyan: #{v.$l-brand-cyan};
 
+  // El naranja pleno tampoco: como texto usa la variante oscura.
+  --accent-text: #{v.$l-accent-text};
+
   --danger-text: #{v.$l-danger-text};
   --danger-bg: #{v.$l-danger-bg};
   --success-text: #{v.$l-success-text};
@@ -43,6 +46,10 @@
 :root {
   color-scheme: dark;
   // Marca
+  --accent: #{v.$accent};
+  --accent-hover: #{v.$accent-hover};
+  --accent-ink: #{v.$accent-ink};
+  --accent-text: #{v.$accent-text};
   --brand-blue: #{v.$brand-blue};
   --brand-blue-hover: #{v.$brand-blue-hover};
   --brand-cyan: #{v.$brand-cyan};
@@ -140,7 +147,7 @@ body {
 }
 
 a {
-  color: var(--brand-cyan);
+  color: var(--accent-text);
 }
 
 h1,
@@ -177,8 +184,8 @@ table,
 }
 
 ::selection {
-  background: var(--brand-blue);
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 // ----- Accesibilidad -----
@@ -186,7 +193,7 @@ table,
 // Foco visible y consistente. Sin esto, navegar con teclado sobre el
 // tema oscuro es prácticamente imposible.
 :focus-visible {
-  outline: 2px solid var(--brand-cyan);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
 }

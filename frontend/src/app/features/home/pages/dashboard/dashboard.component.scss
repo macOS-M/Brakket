@@ -72,7 +72,7 @@
 }
 
 .ver-todos {
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text, #ff6a1f);
   font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
@@ -109,7 +109,7 @@
 }
 
 .marca-cyan {
-  background: var(--brand-cyan, #22d3ee);
+  background: var(--accent-text, #ff6a1f);
 }
 .marca-ambar {
   background: var(--warning-text, #fbbf24);
@@ -168,11 +168,11 @@
 }
 
 .btn-primary {
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
 
   &:hover {
-    background: var(--brand-blue-hover, #3b82f6);
+    background: var(--accent-hover, #ff6a1f);
   }
 }
 

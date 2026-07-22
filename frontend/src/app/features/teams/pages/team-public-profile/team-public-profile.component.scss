@@ -12,7 +12,7 @@
   text-decoration: none;
 
   &:hover {
-    color: var(--brand-cyan, #22d3ee);
+    color: var(--accent-text, #ff6a1f);
   }
 }
 
@@ -58,7 +58,7 @@
 
   .juego {
     margin: 0.2rem 0 0;
-    color: var(--brand-cyan, #22d3ee);
+    color: var(--accent-text, #ff6a1f);
     font-size: 0.8125rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -266,7 +266,7 @@
   padding: 0.5rem 0.7rem;
   background: var(--surface-2, #1f2937);
   border-radius: var(--radius-sm, 8px);
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text, #ff6a1f);
   font-size: 0.875rem; // paso "body" de la escala
   text-decoration: none;
   overflow: hidden;

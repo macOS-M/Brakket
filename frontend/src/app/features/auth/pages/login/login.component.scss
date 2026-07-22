@@ -32,7 +32,7 @@
     width: 28px;
     height: 28px;
     fill: none;
-    stroke: var(--brand-cyan, #22d3ee);
+    stroke: var(--accent-text, #ff6a1f);
     stroke-width: 1.8;
     stroke-linejoin: round;
   }
@@ -40,11 +40,18 @@
 
 .claim {
   margin: 0 0 1.75rem;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
+  // Paso "hero" (solo portadas): Barlow en mayúsculas lee como señalética
+  // de estadio. El acento va en una sola palabra, no en todo el titular.
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
   text-wrap: balance;
+
+  .resaltado {
+    color: var(--accent-text, #ff6a1f);
+  }
 }
 
 .capacidades {
@@ -71,7 +78,7 @@
       width: 6px;
       height: 6px;
       border-radius: var(--radius-pill, 999px);
-      background: var(--brand-cyan, #22d3ee);
+      background: var(--accent-text, #ff6a1f);
     }
   }
 }
@@ -122,7 +129,7 @@
     width: 26px;
     height: 26px;
     fill: none;
-    stroke: var(--brand-cyan, #22d3ee);
+    stroke: var(--accent-text, #ff6a1f);
     stroke-width: 1.8;
     stroke-linejoin: round;
   }
