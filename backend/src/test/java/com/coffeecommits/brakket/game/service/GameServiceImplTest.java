@@ -42,11 +42,12 @@ class GameServiceImplTest {
             return j;
         });
 
-        JuegoResponse resp = gameService.crear(
-                new JuegoRequest("Valorant", "Shooter táctico", "Shooter 5v5 de Riot"));
+        JuegoResponse resp = gameService.crear(new JuegoRequest(
+                "Valorant", "Shooter táctico", "Shooter 5v5 de Riot", "https://media.rawg.io/valorant.jpg"));
 
         assertThat(resp.id()).isEqualTo(1L);
         assertThat(resp.nombre()).isEqualTo("Valorant");
+        assertThat(resp.imagenUrl()).isEqualTo("https://media.rawg.io/valorant.jpg");
         assertThat(resp.activo()).isTrue();
     }
 
@@ -55,7 +56,7 @@ class GameServiceImplTest {
         when(juegoRepository.findByNombre("Valorant"))
                 .thenReturn(Optional.of(Juego.builder().id(9L).nombre("Valorant").build()));
 
-        assertThatThrownBy(() -> gameService.crear(new JuegoRequest("Valorant", "Shooter", null)))
+        assertThatThrownBy(() -> gameService.crear(new JuegoRequest("Valorant", "Shooter", null, null)))
                 .isInstanceOf(BusinessException.class);
         verify(juegoRepository, never()).save(any(Juego.class));
     }
@@ -67,7 +68,7 @@ class GameServiceImplTest {
         when(juegoRepository.findByNombre("Counter-Strike 2"))
                 .thenReturn(Optional.of(Juego.builder().id(2L).nombre("Counter-Strike 2").build()));
 
-        assertThatThrownBy(() -> gameService.editar(1L, new JuegoRequest("Counter-Strike 2", "Shooter", null)))
+        assertThatThrownBy(() -> gameService.editar(1L, new JuegoRequest("Counter-Strike 2", "Shooter", null, null)))
                 .isInstanceOf(BusinessException.class);
         verify(juegoRepository, never()).save(any(Juego.class));
     }
@@ -79,7 +80,8 @@ class GameServiceImplTest {
         when(juegoRepository.findByNombre("Valorant")).thenReturn(Optional.of(juego));
         when(juegoRepository.save(juego)).thenReturn(juego);
 
-        JuegoResponse resp = gameService.editar(1L, new JuegoRequest("Valorant", "FPS táctico", "Nueva descripción"));
+        JuegoResponse resp = gameService.editar(
+                1L, new JuegoRequest("Valorant", "FPS táctico", "Nueva descripción", null));
 
         assertThat(resp.genero()).isEqualTo("FPS táctico");
         assertThat(resp.descripcion()).isEqualTo("Nueva descripción");

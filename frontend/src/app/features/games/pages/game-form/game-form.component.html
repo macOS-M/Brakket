@@ -1,14 +1,65 @@
 <section class="page">
   <app-page-header
     [titulo]="editando() ? 'Editar juego' : 'Nuevo juego'"
-    subtitulo="Definí los datos del título que se usará en ligas y torneos"
+    subtitulo="Buscá el título en el catálogo y ajustá sus datos antes de guardar"
   ></app-page-header>
 
   @if (error()) {
-  <p class="mensaje-error">{{ error() }}</p>
+  <p class="mensaje-error" role="alert">{{ error() }}</p>
   }
 
+  <!-- Buscador contra RAWG (referencia Challenger Mode: "Selecciona un
+       juego para continuar"). Elegir una tarjeta precarga el formulario. -->
+  <div class="buscador-externo">
+    <label class="buscador">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input
+        type="search"
+        placeholder="Buscá el juego (ej. Valorant, FC 25…)"
+        aria-label="Buscar juego en el catálogo externo"
+        [value]="consulta()"
+        (input)="alBuscar($any($event.target).value)"
+      />
+    </label>
+
+    @if (errorBusqueda()) {
+    <p class="mensaje-error" role="alert">{{ errorBusqueda() }}</p>
+    } @if (buscando()) {
+    <p class="buscando" role="status">Buscando en el catálogo…</p>
+    } @else if (resultados() !== null) { @if (resultados()!.length === 0) {
+    <p class="buscando" role="status">Sin coincidencias. Podés completar los campos a mano.</p>
+    } @else {
+    <div class="resultados-externos" role="listbox" aria-label="Resultados del catálogo">
+      @for (juego of resultados()!; track juego.nombre) {
+      <button type="button" class="resultado-externo" (click)="elegir(juego)">
+        <span class="arte" [class.sin-arte]="!juego.imagenUrl">
+          @if (juego.imagenUrl) {
+          <img [src]="juego.imagenUrl" [alt]="" loading="lazy" />
+          } @else {
+          <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
+          }
+        </span>
+        <span class="nombre">{{ juego.nombre }}</span>
+        @if (juego.genero) {
+        <span class="genero">{{ juego.genero }}</span>
+        }
+      </button>
+      }
+    </div>
+    } }
+  </div>
+
   <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+    @if (form.controls.imagenUrl.value) {
+    <div class="portada-preview">
+      <img [src]="form.controls.imagenUrl.value" alt="Portada seleccionada" />
+      <button type="button" class="btn-secondary" (click)="quitarImagen()">Quitar imagen</button>
+    </div>
+    }
+
     <div class="campo">
       <label for="nombre">Nombre *</label>
       <input id="nombre" type="text" formControlName="nombre" />

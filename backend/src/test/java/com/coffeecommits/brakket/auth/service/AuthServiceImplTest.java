@@ -12,9 +12,9 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -42,8 +42,16 @@ class AuthServiceImplTest {
     private UsuarioRolRepository usuarioRolRepository;
     @Mock
     private JuegoRepository juegoRepository;
-    @InjectMocks
+
     private AuthServiceImpl authService;
+
+    @BeforeEach
+    void setUp() {
+        // La lista de admins viene de configuración (brakket.admin-emails);
+        // se pasa con mayúsculas y espacios para cubrir la normalización.
+        authService = new AuthServiceImpl(usuarioRepository, rolRepository, usuarioRolRepository,
+                juegoRepository, " Gvalverdem@ucenfotec.ac.cr , dchavarriam@ucenfotec.ac.cr ");
+    }
 
     @Test
     void upsert_crea_usuario_nuevo_y_le_asigna_rol_base_jugador() {
@@ -80,6 +88,30 @@ class AuthServiceImplTest {
         assertThat(existente.getFotoUrl()).isEqualTo("avatar-personal.png");
         verify(usuarioRepository, never()).save(any(Usuario.class));
         verify(usuarioRolRepository, never()).save(any(UsuarioRol.class));
+    }
+
+    @Test
+    void upsert_asigna_admin_ademas_del_rol_base_a_correos_del_equipo() {
+        when(usuarioRepository.findByGoogleId("g-9")).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
+            Usuario u = inv.getArgument(0);
+            u.setId(11L);
+            return u;
+        });
+        when(usuarioRolRepository.findByUsuarioId(11L)).thenReturn(List.of());
+        when(rolRepository.findByNombreRol("JUGADOR"))
+                .thenReturn(Optional.of(Rol.builder().id(5L).nombreRol("JUGADOR").build()));
+        when(rolRepository.findByNombreRol("ADMIN"))
+                .thenReturn(Optional.of(Rol.builder().id(1L).nombreRol("ADMIN").build()));
+
+        authService.upsertGoogleUser("g-9", "gvalverdem@ucenfotec.ac.cr", "Gabriel", null);
+
+        org.mockito.ArgumentCaptor<UsuarioRol> captor =
+                org.mockito.ArgumentCaptor.forClass(UsuarioRol.class);
+        verify(usuarioRolRepository, org.mockito.Mockito.times(2)).save(captor.capture());
+        assertThat(captor.getAllValues())
+                .extracting(ur -> ur.getRol().getNombreRol())
+                .containsExactlyInAnyOrder("JUGADOR", "ADMIN");
     }
 
     @Test

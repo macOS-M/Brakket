@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api.service';
-import { Juego, JuegoRequest } from '../../../models/juego.model';
+import { Juego, JuegoExterno, JuegoRequest } from '../../../models/juego.model';
 
 /**
  * Servicio de datos de la feature "games" (RF-20).
@@ -13,6 +13,13 @@ export class GamesService {
 
   listActivos(): Observable<Juego[]> {
     return this.api.get<Juego[]>('/games');
+  }
+
+  /** Busca en el catálogo externo (RAWG) vía el proxy del backend. */
+  buscarExterno(consulta: string): Observable<JuegoExterno[]> {
+    return this.api.get<JuegoExterno[]>(
+      `/games/buscar-externo?q=${encodeURIComponent(consulta)}`
+    );
   }
 
   obtenerPorId(id: number): Observable<Juego> {

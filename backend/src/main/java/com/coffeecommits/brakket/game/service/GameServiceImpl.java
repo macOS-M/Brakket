@@ -35,6 +35,7 @@ public class GameServiceImpl implements GameService {
                 .nombre(request.nombre())
                 .genero(request.genero())
                 .descripcion(request.descripcion())
+                .imagenUrl(request.imagenUrl())
                 .activo(true)
                 .build();
 
@@ -57,6 +58,7 @@ public class GameServiceImpl implements GameService {
         juego.setNombre(request.nombre());
         juego.setGenero(request.genero());
         juego.setDescripcion(request.descripcion());
+        juego.setImagenUrl(request.imagenUrl());
 
         return JuegoResponse.fromEntity(juegoRepository.save(juego));
     }

@@ -40,6 +40,7 @@ services:
       TWITCH_CHANNEL: ${TWITCH_CHANNEL:-}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_API_BASE_URL: ${AI_API_BASE_URL:-}
+      RAWG_API_KEY: ${RAWG_API_KEY:-}
     ports:
       - "8080:8080"
 

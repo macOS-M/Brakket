@@ -1,5 +1,153 @@
 .page {
-  max-width: 480px;
+  // Más ancho que un formulario simple: la grilla de resultados del
+  // catálogo externo necesita aire para 3 columnas de arte.
+  max-width: 620px;
+}
+
+// ----- Buscador contra el catálogo externo (RAWG) -----
+
+.buscador-externo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+}
+
+.buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  svg {
+    position: absolute;
+    left: 0.9rem;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--text-muted, #94a3b8);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.55rem 1rem 0.55rem 2.5rem;
+    background: var(--surface-2, #1f2937);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill, 999px);
+    color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.875rem;
+
+    &::placeholder {
+      color: var(--text-muted, #94a3b8);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #ff5500);
+    }
+  }
+}
+
+.buscando {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
+
+.resultados-externos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.resultado-externo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  background: var(--surface-2, #1f2937);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent, #ff5500);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 2px;
+  }
+}
+
+.arte {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 84px;
+  background: var(--surface-3, #0d1526);
+
+  // Absoluta contra el contenedor: la fila implícita del grid es auto y
+  // un height:100% en flujo no constriñe (lección de las portadas).
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .monograma {
+    font-family: var(--font-data, 'Barlow Condensed', sans-serif);
+    font-size: 2rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.65);
+  }
+}
+
+.resultado-externo .nombre {
+  padding: 0.45rem 0.6rem 0.1rem;
+  color: var(--text, #e2e8f0);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultado-externo .genero {
+  padding: 0 0.6rem 0.5rem;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// ----- Vista previa de la portada elegida -----
+
+.portada-preview {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+
+  img {
+    width: 220px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  }
 }
 
 .mensaje-error {
