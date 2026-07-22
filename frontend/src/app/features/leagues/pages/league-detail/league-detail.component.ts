@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { League, Season, SeasonRequest } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
  * Detalle de una liga (RF-22): muestra sus datos, permite ir a configurarla y
@@ -41,6 +42,14 @@ export class LeagueDetailComponent {
 
   /** Eliminar la liga: su comisionado, o un ADMIN sobre cualquier liga. */
   readonly puedeEliminar = computed(() => this.esComisionado() || this.auth.hasRole('ADMIN'));
+
+  /** Portada: foto propia de la liga o, en su defecto, el arte del juego. */
+  readonly portada = computed(() => {
+    const liga = this.league();
+    return liga ? liga.fotoUrl || liga.juegoImagenUrl : null;
+  });
+
+  readonly gradiente = computed(() => portadaGradiente(this.league()?.nombre ?? '?'));
 
   readonly confirmandoEliminar = signal(false);
   readonly eliminando = signal(false);

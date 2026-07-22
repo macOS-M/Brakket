@@ -64,7 +64,12 @@ export class TopbarComponent {
       .join('');
   });
 
-  readonly rolPrincipal = computed(() => this.usuario()?.roles?.[0] || 'Jugador');
+  /** El rol de mayor jerarquía, no el primero que devuelva la API. */
+  readonly rolPrincipal = computed(() => {
+    const jerarquia = ['ADMIN', 'COMISIONADO', 'ARBITRO', 'PATROCINADOR', 'CAPITAN', 'JUGADOR'];
+    const roles = this.usuario()?.roles ?? [];
+    return jerarquia.find((rol) => roles.includes(rol)) ?? roles[0] ?? 'Jugador';
+  });
 
   readonly sinResultados = computed(() => {
     const res = this.resultados();

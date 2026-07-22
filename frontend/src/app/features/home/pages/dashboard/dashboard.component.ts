@@ -79,9 +79,9 @@ export class DashboardComponent implements OnInit {
     this.cargar();
   }
 
-  /** Portada de la liga: la foto de su juego, o un gradiente por nombre. */
+  /** Portada: foto propia → arte del juego → foto de stock → gradiente. */
   fotoLiga(liga: League): string | null {
-    return portadaFoto(liga.juegoNombre ?? '');
+    return liga.fotoUrl || liga.juegoImagenUrl || portadaFoto(liga.juegoNombre ?? '');
   }
 
   gradienteLiga(liga: League): string {

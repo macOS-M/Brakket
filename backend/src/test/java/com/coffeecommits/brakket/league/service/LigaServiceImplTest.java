@@ -1,4 +1,4 @@
-﻿package com.coffeecommits.brakket.league.service;
+package com.coffeecommits.brakket.league.service;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;

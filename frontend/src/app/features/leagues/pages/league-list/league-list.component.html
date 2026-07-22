@@ -38,9 +38,9 @@
   <div class="grid">
     @for (liga of leagues(); track liga.id) {
     <a class="liga-card" [routerLink]="[liga.id]">
-      <div class="portada" [style.background]="foto(liga.juegoNombre) ? undefined : portada(liga.nombre)">
-        @if (foto(liga.juegoNombre)) {
-        <img [src]="foto(liga.juegoNombre)" [alt]="" />
+      <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
+        @if (foto(liga)) {
+        <img [src]="foto(liga)" [alt]="" />
         } @else {
         <span class="monograma-grande" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
         }

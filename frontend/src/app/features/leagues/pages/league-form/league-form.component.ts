@@ -40,7 +40,10 @@ export class LeagueFormComponent {
 
   readonly form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(150)]],
-    juegoId: [null as number | null, [Validators.required]]
+    juegoId: [null as number | null, [Validators.required]],
+    descripcion: ['', [Validators.maxLength(1000)]],
+    reglas: ['', [Validators.maxLength(4000)]],
+    fotoUrl: ['', [Validators.maxLength(500)]]
   });
 
   constructor() {
@@ -56,7 +59,13 @@ export class LeagueFormComponent {
       this.leaguesService.getById(id).subscribe({
         next: (liga: League) => {
           this.ligaCargada.set(liga);
-          this.form.patchValue({ nombre: liga.nombre, juegoId: liga.juegoId });
+          this.form.patchValue({
+            nombre: liga.nombre,
+            juegoId: liga.juegoId,
+            descripcion: liga.descripcion ?? '',
+            reglas: liga.reglas ?? '',
+            fotoUrl: liga.fotoUrl ?? ''
+          });
         },
         error: () => this.error.set('No se pudo cargar la liga.')
       });
@@ -65,6 +74,15 @@ export class LeagueFormComponent {
 
   get esEdicion(): boolean {
     return this.leagueId() !== null;
+  }
+
+  /** Vista previa: la foto elegida o, sin foto, el arte del juego (edición). */
+  get fotoPreview(): string | null {
+    const propia = this.form.value.fotoUrl?.trim();
+    if (propia) {
+      return propia;
+    }
+    return this.ligaCargada()?.juegoImagenUrl ?? null;
   }
 
   submit(): void {
@@ -77,7 +95,10 @@ export class LeagueFormComponent {
 
     const body: LeagueRequest = {
       nombre: this.form.value.nombre!.trim(),
-      juegoId: Number(this.form.value.juegoId)
+      juegoId: Number(this.form.value.juegoId),
+      descripcion: this.form.value.descripcion?.trim() || null,
+      reglas: this.form.value.reglas?.trim() || null,
+      fotoUrl: this.form.value.fotoUrl?.trim() || null
     };
 
     const id = this.leagueId();

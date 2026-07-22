@@ -4,8 +4,8 @@
   <app-page-header
     [titulo]="esEdicion ? 'Configurar liga' : 'Nueva liga'"
     [subtitulo]="esEdicion
-      ? 'Actualizá el nombre y el juego de la liga.'
-      : 'Definí el nombre y el juego para crear una nueva liga.'"
+      ? 'Actualizá los datos, las reglas y la foto de la liga.'
+      : 'Definí el juego, la descripción y las reglas de tu competencia.'"
   />
 
   @if (sinPermiso()) {
@@ -44,6 +44,49 @@
       </select>
       @if (form.controls.juegoId.touched && form.controls.juegoId.invalid) {
       <span id="juego-error" class="field-error">Seleccioná un juego.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="label" for="descripcion">Descripción</label>
+      <textarea
+        id="descripcion"
+        formControlName="descripcion"
+        rows="3"
+        placeholder="De qué se trata la liga, quién puede participar…"
+      ></textarea>
+      @if (form.controls.descripcion.touched && form.controls.descripcion.invalid) {
+      <span class="field-error">Máximo 1000 caracteres.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="label" for="reglas">Reglas</label>
+      <textarea
+        id="reglas"
+        formControlName="reglas"
+        rows="5"
+        placeholder="Formato, horarios, conducta, requisitos de inscripción…"
+      ></textarea>
+      @if (form.controls.reglas.touched && form.controls.reglas.invalid) {
+      <span class="field-error">Máximo 4000 caracteres.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="label" for="fotoUrl">Foto de la liga (URL)</label>
+      <input
+        id="fotoUrl"
+        type="url"
+        formControlName="fotoUrl"
+        placeholder="https://…"
+      />
+      <span class="field-hint">Si la dejás vacía, la portada será el arte del juego.</span>
+      @if (form.controls.fotoUrl.touched && form.controls.fotoUrl.invalid) {
+      <span class="field-error">Máximo 500 caracteres.</span>
+      }
+      @if (fotoPreview) {
+      <img class="foto-preview" [src]="fotoPreview" alt="Vista previa de la portada" />
       }
     </div>
 

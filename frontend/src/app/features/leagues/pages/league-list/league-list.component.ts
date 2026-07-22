@@ -31,9 +31,9 @@ export class LeagueListComponent {
     this.cargar();
   }
 
-  /** La portada de la liga es la foto de su juego; sin foto, gradiente. */
-  foto(juegoNombre: string | null): string | null {
-    return juegoNombre ? portadaFoto(juegoNombre) : null;
+  /** Portada: foto propia → arte del juego → foto de stock → gradiente. */
+  foto(liga: League): string | null {
+    return liga.fotoUrl || liga.juegoImagenUrl || (liga.juegoNombre ? portadaFoto(liga.juegoNombre) : null);
   }
 
   /** Portada determinística por nombre de liga (ver shared/utils/cover). */

@@ -76,7 +76,7 @@ export class GameHubComponent {
   }
 
   portadaLiga(liga: League): string | null {
-    return this.foto();
+    return liga.fotoUrl || this.foto();
   }
 
   gradienteLiga(liga: League): string {
