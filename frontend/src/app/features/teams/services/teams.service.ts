@@ -78,16 +78,26 @@ export class TeamsService {
     return this.api.patch<Equipo>(`/teams/${equipoId}/disolver`, request);
   }
 
-  buscarJugadores(equipoId: number, texto: string, juegoId: number | null,
-                  soloDisponibles: boolean): Observable<JugadorDisponible[]> {
+  buscarJugadores(
+    equipoId: number,
+    texto: string,
+    juegoId: number | null,
+    soloDisponibles: boolean,
+    page = 0,
+    size = 12
+  ): Observable<Pagina<JugadorDisponible>> {
     const params = new URLSearchParams();
     if (texto) {
       params.set('texto', texto);
     }
-    if (juegoId) {
+    if (juegoId !== null) {
       params.set('juegoId', String(juegoId));
     }
     params.set('soloDisponibles', String(soloDisponibles));
-    return this.api.get<JugadorDisponible[]>(`/teams/${equipoId}/jugadores-disponibles?${params.toString()}`);
+    params.set('page', String(page));
+    params.set('size', String(size));
+    return this.api.get<Pagina<JugadorDisponible>>(
+      `/teams/${equipoId}/jugadores-disponibles?${params.toString()}`
+    );
   }
 }

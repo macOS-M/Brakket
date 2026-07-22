@@ -161,8 +161,9 @@ export class TeamRosterComponent implements OnInit {
     this.teamsService.buscarJugadores(
       this.equipoId, this.textoBusqueda().trim(), this.juegoIdBusqueda(), this.soloDisponibles()
     ).subscribe({
-      next: (resultados) => {
-        this.resultados.set(resultados);
+      next: (pagina) => {
+        // El backend ahora pagina; el template itera la lista de la página.
+        this.resultados.set(pagina.items);
         this.buscando.set(false);
       },
       error: (err) => {

@@ -86,38 +86,41 @@
   }
 }
 
+// RF-03: disolución del equipo
 .banner-disuelto {
-  padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
-  background: rgba(248, 113, 113, 0.08);
+  padding: 1rem 1.25rem;
   border: 1px solid #f87171;
   border-radius: 12px;
+  background: rgba(248, 113, 113, 0.08);
 
   .titulo {
-    margin: 0 0 0.4rem;
+    margin: 0 0 0.35rem;
     font-weight: 700;
     color: #f87171;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85rem;
   }
 
   p {
-    margin: 0 0 0.4rem;
-    font-size: 0.85rem;
+    margin: 0;
     color: var(--text, #e2e8f0);
   }
 
   .motivo {
-    font-style: italic;
+    margin-top: 0.35rem;
     color: var(--text-muted, #94a3b8);
+    font-size: 0.9rem;
   }
 }
 
 .zona-peligro {
   margin-top: 2rem;
-  padding: 1.25rem;
-  background: rgba(248, 113, 113, 0.05);
-  border: 1px solid #f87171;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgba(248, 113, 113, 0.45);
   border-radius: 12px;
-  max-width: 500px;
+  background: rgba(248, 113, 113, 0.04);
 
   h2 {
     margin: 0 0 0.75rem;
@@ -126,72 +129,90 @@
   }
 
   .advertencia {
-    font-size: 0.85rem;
-    color: var(--text-muted, #94a3b8);
-    margin-bottom: 0.75rem;
+    margin: 0 0 0.6rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.92rem;
   }
 
   .consecuencias {
-    margin: 0 0 0.75rem;
-    padding-left: 1.2rem;
-    font-size: 0.85rem;
-    color: var(--text, #e2e8f0);
+    margin: 0 0 0.9rem;
+    padding-left: 1.25rem;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
 
-    li {
-      margin-bottom: 0.3rem;
+  .campo-motivo {
+    display: grid;
+    gap: 0.35rem;
+    margin-bottom: 0.9rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.88rem;
+
+    textarea {
+      padding: 0.6rem 0.75rem;
+      background: var(--surface, #111827);
+      border: 1px solid var(--border, #334155);
+      border-radius: 8px;
+      color: var(--text, #e2e8f0);
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+
+      &:focus {
+        outline: none;
+        border-color: #f87171;
+      }
     }
-  }
-
-  .campo-motivo,
-  .confirmacion {
-    display: block;
-    margin-bottom: 0.75rem;
-    font-size: 0.85rem;
-    color: var(--text, #e2e8f0);
-  }
-
-  .campo-motivo textarea {
-    display: block;
-    width: 100%;
-    margin-top: 0.4rem;
-    padding: 0.5rem 0.65rem;
-    background: var(--surface, #111827);
-    border: 1px solid var(--border, #334155);
-    border-radius: 8px;
-    color: var(--text, #e2e8f0);
-    font-family: inherit;
-    resize: vertical;
   }
 
   .confirmacion {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.92rem;
+    cursor: pointer;
+
+    input {
+      width: 1rem;
+      height: 1rem;
+      accent-color: #f87171;
+    }
   }
 
   .error-disolucion {
-    font-size: 0.8rem;
+    margin: 0 0 0.9rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid #f87171;
+    border-radius: 8px;
     color: #f87171;
-    margin-bottom: 0.75rem;
+    font-size: 0.88rem;
   }
 
   .btn-disolver {
-    padding: 0.5rem 1.1rem;
-    background: #f87171;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
+    padding: 0.55rem 1.2rem;
     font-size: 0.85rem;
     font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid #f87171;
+    background: transparent;
+    color: #f87171;
     cursor: pointer;
 
+    &:hover:not(:disabled) {
+      background: rgba(248, 113, 113, 0.12);
+    }
+
     &:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
     }
   }
 }
 
+// ===== RF-11: buscar jugadores disponibles =====
 .buscar-jugadores {
   margin-top: 2rem;
   padding: 1.25rem;

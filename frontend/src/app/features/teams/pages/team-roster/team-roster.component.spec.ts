@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { TeamRosterComponent } from './team-roster.component';
 import { TeamsService } from '../../services/teams.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { GamesService } from '../../../games/services/games.service';
 
 describe('TeamRosterComponent', () => {
   let component: TeamRosterComponent;
@@ -33,11 +34,18 @@ describe('TeamRosterComponent', () => {
       usuario: () => ({ id: 1 })
     };
 
+    // El componente inyecta GamesService (filtro de juegos de RF-11) y lo llama
+    // en ngOnInit; sin este mock el test pide un HttpClient que no está provisto.
+    const gamesServiceMock = {
+      listActivos: () => of([])
+    };
+
     await TestBed.configureTestingModule({
       imports: [TeamRosterComponent],
       providers: [
         { provide: TeamsService, useValue: teamsServiceMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: GamesService, useValue: gamesServiceMock },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => '1' } } }

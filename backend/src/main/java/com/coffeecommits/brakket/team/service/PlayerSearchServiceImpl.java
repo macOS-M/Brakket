@@ -2,22 +2,24 @@ package com.coffeecommits.brakket.team.service;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
+import com.coffeecommits.brakket.common.dto.PageResponse;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.team.dto.JugadorDisponibleResponse;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 import com.coffeecommits.brakket.team.repository.EquipoRepository;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class PlayerSearchServiceImpl implements PlayerSearchService {
-
-    private static final String ESTADO_ACTIVO = "ACTIVO";
 
     private final UsuarioRepository usuarioRepository;
     private final EquipoRepository equipoRepository;
@@ -33,8 +35,9 @@ public class PlayerSearchServiceImpl implements PlayerSearchService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<JugadorDisponibleResponse> buscar(Long equipoId, String texto, Long juegoId,
-                                                  boolean soloDisponibles, String capitanCorreo) {
+    public PageResponse<JugadorDisponibleResponse> buscar(Long equipoId, String texto, Long juegoId,
+                                                          boolean soloDisponibles, String capitanCorreo,
+                                                          int page, int size) {
 
         equipoRepository.findById(equipoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
@@ -52,28 +55,29 @@ public class PlayerSearchServiceImpl implements PlayerSearchService {
 
         String textoFiltro = (texto == null || texto.isBlank()) ? "" : texto.trim();
 
-        return usuarioRepository.buscarDisponibles(textoFiltro, juegoId).stream()
-                .filter(candidato -> !esYaMiembroActivo(equipoId, candidato.getId()))
-                .map(candidato -> mapearCandidato(equipoId, candidato))
-                .filter(r -> !soloDisponibles || !r.requiereTransferencia())
-                .toList();
-    }
+        // La query aplica todos los filtros (incluye la exclusion de miembros y,
+        // si soloDisponibles, la de jugadores en otro equipo), asi que la pagina
+        // ya llega filtrada y con el total correcto.
+        Page<Usuario> pagina = usuarioRepository.buscarDisponibles(
+                textoFiltro, juegoId, equipoId, soloDisponibles, PageRequest.of(page, size));
 
-    private boolean esYaMiembroActivo(Long equipoId, Long usuarioId) {
-        return miembroEquipoRepository.findByEquipoIdAndUsuarioId(equipoId, usuarioId)
-                .filter(m -> ESTADO_ACTIVO.equals(m.getEstado()))
-                .isPresent();
-    }
+        // Una sola query para los badges de toda la pagina, en vez de una por
+        // candidato: aca estaba el N+1.
+        List<Long> ids = pagina.getContent().stream().map(Usuario::getId).toList();
+        Map<Long, String> equipoActualPorUsuario = ids.isEmpty()
+                ? Map.of()
+                : miembroEquipoRepository.findActivosByUsuarioIds(ids).stream()
+                        .filter(m -> !m.getEquipo().getId().equals(equipoId))
+                        .collect(Collectors.toMap(
+                                m -> m.getUsuario().getId(),
+                                m -> m.getEquipo().getNombre(),
+                                (primero, segundo) -> primero));
 
-    private JugadorDisponibleResponse mapearCandidato(Long equipoId, Usuario candidato) {
-        Optional<MiembroEquipo> otroEquipoActivo = miembroEquipoRepository
-                .findByUsuarioId(candidato.getId()).stream()
-                .filter(m -> ESTADO_ACTIVO.equals(m.getEstado()))
-                .filter(m -> !m.getEquipo().getId().equals(equipoId))
-                .findFirst();
-
-        return otroEquipoActivo
-                .map(m -> JugadorDisponibleResponse.conTransferencia(candidato, m.getEquipo().getNombre()))
-                .orElseGet(() -> JugadorDisponibleResponse.invitacionDirecta(candidato));
+        return PageResponse.from(pagina, usuario -> {
+            String equipoActual = equipoActualPorUsuario.get(usuario.getId());
+            return equipoActual != null
+                    ? JugadorDisponibleResponse.conTransferencia(usuario, equipoActual)
+                    : JugadorDisponibleResponse.invitacionDirecta(usuario);
+        });
     }
 }
