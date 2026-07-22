@@ -59,8 +59,12 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // Lecturas públicas (catálogo de juegos):
+                        // Lecturas públicas: el catálogo, las ligas y la búsqueda de
+                        // equipos son navegables sin sesión; el login se exige recién
+                        // al actuar (crear, inscribir, invitar).
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/leagues/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/teams/search").permitAll()
                         // Todo lo demás requiere JWT válido.
                         .anyRequest().authenticated()
                 )

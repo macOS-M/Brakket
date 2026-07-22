@@ -29,8 +29,8 @@ export const routes: Routes = [
         loadChildren: () => import('./features/games/games.routes').then((m) => m.routes)
       },
       {
+        // Lectura pública; los guards de crear/editar viven en sus rutas hijas.
         path: 'leagues',
-        canActivate: [authGuard],
         loadChildren: () => import('./features/leagues/leagues.routes').then((m) => m.routes)
       },
       {

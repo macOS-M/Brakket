@@ -38,6 +38,11 @@ export class LeaguesService {
     return this.api.put<League>(`/leagues/${id}`, body);
   }
 
+  /** Elimina una liga y sus temporadas (solo comisionado o admin). */
+  delete(id: number): Observable<void> {
+    return this.api.delete<void>(`/leagues/${id}`);
+  }
+
   /** Temporadas de una liga. */
   listSeasons(ligaId: number): Observable<Season[]> {
     return this.api.get<Season[]>(`/leagues/${ligaId}/seasons`);

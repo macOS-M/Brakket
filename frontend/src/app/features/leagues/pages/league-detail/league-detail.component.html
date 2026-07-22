@@ -67,6 +67,38 @@
       </form>
       }
     </div>
+
+    @if (puedeEliminar()) {
+    <div class="danger-zone">
+      <h2>Zona de peligro</h2>
+      @if (errorEliminar()) {
+      <p class="error" role="alert">{{ errorEliminar() }}</p>
+      }
+      @if (confirmandoEliminar()) {
+      <p class="danger-aviso">
+        Se eliminará <strong>{{ liga.nombre }}</strong> con todas sus temporadas. Esta acción no
+        se puede deshacer.
+      </p>
+      <div class="danger-acciones">
+        <button type="button" class="btn btn-danger" [disabled]="eliminando()" (click)="eliminarLiga()">
+          {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar la liga' }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost"
+          [disabled]="eliminando()"
+          (click)="confirmandoEliminar.set(false)"
+        >
+          Cancelar
+        </button>
+      </div>
+      } @else {
+      <button type="button" class="btn btn-danger" (click)="confirmandoEliminar.set(true)">
+        Eliminar liga
+      </button>
+      }
+    </div>
+    }
     }
   }
 </section>

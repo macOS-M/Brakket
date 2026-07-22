@@ -161,3 +161,40 @@
   color: var(--text-muted, #94a3b8);
   border: 1px solid rgba(148, 163, 184, 0.4);
 }
+
+.btn-danger {
+  background: var(--danger, #ef4444);
+  color: #fff;
+
+  &:hover:not([disabled]) {
+    filter: brightness(1.08);
+  }
+}
+
+// ----- Zona de peligro (eliminar liga) -----
+
+.danger-zone {
+  margin-top: 2.5rem;
+  padding: 1.1rem 1.2rem 1.2rem;
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-md, 12px);
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.0625rem;
+    color: var(--danger-text, #f87171);
+  }
+}
+
+.danger-aviso {
+  margin: 0 0 0.9rem;
+  color: var(--text, #e2e8f0);
+  font-size: 0.875rem;
+}
+
+.danger-acciones {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

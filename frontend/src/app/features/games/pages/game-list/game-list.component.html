@@ -48,10 +48,14 @@
     <article class="juego-card">
       <!-- El enlace cubre toda la tarjeta vía ::after, así el objetivo de
            clic es la tarjeta entera y no solo el título. Los botones de
-           acción van por encima con z-index. -->
+           acción van por encima con z-index. El destino es el formulario de
+           configuración competitiva (RF-21), que es de ADMIN/COMISIONADO;
+           para el resto la tarjeta es informativa y no navega. -->
+      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
       <a class="enlace-juego" [routerLink]="['/games', juego.id, 'perfil-competitivo']">
         <span class="sr-only">Ver perfil competitivo de {{ juego.nombre }}</span>
       </a>
+      }
 
       <!-- Portada al estilo de las plataformas de torneos: cuando no hay
            imagen real, un gradiente determinístico por nombre con el

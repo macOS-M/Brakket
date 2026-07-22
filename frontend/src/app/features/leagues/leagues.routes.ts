@@ -1,5 +1,12 @@
 import { Routes } from '@angular/router';
 
+import { authGuard } from '../../core/guards/auth.guard';
+import { roleGuard } from '../../core/guards/role.guard';
+
+/**
+ * La lista y el detalle son navegables sin sesion (lectura publica); crear y
+ * configurar exigen sesion y el rol de quien gestiona ligas (RF-22).
+ */
 export const routes: Routes = [
   {
     path: '',
@@ -8,6 +15,8 @@ export const routes: Routes = [
   },
   {
     path: 'nuevo',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN', 'COMISIONADO'] },
     loadComponent: () =>
       import('./pages/league-form/league-form.component').then((m) => m.LeagueFormComponent)
   },
@@ -18,6 +27,8 @@ export const routes: Routes = [
   },
   {
     path: ':id/editar',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN', 'COMISIONADO'] },
     loadComponent: () =>
       import('./pages/league-form/league-form.component').then((m) => m.LeagueFormComponent)
   }

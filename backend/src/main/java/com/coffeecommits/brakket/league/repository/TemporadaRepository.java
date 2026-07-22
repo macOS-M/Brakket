@@ -16,4 +16,6 @@ public interface TemporadaRepository extends JpaRepository<Temporada, Long> {
      */
     boolean existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
             Long ligaId, LocalDate fechaFinNueva, LocalDate fechaInicioNueva);
+
+    void deleteByLigaId(Long ligaId);
 }

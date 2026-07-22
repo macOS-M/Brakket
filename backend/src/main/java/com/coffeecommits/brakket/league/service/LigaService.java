@@ -30,6 +30,12 @@ public interface LigaService {
     /** Configura/edita una liga. Solo el comisionado puede hacerlo. */
     LigaResponse actualizarLiga(Long ligaId, String correoComisionado, ActualizarLigaRequest request);
 
+    /**
+     * Elimina una liga junto con sus temporadas. Puede hacerlo su comisionado
+     * o, con {@code esAdmin}, un administrador de la plataforma.
+     */
+    void eliminarLiga(Long ligaId, String correo, boolean esAdmin);
+
     /** Temporadas de una liga. */
     List<TemporadaResponse> listarTemporadas(Long ligaId);
 

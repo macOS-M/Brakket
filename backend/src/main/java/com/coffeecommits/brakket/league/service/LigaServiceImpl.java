@@ -93,6 +93,22 @@ public class LigaServiceImpl implements LigaService {
     }
 
     @Override
+    @Transactional
+    public void eliminarLiga(Long ligaId, String correo, boolean esAdmin) {
+        Liga liga = buscarLiga(ligaId);
+        if (!esAdmin) {
+            Usuario usuario = buscarUsuario(correo);
+            if (!liga.getComisionado().getId().equals(usuario.getId())) {
+                throw new ForbiddenException("Solo el comisionado o un administrador pueden eliminar esta liga");
+            }
+        }
+        // Las temporadas no tienen borrado en cascada en el esquema; se
+        // eliminan primero para no violar la clave foránea.
+        temporadaRepository.deleteByLigaId(ligaId);
+        ligaRepository.delete(liga);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<TemporadaResponse> listarTemporadas(Long ligaId) {
         buscarLiga(ligaId); // valida que la liga exista (404 si no)

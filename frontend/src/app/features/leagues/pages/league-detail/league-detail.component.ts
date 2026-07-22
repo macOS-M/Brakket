@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { League, Season, SeasonRequest } from '../../../../models/league.model';
@@ -22,6 +22,7 @@ export class LeagueDetailComponent {
   private readonly fb = inject(FormBuilder);
   private readonly leaguesService = inject(LeaguesService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
   readonly league = signal<League | null>(null);
@@ -37,6 +38,13 @@ export class LeagueDetailComponent {
     const usuario = this.auth.usuario();
     return !!liga && !!usuario?.id && Number(usuario.id) === liga.comisionadoId;
   });
+
+  /** Eliminar la liga: su comisionado, o un ADMIN sobre cualquier liga. */
+  readonly puedeEliminar = computed(() => this.esComisionado() || this.auth.hasRole('ADMIN'));
+
+  readonly confirmandoEliminar = signal(false);
+  readonly eliminando = signal(false);
+  readonly errorEliminar = signal<string | null>(null);
 
   private ligaId!: number;
 
@@ -69,6 +77,19 @@ export class LeagueDetailComponent {
     this.leaguesService.listSeasons(this.ligaId).subscribe({
       next: (temporadas) => this.seasons.set(temporadas),
       error: () => this.seasonError.set('No se pudieron cargar las temporadas.')
+    });
+  }
+
+  eliminarLiga(): void {
+    this.eliminando.set(true);
+    this.errorEliminar.set(null);
+    this.leaguesService.delete(this.ligaId).subscribe({
+      next: () => this.router.navigate(['/leagues']),
+      error: (err) => {
+        this.eliminando.set(false);
+        this.confirmandoEliminar.set(false);
+        this.errorEliminar.set(err?.error?.message ?? 'No se pudo eliminar la liga.');
+      }
     });
   }
 

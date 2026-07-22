@@ -11,7 +11,27 @@ describe('DashboardComponent', () => {
   let fixture: ComponentFixture<DashboardComponent>;
   let httpMock: HttpTestingController;
 
-  /** El panel consulta cuatro fuentes en paralelo al iniciar. */
+  /**
+   * Crea el componente con o sin sesión. Con token, el AuthService dispara
+   * GET /me en su constructor y el panel pide las cuatro fuentes; sin token,
+   * el panel solo pide las públicas (ligas y juegos).
+   */
+  function crear(conSesion: boolean): void {
+    if (conSesion) {
+      localStorage.setItem('brakket.jwt', 'jwt-de-prueba');
+    }
+    fixture = TestBed.createComponent(DashboardComponent);
+    component = fixture.componentInstance;
+    httpMock = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    if (conSesion) {
+      httpMock
+        .expectOne(`${environment.apiUrl}/me`)
+        .flush({ authenticated: true, id: 1, nombre: 'Ana', roles: ['JUGADOR'] });
+    }
+  }
+
+  /** El panel consulta cuatro fuentes en paralelo al iniciar (con sesión). */
   function responderCargaInicial(): void {
     httpMock.expectOne(`${environment.apiUrl}/invitaciones/pendientes`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/transfers/pendientes`).flush([]);
@@ -24,29 +44,28 @@ describe('DashboardComponent', () => {
       imports: [DashboardComponent],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     }).compileComponents();
-
-    fixture = TestBed.createComponent(DashboardComponent);
-    component = fixture.componentInstance;
-    httpMock = TestBed.inject(HttpTestingController);
-    fixture.detectChanges();
   });
 
   afterEach(() => {
+    localStorage.removeItem('brakket.jwt');
     httpMock.verify();
   });
 
   it('should create', () => {
+    crear(true);
     responderCargaInicial();
     expect(component).toBeTruthy();
   });
 
   it('deja de cargar cuando responden las cuatro fuentes', () => {
+    crear(true);
     responderCargaInicial();
     expect(component.cargando()).toBeFalse();
     expect(component.errorGeneral()).toBeFalse();
   });
 
   it('sigue mostrando el panel si solo falla una fuente', () => {
+    crear(true);
     httpMock
       .expectOne(`${environment.apiUrl}/invitaciones/pendientes`)
       .flush({ message: 'error' }, { status: 500, statusText: 'Server Error' });
@@ -60,6 +79,7 @@ describe('DashboardComponent', () => {
   });
 
   it('marca error general solo si fallan todas las fuentes', () => {
+    crear(true);
     const fallo = { status: 500, statusText: 'Server Error' };
     httpMock.expectOne(`${environment.apiUrl}/invitaciones/pendientes`).flush(null, fallo);
     httpMock.expectOne(`${environment.apiUrl}/transfers/pendientes`).flush(null, fallo);
@@ -67,5 +87,18 @@ describe('DashboardComponent', () => {
     httpMock.expectOne(`${environment.apiUrl}/games`).flush(null, fallo);
 
     expect(component.errorGeneral()).toBeTrue();
+  });
+
+  it('sin sesión solo consulta las fuentes públicas', () => {
+    crear(false);
+    // Sin token no debe pedir invitaciones ni transferencias: devolverían
+    // 401 y el interceptor expulsaría al visitante hacia el login.
+    httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/games`).flush([]);
+    httpMock.expectNone(`${environment.apiUrl}/invitaciones/pendientes`);
+    httpMock.expectNone(`${environment.apiUrl}/transfers/pendientes`);
+
+    expect(component.cargando()).toBeFalse();
+    expect(component.errorGeneral()).toBeFalse();
   });
 });

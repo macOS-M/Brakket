@@ -15,11 +15,13 @@ export const routes: Routes = [
   },
   {
     path: ':equipoId/editar',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/team-form/team-form.component').then((m) => m.TeamFormComponent)
   },
   {
     path: 'invitaciones',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/my-invitations/my-invitations.component').then((m) => m.MyInvitationsComponent)
   },

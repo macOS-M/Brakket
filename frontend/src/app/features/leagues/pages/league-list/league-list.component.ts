@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { League } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
@@ -20,6 +21,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 })
 export class LeagueListComponent {
   private readonly leaguesService = inject(LeaguesService);
+  readonly auth = inject(AuthService);
 
   readonly leagues = signal<League[]>([]);
   readonly loading = signal(true);

@@ -1,20 +1,26 @@
 <section class="page">
   <app-page-header titulo="Ligas" subtitulo="Administrá tus ligas y abrí su detalle">
+    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
     <a class="btn-primary" routerLink="nuevo">+ Nueva liga</a>
+    }
   </app-page-header>
 
   @if (loading()) {
   <app-empty-state modo="cargando" mensaje="Cargando ligas…" />
   } @else if (error()) {
-  <app-empty-state modo="error" titulo="No se pudieron cargar" [mensaje]="error()">
-    <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
-  </app-empty-state>
+  <app-empty-state modo="error" titulo="No se pudieron cargar" [mensaje]="error()" />
   } @else if (leagues().length === 0) {
   <app-empty-state
     titulo="Aún no hay ligas"
-    mensaje="Creá la primera liga para empezar a organizar temporadas y torneos."
+    [mensaje]="
+      auth.hasRole('ADMIN', 'COMISIONADO')
+        ? 'Creá la primera liga para empezar a organizar temporadas y torneos.'
+        : 'Cuando un comisionado cree la primera liga vas a verla acá.'
+    "
   >
+    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
     <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
+    }
   </app-empty-state>
   } @else {
   <!-- Banner promocional (referencia Aquament) con el conteo real. -->

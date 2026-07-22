@@ -14,7 +14,7 @@
   } @else {
 
   <div class="stats">
-    @if (!auth.hasRole('PATROCINADOR')) {
+    @if (auth.isAuthenticated() && !auth.hasRole('PATROCINADOR')) {
     <app-stat-card
       etiqueta="Invitaciones pendientes"
       [valor]="invitaciones().length"
@@ -80,6 +80,19 @@
         mensaje="Acá vas a auditar la audiencia, la interacción y el sentimiento del público de las competencias que patrocinás."
       >
         <a class="btn-secondary" routerLink="/analytics">Ver panel</a>
+      </app-empty-state>
+    </section>
+    } @else if (!auth.isAuthenticated()) {
+    <!-- Visitante sin sesión: el panel es navegable, la acción pide entrar. -->
+    <section class="bloque">
+      <div class="bloque-titulo">
+        <h2>Competí en Brakket</h2>
+      </div>
+      <app-empty-state
+        titulo="Entrá para competir"
+        mensaje="Con tu cuenta de Google podés crear un equipo, responder invitaciones y participar en las ligas."
+      >
+        <button type="button" class="btn-primary" (click)="auth.login()">Iniciar sesión</button>
       </app-empty-state>
     </section>
     } @else {

@@ -92,11 +92,20 @@ export class DashboardComponent implements OnInit {
     this.cargando.set(true);
     this.errorGeneral.set(false);
 
+    // Sin sesión solo se piden las fuentes públicas: pedir invitaciones o
+    // transferencias devolvería 401 y el interceptor expulsaría al login,
+    // rompiendo la navegación pública de solo lectura.
+    const conSesion = this.auth.isAuthenticated();
+
     // Cada fuente se degrada por separado: que falle una no debe vaciar
     // el panel entero.
     forkJoin({
-      invitaciones: this.teamsService.misInvitacionesPendientes().pipe(catchError(() => of(null))),
-      transferencias: this.transfersService.pendientes().pipe(catchError(() => of(null))),
+      invitaciones: conSesion
+        ? this.teamsService.misInvitacionesPendientes().pipe(catchError(() => of(null)))
+        : of([] as Invitacion[]),
+      transferencias: conSesion
+        ? this.transfersService.pendientes().pipe(catchError(() => of(null)))
+        : of([] as Transferencia[]),
       ligas: this.leaguesService.list().pipe(catchError(() => of(null))),
       juegos: this.gamesService.listActivos().pipe(catchError(() => of(null)))
     }).subscribe((res) => {
