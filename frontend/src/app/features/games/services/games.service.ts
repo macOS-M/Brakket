@@ -22,6 +22,11 @@ export class GamesService {
     );
   }
 
+  /** Trae un juego del catálogo externo al propio (idempotente). */
+  importarExterno(nombre: string): Observable<Juego> {
+    return this.api.post<Juego>('/games/importar-externo', { nombre });
+  }
+
   obtenerPorId(id: number): Observable<Juego> {
     return this.api.get<Juego>(`/games/${id}`);
   }

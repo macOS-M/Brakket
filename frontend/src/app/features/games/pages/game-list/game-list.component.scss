@@ -143,8 +143,20 @@
 .juego-card {
   display: flex;
   flex-direction: column;
+  // Reset para cuando la tarjeta es un <button> (resultados externos).
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
   text-decoration: none;
   transition: transform 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
 
   &:hover {
     transform: translateY(-3px);
@@ -208,6 +220,38 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+// Tarjeta de resultado del catálogo global: mismo lenguaje visual, con el
+// chip de acción encima del arte.
+.chip-agregar {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent, #ff5500);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mensaje-error {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--danger-text, #f87171);
+  font-size: 0.875rem;
+}
+
+.buscando-externos {
+  margin: 1rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

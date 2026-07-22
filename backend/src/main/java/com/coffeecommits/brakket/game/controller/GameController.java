@@ -1,5 +1,6 @@
 package com.coffeecommits.brakket.game.controller;
 
+import com.coffeecommits.brakket.game.dto.ImportarJuegoRequest;
 import com.coffeecommits.brakket.game.dto.JuegoExternoResponse;
 import com.coffeecommits.brakket.game.dto.JuegoRequest;
 import com.coffeecommits.brakket.game.dto.JuegoResponse;
@@ -44,14 +45,27 @@ public class GameController {
     }
 
     /**
-     * Busca juegos en el catálogo externo (RAWG) para precargar el formulario
-     * con nombre, género y arte oficial. Mismo permiso que las escrituras:
-     * es una herramienta de quien administra el catálogo.
+     * Busca juegos en el catálogo externo (RAWG). Lo usa el catálogo para
+     * ofrecer títulos que todavía no están localmente: cualquier usuario con
+     * sesión puede buscar (la key queda protegida detrás del login; la ruta
+     * se excluye del permitAll de GET /api/games/** en SecurityConfig).
      */
     @GetMapping("/buscar-externo")
-    @PreAuthorize("hasAuthority('GESTIONAR_TORNEOS')")
+    @PreAuthorize("isAuthenticated()")
     public List<JuegoExternoResponse> buscarExterno(@RequestParam("q") String consulta) {
         return externalGameSearchService.buscar(consulta);
+    }
+
+    /**
+     * Trae un juego del catálogo externo al propio (idempotente). Los datos
+     * salen de RAWG, no del usuario, así que no hay riesgo de datos basura:
+     * cualquier usuario con sesión puede sumar el título donde quiere
+     * competir (referencia Challenger Mode).
+     */
+    @PostMapping("/importar-externo")
+    @PreAuthorize("isAuthenticated()")
+    public JuegoResponse importarExterno(@Valid @RequestBody ImportarJuegoRequest request) {
+        return gameService.importarDesdeExterno(request.nombre());
     }
 
     @PostMapping

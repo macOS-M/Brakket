@@ -2,6 +2,7 @@ package com.coffeecommits.brakket.game.service;
 
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
+import com.coffeecommits.brakket.game.dto.JuegoExternoResponse;
 import com.coffeecommits.brakket.game.dto.JuegoRequest;
 import com.coffeecommits.brakket.game.dto.JuegoResponse;
 import com.coffeecommits.brakket.game.model.Juego;
@@ -30,6 +31,8 @@ class GameServiceImplTest {
     private JuegoRepository juegoRepository;
     @Mock
     private LigaRepository ligaRepository;
+    @Mock
+    private ExternalGameSearchService externalGameSearchService;
     @InjectMocks
     private GameServiceImpl gameService;
 
@@ -85,6 +88,49 @@ class GameServiceImplTest {
 
         assertThat(resp.genero()).isEqualTo("FPS táctico");
         assertThat(resp.descripcion()).isEqualTo("Nueva descripción");
+    }
+
+    @Test
+    void importar_devuelve_el_existente_reactivandolo_sin_consultar_la_api() {
+        Juego inactivo = Juego.builder().id(3L).nombre("Valorant").genero("Shooter").activo(false).build();
+        when(juegoRepository.findByNombreIgnoreCase("valorant")).thenReturn(Optional.of(inactivo));
+        when(juegoRepository.save(inactivo)).thenReturn(inactivo);
+
+        JuegoResponse resp = gameService.importarDesdeExterno("valorant");
+
+        assertThat(resp.id()).isEqualTo(3L);
+        assertThat(resp.activo()).isTrue();
+        verify(externalGameSearchService, never()).buscar(any());
+    }
+
+    @Test
+    void importar_crea_el_juego_con_los_datos_del_catalogo_externo() {
+        when(juegoRepository.findByNombreIgnoreCase("apex")).thenReturn(Optional.empty());
+        when(externalGameSearchService.buscar("apex")).thenReturn(List.of(
+                new JuegoExternoResponse("Apex Legends", "Shooter", "https://media.rawg.io/apex.jpg")));
+        when(juegoRepository.findByNombreIgnoreCase("Apex Legends")).thenReturn(Optional.empty());
+        when(juegoRepository.save(any(Juego.class))).thenAnswer(inv -> {
+            Juego j = inv.getArgument(0);
+            j.setId(9L);
+            return j;
+        });
+
+        JuegoResponse resp = gameService.importarDesdeExterno("apex");
+
+        assertThat(resp.nombre()).isEqualTo("Apex Legends");
+        assertThat(resp.genero()).isEqualTo("Shooter");
+        assertThat(resp.imagenUrl()).isEqualTo("https://media.rawg.io/apex.jpg");
+        assertThat(resp.activo()).isTrue();
+    }
+
+    @Test
+    void importar_falla_claro_si_el_catalogo_externo_no_lo_encuentra() {
+        when(juegoRepository.findByNombreIgnoreCase("juego-inventado")).thenReturn(Optional.empty());
+        when(externalGameSearchService.buscar("juego-inventado")).thenReturn(List.of());
+
+        assertThatThrownBy(() -> gameService.importarDesdeExterno("juego-inventado"))
+                .isInstanceOf(BusinessException.class);
+        verify(juegoRepository, never()).save(any(Juego.class));
     }
 
     @Test

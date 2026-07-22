@@ -57,8 +57,13 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
     }
 
     @Override
+    public boolean disponible() {
+        return apiKey != null && !apiKey.isBlank();
+    }
+
+    @Override
     public List<JuegoExternoResponse> buscar(String consulta) {
-        if (apiKey == null || apiKey.isBlank()) {
+        if (!disponible()) {
             throw new BusinessException(
                     "El buscador externo no está configurado (falta RAWG_API_KEY en el backend)");
         }
@@ -66,17 +71,32 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
         if (texto.length() < 2) {
             return List.of();
         }
+        return consultar(uri -> uri.path("/games")
+                .queryParam("key", apiKey)
+                .queryParam("search", texto)
+                .queryParam("page_size", MAX_RESULTADOS)
+                .build());
+    }
 
+    @Override
+    public List<JuegoExternoResponse> populares() {
+        if (!disponible()) {
+            throw new BusinessException(
+                    "El buscador externo no está configurado (falta RAWG_API_KEY en el backend)");
+        }
+        // Ordenado por popularidad (cantidad de usuarios que lo agregaron).
+        return consultar(uri -> uri.path("/games")
+                .queryParam("key", apiKey)
+                .queryParam("ordering", "-added")
+                .queryParam("page_size", 24)
+                .build());
+    }
+
+    private List<JuegoExternoResponse> consultar(
+            java.util.function.Function<org.springframework.web.util.UriBuilder, java.net.URI> uri) {
         RawgPage pagina;
         try {
-            pagina = restClient.get()
-                    .uri(uri -> uri.path("/games")
-                            .queryParam("key", apiKey)
-                            .queryParam("search", texto)
-                            .queryParam("page_size", MAX_RESULTADOS)
-                            .build())
-                    .retrieve()
-                    .body(RawgPage.class);
+            pagina = restClient.get().uri(uri).retrieve().body(RawgPage.class);
         } catch (RestClientException e) {
             throw new BusinessException("El buscador externo de juegos no está disponible ahora");
         }

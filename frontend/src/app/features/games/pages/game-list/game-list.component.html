@@ -1,12 +1,8 @@
 <section class="page">
-  <app-page-header
-    titulo="Juegos"
-    subtitulo="Los títulos donde se compite en Brakket"
-  >
-    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
-    <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
-    }
-  </app-page-header>
+  <!-- Sin botón de alta manual: el catálogo se siembra solo desde la API
+       y el buscador agrega lo que falte (el formulario /games/nuevo queda
+       como ruta de respaldo para ADMIN/COMISIONADO). -->
+  <app-page-header titulo="Juegos" subtitulo="Elegí el título donde querés competir" />
 
   @if (cargando()) {
   <app-empty-state modo="cargando" mensaje="Cargando juegos…" />
@@ -14,15 +10,11 @@
   <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()!">
     <button type="button" class="btn-secondary" (click)="cargarJuegos()">Reintentar</button>
   </app-empty-state>
-  } @else if (juegos().length === 0) {
+  } @else if (juegos().length === 0 && !busqueda().trim()) {
   <app-empty-state
-    titulo="Todavía no hay juegos"
-    mensaje="Registrá el primer título para poder crear ligas y torneos sobre él."
-  >
-    @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
-    <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
-    }
-  </app-empty-state>
+    titulo="El catálogo se está preparando"
+    mensaje="Los títulos populares se cargan solos desde el catálogo global. Buscá un juego para agregarlo ya."
+  />
   } @else {
 
   <!-- Escaparate (referencia Challenger Mode): dos filas en marquesina que
@@ -65,7 +57,7 @@
       type="search"
       placeholder="Buscar juego…"
       [value]="busqueda()"
-      (input)="busqueda.set($any($event.target).value)"
+      (input)="alBuscar($any($event.target).value)"
     />
     <span class="sr-only">Buscar juego por nombre</span>
   </label>
@@ -93,10 +85,18 @@
     }
   </div>
 
-  @if (juegosFiltrados().length === 0) {
+  @if (errorImportar()) {
+  <p class="mensaje-error" role="alert">{{ errorImportar() }}</p>
+  }
+
+  @if (juegosFiltrados().length === 0 && externos().length === 0 && !buscandoExternos()) {
   <app-empty-state
     titulo="Sin resultados"
-    mensaje="Ningún juego coincide con los filtros aplicados."
+    [mensaje]="
+      auth.isAuthenticated()
+        ? 'Ningún juego coincide con la búsqueda, ni acá ni en el catálogo global.'
+        : 'Ningún juego coincide. Iniciá sesión para buscar en el catálogo global.'
+    "
   >
     <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
   </app-empty-state>
@@ -117,7 +117,37 @@
       }
     </a>
     }
+
+    <!-- Resultados del catálogo global (RAWG) que aún no están acá: un
+         clic los agrega y navega a su hub. Sin formulario. -->
+    @for (externo of externos(); track externo.nombre) {
+    <button
+      type="button"
+      class="juego-card externo"
+      [disabled]="importando() !== null"
+      (click)="agregarExterno(externo)"
+    >
+      <div class="portada">
+        @if (externo.imagenUrl) {
+        <img [src]="externo.imagenUrl" [alt]="" loading="lazy" />
+        } @else {
+        <span class="monograma-grande" aria-hidden="true">{{ externo.nombre.charAt(0) }}</span>
+        }
+        <span class="chip-agregar">
+          {{ importando() === externo.nombre ? 'Agregando…' : '+ Agregar' }}
+        </span>
+      </div>
+      <span class="nombre">{{ externo.nombre }}</span>
+      @if (externo.genero) {
+      <span class="genero">{{ externo.genero }}</span>
+      }
+    </button>
+    }
   </div>
+
+  @if (buscandoExternos()) {
+  <p class="buscando-externos" role="status">Buscando en el catálogo global…</p>
+  }
   }
   }
 </section>

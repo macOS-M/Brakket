@@ -12,4 +12,10 @@ public interface ExternalGameSearchService {
 
     /** Busca juegos por texto libre. Lista vacía si no hay coincidencias. */
     List<JuegoExternoResponse> buscar(String consulta);
+
+    /** Los títulos más populares del catálogo externo (para sembrar el propio). */
+    List<JuegoExternoResponse> populares();
+
+    /** Hay credenciales configuradas para consultar el catálogo externo. */
+    boolean disponible();
 }

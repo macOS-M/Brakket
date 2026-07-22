@@ -67,7 +67,10 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Lecturas públicas: el catálogo, las ligas y la búsqueda de
                         // equipos son navegables sin sesión; el login se exige recién
-                        // al actuar (crear, inscribir, invitar).
+                        // al actuar (crear, inscribir, invitar). El buscador externo
+                        // queda fuera del permitAll: consume la API key de RAWG y
+                        // exige sesión (primer match gana).
+                        .requestMatchers(HttpMethod.GET, "/api/games/buscar-externo").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/leagues/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/search").permitAll()
