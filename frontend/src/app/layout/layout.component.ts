@@ -3,18 +3,16 @@ import { RouterOutlet } from '@angular/router';
 
 import { FooterComponent } from './footer/footer.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import { TopbarComponent } from './topbar/topbar.component';
 
 /**
- * Shell principal de la aplicacion: navegacion lateral, area de contenido
- * y pie de pagina.
- *
- * No hay cabecera superior: la marca y las acciones de sesion viven en el
- * sidebar (segun el diseno), y cada pagina aporta su propio titulo.
+ * Shell principal de la aplicacion: navegacion lateral, barra superior
+ * (buscador global y sesion), area de contenido y pie de pagina.
  */
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, FooterComponent],
+  imports: [RouterOutlet, SidebarComponent, TopbarComponent, FooterComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })

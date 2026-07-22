@@ -105,30 +105,5 @@
     </span>
   </button>
 
-  @if (usuario()?.authenticated) {
-  <div class="usuario">
-    <a class="usuario-info" routerLink="/profile" (click)="cerrarMenu()">
-      <span class="avatar">{{ iniciales() }}</span>
-      <span class="datos">
-        <span class="nombre">{{ usuario()?.nombre || 'Mi perfil' }}</span>
-        <span class="rol">{{ usuario()?.roles?.[0] || 'Jugador' }}</span>
-      </span>
-    </a>
-    <button type="button" class="btn-salir" (click)="logout()">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M15 17l5-5-5-5M20 12H9M12 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h6" />
-      </svg>
-      <span class="sr-only">Cerrar sesión</span>
-    </button>
-  </div>
-  } @else {
-  <!-- Varias rutas del shell (inicio, juegos, equipos) no exigen sesión, así
-       que quien entra sin loguearse necesita el acceso desde acá. -->
-  <button type="button" class="btn-entrar" (click)="login()">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M10 17l5-5-5-5M15 12H3M12 3h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-6" />
-    </svg>
-    Iniciar sesión
-  </button>
-  }
+  <!-- La sesión (avatar, rol, salir/entrar) vive en la topbar. -->
 </aside>

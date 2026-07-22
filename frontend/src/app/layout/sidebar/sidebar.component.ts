@@ -42,7 +42,6 @@ export class SidebarComponent {
   private readonly authService = inject(AuthService);
   private readonly themeService = inject(ThemeService);
 
-  readonly usuario = this.authService.usuario;
   readonly abiertoEnMovil = signal(false);
   readonly tema = this.themeService.tema;
 
@@ -196,18 +195,6 @@ export class SidebarComponent {
       .filter((grupo) => grupo.enlaces.length > 0)
   );
 
-  readonly iniciales = computed(() => {
-    const nombre = this.usuario()?.nombre?.trim();
-    if (!nombre) {
-      return '?';
-    }
-    return nombre
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((parte) => parte.charAt(0).toUpperCase())
-      .join('');
-  });
-
   alternarMenu(): void {
     this.abiertoEnMovil.update((abierto) => !abierto);
   }
@@ -218,14 +205,6 @@ export class SidebarComponent {
 
   alternarTema(): void {
     this.themeService.alternar();
-  }
-
-  login(): void {
-    this.authService.login();
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 
   private puedeVer(enlace: EnlaceNav): boolean {

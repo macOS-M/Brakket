@@ -98,7 +98,11 @@
       <ul class="lista">
         @for (invitacion of invitaciones(); track invitacion.id) {
         <li class="item">
-          <span class="marca marca-cyan" aria-hidden="true"></span>
+          <span class="item-icono icono-invitacion" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M18 20h4a6 6 0 0 0-4-5.6" />
+            </svg>
+          </span>
           <div class="item-cuerpo">
             <p class="item-titulo">Invitación de {{ invitacion.equipoNombre }}</p>
             <p class="item-detalle">
@@ -111,7 +115,11 @@
         }
         @for (transferencia of transferencias(); track transferencia.id) {
         <li class="item">
-          <span class="marca marca-ambar" aria-hidden="true"></span>
+          <span class="item-icono icono-transferencia" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5" />
+            </svg>
+          </span>
           <div class="item-cuerpo">
             <p class="item-titulo">
               Transferencia de {{ transferencia.jugadorNombre }}
@@ -143,20 +151,29 @@
         <a class="btn-primary" routerLink="/leagues">Ir a ligas</a>
       </app-empty-state>
       } @else {
-      <ul class="lista">
+      <!-- Tarjetas con portada fotográfica, como en la lista de ligas:
+           la foto del juego de la liga o un gradiente determinístico. -->
+      <div class="ligas-grid">
         @for (liga of ligasRecientes(); track liga.id) {
-        <li class="item">
-          <span class="marca marca-verde" aria-hidden="true"></span>
-          <div class="item-cuerpo">
-            <p class="item-titulo">{{ liga.nombre }}</p>
-            <p class="item-detalle">
-              {{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}
-            </p>
+        <a class="liga-tile" [routerLink]="['/leagues', liga.id]">
+          <div
+            class="tile-portada"
+            [style.background]="fotoLiga(liga) ? undefined : gradienteLiga(liga)"
+          >
+            @if (fotoLiga(liga)) {
+            <img [src]="fotoLiga(liga)" [alt]="" />
+            }
+            @if (liga.juegoNombre) {
+            <span class="tile-chip">{{ liga.juegoNombre }}</span>
+            }
           </div>
-          <a class="btn-secondary" [routerLink]="['/leagues', liga.id]">Abrir</a>
-        </li>
+          <div class="tile-cuerpo">
+            <p class="tile-nombre">{{ liga.nombre }}</p>
+            <p class="tile-meta">{{ liga.comisionadoNombre }}</p>
+          </div>
+        </a>
         }
-      </ul>
+      </div>
       }
     </section>
   </div>

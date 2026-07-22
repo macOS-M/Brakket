@@ -8,47 +8,6 @@
     }
   </app-page-header>
 
-  @if (!cargando() && !error() && juegos().length > 0) {
-  <div class="filtros">
-    <label class="buscador">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" />
-        <path d="M20 20l-3.5-3.5" />
-      </svg>
-      <input
-        type="search"
-        placeholder="Buscar juego…"
-        [value]="busqueda()"
-        (input)="busqueda.set($any($event.target).value)"
-      />
-      <span class="sr-only">Buscar juego por nombre</span>
-    </label>
-
-    <div class="chips" role="group" aria-label="Filtrar por género">
-      <button
-        type="button"
-        class="chip"
-        [class.activo]="generoActivo() === null"
-        [attr.aria-pressed]="generoActivo() === null"
-        (click)="filtrarPorGenero(null)"
-      >
-        Todos
-      </button>
-      @for (genero of generos(); track genero) {
-      <button
-        type="button"
-        class="chip"
-        [class.activo]="generoActivo() === genero"
-        [attr.aria-pressed]="generoActivo() === genero"
-        (click)="filtrarPorGenero(genero)"
-      >
-        {{ genero }}
-      </button>
-      }
-    </div>
-  </div>
-  }
-
   @if (errorAccion()) {
   <p class="error-accion" role="alert">{{ errorAccion() }}</p>
   }
@@ -68,15 +27,23 @@
     <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
     }
   </app-empty-state>
-  } @else if (juegosFiltrados().length === 0) {
-  <app-empty-state
-    titulo="Sin resultados"
-    mensaje="Ningún juego coincide con los filtros aplicados."
-  >
-    <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
-  </app-empty-state>
   } @else {
-  <div class="grid">
+  <!-- Grilla a la izquierda, rail de filtros a la derecha (referencia
+       Aquament). El rail queda visible incluso sin resultados, para poder
+       deshacer el filtro que vació la grilla. -->
+  <div class="cuerpo-catalogo">
+    <div class="zona-cards">
+      @if (juegosFiltrados().length === 0) {
+      <app-empty-state
+        titulo="Sin resultados"
+        mensaje="Ningún juego coincide con los filtros aplicados."
+      >
+        <button type="button" class="btn-secondary" (click)="limpiarFiltros()">
+          Limpiar filtros
+        </button>
+      </app-empty-state>
+      } @else {
+      <div class="grid">
     @for (juego of juegosFiltrados(); track juego.id) {
     <article class="juego-card">
       <!-- El enlace cubre toda la tarjeta vía ::after, así el objetivo de
@@ -130,6 +97,57 @@
       }
     </article>
     }
+  </div>
+      }
+    </div>
+
+    <aside class="rail" aria-label="Filtros del catálogo">
+      <label class="buscador">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.5-3.5" />
+        </svg>
+        <input
+          type="search"
+          placeholder="Buscar juego…"
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+        />
+        <span class="sr-only">Buscar juego por nombre</span>
+      </label>
+
+      <div class="rail-grupo" role="group" aria-label="Filtrar por género">
+        <p class="rail-titulo">Género</p>
+        <button
+          type="button"
+          class="filtro"
+          [class.activo]="generoActivo() === null"
+          [attr.aria-pressed]="generoActivo() === null"
+          (click)="filtrarPorGenero(null)"
+        >
+          <span class="filtro-nombre">Todos</span>
+          <span class="filtro-conteo">{{ juegos().length }}</span>
+        </button>
+        @for (genero of generos(); track genero) {
+        <button
+          type="button"
+          class="filtro"
+          [class.activo]="generoActivo() === genero"
+          [attr.aria-pressed]="generoActivo() === genero"
+          (click)="filtrarPorGenero(genero)"
+        >
+          <span class="filtro-nombre">{{ genero }}</span>
+          <span class="filtro-conteo">{{ conteoPorGenero().get(genero) }}</span>
+        </button>
+        }
+      </div>
+
+      @if (hayFiltros()) {
+      <button type="button" class="btn-secondary btn-limpiar" (click)="limpiarFiltros()">
+        Limpiar filtros
+      </button>
+      }
+    </aside>
   </div>
   }
 </section>

@@ -51,7 +51,8 @@
 
 @media (max-width: 900px) {
   .content {
-    // Deja aire para el botón hamburguesa, que va fijo arriba a la izquierda.
-    padding: 4rem 1rem 1.5rem;
+    // La hamburguesa fija convive con la topbar (que ya le deja aire a la
+    // izquierda), así que el contenido no necesita empujarse hacia abajo.
+    padding: 1.25rem 1rem 1.5rem;
   }
 }

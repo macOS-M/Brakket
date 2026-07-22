@@ -15,6 +15,7 @@ import { League } from '../../../../models/league.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
  * Panel principal.
@@ -76,6 +77,15 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+  }
+
+  /** Portada de la liga: la foto de su juego, o un gradiente por nombre. */
+  fotoLiga(liga: League): string | null {
+    return portadaFoto(liga.juegoNombre ?? '');
+  }
+
+  gradienteLiga(liga: League): string {
+    return portadaGradiente(liga.nombre);
   }
 
   cargar(): void {

@@ -49,6 +49,18 @@ export class GameListComponent implements OnInit {
     return [...vistos].sort((a, b) => a.localeCompare(b));
   });
 
+  /** Cuántos juegos hay por género, para acompañar cada filtro del rail. */
+  readonly conteoPorGenero = computed(() => {
+    const conteo = new Map<string, number>();
+    for (const juego of this.juegos()) {
+      const genero = juego.genero?.trim();
+      if (genero) {
+        conteo.set(genero, (conteo.get(genero) ?? 0) + 1);
+      }
+    }
+    return conteo;
+  });
+
   readonly juegosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
     const genero = this.generoActivo();
