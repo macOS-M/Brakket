@@ -3,11 +3,13 @@ package com.coffeecommits.brakket.team.service;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
+import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.team.dto.AsignarRolRequest;
 import com.coffeecommits.brakket.team.dto.MiembroEquipoResponse;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.EquipoRolHistorial;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
+import com.coffeecommits.brakket.team.repository.EquipoRepository;
 import com.coffeecommits.brakket.team.repository.EquipoRolHistorialRepository;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,8 @@ class TeamRoleServiceImplTest {
     private UsuarioRepository usuarioRepository;
     @Mock
     private EquipoRolHistorialRepository historialRepository;
+    @Mock
+    private EquipoRepository equipoRepository; // RF-08
     @InjectMocks
     private TeamRoleServiceImpl teamRoleService;
 
@@ -143,6 +147,7 @@ class TeamRoleServiceImplTest {
 
     @Test
     void listarMiembros_mapea_la_plantilla_a_dto() {
+        when(equipoRepository.existsById(10L)).thenReturn(true);
         when(miembroEquipoRepository.findByEquipoId(10L)).thenReturn(List.of(
                 miembro(capitan, "CAPITAN"), miembro(jugador, "TITULAR")));
 
@@ -153,5 +158,27 @@ class TeamRoleServiceImplTest {
                 .containsExactly("CAPITAN", "TITULAR");
         assertThat(resp).extracting(MiembroEquipoResponse::nombreUsuario)
                 .containsExactly("Capi", "Juga");
+    }
+
+    @Test
+    void listarMiembros_incluye_la_fecha_de_incorporacion() {
+        MiembroEquipo conFecha = miembro(capitan, "CAPITAN");
+        conFecha.setFechaUnion(java.time.LocalDate.of(2026, 7, 1));
+        when(equipoRepository.existsById(10L)).thenReturn(true);
+        when(miembroEquipoRepository.findByEquipoId(10L)).thenReturn(List.of(conFecha));
+
+        List<MiembroEquipoResponse> resp = teamRoleService.listarMiembros(10L);
+
+        assertThat(resp.getFirst().fechaUnion()).isEqualTo(java.time.LocalDate.of(2026, 7, 1));
+    }
+
+    @Test
+    void listarMiembros_falla_si_el_equipo_no_existe() {
+        when(equipoRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> teamRoleService.listarMiembros(99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(miembroEquipoRepository, never()).findByEquipoId(any());
     }
 }

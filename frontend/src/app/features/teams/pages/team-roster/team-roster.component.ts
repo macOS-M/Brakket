@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -7,10 +8,13 @@ import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.m
 import { TeamsService } from '../../services/teams.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
+/** Orden de presentación de la plantilla (RF-08): capitán primero. */
+const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 2, COACH: 3 };
+
 @Component({
   selector: 'app-team-roster',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DatePipe],
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })
@@ -25,6 +29,27 @@ export class TeamRosterComponent implements OnInit {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly guardandoId = signal<number | null>(null);
+
+  // RF-08: datos del equipo para encabezado y vista histórica si está disuelto.
+  readonly equipo = signal<Equipo | null>(null);
+
+  /** Plantilla ordenada: activos primero (capitán, titulares, suplentes, coach), luego el resto. */
+  readonly miembrosOrdenados = computed(() =>
+    [...this.miembros()].sort((a, b) => {
+      const activoA = a.estado === 'ACTIVO' ? 0 : 1;
+      const activoB = b.estado === 'ACTIVO' ? 0 : 1;
+      if (activoA !== activoB) return activoA - activoB;
+      const rolA = ORDEN_ROLES[a.rol] ?? 9;
+      const rolB = ORDEN_ROLES[b.rol] ?? 9;
+      if (rolA !== rolB) return rolA - rolB;
+      return a.nombreUsuario.localeCompare(b.nombreUsuario);
+    })
+  );
+
+  /** El equipo está disuelto: la plantilla se muestra como vista histórica de solo lectura. */
+  readonly vistaHistorica = computed(
+    () => this.equipoDisuelto() !== null || this.equipo()?.estado === 'DISUELTO'
+  );
 
   readonly invitando = signal(false);
   readonly errorInvitar = signal<string | null>(null);
@@ -48,7 +73,16 @@ export class TeamRosterComponent implements OnInit {
 
   ngOnInit(): void {
     this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
+    this.cargarEquipo();
     this.cargarMiembros();
+  }
+
+  /** RF-08: carga nombre y estado del equipo; si falla, la plantilla sigue siendo usable. */
+  private cargarEquipo(): void {
+    this.teamsService.obtenerPorId(this.equipoId).subscribe({
+      next: (equipo) => this.equipo.set(equipo),
+      error: () => this.equipo.set(null)
+    });
   }
 
   cargarMiembros(): void {
@@ -60,11 +94,21 @@ export class TeamRosterComponent implements OnInit {
         this.cargando.set(false);
         this.actualizarEsCapitan();
       },
-      error: () => {
-        this.error.set('No se pudo cargar la plantilla del equipo.');
+      error: (err) => {
+        this.error.set(err?.status === 404
+          ? 'El equipo consultado no existe.'
+          : 'No se pudo cargar la plantilla del equipo.');
         this.cargando.set(false);
       }
     });
+  }
+
+  /** Reintento del criterio "error de carga" de RF-08. */
+  reintentar(): void {
+    if (!this.equipo()) {
+      this.cargarEquipo();
+    }
+    this.cargarMiembros();
   }
 
   private actualizarEsCapitan(): void {

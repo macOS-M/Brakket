@@ -8,6 +8,7 @@ import com.coffeecommits.brakket.team.dto.AsignarRolRequest;
 import com.coffeecommits.brakket.team.dto.MiembroEquipoResponse;
 import com.coffeecommits.brakket.team.model.EquipoRolHistorial;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
+import com.coffeecommits.brakket.team.repository.EquipoRepository;
 import com.coffeecommits.brakket.team.repository.EquipoRolHistorialRepository;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
 import org.springframework.stereotype.Service;
@@ -26,18 +27,26 @@ public class TeamRoleServiceImpl implements TeamRoleService {
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final UsuarioRepository usuarioRepository;
     private final EquipoRolHistorialRepository historialRepository;
+    private final EquipoRepository equipoRepository;
 
     public TeamRoleServiceImpl(MiembroEquipoRepository miembroEquipoRepository,
                                UsuarioRepository usuarioRepository,
-                               EquipoRolHistorialRepository historialRepository) {
+                               EquipoRolHistorialRepository historialRepository,
+                               EquipoRepository equipoRepository) {
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.usuarioRepository = usuarioRepository;
         this.historialRepository = historialRepository;
+        this.equipoRepository = equipoRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MiembroEquipoResponse> listarMiembros(Long equipoId) {
+        // RF-08: el equipo consultado debe existir; si esta disuelto se devuelve
+        // igualmente su plantilla como vista historica.
+        if (!equipoRepository.existsById(equipoId)) {
+            throw new ResourceNotFoundException("Equipo", equipoId);
+        }
         return miembroEquipoRepository.findByEquipoId(equipoId).stream()
                 .map(MiembroEquipoResponse::fromEntity)
                 .toList();
