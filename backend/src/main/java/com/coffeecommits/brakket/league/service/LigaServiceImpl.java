@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class LigaServiceImpl implements LigaService {
@@ -162,10 +163,13 @@ public class LigaServiceImpl implements LigaService {
                 ligaId, config.fechaFin(), config.fechaInicio(), temporadaId)) {
             throw new BusinessException("Las fechas se solapan con otra temporada de esta liga");
         }
+        // Las temporadas creadas antes de RF-23 tienen formato nulo (la columna
+        // es nullable). Sin este guard, editarlas lanza NullPointerException.
+        Long formatoActualId = temporada.getFormato() == null ? null : temporada.getFormato().getId();
         boolean cambioCritico = !temporada.getFechaInicio().equals(config.fechaInicio())
                 || !temporada.getFechaFin().equals(config.fechaFin())
                 || !temporada.getCupoEquipos().equals(config.cupoEquipos())
-                || !temporada.getFormato().getId().equals(config.formatoId());
+                || !Objects.equals(formatoActualId, config.formatoId());
         if (cambioCritico && torneoRepository.existsActivoByTemporadaId(temporadaId)) {
             throw new BusinessException("No se pueden cambiar fechas, cupo o formato mientras existan torneos activos");
         }
