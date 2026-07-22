@@ -1,15 +1,11 @@
 import { Component } from '@angular/core';
 
-import { BracketViewComponent } from '../../components/bracket-view/bracket-view.component';
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
 
-/**
- * Torneos. Placeholder de la feature "tournaments".
- * Pendiente EPIC-07.
- */
 @Component({
   selector: 'app-tournament-list',
   standalone: true,
-  imports: [BracketViewComponent],
+  imports: [ComingSoonComponent],
   templateUrl: './tournament-list.component.html',
   styleUrl: './tournament-list.component.scss'
 })
