@@ -13,6 +13,13 @@ export interface EnlaceNav {
   proximamente?: boolean;
   /** Solo visible para quien tenga alguno de estos roles. */
   roles?: string[];
+  /**
+   * Oculto para quien tenga alguno de estos roles. Se usa para limpiar el
+   * portal del patrocinador (ACT-06), que no participa de la competencia.
+   * Nota: es una denylist simple; una cuenta que combine PATROCINADOR con
+   * otro rol pierde el enlace igual. Para la demo alcanza.
+   */
+  ocultarPara?: string[];
 }
 
 export interface GrupoNav {
@@ -73,14 +80,27 @@ export class SidebarComponent {
     {
       titulo: 'Mi equipo',
       enlaces: [
-        { ruta: '/teams', etiqueta: 'Equipos', icono: 'users', exact: false },
-        { ruta: '/transfers', etiqueta: 'Transferencias', icono: 'exchange', exact: false },
+        {
+          ruta: '/teams',
+          etiqueta: 'Equipos',
+          icono: 'users',
+          exact: false,
+          ocultarPara: ['PATROCINADOR']
+        },
+        {
+          ruta: '/transfers',
+          etiqueta: 'Transferencias',
+          icono: 'exchange',
+          exact: false,
+          ocultarPara: ['PATROCINADOR']
+        },
         {
           ruta: '/disputes',
           etiqueta: 'Disputas',
           icono: 'shield',
           exact: false,
-          proximamente: true
+          proximamente: true,
+          ocultarPara: ['PATROCINADOR']
         }
       ]
     },
@@ -92,14 +112,16 @@ export class SidebarComponent {
           etiqueta: 'Estadísticas',
           icono: 'chart',
           exact: false,
-          proximamente: true
+          proximamente: true,
+          ocultarPara: ['PATROCINADOR']
         },
         {
           ruta: '/progression',
           etiqueta: 'Progresión',
           icono: 'star',
           exact: false,
-          proximamente: true
+          proximamente: true,
+          ocultarPara: ['PATROCINADOR']
         },
         {
           ruta: '/notifications',
@@ -118,6 +140,23 @@ export class SidebarComponent {
       ]
     },
     {
+      // Portal del patrocinador (ACT-06): su panel comercial de métricas
+      // de audiencia y sentimiento (RF-44). Llega con EPIC-11 (sprint 6).
+      titulo: 'Mi marca',
+      enlaces: [
+        {
+          ruta: '/analytics',
+          etiqueta: 'Panel comercial',
+          icono: 'briefcase',
+          exact: false,
+          proximamente: true,
+          roles: ['PATROCINADOR']
+        }
+      ]
+    },
+    {
+      // Gestión de la competencia y de la plataforma. Los patrocinios los
+      // gestionan administrador y comisionado (RF-42/RF-43 de la ERS).
       titulo: 'Gestión',
       enlaces: [
         {
@@ -125,14 +164,16 @@ export class SidebarComponent {
           etiqueta: 'Patrocinios',
           icono: 'briefcase',
           exact: false,
-          proximamente: true
+          proximamente: true,
+          roles: ['ADMIN', 'COMISIONADO']
         },
         {
           ruta: '/analytics',
           etiqueta: 'Analítica',
           icono: 'pulse',
           exact: false,
-          proximamente: true
+          proximamente: true,
+          roles: ['ADMIN', 'COMISIONADO']
         },
         {
           ruta: '/admin',
@@ -188,10 +229,13 @@ export class SidebarComponent {
   }
 
   private puedeVer(enlace: EnlaceNav): boolean {
-    if (!enlace.roles) {
-      return true;
-    }
     const roles = this.authService.roles();
-    return enlace.roles.some((rol) => roles.includes(rol));
+    if (enlace.roles && !enlace.roles.some((rol) => roles.includes(rol))) {
+      return false;
+    }
+    if (enlace.ocultarPara && enlace.ocultarPara.some((rol) => roles.includes(rol))) {
+      return false;
+    }
+    return true;
   }
 }

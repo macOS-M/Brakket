@@ -14,6 +14,7 @@
   } @else {
 
   <div class="stats">
+    @if (!auth.hasRole('PATROCINADOR')) {
     <app-stat-card
       etiqueta="Invitaciones pendientes"
       [valor]="invitaciones().length"
@@ -26,6 +27,7 @@
       nota="Requieren tu aprobación"
       tono="ambar"
     />
+    }
     <app-stat-card etiqueta="Ligas" [valor]="ligas().length" nota="Registradas" tono="verde" />
     <app-stat-card
       etiqueta="Juegos"
@@ -35,7 +37,52 @@
     />
   </div>
 
+  <!-- Panel de gestión: solo para quien administra la competencia o la
+       plataforma. Un jugador no ve nada de esto. -->
+  @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+  <section class="bloque gestion">
+    <div class="bloque-titulo">
+      <h2>Gestión</h2>
+    </div>
+    <div class="accesos">
+      <a class="acceso" routerLink="/leagues/nuevo">
+        <span class="acceso-titulo">Crear liga</span>
+        <span class="acceso-detalle">Nueva competencia con temporadas y formatos</span>
+      </a>
+      <a class="acceso" routerLink="/games">
+        <span class="acceso-titulo">Catálogo de juegos</span>
+        <span class="acceso-detalle">Títulos disponibles y perfiles competitivos</span>
+      </a>
+      <a class="acceso" routerLink="/sponsorships">
+        <span class="acceso-titulo">Patrocinios</span>
+        <span class="acceso-detalle">Marcas y espacios publicitarios</span>
+      </a>
+      @if (auth.hasRole('ADMIN')) {
+      <a class="acceso" routerLink="/admin">
+        <span class="acceso-titulo">Administración</span>
+        <span class="acceso-detalle">Usuarios, roles y permisos de la plataforma</span>
+      </a>
+      }
+    </div>
+  </section>
+  }
+
   <div class="columnas">
+    @if (auth.hasRole('PATROCINADOR')) {
+    <!-- Portal de marca (ACT-06): el patrocinador no participa de la
+         competencia; su bloque central es el panel comercial (RF-44). -->
+    <section class="bloque">
+      <div class="bloque-titulo">
+        <h2>Mi marca</h2>
+      </div>
+      <app-empty-state
+        titulo="Panel comercial en camino"
+        mensaje="Acá vas a auditar la audiencia, la interacción y el sentimiento del público de las competencias que patrocinás."
+      >
+        <a class="btn-secondary" routerLink="/analytics">Ver panel</a>
+      </app-empty-state>
+    </section>
+    } @else {
     <!-- Pendientes accionables -->
     <section class="bloque">
       <div class="bloque-titulo">
@@ -79,6 +126,7 @@
       </ul>
       }
     </section>
+    }
 
     <!-- Ligas -->
     <section class="bloque">

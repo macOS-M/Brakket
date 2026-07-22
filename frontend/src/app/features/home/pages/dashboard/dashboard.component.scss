@@ -12,6 +12,44 @@
   align-items: start;
 }
 
+// ----- Panel de gestión (comisionado / admin) -----
+
+.bloque.gestion {
+  margin-bottom: 1.25rem;
+}
+
+.accesos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.acceso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.8rem 0.95rem;
+  background: var(--surface-2, #1f2937);
+  border-radius: var(--radius-sm, 8px);
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--neutral-bg, rgba(148, 163, 184, 0.1));
+  }
+
+  .acceso-titulo {
+    color: var(--text, #e2e8f0);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .acceso-detalle {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.8125rem;
+  }
+}
+
 .bloque {
   padding: 1.1rem 1.2rem 1.2rem;
   background: var(--surface, #111827);
