@@ -86,6 +86,7 @@ rounded:
   sm: "8px"
   md: "12px"
   lg: "16px"
+  xl: "20px"
   pill: "999px"
 spacing:
   xs: "4px"
@@ -156,6 +157,8 @@ La energía competitiva que el producto necesita no viene del color de fondo ni 
 
 Este sistema rechaza explícitamente: la estética de proyecto de curso (cards idénticas repetidas, todo del mismo peso), el gamer llamativo de los 2000 (neones, degradados violeta-azul, texturas), el landing de SaaS (número gigante con etiqueta chiquita, aire donde debería haber información) y el panel de admin sin diseñar (tablas crudas, formularios planos).
 
+**Referencia visual vigente:** la dirección la marcan las capturas de Aquament (dark + naranja, navegación de píldoras con iconos en círculo, tarjetas con fotografía, banner promocional con decoración 3D juguetona) aportadas por el equipo. Ante la duda entre sobriedad y parecido a la referencia, gana la referencia.
+
 **Key Characteristics:**
 - Densidad legible por jerarquía, no por espaciado
 - Estados distinguibles de un vistazo, nunca solo por color
@@ -168,7 +171,7 @@ Este sistema rechaza explícitamente: la estética de proyecto de curso (cards i
 Paleta fría de trabajo prolongado: azules profundos como base, un cyan que marca lo activo, y una familia de estados que hace todo el trabajo semántico. El acento se reserva para acción y selección; jamás decora.
 
 ### Primary
-- **Naranja de salida** (`#ff5500`): el color de acción y de identidad — botones primarios, ítem de navegación activo, foco del teclado, selección. Es el naranja de la línea de largada: sobre el azul marino neutro, una sola familia cálida carga toda la energía competitiva. La tinta sobre él es siempre el navy del fondo (`#0b1120`, 5.6:1), nunca blanco (3.1:1, no llega a AA).
+- **Naranja de salida** (`#ff5500`): el color de acción y de identidad — botones primarios, ítem de navegación activo, foco del teclado, selección, banners. Es el naranja de la línea de largada. **La tinta sobre él es blanca y en negrita** (referencia Aquament): 3.1:1, que cumple AA para texto grande/bold; el texto chico sobre acento se evita, no se oscurece.
 - **Naranja hover** (`#ff6a1f`): estado hover del anterior, y también la variante de texto sobre fondo oscuro (5.9:1). En tema claro el texto naranja baja a `#c2410c` (4.9:1).
 
 ### Secondary
@@ -315,8 +318,8 @@ La sombra existe, pero es **respuesta a una acción**, no propiedad de un objeto
 - **Mobile:** por debajo de `900px` la barra sale del flujo y se despliega desde la izquierda sobre un fondo oscurecido, con un botón hamburguesa fijo.
 - **Secciones no disponibles:** llevan un chip "pronto" en tinta tenue. Una sección que no funciona se marca; no se esconde ni se finge.
 
-### Portada determinística *(componente distintivo)*
-Las tarjetas de juegos, ligas y torneos llevan una portada de arte generado: un gradiente diagonal cuyo matiz se deriva del nombre de la entidad (`shared/utils/cover.ts`), con el monograma en Barlow Condensed gigante encima y un chip contextual. Mismo nombre → misma portada, siempre. Resuelve dos cosas a la vez: las grillas dejan de ser tarjetas idénticas, y no se embebe arte de juegos con copyright ni imágenes inventadas. Cuando la entidad tenga imagen real cargada, la imagen reemplaza al gradiente.
+### Portada con fotografía *(componente distintivo)*
+Las tarjetas de juegos, ligas y torneos llevan portada fotográfica, como la referencia. Prioridad: (1) `imagenUrl` real de la entidad; (2) fotografía de stock libre (Pexels) mapeada por nombre en `shared/utils/cover.ts`; (3) gradiente determinístico por nombre como último recurso. Nunca key-art con copyright de los juegos.
 
 ### Banner promocional *(componente distintivo)*
 Franja de acento pleno con un número real en Barlow Condensed grande y su contexto ("N ligas te esperan"). Solo con datos que existen: si el conteo es cero, el banner no se muestra — el estado vacío ya cumple ese rol.
@@ -343,7 +346,7 @@ Un solo componente cubre carga, vacío y error. Carga muestra un anillo giratori
 ### Don't:
 - **Don't** mostrar métricas, contadores o datos que no vengan del backend. Ningún número de relleno, en ninguna pantalla.
 - **Don't** repetir cards idénticas con icono, título y texto como respuesta por defecto a una lista — es la firma del **proyecto de curso genérico**.
-- **Don't** usar neones, degradados violeta-azul, tipografía angulosa ni texturas: el **gamer llamativo de los 2000** es anti-referencia explícita.
+- **Don't** usar neones, degradados violeta-azul, tipografía angulosa ni texturas de fibra de carbono: el **gamer llamativo de los 2000** sigue siendo anti-referencia. La decoración juguetona estilo Aquament (emoji 3D grandes en banners y vacíos) **sí está permitida**: es el lenguaje de la referencia, no el neón noventero.
 - **Don't** construir pantallas con número gigante y etiqueta chiquita, testimonios o aire vacío donde debería haber información — eso es **landing de SaaS**, y Brakket es un producto.
 - **Don't** entregar tablas crudas y formularios sin jerarquía: el **panel de admin sin diseñar** es anti-referencia, aunque funcione.
 - **Don't** usar `border-left` o `border-right` mayor a `1px` como franja de acento en tarjetas o alertas.

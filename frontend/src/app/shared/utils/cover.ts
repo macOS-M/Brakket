@@ -18,6 +18,34 @@ function hash(texto: string): number {
 }
 
 /**
+ * Fotografías de stock libre (licencia Pexels, uso libre) para los juegos
+ * del catálogo semilla. La referencia visual usa key-art oficial de cada
+ * juego, que no podemos embeber por copyright; estas fotos temáticas dan
+ * el mismo efecto de tarjeta fotográfica. Verificadas en el navegador.
+ */
+const FOTOS_STOCK: Record<string, string> = {
+  'league of legends':
+    'https://images.pexels.com/photos/7848987/pexels-photo-7848987.jpeg?auto=compress&cs=tinysrgb&w=800',
+  valorant:
+    'https://images.pexels.com/photos/9072394/pexels-photo-9072394.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'counter-strike 2':
+    'https://images.pexels.com/photos/6125330/pexels-photo-6125330.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'rocket league':
+    'https://images.pexels.com/photos/13930769/pexels-photo-13930769.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'ea sports fc 25':
+    'https://images.pexels.com/photos/1657324/pexels-photo-1657324.jpeg?auto=compress&cs=tinysrgb&w=800'
+};
+
+/**
+ * Fotografía de portada para un nombre conocido, o null si no hay.
+ * La cadena de prioridad completa la resuelve cada componente:
+ * imagenUrl real → foto de stock → gradiente determinístico.
+ */
+export function portadaFoto(nombre: string): string | null {
+  return FOTOS_STOCK[(nombre || '').trim().toLowerCase()] ?? null;
+}
+
+/**
  * Gradiente de portada. Dos tonos del mismo matiz en diagonal, oscurecidos
  * para que el texto claro y el monograma mantengan contraste encima.
  */

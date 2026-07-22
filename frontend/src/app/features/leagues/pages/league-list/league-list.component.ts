@@ -5,7 +5,7 @@ import { League } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { portadaGradiente } from '../../../../shared/utils/cover';
+import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
  * Listado de ligas (RF-22). Punto de entrada de la feature: muestra las ligas
@@ -27,6 +27,11 @@ export class LeagueListComponent {
 
   constructor() {
     this.cargar();
+  }
+
+  /** La portada de la liga es la foto de su juego; sin foto, gradiente. */
+  foto(juegoNombre: string | null): string | null {
+    return juegoNombre ? portadaFoto(juegoNombre) : null;
   }
 
   /** Portada determinística por nombre de liga (ver shared/utils/cover). */

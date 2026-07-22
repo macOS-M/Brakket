@@ -69,7 +69,7 @@
 .grupo a {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.6rem;
   padding: 0.55rem 0.7rem;
   // Píldora (referencia Aquament): el ítem activo se rellena con el
   // acento y la tinta navy, en vez de la barra lateral de 3px.
@@ -86,16 +86,20 @@
 
   &.active {
     background: var(--accent, #ff5500);
-    color: var(--accent-ink, #0b1120);
+    color: #fff;
     font-weight: 700;
 
+    .icono-caja {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
     .icono {
-      stroke: var(--accent-ink, #0b1120);
+      stroke: #fff;
     }
 
     .chip-pronto {
-      background: rgba(11, 17, 32, 0.18);
-      color: var(--accent-ink, #0b1120);
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
     }
   }
 
@@ -104,10 +108,20 @@
   }
 }
 
-.icono {
-  width: 17px;
-  height: 17px;
+.icono-caja {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface, #111827);
+  transition: background 0.15s ease;
+}
+
+.icono {
+  width: 16px;
+  height: 16px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.7;

@@ -10,9 +10,10 @@
 // ============================================================
 
 // ----- Marca -----
-// El acento de acción es el naranja de competencia (dirección FACEIT):
-// carga la identidad sobre el azul marino neutro. El texto sobre acento
-// es el navy del fondo, no blanco: #fff sobre #ff5500 no llega a AA.
+// El acento de acción es el naranja de competencia (referencia Aquament):
+// carga la identidad sobre el azul marino neutro. La tinta sobre acento
+// es blanca y en negrita (AA de texto grande); el texto chico sobre
+// acento se evita.
 $accent: #ff5500;
 $accent-hover: #ff6a1f;
 $accent-ink: #0b1120; // texto sobre superficies naranjas (5.6:1)
@@ -128,11 +129,12 @@ $font-data: 'Barlow Condensed', 'Barlow', 'Segoe UI', sans-serif;
 $radius-sm: 8px;
 $radius-md: 12px;
 $radius-lg: 16px;
+$radius-xl: 20px; // chrome grande de la referencia (banners, modales)
 $radius-pill: 999px;
 
 $shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
 $shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.55);
 
 // ----- Layout -----
-$sidebar-width: 232px;
+$sidebar-width: 252px;
 $content-max: 1280px;

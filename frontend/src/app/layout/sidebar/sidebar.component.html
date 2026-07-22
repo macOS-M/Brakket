@@ -38,6 +38,7 @@
         [class.pendiente]="enlace.proximamente"
         (click)="cerrarMenu()"
       >
+        <span class="icono-caja" aria-hidden="true">
         <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
           @switch (enlace.icono) { @case ('home') {
           <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" />
@@ -70,6 +71,7 @@
           <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4.5 15H4a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 5.3 8.2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V4a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.8 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.3a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z" />
           } }
         </svg>
+        </span>
         <span class="etiqueta">{{ enlace.etiqueta }}</span>
         @if (enlace.proximamente) {
         <span class="chip-pronto" title="Aún no implementado">pronto</span>

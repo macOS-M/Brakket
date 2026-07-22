@@ -19,18 +19,25 @@
   } @else {
   <!-- Banner promocional (referencia Aquament) con el conteo real. -->
   <div class="banner">
-    <span class="banner-numero">{{ leagues().length }}</span>
+    <span class="banner-emoji" aria-hidden="true">🎮</span>
     <div class="banner-texto">
-      <p class="banner-titulo">{{ leagues().length === 1 ? 'liga te espera' : 'ligas te esperan' }}</p>
+      <p class="banner-titulo">
+        {{ leagues().length }} {{ leagues().length === 1 ? 'liga te espera' : 'ligas te esperan' }}
+      </p>
       <p class="banner-detalle">Abrí una para ver sus temporadas y su calendario.</p>
     </div>
+    <span class="banner-emoji" aria-hidden="true">🏆</span>
   </div>
 
   <div class="grid">
     @for (liga of leagues(); track liga.id) {
     <a class="liga-card" [routerLink]="[liga.id]">
-      <div class="portada" [style.background]="portada(liga.nombre)">
+      <div class="portada" [style.background]="foto(liga.juegoNombre) ? undefined : portada(liga.nombre)">
+        @if (foto(liga.juegoNombre)) {
+        <img [src]="foto(liga.juegoNombre)" [alt]="" />
+        } @else {
         <span class="monograma-grande" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
+        }
         @if (liga.juegoNombre) {
         <span class="juego-chip">{{ liga.juegoNombre }}</span>
         }

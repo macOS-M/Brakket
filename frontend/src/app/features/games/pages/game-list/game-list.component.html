@@ -89,9 +89,9 @@
       <!-- Portada al estilo de las plataformas de torneos: cuando no hay
            imagen real, un gradiente determinístico por nombre con el
            monograma en grande. Cada juego tiene su color propio. -->
-      <div class="portada" [style.background]="juego.imagenUrl ? undefined : portada(juego)">
-        @if (juego.imagenUrl) {
-        <img [src]="juego.imagenUrl" [alt]="" />
+      <div class="portada" [style.background]="foto(juego) ? undefined : portada(juego)">
+        @if (foto(juego)) {
+        <img [src]="foto(juego)" [alt]="" />
         } @else {
         <span class="monograma-grande" aria-hidden="true">{{ inicial(juego) }}</span>
         }
