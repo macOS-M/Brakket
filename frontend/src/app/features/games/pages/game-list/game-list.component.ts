@@ -9,12 +9,10 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
- * Catalogo de juegos (RF-20).
- *
- * Los filtros se apoyan en datos que existen de verdad (nombre y genero).
- * El diseno mostraba ademas "N torneos activos" por juego, pero el modulo
- * de torneos todavia no tiene backend, asi que ese contador se omite en
- * lugar de inventarlo.
+ * Catalogo de juegos (RF-20), al estilo de la referencia Challenger Mode:
+ * escaparate con dos filas en marquesina, buscador y grilla de portadas
+ * altas. Cada tarjeta lleva al hub del juego; las acciones de gestion
+ * (editar, perfil competitivo, desactivar) viven alla.
  */
 @Component({
   selector: 'app-game-list',
@@ -34,10 +32,6 @@ export class GameListComponent implements OnInit {
   readonly busqueda = signal('');
   readonly generoActivo = signal<string | null>(null);
 
-  /** Juego cuya desactivacion se esta confirmando en linea. */
-  readonly confirmandoId = signal<number | null>(null);
-  readonly errorAccion = signal<string | null>(null);
-
   /** Generos presentes en el catalogo, para armar los chips de filtro. */
   readonly generos = computed(() => {
     const vistos = new Set<string>();
@@ -47,18 +41,6 @@ export class GameListComponent implements OnInit {
       }
     }
     return [...vistos].sort((a, b) => a.localeCompare(b));
-  });
-
-  /** Cuántos juegos hay por género, para acompañar cada filtro del rail. */
-  readonly conteoPorGenero = computed(() => {
-    const conteo = new Map<string, number>();
-    for (const juego of this.juegos()) {
-      const genero = juego.genero?.trim();
-      if (genero) {
-        conteo.set(genero, (conteo.get(genero) ?? 0) + 1);
-      }
-    }
-    return conteo;
   });
 
   readonly juegosFiltrados = computed(() => {
@@ -72,6 +54,19 @@ export class GameListComponent implements OnInit {
   });
 
   readonly hayFiltros = computed(() => !!this.busqueda().trim() || this.generoActivo() !== null);
+
+  /**
+   * La marquesina duplica el catalogo para que el loop de la animacion sea
+   * continuo (el keyframe corre hasta -50% y vuelve sin salto). Solo tiene
+   * sentido con suficientes tarjetas; por debajo del minimo no se muestra.
+   */
+  readonly marquesina = computed(() => {
+    const juegos = this.juegos();
+    if (juegos.length < 4) {
+      return null;
+    }
+    return [...juegos, ...juegos];
+  });
 
   ngOnInit(): void {
     this.cargarJuegos();
@@ -99,28 +94,6 @@ export class GameListComponent implements OnInit {
   limpiarFiltros(): void {
     this.busqueda.set('');
     this.generoActivo.set(null);
-  }
-
-  pedirConfirmacion(juego: Juego): void {
-    this.errorAccion.set(null);
-    this.confirmandoId.set(juego.id);
-  }
-
-  cancelarConfirmacion(): void {
-    this.confirmandoId.set(null);
-  }
-
-  confirmarDesactivar(juego: Juego): void {
-    this.gamesService.desactivar(juego.id).subscribe({
-      next: () => {
-        this.confirmandoId.set(null);
-        this.cargarJuegos();
-      },
-      error: (err) => {
-        this.confirmandoId.set(null);
-        this.errorAccion.set(err?.error?.message ?? 'No se pudo desactivar el juego.');
-      }
-    });
   }
 
   /** Inicial del juego, para la portada cuando no hay imagen. */

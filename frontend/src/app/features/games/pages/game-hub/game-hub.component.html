@@ -1,0 +1,139 @@
+<section class="page">
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando juego…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()!">
+    <a class="btn-secondary" routerLink="/games">Volver al catálogo</a>
+  </app-empty-state>
+  } @else { @if (juego(); as juego) {
+
+  <!-- Banner con el arte del juego (referencia Challenger Mode). -->
+  <header class="banner" [style.background]="foto() ? undefined : gradiente()">
+    @if (foto()) {
+    <img class="banner-arte" [src]="foto()" alt="" />
+    }
+    <div class="banner-velo" aria-hidden="true"></div>
+
+    <a class="volver" routerLink="/games">← Catálogo</a>
+
+    <div class="banner-contenido">
+      <div class="cartel" [style.background]="foto() ? undefined : gradiente()">
+        @if (foto()) {
+        <img [src]="foto()" alt="" />
+        } @else {
+        <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
+        }
+      </div>
+      <div class="titulos">
+        <h1>{{ juego.nombre }}</h1>
+        @if (juego.genero) {
+        <span class="genero-chip">{{ juego.genero }}</span>
+        }
+      </div>
+
+      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+      <div class="acciones-admin">
+        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'editar']">Editar</a>
+        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'perfil-competitivo']">
+          Perfil competitivo
+        </a>
+        <button type="button" class="btn-ghost-danger" (click)="confirmandoDesactivar.set(true)">
+          Desactivar
+        </button>
+      </div>
+      }
+    </div>
+  </header>
+
+  @if (errorAccion()) {
+  <p class="mensaje-error" role="alert">{{ errorAccion() }}</p>
+  }
+  @if (confirmandoDesactivar()) {
+  <div class="confirmacion" role="alertdialog" aria-label="Confirmar desactivación">
+    <p>¿Desactivar {{ juego.nombre }}? Dejará de estar disponible para nuevas ligas y torneos.</p>
+    <div class="confirmacion-acciones">
+      <button type="button" class="btn-danger" (click)="confirmarDesactivar()">Sí, desactivar</button>
+      <button type="button" class="btn-secondary" (click)="confirmandoDesactivar.set(false)">
+        Cancelar
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Tabs del hub -->
+  <nav class="tabs" aria-label="Secciones del juego">
+    <button
+      type="button"
+      class="tab"
+      [class.activo]="tab() === 'resumen'"
+      [attr.aria-current]="tab() === 'resumen' ? 'page' : null"
+      (click)="tab.set('resumen')"
+    >
+      Resumen
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.activo]="tab() === 'torneos'"
+      [attr.aria-current]="tab() === 'torneos' ? 'page' : null"
+      (click)="tab.set('torneos')"
+    >
+      Torneos
+    </button>
+  </nav>
+
+  @if (tab() === 'resumen') {
+  <div class="contenido">
+    @if (juego.descripcion) {
+    <p class="descripcion">{{ juego.descripcion }}</p>
+    }
+
+    <div class="bloque-titulo">
+      <h2>Ligas de {{ juego.nombre }}</h2>
+      <a class="ver-todos" routerLink="/leagues">Ver todas →</a>
+    </div>
+
+    @if (ligas().length === 0) {
+    <app-empty-state
+      titulo="Todavía no hay ligas de este juego"
+      [mensaje]="
+        auth.hasRole('ADMIN', 'COMISIONADO')
+          ? 'Creá la primera liga para empezar a competir en este título.'
+          : 'Cuando un comisionado cree una liga de este juego vas a verla acá.'
+      "
+    >
+      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+      <a class="btn-primary" routerLink="/leagues/nuevo">+ Nueva liga</a>
+      }
+    </app-empty-state>
+    } @else {
+    <div class="ligas-grid">
+      @for (liga of ligas(); track liga.id) {
+      <a class="liga-tile" [routerLink]="['/leagues', liga.id]">
+        <div
+          class="tile-portada"
+          [style.background]="portadaLiga(liga) ? undefined : gradienteLiga(liga)"
+        >
+          @if (portadaLiga(liga)) {
+          <img [src]="portadaLiga(liga)" alt="" />
+          }
+        </div>
+        <div class="tile-cuerpo">
+          <p class="tile-nombre">{{ liga.nombre }}</p>
+          <p class="tile-meta">Comisionado: {{ liga.comisionadoNombre }}</p>
+        </div>
+      </a>
+      }
+    </div>
+    }
+  </div>
+  } @else {
+  <div class="contenido">
+    <app-empty-state
+      titulo="Los torneos de este juego van a vivir acá"
+      mensaje="Muy pronto vas a poder crear un torneo en una de tus ligas y ver los próximos enfrentamientos de este título."
+    />
+  </div>
+  }
+  } }
+</section>

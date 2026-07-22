@@ -21,6 +21,12 @@ export const routes: Routes = [
       import('./pages/game-form/game-form.component').then((m) => m.GameFormComponent)
   },
   {
+    // Hub público del juego (banner, resumen, torneos). Sin guard.
+    path: ':id',
+    loadComponent: () =>
+      import('./pages/game-hub/game-hub.component').then((m) => m.GameHubComponent)
+  },
+  {
     path: ':id/editar',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMIN', 'COMISIONADO'] },

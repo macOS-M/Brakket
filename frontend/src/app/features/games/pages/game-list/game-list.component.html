@@ -1,16 +1,12 @@
 <section class="page">
   <app-page-header
-    titulo="Catálogo de juegos"
-    subtitulo="Los títulos disponibles para crear ligas y torneos"
+    titulo="Juegos"
+    subtitulo="Los títulos donde se compite en Brakket"
   >
     @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
     <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
     }
   </app-page-header>
-
-  @if (errorAccion()) {
-  <p class="error-accion" role="alert">{{ errorAccion() }}</p>
-  }
 
   @if (cargando()) {
   <app-empty-state modo="cargando" mensaje="Cargando juegos…" />
@@ -28,130 +24,100 @@
     }
   </app-empty-state>
   } @else {
-  <!-- Grilla a la izquierda, rail de filtros a la derecha (referencia
-       Aquament). El rail queda visible incluso sin resultados, para poder
-       deshacer el filtro que vació la grilla. -->
-  <div class="cuerpo-catalogo">
-    <div class="zona-cards">
-      @if (juegosFiltrados().length === 0) {
-      <app-empty-state
-        titulo="Sin resultados"
-        mensaje="Ningún juego coincide con los filtros aplicados."
-      >
-        <button type="button" class="btn-secondary" (click)="limpiarFiltros()">
-          Limpiar filtros
-        </button>
-      </app-empty-state>
-      } @else {
-      <div class="grid">
-    @for (juego of juegosFiltrados(); track juego.id) {
-    <article class="juego-card">
-      <!-- El enlace cubre toda la tarjeta vía ::after, así el objetivo de
-           clic es la tarjeta entera y no solo el título. Los botones de
-           acción van por encima con z-index. El destino es el formulario de
-           configuración competitiva (RF-21), que es de ADMIN/COMISIONADO;
-           para el resto la tarjeta es informativa y no navega. -->
-      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
-      <a class="enlace-juego" [routerLink]="['/games', juego.id, 'perfil-competitivo']">
-        <span class="sr-only">Ver perfil competitivo de {{ juego.nombre }}</span>
-      </a>
-      }
 
-      <!-- Portada al estilo de las plataformas de torneos: cuando no hay
-           imagen real, un gradiente determinístico por nombre con el
-           monograma en grande. Cada juego tiene su color propio. -->
+  <!-- Escaparate (referencia Challenger Mode): dos filas en marquesina que
+       recorren el catálogo en sentidos opuestos. Decorativas: la grilla de
+       abajo es la navegación real, así que van ocultas para lectores de
+       pantalla y quietas con reduced-motion. -->
+  @if (marquesina(); as fila) {
+  <div class="escaparate" aria-hidden="true">
+    <div class="marquesina">
+      <div class="pista">
+        @for (juego of fila; track $index) {
+        <div class="tarjeta-mini" [style.background]="foto(juego) ? undefined : portada(juego)">
+          @if (foto(juego)) {
+          <img [src]="foto(juego)" alt="" loading="lazy" />
+          }
+        </div>
+        }
+      </div>
+    </div>
+    <div class="marquesina reversa">
+      <div class="pista">
+        @for (juego of fila; track $index) {
+        <div class="tarjeta-mini" [style.background]="foto(juego) ? undefined : portada(juego)">
+          @if (foto(juego)) {
+          <img [src]="foto(juego)" alt="" loading="lazy" />
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+  <label class="buscador">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </svg>
+    <input
+      type="search"
+      placeholder="Buscar juego…"
+      [value]="busqueda()"
+      (input)="busqueda.set($any($event.target).value)"
+    />
+    <span class="sr-only">Buscar juego por nombre</span>
+  </label>
+
+  <div class="chips" role="group" aria-label="Filtrar por género">
+    <button
+      type="button"
+      class="chip"
+      [class.activo]="generoActivo() === null"
+      [attr.aria-pressed]="generoActivo() === null"
+      (click)="filtrarPorGenero(null)"
+    >
+      Todos
+    </button>
+    @for (genero of generos(); track genero) {
+    <button
+      type="button"
+      class="chip"
+      [class.activo]="generoActivo() === genero"
+      [attr.aria-pressed]="generoActivo() === genero"
+      (click)="filtrarPorGenero(genero)"
+    >
+      {{ genero }}
+    </button>
+    }
+  </div>
+
+  @if (juegosFiltrados().length === 0) {
+  <app-empty-state
+    titulo="Sin resultados"
+    mensaje="Ningún juego coincide con los filtros aplicados."
+  >
+    <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </app-empty-state>
+  } @else {
+  <div class="grid">
+    @for (juego of juegosFiltrados(); track juego.id) {
+    <a class="juego-card" [routerLink]="['/games', juego.id]">
       <div class="portada" [style.background]="foto(juego) ? undefined : portada(juego)">
         @if (foto(juego)) {
-        <img [src]="foto(juego)" [alt]="" />
+        <img [src]="foto(juego)" [alt]="" loading="lazy" />
         } @else {
         <span class="monograma-grande" aria-hidden="true">{{ inicial(juego) }}</span>
         }
-        <span class="genero-chip">{{ juego.genero }}</span>
       </div>
-
-      <div class="cuerpo">
-        <h2 class="nombre">{{ juego.nombre }}</h2>
-        @if (juego.descripcion) {
-        <p class="descripcion">{{ juego.descripcion }}</p>
-        }
-      </div>
-
-      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
-      <div class="acciones">
-        @if (confirmandoId() === juego.id) {
-        <p class="confirmacion">¿Desactivar {{ juego.nombre }}?</p>
-        <div class="botones">
-          <button type="button" class="btn-danger" (click)="confirmarDesactivar(juego)">
-            Sí, desactivar
-          </button>
-          <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
-            Cancelar
-          </button>
-        </div>
-        } @else {
-        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'perfil-competitivo']">
-          Perfil competitivo
-        </a>
-        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'editar']">Editar</a>
-        <button type="button" class="btn-ghost-danger" (click)="pedirConfirmacion(juego)">
-          Desactivar
-        </button>
-        }
-      </div>
+      <span class="nombre">{{ juego.nombre }}</span>
+      @if (juego.genero) {
+      <span class="genero">{{ juego.genero }}</span>
       }
-    </article>
+    </a>
     }
   </div>
-      }
-    </div>
-
-    <aside class="rail" aria-label="Filtros del catálogo">
-      <label class="buscador">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-3.5-3.5" />
-        </svg>
-        <input
-          type="search"
-          placeholder="Buscar juego…"
-          [value]="busqueda()"
-          (input)="busqueda.set($any($event.target).value)"
-        />
-        <span class="sr-only">Buscar juego por nombre</span>
-      </label>
-
-      <div class="rail-grupo" role="group" aria-label="Filtrar por género">
-        <p class="rail-titulo">Género</p>
-        <button
-          type="button"
-          class="filtro"
-          [class.activo]="generoActivo() === null"
-          [attr.aria-pressed]="generoActivo() === null"
-          (click)="filtrarPorGenero(null)"
-        >
-          <span class="filtro-nombre">Todos</span>
-          <span class="filtro-conteo">{{ juegos().length }}</span>
-        </button>
-        @for (genero of generos(); track genero) {
-        <button
-          type="button"
-          class="filtro"
-          [class.activo]="generoActivo() === genero"
-          [attr.aria-pressed]="generoActivo() === genero"
-          (click)="filtrarPorGenero(genero)"
-        >
-          <span class="filtro-nombre">{{ genero }}</span>
-          <span class="filtro-conteo">{{ conteoPorGenero().get(genero) }}</span>
-        </button>
-        }
-      </div>
-
-      @if (hayFiltros()) {
-      <button type="button" class="btn-secondary btn-limpiar" (click)="limpiarFiltros()">
-        Limpiar filtros
-      </button>
-      }
-    </aside>
-  </div>
+  }
   }
 </section>
