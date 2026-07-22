@@ -55,6 +55,9 @@ public class LigaServiceImpl implements LigaService {
                 .nombre(nombre)
                 .juego(juego)
                 .comisionado(comisionado)
+                .descripcion(normalizar(request.descripcion()))
+                .reglas(normalizar(request.reglas()))
+                .fotoUrl(normalizar(request.fotoUrl()))
                 .build());
         return LigaResponse.from(liga);
     }
@@ -89,6 +92,9 @@ public class LigaServiceImpl implements LigaService {
 
         liga.setNombre(nombre);
         liga.setJuego(buscarJuego(request.juegoId()));
+        liga.setDescripcion(normalizar(request.descripcion()));
+        liga.setReglas(normalizar(request.reglas()));
+        liga.setFotoUrl(normalizar(request.fotoUrl()));
         return LigaResponse.from(liga);
     }
 
@@ -151,6 +157,11 @@ public class LigaServiceImpl implements LigaService {
     }
 
     // ---------- helpers ----------
+
+    /** Campos opcionales: el texto en blanco se guarda como null. */
+    private static String normalizar(String valor) {
+        return valor == null || valor.trim().isEmpty() ? null : valor.trim();
+    }
 
     private Liga buscarLiga(Long ligaId) {
         return ligaRepository.findById(ligaId)

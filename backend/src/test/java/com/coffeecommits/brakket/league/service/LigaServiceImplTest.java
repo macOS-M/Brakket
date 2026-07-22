@@ -1,4 +1,4 @@
-package com.coffeecommits.brakket.league.service;
+﻿package com.coffeecommits.brakket.league.service;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
@@ -68,7 +68,7 @@ class LigaServiceImplTest {
             return l;
         });
 
-        LigaResponse resp = ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L));
+        LigaResponse resp = ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L, null, null, null));
 
         assertThat(resp.id()).isEqualTo(50L);
         assertThat(resp.nombre()).isEqualTo("Liga Pro");
@@ -82,7 +82,7 @@ class LigaServiceImplTest {
         when(juegoRepository.findById(3L)).thenReturn(Optional.of(juego()));
         when(ligaRepository.existsByComisionadoIdAndNombreIgnoreCase(1L, "Liga Pro")).thenReturn(true);
 
-        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L)))
+        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L, null, null, null)))
                 .isInstanceOf(BusinessException.class);
         verify(ligaRepository, never()).save(any(Liga.class));
     }
@@ -92,7 +92,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
         when(juegoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 99L)))
+        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 99L, null, null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -151,7 +151,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
         when(juegoRepository.findById(4L)).thenReturn(Optional.of(inactivo));
 
-        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 4L)))
+        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 4L, null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(ligaRepository, never()).save(any(Liga.class));
     }
@@ -183,7 +183,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo("beto@brakket.gg")).thenReturn(Optional.of(otro));
 
         assertThatThrownBy(() -> ligaService.actualizarLiga(
-                50L, "beto@brakket.gg", new ActualizarLigaRequest("Otro nombre", 3L)))
+                50L, "beto@brakket.gg", new ActualizarLigaRequest("Otro nombre", 3L, null, null, null)))
                 .isInstanceOf(ForbiddenException.class);
     }
 
@@ -196,7 +196,7 @@ class LigaServiceImplTest {
         when(ligaRepository.existsByComisionadoIdAndNombreIgnoreCase(1L, "Liga Elite")).thenReturn(true);
 
         assertThatThrownBy(() -> ligaService.actualizarLiga(
-                50L, CORREO, new ActualizarLigaRequest("Liga Elite", 3L)))
+                50L, CORREO, new ActualizarLigaRequest("Liga Elite", 3L, null, null, null)))
                 .isInstanceOf(BusinessException.class);
     }
 
@@ -209,7 +209,7 @@ class LigaServiceImplTest {
         when(juegoRepository.findById(3L)).thenReturn(Optional.of(juego()));
 
         LigaResponse resp = ligaService.actualizarLiga(
-                50L, CORREO, new ActualizarLigaRequest("LIGA PRO", 3L));
+                50L, CORREO, new ActualizarLigaRequest("LIGA PRO", 3L, null, null, null));
 
         assertThat(resp.nombre()).isEqualTo("LIGA PRO");
         verify(ligaRepository, never()).existsByComisionadoIdAndNombreIgnoreCase(any(), any());
@@ -266,3 +266,4 @@ class LigaServiceImplTest {
         verify(ligaRepository).delete(liga);
     }
 }
+
