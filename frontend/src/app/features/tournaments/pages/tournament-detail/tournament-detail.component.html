@@ -128,7 +128,13 @@
 
     @if (puedeEliminar()) {
     <div class="danger-zone">
-      <h2>Zona de peligro</h2>
+      <h2>{{ esModeracion() ? 'Moderación (admin)' : 'Zona de peligro' }}</h2>
+      @if (esModeracion()) {
+      <p class="danger-nota">
+        Ves esto porque sos administrador: este torneo pertenece a
+        {{ torneo.organizadorNombre }}. Los usuarios comunes no ven esta sección.
+      </p>
+      }
       @if (confirmandoEliminar()) {
       <p class="danger-aviso">
         Se eliminará <strong>{{ torneo.nombre }}</strong> con sus inscripciones.

@@ -132,7 +132,13 @@
 
     @if (puedeEliminar()) {
     <div class="danger-zone">
-      <h2>Zona de peligro</h2>
+      <h2>{{ esModeracion() ? 'Moderación (admin)' : 'Zona de peligro' }}</h2>
+      @if (esModeracion()) {
+      <p class="danger-nota">
+        Ves esto porque sos administrador: esta liga pertenece a
+        {{ liga.comisionadoNombre }}. Los usuarios comunes no ven esta sección.
+      </p>
+      }
       @if (errorEliminar()) {
       <p class="error" role="alert">{{ errorEliminar() }}</p>
       }

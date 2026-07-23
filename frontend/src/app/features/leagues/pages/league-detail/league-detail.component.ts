@@ -48,6 +48,9 @@ export class LeagueDetailComponent {
   /** Eliminar la liga: su comisionado, o un ADMIN sobre cualquier liga. */
   readonly puedeEliminar = computed(() => this.esComisionado() || this.auth.hasRole('ADMIN'));
 
+  /** La ve un ADMIN sobre una liga ajena: es moderación, no gestión propia. */
+  readonly esModeracion = computed(() => this.puedeEliminar() && !this.esComisionado());
+
   /** Portada: foto propia de la liga o, en su defecto, el arte del juego. */
   readonly portada = computed(() => {
     const liga = this.league();

@@ -70,14 +70,18 @@ export class TournamentDetailComponent {
     return !!t && t.estado === 'ABIERTO' && !this.comenzo() && !this.cupoLleno();
   });
 
-  readonly puedeEliminar = computed(() => {
+  readonly esOrganizador = computed(() => {
     const t = this.torneo();
     const usuario = this.auth.usuario();
-    if (!t || !usuario?.id) {
-      return false;
-    }
-    return Number(usuario.id) === t.organizadorId || this.auth.hasRole('ADMIN');
+    return !!t && !!usuario?.id && Number(usuario.id) === t.organizadorId;
   });
+
+  readonly puedeEliminar = computed(
+    () => this.esOrganizador() || this.auth.hasRole('ADMIN')
+  );
+
+  /** La ve un ADMIN sobre un torneo ajeno: es moderación, no gestión propia. */
+  readonly esModeracion = computed(() => this.puedeEliminar() && !this.esOrganizador());
 
   constructor() {
     this.torneoId = Number(this.route.snapshot.paramMap.get('id'));

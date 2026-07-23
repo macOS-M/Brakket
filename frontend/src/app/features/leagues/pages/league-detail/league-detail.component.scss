@@ -403,3 +403,9 @@ input {
   gap: 0.6rem;
   flex-wrap: wrap;
 }
+
+.danger-nota {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
