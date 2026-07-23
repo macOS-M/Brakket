@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -20,6 +22,9 @@ describe('TeamFormComponent', () => {
     await TestBed.configureTestingModule({
       imports: [TeamFormComponent],
       providers: [
+        // El foto-input del formulario inyecta UploadsService -> HttpClient.
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: GamesService, useValue: gamesServiceMock },
         { provide: TeamsService, useValue: teamsServiceMock },
         { provide: Router, useValue: routerMock },

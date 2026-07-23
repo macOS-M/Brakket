@@ -189,8 +189,20 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
             equipo.setLogo(request.logo().isBlank() ? null : request.logo());
         }
 
+        if (request.bannerUrl() != null) {
+            equipo.setBannerUrl(request.bannerUrl().isBlank() ? null : request.bannerUrl());
+        }
+
         if (request.descripcion() != null) {
             equipo.setDescripcion(request.descripcion().isBlank() ? null : request.descripcion());
+        }
+
+        if (request.sitioWeb() != null) {
+            equipo.setSitioWeb(request.sitioWeb().isBlank() ? null : request.sitioWeb());
+        }
+
+        if (request.videoUrl() != null) {
+            equipo.setVideoUrl(request.videoUrl().isBlank() ? null : request.videoUrl());
         }
 
         if (request.estadoPrivacidad() != null) {

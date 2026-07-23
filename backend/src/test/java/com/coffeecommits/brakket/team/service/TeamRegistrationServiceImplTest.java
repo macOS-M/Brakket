@@ -83,7 +83,8 @@ class TeamRegistrationServiceImplTest {
 
     private EditarEquipoRequest request(String nombre, String logo, String descripcion,
                                         Long juegoId, Long version) {
-        return new EditarEquipoRequest(nombre, logo, descripcion, juegoId, null, null, version);
+        return new EditarEquipoRequest(
+                nombre, logo, null, descripcion, null, null, juegoId, null, null, version);
     }
 
     @Test

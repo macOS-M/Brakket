@@ -483,7 +483,7 @@
   p { margin: 0; color: var(--text-muted); font-size: 0.9rem; max-width: 52ch; }
 }
 
-.hero-puntos { position: absolute; bottom: 14px; right: 18px; display: flex; gap: 6px; z-index: 2; }
+.hero-puntos { position: absolute; bottom: 14px; right: 18px; display: flex; gap: 6px; z-index: 3; }
 .hero-punto { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: background 0.2s ease; }
 .hero-punto.activo { background: var(--accent); }
 .ver-mas { display: block; width: 100%; margin-top: 10px; padding: 9px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; }
@@ -491,14 +491,29 @@
 
 // ---------- hero carousel de marco fijo con slide suave ----------
 
+// A toda la anchura del contenido y con altura de portada (referencia CM):
+// el arte manda y la página emerge de él.
 .hero-carrusel {
   position: relative;
-  height: 280px;
-  border-radius: var(--radius-xl);
+  height: clamp(320px, 44vh, 470px);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 6px;
 
-  @media (max-width: 700px) { height: 200px; }
+  @media (max-width: 700px) { height: 240px; }
+}
+
+// El fundido hacia el lienzo: el borde inferior del hero no existe; el
+// arte se disuelve y "Tus competencias" aparece desde adentro.
+.hero-fundido {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 46%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, var(--bg, #0b1120) 96%);
 }
 
 .hero-pista {
@@ -535,10 +550,11 @@
 
   .hero-texto {
     position: relative;
-    z-index: 1;
-    padding: 20px 24px;
+    z-index: 2;
+    padding: 20px 28px 26px;
 
-    h2 { margin: 0 0 8px; color: #fff; font-size: 1.5rem; font-weight: 800; }
+    // Con la altura de portada, el título sube al paso display.
+    h2 { margin: 0 0 10px; color: #fff; font-size: 2rem; font-weight: 800; }
   }
 
   .hero-cta {

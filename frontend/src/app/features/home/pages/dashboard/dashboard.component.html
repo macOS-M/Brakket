@@ -13,58 +13,59 @@
   </app-empty-state>
   } @else {
 
+  <!-- Héroe a toda la anchura (referencia Challenger Mode): el arte del
+       juego llena el marco y se funde hacia abajo con el lienzo, así la
+       sección siguiente emerge del hero en vez de cortarlo. -->
+  @if (heroJuegos().length > 0) {
+  <div
+    class="hero-carrusel"
+    (mouseenter)="heroPausado.set(true)"
+    (mouseleave)="heroPausado.set(false)"
+    (focusin)="heroPausado.set(true)"
+    (focusout)="heroPausado.set(false)"
+  >
+    <div
+      class="hero-pista"
+      [style.transform]="'translateX(-' + heroVisible() * 100 + '%)'"
+    >
+      @for (hero of heroJuegos(); track hero.id) {
+      <a
+        class="hero-slide"
+        [routerLink]="['/games', hero.id]"
+        [attr.tabindex]="heroVisible() === $index ? null : -1"
+        [attr.aria-hidden]="heroVisible() === $index ? null : true"
+        [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+      >
+        @if (foto(hero)) {
+        <img [src]="foto(hero)" alt="" />
+        }
+        <div class="hero-velo" aria-hidden="true"></div>
+        <div class="hero-texto">
+          <h2>{{ hero.nombre }}</h2>
+          <span class="hero-cta">Ver juego →</span>
+        </div>
+      </a>
+      }
+    </div>
+    <div class="hero-fundido" aria-hidden="true"></div>
+    @if (heroJuegos().length > 1) {
+    <span class="hero-puntos">
+      @for (j of heroJuegos(); track j.id; let i = $index) {
+      <button
+        type="button"
+        class="hero-punto"
+        [class.activo]="heroVisible() === i"
+        [attr.aria-label]="'Ver ' + j.nombre"
+        (click)="heroIndex.set(i)"
+      ></button>
+      }
+    </span>
+    }
+  </div>
+  }
+
   <div class="tablero">
     <div class="columna-principal">
-      <!-- Héroe: el juego destacado del catálogo (referencia dashboard). -->
-      @if (heroJuegos().length > 0) {
-      <!-- Carousel de contenedor fijo: la imagen se adapta al marco y el
-           cambio es un slide suave hacia la izquierda, no un corte. -->
-      <div
-        class="hero-carrusel"
-        (mouseenter)="heroPausado.set(true)"
-        (mouseleave)="heroPausado.set(false)"
-        (focusin)="heroPausado.set(true)"
-        (focusout)="heroPausado.set(false)"
-      >
-        <div
-          class="hero-pista"
-          [style.transform]="'translateX(-' + heroVisible() * 100 + '%)'"
-        >
-          @for (hero of heroJuegos(); track hero.id) {
-          <a
-            class="hero-slide"
-            [routerLink]="['/games', hero.id]"
-            [attr.tabindex]="heroVisible() === $index ? null : -1"
-            [attr.aria-hidden]="heroVisible() === $index ? null : true"
-            [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
-          >
-            @if (foto(hero)) {
-            <img [src]="foto(hero)" alt="" />
-            }
-            <div class="hero-velo" aria-hidden="true"></div>
-            <div class="hero-texto">
-              <h2>{{ hero.nombre }}</h2>
-              <span class="hero-cta">Ver juego →</span>
-            </div>
-          </a>
-          }
-        </div>
-        @if (heroJuegos().length > 1) {
-        <span class="hero-puntos">
-          @for (j of heroJuegos(); track j.id; let i = $index) {
-          <button
-            type="button"
-            class="hero-punto"
-            [class.activo]="heroVisible() === i"
-            [attr.aria-label]="'Ver ' + j.nombre"
-            (click)="heroIndex.set(i)"
-          ></button>
-          }
-        </span>
-        }
-      </div>
-      }
-
       <!-- Tus competencias: lo accionable primero (referencia CM). -->
       @if (competencias().length > 0) {
       <h2 class="seccion">Tus competencias</h2>

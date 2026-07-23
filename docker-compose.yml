@@ -51,6 +51,10 @@ services:
       SPRING_FLYWAY_OUT_OF_ORDER: ${SPRING_FLYWAY_OUT_OF_ORDER:-false}
     ports:
       - "8080:8080"
+    volumes:
+      # Imágenes subidas (logos/banners): sobreviven al recrear el contenedor.
+      - brakket_uploads:/app/uploads
 
 volumes:
   brakket_pgdata:
+  brakket_uploads:

@@ -2,7 +2,11 @@ export interface Equipo {
   id: number;
   nombre: string;
   logo: string | null;
+  /** Banner de portada del perfil (V30, referencia Challenger Mode). */
+  bannerUrl: string | null;
   descripcion: string | null;
+  sitioWeb: string | null;
+  videoUrl: string | null;
   juegoId: number;
   juegoNombre: string;
   capitanId: number;
@@ -62,7 +66,10 @@ export interface CrearEquipoRequest {
 export interface EditarEquipoRequest {
   nombre?: string | null;
   logo?: string | null;
+  bannerUrl?: string | null;
   descripcion?: string | null;
+  sitioWeb?: string | null;
+  videoUrl?: string | null;
   juegoId?: number | null;
   redesSociales?: string[] | null;
   estadoPrivacidad?: string | null;

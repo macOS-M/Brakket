@@ -66,6 +66,13 @@ export class TeamListComponent implements OnInit, OnDestroy {
   readonly otros = computed(() =>
     (this.pagina()?.items ?? []).filter((e) => !this.misIds().has(e.id)));
 
+  /**
+   * "Todos los equipos" arranca plegado: lo tuyo primero. Se abre solo
+   * cuando no tenés equipos (si no, la página quedaría vacía) o cuando
+   * usás un filtro (buscar algo y no ver resultados sería absurdo).
+   */
+  readonly mostrarTodos = signal(false);
+
   /** Solicitudes enviadas en esta sesión, para no re-ofrecer el botón. */
   readonly solicitados = signal<Set<number>>(new Set());
   readonly solicitandoId = signal<number | null>(null);
@@ -76,9 +83,19 @@ export class TeamListComponent implements OnInit, OnDestroy {
     this.cargarJuegos();
     if (this.auth.isAuthenticated()) {
       this.teamsService.misEquipos().subscribe({
-        next: (equipos) => this.misEquipos.set(equipos),
-        error: () => this.misEquipos.set([])
+        next: (equipos) => {
+          this.misEquipos.set(equipos);
+          if (equipos.length === 0) {
+            this.mostrarTodos.set(true);
+          }
+        },
+        error: () => {
+          this.misEquipos.set([]);
+          this.mostrarTodos.set(true);
+        }
       });
+    } else {
+      this.mostrarTodos.set(true);
     }
 
     // Un único stream de búsqueda: cada emisión cancela el request en vuelo,
@@ -126,7 +143,15 @@ export class TeamListComponent implements OnInit, OnDestroy {
         distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
         takeUntil(this.destroy$)
       )
-      .subscribe(() => this.buscar(0));
+      .subscribe(() => {
+        // Filtrar implica querer ver resultados: el plegado se abre solo.
+        this.mostrarTodos.set(true);
+        this.buscar(0);
+      });
+  }
+
+  alternarTodos(): void {
+    this.mostrarTodos.update((abierto) => !abierto);
   }
 
   ngOnDestroy(): void {

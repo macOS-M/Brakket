@@ -91,13 +91,31 @@
     </article>
     }
   </div>
-  <div class="seccion-titulo">
-    <h2>Todos los equipos</h2>
-    @if (pagina()) {
-    <span class="conteo">{{ pagina()!.totalElements }}</span>
-    }
-  </div>
   }
+
+  <!-- Disclosure: lo de la plataforma entera se despliega a demanda. -->
+  <div class="seccion-titulo">
+    <h2 class="titulo-desplegable">
+      <button
+        type="button"
+        class="btn-desplegable"
+        [attr.aria-expanded]="mostrarTodos()"
+        (click)="alternarTodos()"
+      >
+        <span class="chevron" [class.abierto]="mostrarTodos()" aria-hidden="true">▸</span>
+        Todos los equipos
+        @if (pagina()) {
+        <span class="conteo">{{ pagina()!.totalElements }}</span>
+        }
+      </button>
+    </h2>
+  </div>
+
+  @if (!mostrarTodos()) {
+  <p class="pista-desplegable">
+    Desplegá para explorar todos los equipos de la plataforma, o usá los filtros de arriba.
+  </p>
+  } @else {
 
   @if (cargando()) {
   <app-empty-state modo="cargando" mensaje="Buscando equipos…" />
@@ -197,5 +215,5 @@
       Siguiente →
     </button>
   </nav>
-  } }
+  } } }
 </section>

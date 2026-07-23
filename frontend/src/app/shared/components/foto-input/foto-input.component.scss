@@ -1,0 +1,125 @@
+.foto-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.previa {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border, #334155);
+  background: var(--surface-2, #1f2937);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.vacia svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: var(--text-subtle, #64748b);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+  }
+}
+
+// El banner previsualiza ancho, como se va a ver en el perfil.
+.banner .previa {
+  width: 100%;
+  max-width: 320px;
+  height: 80px;
+}
+
+.quitar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(4, 8, 18, 0.65);
+  color: #fff;
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover { background: rgba(4, 8, 18, 0.85); }
+  &:disabled { opacity: 0.4; cursor: default; }
+}
+
+.controles {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-subir {
+  align-self: flex-start;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease-out, border-color 0.2s ease-out;
+
+  &:hover:not(.ocupado) {
+    background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+
+  &.ocupado {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  // El input real queda invisible pero enfocable: el label lo dispara.
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+  }
+}
+
+.url {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.8125rem;
+
+  &::placeholder { color: var(--text-subtle, #64748b); }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}
+
+.error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--danger-text, #f87171);
+  font-size: 0.8125rem;
+}

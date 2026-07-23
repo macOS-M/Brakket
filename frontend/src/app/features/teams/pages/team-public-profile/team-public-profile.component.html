@@ -9,7 +9,13 @@
   <!-- `as` solo se admite en el @if primario, por eso este bloque va anidado. -->
   @if (perfil(); as equipo) {
 
-  <header class="hero">
+  <header class="hero" [class.con-banner]="equipo.bannerUrl">
+    @if (equipo.bannerUrl) {
+    <div class="hero-banner" aria-hidden="true">
+      <img [src]="equipo.bannerUrl" alt="" loading="lazy" />
+      <div class="hero-velo"></div>
+    </div>
+    }
     @if (equipo.logo) {
     <img class="logo" [src]="equipo.logo" [alt]="'Logo de ' + equipo.nombre" />
     } @else {
@@ -19,6 +25,16 @@
     <div class="identidad">
       <h1>{{ equipo.nombre }}</h1>
       <p class="juego">{{ equipo.juegoNombre || 'Sin juego principal definido' }}</p>
+      @if (equipo.sitioWeb || equipo.videoUrl) {
+      <p class="enlaces">
+        @if (equipo.sitioWeb) {
+        <a [href]="equipo.sitioWeb" target="_blank" rel="noopener noreferrer">Sitio web ↗</a>
+        }
+        @if (equipo.videoUrl) {
+        <a [href]="equipo.videoUrl" target="_blank" rel="noopener noreferrer">Video de presentación ↗</a>
+        }
+      </p>
+      }
     </div>
 
     <app-status-badge [estado]="equipo.estado" />

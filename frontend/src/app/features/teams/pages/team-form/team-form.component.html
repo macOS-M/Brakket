@@ -65,11 +65,6 @@
     </div>
 
     <div class="field">
-      <label class="label" for="logo">Logo (URL)</label>
-      <input id="logo" type="text" formControlName="logo" placeholder="https://…" />
-    </div>
-
-    <div class="field">
       <label class="label" for="descripcion">Descripción</label>
       <textarea
         id="descripcion"
@@ -83,6 +78,31 @@
       @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
       <span id="descripcion-error" class="field-error">Máximo 500 caracteres.</span>
       }
+    </div>
+
+    <div class="field">
+      <label class="label" for="sitioWeb">Sitio web</label>
+      <input id="sitioWeb" type="url" formControlName="sitioWeb" placeholder="https://miequipo.gg" />
+    </div>
+
+    <div class="field">
+      <label class="label" for="videoUrl">Video de presentación</label>
+      <input id="videoUrl" type="url" formControlName="videoUrl" placeholder="https://youtube.com/…" />
+      <span class="field-pista">Un enlace a YouTube o Twitch que presente al equipo.</span>
+    </div>
+
+    <h2 class="seccion-form">Apariencia</h2>
+
+    <div class="field">
+      <span class="label" id="etiqueta-logo">Logo</span>
+      <app-foto-input etiqueta="Logo" formControlName="logo" aria-labelledby="etiqueta-logo" />
+      <span class="field-pista">Cuadrado, ideal 256×256 píxeles.</span>
+    </div>
+
+    <div class="field">
+      <span class="label" id="etiqueta-banner">Banner del perfil</span>
+      <app-foto-input etiqueta="Banner" forma="banner" formControlName="bannerUrl" aria-labelledby="etiqueta-banner" />
+      <span class="field-pista">Apaisado, ideal 2400×600 píxeles: es la portada del perfil del equipo.</span>
     </div>
 
     @if (esEdicion) {

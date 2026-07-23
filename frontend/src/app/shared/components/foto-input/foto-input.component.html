@@ -1,0 +1,49 @@
+<div class="foto-input" [class.banner]="forma() === 'banner'">
+  @if (valor()) {
+  <div class="previa">
+    <img [src]="valor()" alt="" (error)="quitar()" />
+    <button
+      type="button"
+      class="quitar"
+      [disabled]="deshabilitado()"
+      (click)="quitar()"
+      [attr.aria-label]="'Quitar ' + etiqueta().toLowerCase()"
+    >
+      ✕
+    </button>
+  </div>
+  } @else {
+  <div class="previa vacia" aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      <path d="M4 7h3l2-2h6l2 2h3v13H4z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  </div>
+  }
+
+  <div class="controles">
+    <label class="btn-subir" [class.ocupado]="subiendo() || deshabilitado()">
+      {{ subiendo() ? 'Subiendo…' : 'Subir imagen' }}
+      <input
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        [disabled]="subiendo() || deshabilitado()"
+        (change)="alElegirArchivo($event)"
+        [attr.aria-label]="'Subir ' + etiqueta().toLowerCase() + ' desde tu equipo'"
+      />
+    </label>
+    <input
+      class="url"
+      type="url"
+      placeholder="…o pegá una URL"
+      [value]="valor()"
+      [disabled]="deshabilitado()"
+      (input)="alEscribirUrl($any($event.target).value)"
+      [attr.aria-label]="'URL de ' + etiqueta().toLowerCase()"
+    />
+  </div>
+
+  @if (errorSubida()) {
+  <p class="error" role="alert">{{ errorSubida() }}</p>
+  }
+</div>

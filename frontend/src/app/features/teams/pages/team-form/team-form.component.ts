@@ -5,12 +5,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
 import { TeamsService } from '../../services/teams.service';
 
 @Component({
   selector: 'app-team-form',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeaderComponent],
+  imports: [ReactiveFormsModule, PageHeaderComponent, FotoInputComponent],
   templateUrl: './team-form.component.html',
   styleUrl: './team-form.component.scss'
 })
@@ -36,7 +37,10 @@ export class TeamFormComponent implements OnInit {
   readonly form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
     logo: [''],
+    bannerUrl: [''],
     descripcion: ['', [Validators.maxLength(500)]],
+    sitioWeb: [''],
+    videoUrl: [''],
     juegoId: [null as number | null, [Validators.required]],
     estadoPrivacidad: ['PUBLIC'],
     redesSociales: this.fb.nonNullable.array<string>([])
@@ -72,7 +76,10 @@ export class TeamFormComponent implements OnInit {
         this.form.patchValue({
           nombre: equipo.nombre,
           logo: equipo.logo ?? '',
+          bannerUrl: equipo.bannerUrl ?? '',
           descripcion: equipo.descripcion ?? '',
+          sitioWeb: equipo.sitioWeb ?? '',
+          videoUrl: equipo.videoUrl ?? '',
           juegoId: equipo.juegoId,
           estadoPrivacidad: equipo.estadoPrivacidad
         });
@@ -114,7 +121,10 @@ export class TeamFormComponent implements OnInit {
       this.teamsService.editar(this.equipoId()!, {
         nombre: valores.nombre,
         logo: valores.logo.trim(),
+        bannerUrl: valores.bannerUrl.trim(),
         descripcion: valores.descripcion.trim(),
+        sitioWeb: valores.sitioWeb.trim(),
+        videoUrl: valores.videoUrl.trim(),
         juegoId: valores.juegoId,
         estadoPrivacidad: valores.estadoPrivacidad,
         redesSociales: valores.redesSociales,

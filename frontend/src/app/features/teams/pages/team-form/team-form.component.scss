@@ -216,3 +216,20 @@ textarea {
     background: var(--surface-2, #1f2937);
   }
 }
+
+// ----- Secciones del formulario ampliado (Acerca de / Apariencia) -----
+
+.seccion-form {
+  margin: 20px 0 4px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text, #e2e8f0);
+  border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  padding-top: 18px;
+}
+
+.field-pista {
+  color: var(--text-subtle, #64748b);
+  font-size: 0.75rem;
+}

@@ -255,3 +255,11 @@
     background: var(--surface-2, #1f2937);
   }
 }
+
+.label-portada {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+}
