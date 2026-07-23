@@ -315,18 +315,28 @@ export class TournamentDetailComponent {
   /** Aplica un cambio de datos dentro de una View Transition si existe. */
   private conTransicion(aplicar: () => void): void {
     const doc = document as Document & {
-      startViewTransition?: (cb: () => Promise<void>) => void;
+      startViewTransition?: (cb: () => Promise<void>) => {
+        ready?: Promise<void>;
+        finished?: Promise<void>;
+      };
     };
     const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!doc.startViewTransition || reducido) {
+    // Con la pestaña oculta el navegador aborta la transición; bajo Karma
+    // desestabiliza el tab del runner. En ambos casos, directo.
+    if (!doc.startViewTransition || reducido || document.hidden || '__karma__' in window) {
       aplicar();
       return;
     }
-    doc.startViewTransition(async () => {
-      aplicar();
-      // Deja que Angular pinte el nuevo estado antes de capturar el "después".
+    // El estado se aplica sincrónico: specs y llamadores ven el cambio ya.
+    // La transición captura el "antes" (el DOM aún no repintó) y su callback
+    // solo espera un tick a que Angular pinte el "después".
+    aplicar();
+    const transicion = doc.startViewTransition(async () => {
       await new Promise((resolver) => setTimeout(resolver, 0));
     });
+    // Si el navegador la aborta, el cambio ya está aplicado: solo se silencia.
+    transicion.ready?.catch(() => undefined);
+    transicion.finished?.catch(() => undefined);
   }
 
   /** Punto único de entrada del detalle: detecta la coronación en vivo. */

@@ -1,10 +1,19 @@
 // ----- Filtros -----
 
+// Pegajosos: al bajar por una lista larga, buscar y filtrar siguen a mano.
+// Fondo sólido del lienzo (nada de vidrio) y un borde que solo se nota
+// cuando hay contenido pasando por debajo.
 .filtros {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-bottom: 1.35rem;
+  padding: 0.5rem 0;
+  background: var(--bg, #0b1120);
+  border-bottom: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
 }
 
 .buscador {
@@ -103,28 +112,82 @@
   gap: 1.1rem;
 }
 
+// La tarjeta de club: portada con vida, tilt 3D hacia el cursor (la
+// directiva appTilt escribe --tilt-x/--tilt-y y --gx/--gy; con puntero
+// grueso o reduced-motion no escribe nada y la tarjeta queda plana).
 .equipo-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--surface, #111827);
   border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
   border-radius: var(--radius-md, 12px);
-  transition: border-color 0.2s ease-out, transform 0.2s ease-out;
+  transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
+    translateY(var(--alza, 0px));
+  transition: border-color 0.2s ease-out, transform 0.15s ease-out;
 
   &:hover {
+    --alza: -2px;
     border-color: var(--accent, #ff5500);
-    transform: translateY(-2px);
+  }
+
+  // El brillo que sigue al cursor: una luz tenue sobre la cara de la
+  // tarjeta, solo con puntero fino y solo en hover.
+  @media (pointer: fine) {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(
+        220px circle at var(--gx, 50%) var(--gy, 30%),
+        rgba(255, 255, 255, 0.07),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+
+    &:hover::after {
+      opacity: 1;
+    }
   }
 }
 
 // Banda de portada: gradiente determinístico del juego con su nombre
-// como marca de agua. Le da identidad a la tarjeta sin inventar arte.
+// como marca de agua. Más alta que antes: la portada es la identidad.
 .banda {
   position: relative;
-  height: 72px;
+  height: 92px;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+// El fondo va en su propia capa para poder acercarse en hover sin mover
+// la marca de agua ni el chip de estado.
+.banda-fondo {
+  position: absolute;
+  inset: 0;
+  transform: scale(1.001);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.equipo-card:hover .banda-fondo {
+  transform: scale(1.07);
+}
+
+// El estado vive sobre la portada, con su propio velo para leerse
+// encima de cualquier gradiente.
+.estado-flotante {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  border-radius: var(--radius-pill, 999px);
+  background: rgba(4, 8, 18, 0.62);
+  padding: 1px;
 }
 
 .banda-marca {
@@ -151,25 +214,25 @@
   padding: 0 1.1rem 1.1rem;
 }
 
-// El logo cabalga el borde inferior de la banda; el chip de estado
-// aterriza a su lado, ya sobre el cuerpo de la tarjeta.
+// Solo el logo-medallón cabalga la banda (margen negativo propio); la
+// identidad queda a su lado, ya del todo sobre el cuerpo de la tarjeta.
 .cabecera {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.7rem;
-  margin-top: -24px;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-top: 0.45rem;
   margin-bottom: 0.6rem;
 }
 
 .logo {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   flex-shrink: 0;
+  margin-top: -33px;
   border: 3px solid var(--surface, #111827);
-  border-radius: var(--radius-sm, 8px);
+  border-radius: var(--radius-md, 12px);
   background: var(--surface-2, #1f2937);
   object-fit: cover;
 
@@ -188,6 +251,7 @@
     margin: 0;
     font-size: 1.0625rem;
     font-weight: 700;
+    letter-spacing: -0.015em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

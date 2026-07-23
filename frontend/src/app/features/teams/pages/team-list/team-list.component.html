@@ -55,13 +55,16 @@
       class="equipo-card clickeable entra-tarjeta"
       role="link"
       tabindex="0"
+      appTilt
       (click)="abrir(equipo, true)"
       (keydown.enter)="abrir(equipo, true)"
     >
-      <div class="banda" [style.background]="portada(equipo)">
+      <div class="banda">
+        <div class="banda-fondo" aria-hidden="true" [style.background]="portada(equipo)"></div>
         @if (equipo.juegoNombre) {
         <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
         }
+        <app-status-badge class="estado-flotante" [estado]="equipo.estado" />
       </div>
       <div class="cuerpo">
         <div class="cabecera">
@@ -74,13 +77,12 @@
             [style.background]="colorDe(equipo.nombre)"
           >{{ equipo.nombre.charAt(0) }}</span>
           }
-          <app-status-badge [estado]="equipo.estado" />
-        </div>
-        <div class="identidad">
-          <h2 class="nombre">{{ equipo.nombre }}</h2>
-          @if (equipo.juegoNombre) {
-          <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
-          }
+          <div class="identidad">
+            <h2 class="nombre">{{ equipo.nombre }}</h2>
+            @if (equipo.juegoNombre) {
+            <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+            }
+          </div>
         </div>
         @if (equipo.descripcion) {
         <p class="descripcion">{{ equipo.descripcion }}</p>
@@ -117,13 +119,16 @@
       class="equipo-card clickeable entra-tarjeta"
       role="link"
       tabindex="0"
+      appTilt
       (click)="abrir(equipo, false)"
       (keydown.enter)="abrir(equipo, false)"
     >
-      <div class="banda" [style.background]="portada(equipo)">
+      <div class="banda">
+        <div class="banda-fondo" aria-hidden="true" [style.background]="portada(equipo)"></div>
         @if (equipo.juegoNombre) {
         <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
         }
+        <app-status-badge class="estado-flotante" [estado]="equipo.estado" />
       </div>
       <div class="cuerpo">
         <div class="cabecera">
@@ -136,13 +141,12 @@
             [style.background]="colorDe(equipo.nombre)"
           >{{ equipo.nombre.charAt(0) }}</span>
           }
-          <app-status-badge [estado]="equipo.estado" />
-        </div>
-        <div class="identidad">
-          <h2 class="nombre">{{ equipo.nombre }}</h2>
-          @if (equipo.juegoNombre) {
-          <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
-          }
+          <div class="identidad">
+            <h2 class="nombre">{{ equipo.nombre }}</h2>
+            @if (equipo.juegoNombre) {
+            <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+            }
+          </div>
         </div>
 
         @if (equipo.descripcion) {

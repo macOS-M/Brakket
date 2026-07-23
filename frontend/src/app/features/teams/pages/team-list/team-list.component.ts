@@ -12,6 +12,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { TiltDirective } from '../../../../shared/directives/tilt.directive';
 
 /** Largo máximo del texto de búsqueda (igual al nombre de equipo en la BD). */
 const LARGO_MAXIMO_TEXTO = 120;
@@ -28,7 +29,8 @@ const TAMANO_PAGINA = 12;
     RouterLink,
     PageHeaderComponent,
     EmptyStateComponent,
-    StatusBadgeComponent
+    StatusBadgeComponent,
+    TiltDirective
   ],
   templateUrl: './team-list.component.html',
   styleUrl: './team-list.component.scss'
@@ -106,10 +108,15 @@ export class TeamListComponent implements OnInit, OnDestroy {
       .subscribe(({ pagina, fallo }) => {
         if (fallo) {
           this.error.set('No se pudo realizar la búsqueda de equipos.');
-        } else {
-          this.pagina.set(pagina);
+          this.cargando.set(false);
+          return;
         }
-        this.cargando.set(false);
+        // Con resultados ya en pantalla, el reemplazo entra con una View
+        // Transition: filtrar se siente como reacomodo, no como parpadeo.
+        this.conTransicion(() => {
+          this.pagina.set(pagina);
+          this.cargando.set(false);
+        });
       });
 
     this.buscar(0);
@@ -129,6 +136,40 @@ export class TeamListComponent implements OnInit, OnDestroy {
 
   buscar(page: number): void {
     this.busqueda$.next(page);
+  }
+
+  /** Aplica un cambio dentro de una View Transition cuando el navegador puede. */
+  private conTransicion(aplicar: () => void): void {
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => Promise<void>) => {
+        ready?: Promise<void>;
+        finished?: Promise<void>;
+      };
+    };
+    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Sin resultados previos no hay reacomodo que suavizar; con la pestaña
+    // oculta el navegador aborta la transición; bajo Karma la transición
+    // desestabiliza el tab del runner. En todos esos casos, directo.
+    if (
+      !doc.startViewTransition
+      || reducido
+      || document.hidden
+      || '__karma__' in window
+      || this.pagina() === null
+    ) {
+      aplicar();
+      return;
+    }
+    // El estado se aplica sincrónico: specs y llamadores ven el cambio ya.
+    // La transición captura el "antes" (el DOM aún no repintó) y su callback
+    // solo espera un tick a que Angular pinte el "después".
+    aplicar();
+    const transicion = doc.startViewTransition(async () => {
+      await new Promise((resolver) => setTimeout(resolver, 0));
+    });
+    // Si el navegador la aborta, el cambio ya está aplicado: solo se silencia.
+    transicion.ready?.catch(() => undefined);
+    transicion.finished?.catch(() => undefined);
   }
 
   reintentar(): void {
