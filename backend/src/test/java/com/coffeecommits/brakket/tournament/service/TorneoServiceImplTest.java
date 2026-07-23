@@ -35,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -71,7 +72,7 @@ class TorneoServiceImplTest {
 
     private CrearTorneoRequest request(Long temporadaId, LocalDateTime fecha) {
         return new CrearTorneoRequest(
-                "Copa Nocturna", 3L, temporadaId, "Eliminación directa", 5, 8, fecha, true, null, null);
+                "Copa Nocturna", 3L, temporadaId, "Eliminación directa", 5, 8, fecha, true, null, null, null);
     }
 
     private Torneo torneoAbierto() {
@@ -159,7 +160,7 @@ class TorneoServiceImplTest {
 
         // No es capitán → prohibido.
         when(inscripcionRepository.esCapitanActivo(1L, 20L)).thenReturn(false);
-        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L))
+        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL"))
                 .isInstanceOf(ForbiddenException.class);
 
         // Capitán con plantilla suficiente → inscribe.
@@ -170,9 +171,10 @@ class TorneoServiceImplTest {
         when(inscripcionRepository.save(any(Inscripcion.class))).thenAnswer(inv -> inv.getArgument(0));
         when(inscripcionRepository.findByTorneoId(7L)).thenReturn(List.of());
 
-        TorneoDetalleResponse detalle = torneoService.inscribirEquipo(7L, CORREO, 20L);
+        TorneoDetalleResponse detalle = torneoService.inscribirEquipo(7L, CORREO, 20L, " AnaRL ");
         assertThat(detalle.torneo().id()).isEqualTo(7L);
-        verify(inscripcionRepository).save(any(Inscripcion.class));
+        // El gamertag viaja recortado en la inscripción (identidad en el juego).
+        verify(inscripcionRepository).save(argThat(i -> "AnaRL".equals(i.getUsuarioEnJuego())));
     }
 
     @Test
@@ -183,7 +185,7 @@ class TorneoServiceImplTest {
 
         // Cupo lleno.
         when(inscripcionRepository.countVigentesPorTorneo(7L)).thenReturn(8L);
-        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L))
+        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL"))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("cupo");
 
@@ -194,7 +196,7 @@ class TorneoServiceImplTest {
         when(inscripcionRepository.equiposCapitaneadosPor(1L)).thenReturn(List.of(
                 Equipo.builder().id(20L).nombre("Nébula").juego(juego()).build()));
         when(inscripcionRepository.countMiembrosActivos(20L)).thenReturn(2L);
-        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L))
+        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL"))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("2 jugador");
     }

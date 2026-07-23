@@ -32,15 +32,23 @@ export class TorneoCardComponent {
 
   readonly badge = computed(() => {
     const t = this.torneo();
-    if (t.estado !== 'INSCRIPCION_ABIERTA') {
-      return { texto: t.estado.toLowerCase(), tono: 'neutro' };
+    switch (t.estado) {
+      case 'EN_CURSO':
+        return { texto: '● En curso', tono: 'verde' };
+      case 'FINALIZADO':
+        return { texto: 'Finalizado', tono: 'neutro' };
+      case 'CANCELADO':
+        return { texto: 'Cancelado', tono: 'neutro' };
+      case 'INSCRIPCION_ABIERTA':
+        if (this.comenzo()) {
+          return { texto: 'Comenzó', tono: 'neutro' };
+        }
+        if (this.cupoLleno()) {
+          return { texto: 'Cupo lleno', tono: 'ambar' };
+        }
+        return { texto: 'Abierta', tono: 'verde' };
+      default:
+        return { texto: t.estado.toLowerCase(), tono: 'neutro' };
     }
-    if (this.comenzo()) {
-      return { texto: 'Comenzó', tono: 'neutro' };
-    }
-    if (this.cupoLleno()) {
-      return { texto: 'Cupo lleno', tono: 'ambar' };
-    }
-    return { texto: 'Abierta', tono: 'verde' };
   });
 }

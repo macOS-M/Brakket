@@ -3,8 +3,11 @@ package com.coffeecommits.brakket.tournament.controller;
 import com.coffeecommits.brakket.tournament.dto.CrearTorneoRequest;
 import com.coffeecommits.brakket.tournament.dto.EquipoElegibleResponse;
 import com.coffeecommits.brakket.tournament.dto.InscribirEquipoRequest;
+import com.coffeecommits.brakket.tournament.dto.PartidaResponse;
+import com.coffeecommits.brakket.tournament.dto.ReportarResultadoRequest;
 import com.coffeecommits.brakket.tournament.dto.TorneoDetalleResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoResponse;
+import com.coffeecommits.brakket.tournament.service.PartidaService;
 import com.coffeecommits.brakket.tournament.service.TorneoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,9 +35,11 @@ import java.util.List;
 public class TorneoController {
 
     private final TorneoService torneoService;
+    private final PartidaService partidaService;
 
-    public TorneoController(TorneoService torneoService) {
+    public TorneoController(TorneoService torneoService, PartidaService partidaService) {
         this.torneoService = torneoService;
+        this.partidaService = partidaService;
     }
 
     @PostMapping
@@ -71,7 +76,56 @@ public class TorneoController {
     public TorneoDetalleResponse inscribir(@PathVariable Long id,
                                            @Valid @RequestBody InscribirEquipoRequest request,
                                            Authentication authentication) {
-        return torneoService.inscribirEquipo(id, authentication.getName(), request.equipoId());
+        return torneoService.inscribirEquipo(id, authentication.getName(), request.equipoId(),
+                request.usuarioEnJuego());
+    }
+
+    // ---------- torneo en vivo (RF-26/27/29 mínimos) ----------
+
+    /** Cierra inscripciones, genera el bracket y pone el torneo en curso. */
+    @PostMapping("/{id}/iniciar")
+    @PreAuthorize("isAuthenticated()")
+    public List<PartidaResponse> iniciar(@PathVariable Long id, Authentication authentication) {
+        return partidaService.iniciarTorneo(id, authentication.getName(), esAdmin(authentication));
+    }
+
+    /** El bracket completo; público si el torneo es público. */
+    @GetMapping("/{id}/bracket")
+    public List<PartidaResponse> bracket(@PathVariable Long id, Authentication authentication) {
+        return partidaService.obtenerBracket(id, correoDe(authentication), esAdmin(authentication));
+    }
+
+    /** Un capitán de la partida reporta el marcador. */
+    @PostMapping("/partidas/{partidaId}/reporte")
+    @PreAuthorize("isAuthenticated()")
+    public PartidaResponse reportar(@PathVariable Long partidaId,
+                                    @Valid @RequestBody ReportarResultadoRequest request,
+                                    Authentication authentication) {
+        return partidaService.reportar(partidaId, authentication.getName(), request);
+    }
+
+    /** El capitán rival confirma; el ganador avanza en la llave. */
+    @PostMapping("/partidas/{partidaId}/confirmacion")
+    @PreAuthorize("isAuthenticated()")
+    public PartidaResponse confirmar(@PathVariable Long partidaId, Authentication authentication) {
+        return partidaService.confirmar(partidaId, authentication.getName());
+    }
+
+    /** El capitán rival rechaza el reporte: queda en disputa. */
+    @PostMapping("/partidas/{partidaId}/rechazo")
+    @PreAuthorize("isAuthenticated()")
+    public PartidaResponse rechazar(@PathVariable Long partidaId, Authentication authentication) {
+        return partidaService.rechazar(partidaId, authentication.getName());
+    }
+
+    /** El organizador (o un ADMIN) fija el resultado final. */
+    @PostMapping("/partidas/{partidaId}/resolucion")
+    @PreAuthorize("isAuthenticated()")
+    public PartidaResponse resolver(@PathVariable Long partidaId,
+                                    @Valid @RequestBody ReportarResultadoRequest request,
+                                    Authentication authentication) {
+        return partidaService.resolver(partidaId, authentication.getName(),
+                esAdmin(authentication), request);
     }
 
     @DeleteMapping("/{id}")

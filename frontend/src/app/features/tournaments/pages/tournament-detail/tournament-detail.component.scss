@@ -388,3 +388,197 @@
   color: var(--text-muted, #94a3b8);
   font-size: 0.8125rem;
 }
+
+// ---------- torneo en vivo (RF-26/27/29) ----------
+
+.stat.en-curso { background: var(--success-bg); color: var(--success-text); }
+.stat.finalizado { background: var(--neutral-bg); color: var(--text-muted); }
+
+.campeon-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--accent-gold-text);
+  background: var(--accent-gold-bg);
+  margin-bottom: 24px;
+
+  .campeon-copa { font-size: 2rem; }
+  .campeon-titulo {
+    margin: 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent-gold-text);
+  }
+  .campeon-nombre { margin: 2px 0 0; font-size: 1.4rem; font-weight: 800; color: var(--text); }
+}
+
+.ajustes-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+
+  h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  .ajustes-nota { margin: 0 0 16px; font-size: 0.85rem; color: var(--text-muted); }
+}
+
+.ajustes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px 24px;
+  margin: 0;
+
+  dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+  dd { margin: 2px 0 0; font-weight: 600; color: var(--text); }
+}
+
+.iniciar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+
+  h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  p { margin: 0; color: var(--text-muted); font-size: 0.9rem; max-width: 52ch; }
+}
+
+.inscripcion-fila input[type='text'] {
+  flex: 1;
+  min-width: 180px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.pista-gamertag { display: block; margin-top: 8px; font-size: 0.8rem; color: var(--text-muted); }
+
+.gamertag {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  strong { color: var(--text); font-family: var(--font-data); }
+}
+
+// La llave: columnas por ronda con scroll horizontal propio.
+.bracket {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.ronda {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  // Centra verticalmente las rondas tardías respecto a las tempranas.
+  justify-content: space-around;
+}
+
+.ronda-titulo {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.partida {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 12px;
+
+  &.finalizada { opacity: 0.92; }
+  &.disputa { border-color: var(--warning-text); }
+}
+
+.partida-equipos { display: flex; flex-direction: column; gap: 6px; }
+
+.lado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+
+  .lado-nombre { font-size: 0.9rem; color: var(--text); }
+  .lado-marcador { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+
+  &.ganador {
+    background: var(--success-bg);
+    .lado-nombre { font-weight: 700; }
+    .lado-marcador { color: var(--success-text); font-weight: 700; }
+  }
+}
+
+.partida-estado {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  &.reportada { color: var(--info-text); }
+  &.en-disputa { color: var(--warning-text); }
+}
+
+.lobby {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+
+  .lobby-dato { font-family: var(--font-data); font-size: 0.82rem; color: var(--text); }
+  .lobby-etiqueta {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-right: 4px;
+  }
+}
+
+.partida-acciones, .marcador-acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.marcador-form { margin-top: 10px; }
+
+.marcador-campo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: var(--text);
+
+  input {
+    width: 72px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: var(--font-data);
+  }
+}

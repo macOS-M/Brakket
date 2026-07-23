@@ -27,15 +27,29 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     /**
      * RF-03: inscripciones que impiden disolver un equipo. Se consideran
-     * cerradas las RECHAZADA/CANCELADA/FINALIZADA (convención pendiente de
-     * formalizar cuando exista la gestión de inscripciones, RF-25).
+     * cerradas las RECHAZADA/CANCELADA/FINALIZADA y, con el ciclo de vida
+     * del torneo, también cualquier inscripción de un torneo ya cerrado
+     * (FINALIZADO/CANCELADO): un campeonato terminado no ancla al equipo.
      */
     @Query("""
             select count(i) > 0 from Inscripcion i
             where i.equipo.id = :equipoId
               and i.estado not in ('RECHAZADA', 'CANCELADA', 'FINALIZADA')
+              and i.torneo.estado not in (
+                  com.coffeecommits.brakket.tournament.model.EstadoTorneo.FINALIZADO,
+                  com.coffeecommits.brakket.tournament.model.EstadoTorneo.CANCELADO)
             """)
     boolean existsInscripcionActivaPorEquipo(@Param("equipoId") Long equipoId);
+
+    /** Inscripciones vigentes en orden de llegada: la siembra del bracket. */
+    @Query("""
+            select i from Inscripcion i
+            join fetch i.equipo
+            where i.torneo.id = :torneoId
+              and i.estado not in ('RECHAZADA', 'CANCELADA')
+            order by i.id
+            """)
+    List<Inscripcion> vigentesPorTorneo(@Param("torneoId") Long torneoId);
 
     /**
      * Equipos activos donde el usuario es capitán activo (RF-25: solo el

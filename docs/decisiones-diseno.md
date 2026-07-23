@@ -46,23 +46,64 @@ Sin perfil valen los defaults (1v1…5v5, todos los formatos del
 catálogo); con perfil, el wizard y el backend acotan el tamaño de
 equipo a la plantilla mínima/máxima definida.
 
+## DD-04 · Login local además de Google (2026-07-22)
+
+Registro e inicio de sesión con correo y contraseña (BCrypt, V24) que
+emite el mismo JWT que el flujo de Google. Motivo: la app de OAuth está
+en modo testing y solo admite usuarios allowlisted; el login local
+desbloquea demos y usuarios reales. El bootstrap de ADMIN por correo del
+equipo aplica **solo** vía Google (correo verificado); registrarse
+localmente con un correo del equipo no otorga ningún rol especial. Si el
+correo ya existía como cuenta local, "Continuar con Google" le vincula el
+`googleId` en vez de duplicarla.
+
+## DD-05 · Torneo en vivo sin API del juego (2026-07-23)
+
+**Contexto.** Los juegos (Rocket League incluido) no exponen API pública
+para inyectar torneos ni leer resultados. Como las plataformas reales,
+Brakket es la **capa organizativa por fuera del juego** y el puente son
+las personas:
+
+- **Iniciar torneo** (organizador o ADMIN, ≥2 inscritos): cierra la
+  inscripción, genera el **bracket de eliminación directa** (RF-26/27)
+  redondeando a la potencia de 2 siguiente — los primeros inscritos
+  reciben los byes — y pone el torneo `EN_CURSO`.
+- **Lobby por partida**: cada cruce recibe nombre y clave autogenerados
+  (`BRAKKET-T7-R1M2` + clave dictable). Los capitanes crean esa partida
+  privada dentro del juego; Brakket no la crea ni la verifica.
+- **Gamertag en la inscripción** (`usuario_en_juego`, V26): identidad
+  declarada dentro del juego, para saber a quién invitar a la lobby y
+  quién jugó. Sin API no hay verificación técnica: es dato declarado.
+- **Ajustes de partida** (pares clave/valor, V26): el organizador define
+  el "Game settings" del torneo (modo, arena, duración…). Brakket lo
+  publica como contrato; ante una disputa, esa configuración manda.
+- **Resultados (RF-29 mínimo)**: un capitán reporta, el rival confirma o
+  rechaza; en disputa (o con un rival ausente) resuelve el organizador o
+  un ADMIN. El resultado confirmado avanza la llave; la final corona al
+  campeón y el torneo queda `FINALIZADO` (los equipos vuelven a poder
+  disolverse).
+
 ## Deuda técnica registrada
 
 - Invitaciones a torneos privados (hoy: privado = oculto, sin flujo de
   invitación).
 - Aprobación de inscripciones por el organizador (hoy: inscripción
   directa hasta llenar cupo).
-- Brackets y fixtures (RF-26/RF-27) y reporte de resultados (RF-29+).
+- Formatos de bracket más allá de eliminación directa (doble
+  eliminación, round robin, suizo): el wizard los ofrece como metadato
+  pero el motor genera eliminación simple (DD-05).
+- La lobby (nombre y clave) es visible para cualquiera que vea el
+  torneo; restringirla a los capitanes participantes queda pendiente.
+- Disputas formales con evidencia adjunta (RF-30+): hoy el rechazo deja
+  la partida EN_DISPUTA y el organizador la resuelve sin evidencias.
 - Formatos por puntaje/leaderboard para juegos que no son "A contra B"
   (el catálogo de formatos lo admite como fila futura).
 - Flag "modo curado" para restringir la creación a roles habilitados
   (vuelta al modelo estricto de la ERS si el curso lo exige).
 - Editar liga con override de ADMIN (hoy el PUT es solo del dueño; el
   ADMIN modera vía eliminación).
-- Ciclo de vida del torneo: no hay endpoint que transicione `EstadoTorneo`
-  (queda `INSCRIPCION_ABIERTA`; las fechas frenan inscripciones pero el
-  estado no avanza). Colateral conocido: un equipo con inscripción
-  `CONFIRMADA` no puede disolverse hasta que exista esa gestión.
+- Cancelar torneo (transición a `CANCELADO` liberando inscripciones y
+  partidas); iniciar/finalizar ya existen (DD-05).
 - Hospedar torneo no valida que `fechaInicio` caiga dentro del rango de
   la temporada elegida.
 - Carrera en el cupo de inscripción (count-then-insert sin bloqueo): dos

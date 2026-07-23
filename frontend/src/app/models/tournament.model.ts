@@ -1,3 +1,9 @@
+/** Regla de partida definida por el organizador (tipo "Game settings" de CM). */
+export interface AjustePartida {
+  clave: string;
+  valor: string;
+}
+
 /** Torneo con modelo abierto de organizadores (RF-24/RF-25). */
 export interface Torneo {
   id: number;
@@ -20,6 +26,9 @@ export interface Torneo {
   estado: string;
   publico: boolean;
   premio: string | null;
+  ajustesPartida: AjustePartida[];
+  campeonEquipoId: number | null;
+  campeonNombre: string | null;
 }
 
 export interface JugadorInscrito {
@@ -32,6 +41,8 @@ export interface EquipoInscrito {
   equipoId: number;
   nombre: string;
   logo: string | null;
+  /** Gamertag del capitán dentro del juego (null en datos previos). */
+  usuarioEnJuego: string | null;
   jugadores: JugadorInscrito[];
 }
 
@@ -57,4 +68,31 @@ export interface CrearTorneoRequest {
   publico: boolean;
   descripcion: string | null;
   premio: string | null;
+  ajustesPartida: AjustePartida[];
+}
+
+/**
+ * Enfrentamiento del bracket (RF-26/27). La lobby (nombre + clave) es el
+ * puente con el juego: Brakket genera las credenciales de la partida
+ * privada que ambos capitanes usan dentro del juego.
+ */
+export interface Partida {
+  id: number;
+  ronda: number;
+  orden: number;
+  equipoAId: number | null;
+  equipoANombre: string | null;
+  equipoALogo: string | null;
+  equipoBId: number | null;
+  equipoBNombre: string | null;
+  equipoBLogo: string | null;
+  marcadorA: number | null;
+  marcadorB: number | null;
+  ganadorEquipoId: number | null;
+  reportadoPorEquipoId: number | null;
+  estado: 'PENDIENTE' | 'REPORTADA' | 'EN_DISPUTA' | 'FINALIZADA' | 'CANCELADA';
+  bye: boolean;
+  lobbyNombre: string | null;
+  lobbyClave: string | null;
+  siguientePartidaId: number | null;
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, effect, inject, input, output, signal } from '@angular/core';
 
-import { CrearTorneoRequest, Torneo } from '../../../../models/tournament.model';
+import { AjustePartida, CrearTorneoRequest, Torneo } from '../../../../models/tournament.model';
 import { League, Season } from '../../../../models/league.model';
 import { TournamentsService } from '../../services/tournaments.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
@@ -54,6 +54,31 @@ export class TournamentWizardComponent implements OnInit {
   // Paso 3 — Fecha y configuración avanzada
   readonly fechaInicio = signal('');
   readonly premio = signal('');
+
+  /**
+   * Ajustes de partida (referencia "Game settings" de CM): el contrato que
+   * ambos capitanes deben aplicar al crear la lobby privada en el juego.
+   */
+  readonly ajustes = signal<AjustePartida[]>([]);
+  readonly ajustesSugeridos = [
+    'Modo de juego', 'Arena / Mapa', 'Duración', 'Puntaje máximo', 'Región', 'Overtime'
+  ];
+
+  agregarAjuste(clave = ''): void {
+    if (clave && this.ajustes().some((a) => a.clave === clave)) {
+      return;
+    }
+    this.ajustes.update((lista) => [...lista, { clave, valor: '' }]);
+  }
+
+  quitarAjuste(indice: number): void {
+    this.ajustes.update((lista) => lista.filter((_, i) => i !== indice));
+  }
+
+  editarAjuste(indice: number, campo: 'clave' | 'valor', valor: string): void {
+    this.ajustes.update((lista) =>
+      lista.map((a, i) => (i === indice ? { ...a, [campo]: valor } : a)));
+  }
 
   private readonly ligasDisponibles = signal<League[]>([]);
 
@@ -211,7 +236,10 @@ export class TournamentWizardComponent implements OnInit {
       fechaInicio: this.fechaInicio(),
       publico: this.publico(),
       descripcion: this.descripcion().trim() || null,
-      premio: this.premio().trim() || null
+      premio: this.premio().trim() || null,
+      ajustesPartida: this.ajustes()
+        .map((a) => ({ clave: a.clave.trim(), valor: a.valor.trim() }))
+        .filter((a) => a.clave && a.valor)
     };
 
     this.tournamentsService.crear(request).subscribe({

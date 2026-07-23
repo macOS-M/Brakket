@@ -16,6 +16,7 @@ import com.coffeecommits.brakket.tournament.dto.EquipoElegibleResponse;
 import com.coffeecommits.brakket.tournament.dto.EquipoInscritoResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoDetalleResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoResponse;
+import com.coffeecommits.brakket.tournament.model.AjustePartida;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
@@ -118,6 +119,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .estado(EstadoTorneo.INSCRIPCION_ABIERTA)
                 .publico(request.publico() == null || request.publico())
                 .premio(normalizar(request.premio()))
+                .ajustesPartida(normalizarAjustes(request.ajustesPartida()))
                 .build());
         return TorneoResponse.from(torneo, 0);
     }
@@ -154,7 +156,8 @@ public class TorneoServiceImpl implements TorneoService {
 
     @Override
     @Transactional
-    public TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId) {
+    public TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId,
+                                                 String usuarioEnJuego) {
         Usuario usuario = buscarUsuario(correo);
         Torneo torneo = buscarVisible(torneoId, correo, false);
 
@@ -199,6 +202,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .equipo(equipo)
                 .estado("CONFIRMADA")
                 .fechaSolicitud(LocalDate.now())
+                .usuarioEnJuego(usuarioEnJuego.trim())
                 .build());
         return detalleDe(torneo);
     }
@@ -260,6 +264,7 @@ public class TorneoServiceImpl implements TorneoService {
                         i.getEquipo().getId(),
                         i.getEquipo().getNombre(),
                         i.getEquipo().getLogo(),
+                        i.getUsuarioEnJuego(),
                         inscripcionRepository.miembrosActivosDeEquipo(i.getEquipo().getId()).stream()
                                 .map(m -> new EquipoInscritoResponse.JugadorInscritoResponse(
                                         m.getUsuario().getId(),
@@ -277,5 +282,17 @@ public class TorneoServiceImpl implements TorneoService {
 
     private static String normalizar(String valor) {
         return valor == null || valor.trim().isEmpty() ? null : valor.trim();
+    }
+
+    /** Descarta pares vacíos y recorta espacios de los ajustes de partida. */
+    private static List<AjustePartida> normalizarAjustes(List<AjustePartida> ajustes) {
+        if (ajustes == null) {
+            return List.of();
+        }
+        return ajustes.stream()
+                .filter(a -> a != null && a.clave() != null && !a.clave().isBlank()
+                        && a.valor() != null && !a.valor().isBlank())
+                .map(a -> new AjustePartida(a.clave().trim(), a.valor().trim()))
+                .toList();
     }
 }

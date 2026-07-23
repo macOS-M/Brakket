@@ -382,3 +382,53 @@
     background: var(--surface-2, #1f2937);
   }
 }
+
+// ---------- ajustes de partida (Game settings) ----------
+
+.ajustes-sugeridos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.chip-ajuste {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover { border-color: var(--accent); color: var(--accent-text); }
+}
+
+.ajuste-fila {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  .ajuste-clave { flex: 0 0 34%; }
+  .ajuste-valor { flex: 1; }
+
+  input {
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    min-width: 0;
+  }
+
+  .ajuste-quitar {
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 6px;
+    border-radius: var(--radius-sm);
+
+    &:hover { color: var(--danger-text); background: var(--danger-bg); }
+  }
+}

@@ -11,15 +11,21 @@ public interface PartidaRepository extends JpaRepository<Partida, Long> {
 
     List<Partida> findByTorneoId(Long torneoId);
 
+    /** El bracket completo en orden de dibujo: ronda a ronda, slot a slot. */
+    List<Partida> findByTorneoIdOrderByRondaAscOrdenAsc(Long torneoId);
+
+    boolean existsByTorneoId(Long torneoId);
+
     /**
-     * RF-03: partidas pendientes que impiden disolver un equipo. Se considera
-     * resuelta una partida FINALIZADA o CANCELADA (convención pendiente de
-     * formalizar cuando exista el motor de competencias, RF-26+).
+     * RF-03: partidas pendientes que impiden disolver un equipo. Una
+     * partida FINALIZADA o CANCELADA ya no ancla al equipo.
      */
     @Query("""
             select count(p) > 0 from Partida p
             where (p.equipoA.id = :equipoId or p.equipoB.id = :equipoId)
-              and p.estado not in ('FINALIZADA', 'CANCELADA')
+              and p.estado not in (
+                  com.coffeecommits.brakket.tournament.model.EstadoPartida.FINALIZADA,
+                  com.coffeecommits.brakket.tournament.model.EstadoPartida.CANCELADA)
             """)
     boolean existsPartidaPendientePorEquipo(@Param("equipoId") Long equipoId);
 }

@@ -33,6 +33,11 @@
         <span class="stat">{{ torneo.formato }}</span>
         <span class="stat">{{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
         <span class="stat resaltado">{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos</span>
+        @if (enCurso()) {
+        <span class="stat en-curso">● En curso</span>
+        } @else if (finalizado()) {
+        <span class="stat finalizado">Finalizado</span>
+        }
         @if (torneo.premio) {
         <span class="stat premio">🏆 {{ torneo.premio }}</span>
         }
@@ -64,21 +69,83 @@
     >
       Equipos ({{ torneo.inscritos }})
     </button>
+    @if (enCurso() || finalizado()) {
+    <button
+      type="button"
+      class="tab"
+      [class.activo]="tab() === 'llaves'"
+      (click)="tab.set('llaves')"
+    >
+      Llaves
+    </button>
+    }
   </nav>
 
   @if (tab() === 'resumen') {
   <div class="contenido">
+    @if (finalizado() && torneo.campeonNombre) {
+    <!-- El cierre de la historia: la final confirmada corona al campeón. -->
+    <div class="campeon-banner" role="status">
+      <span class="campeon-copa" aria-hidden="true">🏆</span>
+      <div>
+        <p class="campeon-titulo">Campeón del torneo</p>
+        <p class="campeon-nombre">{{ torneo.campeonNombre }}</p>
+      </div>
+    </div>
+    }
+
     @if (torneo.descripcion) {
     <p class="descripcion">{{ torneo.descripcion }}</p>
+    }
+
+    @if (torneo.ajustesPartida.length > 0) {
+    <!-- El contrato de la lobby (referencia "Ajustes de partida" de CM). -->
+    <section class="ajustes-card" aria-label="Ajustes de partida">
+      <h2>Ajustes de partida</h2>
+      <p class="ajustes-nota">
+        Ambos capitanes deben configurar así la partida privada dentro de
+        {{ torneo.juegoNombre }}. Ante una disputa, esta configuración manda.
+      </p>
+      <dl class="ajustes-grid">
+        @for (a of torneo.ajustesPartida; track a.clave) {
+        <div class="ajuste">
+          <dt>{{ a.clave }}</dt>
+          <dd>{{ a.valor }}</dd>
+        </div>
+        }
+      </dl>
+    </section>
+    }
+
+    @if (puedeIniciar()) {
+    <!-- El organizador arranca la competencia: se cierra la inscripción y
+         se genera la llave de eliminación directa. -->
+    <div class="iniciar-card">
+      <div>
+        <h2>¿Listos para competir?</h2>
+        <p>
+          Hay {{ torneo.inscritos }} equipos inscritos. Al iniciar se cierran las
+          inscripciones, se genera la llave y cada partida recibe su lobby.
+        </p>
+      </div>
+      <button type="button" class="btn-primary" [disabled]="iniciando()" (click)="iniciarTorneo()">
+        {{ iniciando() ? 'Generando llave…' : 'Iniciar torneo' }}
+      </button>
+    </div>
+    @if (errorLlaves() && !enCurso()) {
+    <p class="mensaje-error" role="alert">{{ errorLlaves() }}</p>
+    }
     }
 
     <!-- Inscripción (RF-25): la ve cualquier usuario; actúa el capitán. -->
     @if (inscripcionExitosa()) {
     <p class="mensaje-ok" role="status">¡Equipo inscrito! Ya aparece en la pestaña Equipos.</p>
     } @else if (!abierto()) {
+    @if (!enCurso() && !finalizado()) {
     <p class="aviso-cerrado">
       {{ cupoLleno() ? 'El torneo alcanzó su cupo de equipos.' : comenzo() ? 'El torneo ya comenzó.' : 'El torneo no acepta inscripciones.' }}
     </p>
+    }
     } @else if (!auth.isAuthenticated()) {
     <div class="inscripcion">
       <p>¿Querés competir? Iniciá sesión e inscribí a tu equipo.</p>
@@ -98,15 +165,27 @@
           <option [value]="equipo.id">{{ equipo.nombre }}</option>
           }
         </select>
+        <input
+          id="gamertag"
+          type="text"
+          maxlength="100"
+          placeholder="Tu usuario dentro del juego"
+          [value]="usuarioEnJuego()"
+          (input)="usuarioEnJuego.set($any($event.target).value)"
+        />
         <button
           type="button"
           class="btn-primary"
-          [disabled]="!equipoElegido() || inscribiendo()"
+          [disabled]="!equipoElegido() || !usuarioEnJuego().trim() || inscribiendo()"
           (click)="inscribir()"
         >
           {{ inscribiendo() ? 'Inscribiendo…' : 'Inscribir equipo' }}
         </button>
       </div>
+      <span class="pista-gamertag">
+        Tu usuario en {{ torneo.juegoNombre }} le dice al rival a quién invitar
+        a la lobby y permite verificar quién jugó.
+      </span>
       @if (errorInscripcion()) {
       <p class="mensaje-error" role="alert">{{ errorInscripcion() }}</p>
       }
@@ -155,7 +234,7 @@
     </div>
     }
   </div>
-  } @else {
+  } @else if (tab() === 'equipos') {
   <div class="contenido">
     @if (detalle()!.equipos.length === 0) {
     <app-empty-state
@@ -172,6 +251,9 @@
           </a>
           <span class="conteo">{{ equipo.jugadores.length }} jugador(es)</span>
         </div>
+        @if (equipo.usuarioEnJuego) {
+        <p class="gamertag">En el juego: <strong>{{ equipo.usuarioEnJuego }}</strong></p>
+        }
         <ul class="jugadores">
           @for (jugador of equipo.jugadores; track jugador.usuarioId) {
           <li>
@@ -182,6 +264,126 @@
           </li>
           }
         </ul>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  } @else {
+  <!-- Llaves (RF-26/27): el bracket ronda a ronda, con lobby y resultados. -->
+  <div class="contenido">
+    @if (errorLlaves()) {
+    <p class="mensaje-error" role="alert">{{ errorLlaves() }}</p>
+    }
+    @if (partidas().length === 0) {
+    <app-empty-state mensaje="La llave todavía no está disponible." />
+    } @else {
+    <div class="bracket" role="list" aria-label="Llave del torneo">
+      @for (ronda of rondas(); track ronda.numero) {
+      <div class="ronda" role="listitem">
+        <h2 class="ronda-titulo">{{ ronda.etiqueta }}</h2>
+        @for (p of ronda.partidas; track p.id) {
+        <article
+          class="partida"
+          [class.finalizada]="p.estado === 'FINALIZADA'"
+          [class.disputa]="p.estado === 'EN_DISPUTA'"
+        >
+          <div class="partida-equipos">
+            <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoAId">
+              <span class="lado-nombre">{{ p.equipoANombre ?? 'Por definir' }}</span>
+              <span class="lado-marcador">{{ p.estado === 'FINALIZADA' || p.estado === 'REPORTADA' ? (p.marcadorA ?? '—') : '—' }}</span>
+            </div>
+            <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoBId">
+              <span class="lado-nombre">{{ p.bye ? 'Bye' : (p.equipoBNombre ?? 'Por definir') }}</span>
+              <span class="lado-marcador">{{ p.estado === 'FINALIZADA' || p.estado === 'REPORTADA' ? (p.marcadorB ?? '—') : '—' }}</span>
+            </div>
+          </div>
+
+          @if (p.estado === 'REPORTADA') {
+          <p class="partida-estado reportada">Reporte enviado: falta la confirmación del rival</p>
+          } @else if (p.estado === 'EN_DISPUTA') {
+          <p class="partida-estado en-disputa">En disputa: resuelve el organizador</p>
+          }
+
+          @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
+          <!-- El puente con el juego: la partida privada que ambos capitanes
+               deben crear/buscar dentro del juego, con estas credenciales. -->
+          <div class="lobby">
+            <span class="lobby-dato"><span class="lobby-etiqueta">Lobby</span> {{ p.lobbyNombre }}</span>
+            <span class="lobby-dato"><span class="lobby-etiqueta">Clave</span> {{ p.lobbyClave }}</span>
+          </div>
+          }
+
+          @if (reportando() === p.id) {
+          <div class="marcador-form">
+            <label class="marcador-campo">
+              <span>{{ p.equipoANombre }}</span>
+              <input
+                type="number"
+                min="0"
+                max="999"
+                [value]="marcadorA()"
+                (input)="marcadorA.set(+$any($event.target).value)"
+              />
+            </label>
+            <label class="marcador-campo">
+              <span>{{ p.equipoBNombre }}</span>
+              <input
+                type="number"
+                min="0"
+                max="999"
+                [value]="marcadorB()"
+                (input)="marcadorB.set(+$any($event.target).value)"
+              />
+            </label>
+            <div class="marcador-acciones">
+              <button
+                type="button"
+                class="btn-primary"
+                [disabled]="enviandoResultado()"
+                (click)="enviarReporte(p, !puedeReportar(p))"
+              >
+                {{ enviandoResultado() ? 'Enviando…' : puedeReportar(p) ? 'Reportar' : 'Resolver' }}
+              </button>
+              <button type="button" class="btn-secondary" (click)="reportando.set(null)">
+                Cancelar
+              </button>
+            </div>
+          </div>
+          } @else {
+          <div class="partida-acciones">
+            @if (puedeReportar(p)) {
+            <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
+              Reportar resultado
+            </button>
+            }
+            @if (puedeConfirmar(p)) {
+            <button
+              type="button"
+              class="btn-primary"
+              [disabled]="enviandoResultado()"
+              (click)="confirmarResultado(p)"
+            >
+              Confirmar
+            </button>
+            <button
+              type="button"
+              class="btn-secondary"
+              [disabled]="enviandoResultado()"
+              (click)="rechazarResultado(p)"
+            >
+              Rechazar
+            </button>
+            }
+            @if (puedeResolver(p) && !puedeReportar(p) && !puedeConfirmar(p)) {
+            <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
+              Resolver (organizador)
+            </button>
+            }
+          </div>
+          }
+        </article>
+        }
       </div>
       }
     </div>

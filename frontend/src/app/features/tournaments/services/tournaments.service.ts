@@ -5,6 +5,7 @@ import { ApiService } from '../../../core/services/api.service';
 import {
   CrearTorneoRequest,
   EquipoElegible,
+  Partida,
   Torneo,
   TorneoDetalle
 } from '../../../models/tournament.model';
@@ -12,6 +13,7 @@ import {
 /**
  * Servicio de datos de torneos (RF-24/RF-25, modelo abierto): torneos
  * públicos visibles para todos; el organizador ve además los suyos.
+ * Incluye el torneo en vivo (RF-26/27/29): bracket y resultados.
  */
 @Injectable({ providedIn: 'root' })
 export class TournamentsService {
@@ -36,11 +38,45 @@ export class TournamentsService {
     return this.api.get<EquipoElegible[]>(`/tournaments/${id}/equipos-elegibles`);
   }
 
-  inscribir(id: number, equipoId: number): Observable<TorneoDetalle> {
-    return this.api.post<TorneoDetalle>(`/tournaments/${id}/inscripciones`, { equipoId });
+  inscribir(id: number, equipoId: number, usuarioEnJuego: string): Observable<TorneoDetalle> {
+    return this.api.post<TorneoDetalle>(
+      `/tournaments/${id}/inscripciones`, { equipoId, usuarioEnJuego });
   }
 
   eliminar(id: number): Observable<void> {
     return this.api.delete<void>(`/tournaments/${id}`);
+  }
+
+  // ---------- torneo en vivo ----------
+
+  /** Cierra inscripciones, genera el bracket y pone el torneo en curso. */
+  iniciar(id: number): Observable<Partida[]> {
+    return this.api.post<Partida[]>(`/tournaments/${id}/iniciar`, {});
+  }
+
+  bracket(id: number): Observable<Partida[]> {
+    return this.api.get<Partida[]>(`/tournaments/${id}/bracket`);
+  }
+
+  /** Un capitán de la partida reporta el marcador. */
+  reportar(partidaId: number, marcadorA: number, marcadorB: number): Observable<Partida> {
+    return this.api.post<Partida>(
+      `/tournaments/partidas/${partidaId}/reporte`, { marcadorA, marcadorB });
+  }
+
+  /** El capitán rival confirma; el ganador avanza en la llave. */
+  confirmar(partidaId: number): Observable<Partida> {
+    return this.api.post<Partida>(`/tournaments/partidas/${partidaId}/confirmacion`, {});
+  }
+
+  /** El capitán rival rechaza el reporte: queda en disputa. */
+  rechazar(partidaId: number): Observable<Partida> {
+    return this.api.post<Partida>(`/tournaments/partidas/${partidaId}/rechazo`, {});
+  }
+
+  /** El organizador (o un ADMIN) fija el resultado final. */
+  resolver(partidaId: number, marcadorA: number, marcadorB: number): Observable<Partida> {
+    return this.api.post<Partida>(
+      `/tournaments/partidas/${partidaId}/resolucion`, { marcadorA, marcadorB });
   }
 }

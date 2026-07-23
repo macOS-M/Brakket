@@ -27,7 +27,8 @@ public interface TorneoService {
     TorneoDetalleResponse obtenerDetalle(Long torneoId, String correoOpcional, boolean esAdmin);
 
     /** Inscribe un equipo del capitán autenticado (RF-25). */
-    TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId);
+    TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId,
+                                          String usuarioEnJuego);
 
     /** Equipos del capitán autenticado que pueden inscribirse en este torneo. */
     List<EquipoElegibleResponse> equiposElegibles(Long torneoId, String correo);

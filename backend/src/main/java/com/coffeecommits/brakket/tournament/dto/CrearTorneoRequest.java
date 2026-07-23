@@ -1,5 +1,6 @@
 package com.coffeecommits.brakket.tournament.dto;
 
+import com.coffeecommits.brakket.tournament.model.AjustePartida;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Datos para crear un torneo (RF-24, modelo abierto). El organizador no
@@ -46,6 +48,10 @@ public record CrearTorneoRequest(
         String descripcion,
 
         @Size(max = 200, message = "El premio no puede superar los 200 caracteres")
-        String premio
+        String premio,
+
+        /** Reglas de partida (opcional): pares clave/valor tipo "Game settings". */
+        @Size(max = 15, message = "Máximo 15 ajustes de partida")
+        List<AjustePartida> ajustesPartida
 ) {
 }
