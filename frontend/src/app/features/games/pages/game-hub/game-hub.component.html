@@ -34,17 +34,20 @@
       <div class="acciones-banner">
         <!-- Modelo abierto: cualquier usuario con sesión crea liga o torneo. -->
         @if (auth.isAuthenticated()) {
-        <div class="crear">
+        <div class="crear" #zonaCrear>
           <button
+            #btnCrear
             type="button"
             class="btn-crear"
+            aria-haspopup="menu"
             [attr.aria-expanded]="menuCrearAbierto()"
-            (click)="menuCrearAbierto.set(!menuCrearAbierto())"
+            (click)="alternarMenuCrear()"
+            (keydown.arrowdown)="!menuCrearAbierto() && alternarMenuCrear()"
           >
             Crear
           </button>
           @if (menuCrearAbierto()) {
-          <div class="menu-crear" role="menu" (keydown.escape)="menuCrearAbierto.set(false)">
+          <div class="menu-crear" #menuCrear role="menu" aria-label="Crear competencia" (keydown)="tecladoMenuCrear($event)">
             <button type="button" role="menuitem" (click)="abrirWizard()">
               <span class="titulo-opcion">Torneo</span>
               <span class="detalle-opcion">Creá un torneo para tus amigos o tu comunidad.</span>
