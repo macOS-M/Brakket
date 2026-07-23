@@ -16,35 +16,43 @@
   <div class="tablero">
     <div class="columna-principal">
       <!-- Héroe: el juego destacado del catálogo (referencia dashboard). -->
-      @if (heroJuego(); as hero) {
-      <a
-        class="hero"
-        [routerLink]="['/games', hero.id]"
-        [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+      @if (heroJuegos().length > 0) {
+      <!-- Carousel de contenedor fijo: la imagen se adapta al marco y el
+           cambio es un slide suave hacia la izquierda, no un corte. -->
+      <div
+        class="hero-carrusel"
         (mouseenter)="heroPausado.set(true)"
         (mouseleave)="heroPausado.set(false)"
       >
-        @if (foto(hero)) {
-        <img [src]="foto(hero)" alt="" />
-        }
-        <div class="hero-velo" aria-hidden="true"></div>
-        <div class="hero-texto">
-          <h2>{{ hero.nombre }}</h2>
-          @if (hero.descripcion) {
-          <p>{{ hero.descripcion }}</p>
-          } @else {
-          <p>Mirá los torneos y ligas de este título, o creá el tuyo.</p>
+        <div
+          class="hero-pista"
+          [style.transform]="'translateX(-' + heroVisible() * 100 + '%)'"
+        >
+          @for (hero of heroJuegos(); track hero.id) {
+          <a
+            class="hero-slide"
+            [routerLink]="['/games', hero.id]"
+            [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+          >
+            @if (foto(hero)) {
+            <img [src]="foto(hero)" alt="" />
+            }
+            <div class="hero-velo" aria-hidden="true"></div>
+            <div class="hero-texto">
+              <h2>{{ hero.nombre }}</h2>
+              <span class="hero-cta">Ver juego →</span>
+            </div>
+          </a>
           }
-          <span class="hero-cta">Ver juego →</span>
         </div>
         @if (heroJuegos().length > 1) {
         <span class="hero-puntos" aria-hidden="true">
           @for (j of heroJuegos(); track j.id; let i = $index) {
-          <span class="hero-punto" [class.activo]="heroJuego()?.id === j.id"></span>
+          <span class="hero-punto" [class.activo]="heroVisible() === i"></span>
           }
         </span>
         }
-      </a>
+      </div>
       }
 
       <!-- Tus competencias: lo accionable primero (referencia CM). -->

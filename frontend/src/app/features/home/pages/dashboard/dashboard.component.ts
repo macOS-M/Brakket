@@ -78,21 +78,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
       .slice(0, 5));
 
-  readonly heroJuego = computed(() => {
-    const lista = this.heroJuegos();
-    return lista.length > 0 ? lista[this.heroIndex() % lista.length] : this.juegos()[0] ?? null;
+  /** Índice acotado al largo real de la lista (para transform y puntos). */
+  readonly heroVisible = computed(() => {
+    const total = this.heroJuegos().length;
+    return total > 0 ? this.heroIndex() % total : 0;
   });
 
   /** Fila de juegos top por popularidad real de RAWG (rating desc). */
   readonly mostrandoMas = signal(false);
 
-  readonly topJuegos = computed(() => {
-    const hero = this.heroJuego();
-    return [...this.juegos()]
-      .filter((j) => j.id !== hero?.id)
+  // Estable a propósito: no depende del héroe rotativo (antes la fila
+  // "bailaba" cada 3 s porque excluía al slide visible).
+  readonly topJuegos = computed(() =>
+    [...this.juegos()]
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-      .slice(0, this.mostrandoMas() ? 18 : 6);
-  });
+      .slice(0, this.mostrandoMas() ? 18 : 6));
 
   ngOnDestroy(): void {
     if (this.heroTimer) {

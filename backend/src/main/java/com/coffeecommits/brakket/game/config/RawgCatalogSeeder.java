@@ -26,6 +26,20 @@ public class RawgCatalogSeeder implements ApplicationRunner {
     /** Por debajo de este número de juegos activos se completa el catálogo. */
     private static final int MINIMO_CATALOGO = 8;
 
+    /**
+     * Catálogo curado: los títulos competitivos reales (guía: el catálogo
+     * de Challenger Mode). El "-added" de RAWG traía juegos populares pero
+     * no competitivos (Skyrim, Portal, The Witcher…).
+     */
+    private static final java.util.List<String> CURADOS = java.util.List.of(
+            "League of Legends", "Valorant", "Counter-Strike 2", "Dota 2",
+            "Fortnite", "Rocket League", "Overwatch 2", "Apex Legends",
+            "Tom Clancy's Rainbow Six Siege", "PUBG: Battlegrounds",
+            "Call of Duty: Warzone", "Street Fighter 6", "Tekken 8",
+            "Mortal Kombat 1", "EA Sports FC 25", "Brawlhalla",
+            "Hearthstone", "Halo Infinite", "Fall Guys: Ultimate Knockout",
+            "Clash Royale");
+
     private final JuegoRepository juegoRepository;
     private final ExternalGameSearchService externalGameSearchService;
 
@@ -47,8 +61,19 @@ public class RawgCatalogSeeder implements ApplicationRunner {
 
         try {
             int importados = 0;
-            for (var externo : externalGameSearchService.populares()) {
-                if (juegoRepository.findByNombreIgnoreCase(externo.nombre()).isPresent()) {
+            for (String nombre : CURADOS) {
+                var existente = juegoRepository.findByNombreIgnoreCase(nombre).orElse(null);
+                if (existente != null) {
+                    // Un curado desactivado se reactiva: es catálogo oficial.
+                    if (!Boolean.TRUE.equals(existente.getActivo())) {
+                        existente.setActivo(true);
+                        juegoRepository.save(existente);
+                    }
+                    continue;
+                }
+                var externo = externalGameSearchService.buscar(nombre).stream()
+                        .findFirst().orElse(null);
+                if (externo == null) {
                     continue;
                 }
                 Juego juego = Juego.builder()

@@ -488,3 +488,66 @@
 .hero-punto.activo { background: var(--accent); }
 .ver-mas { display: block; width: 100%; margin-top: 10px; padding: 9px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; }
 .ver-mas:hover { color: var(--accent-text); border-color: var(--accent); }
+
+// ---------- hero carousel de marco fijo con slide suave ----------
+
+.hero-carrusel {
+  position: relative;
+  height: 280px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  margin-bottom: 20px;
+
+  @media (max-width: 700px) { height: 200px; }
+}
+
+.hero-pista {
+  display: flex;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+.hero-slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  text-decoration: none;
+
+  // La imagen se adapta al marco (nunca al revés).
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-velo {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(4, 8, 18, 0.85) 0%, rgba(4, 8, 18, 0.25) 55%, transparent 100%);
+  }
+
+  .hero-texto {
+    position: relative;
+    z-index: 1;
+    padding: 20px 24px;
+
+    h2 { margin: 0 0 8px; color: #fff; font-size: 1.6rem; font-weight: 800; }
+  }
+
+  .hero-cta {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+}
