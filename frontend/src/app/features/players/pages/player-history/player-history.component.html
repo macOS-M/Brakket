@@ -1,0 +1,29 @@
+<section class="page">
+  <h1>Historial del jugador</h1>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando historial...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (historial().length === 0) {
+  <p class="placeholder">Este jugador no tiene historial de equipos todavía.</p>
+  } @else {
+  <div class="timeline">
+    @for (item of historial(); track item.equipoId) {
+    <div class="timeline-item">
+      <div class="punto" [class.activo]="!item.fechaSalida"></div>
+      <div class="contenido">
+        <p class="equipo">{{ item.equipoNombre }}</p>
+        @if (item.juegoNombre) {
+        <p class="juego">{{ item.juegoNombre }}</p>
+        }
+        <p class="rol">Rol: {{ item.rol }}</p>
+        <p class="fechas">
+          {{ item.fechaIngreso }} — {{ item.fechaSalida ? item.fechaSalida.substring(0, 10) : 'presente' }}
+        </p>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</section>
