@@ -20,6 +20,11 @@ export const routes: Routes = [
       .then((m) => m.TeamPublicProfileComponent)
   },
   {
+    path: 'team-profile/:equipoId/historial',
+    loadComponent: () => import('./features/teams/pages/team-history/team-history.component')
+      .then((m) => m.TeamHistoryComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.routes)
   },
