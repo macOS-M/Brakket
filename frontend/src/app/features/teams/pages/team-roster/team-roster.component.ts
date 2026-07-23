@@ -7,6 +7,7 @@ import { catchError, map } from 'rxjs/operators';
 
 import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 import { JugadorDisponible } from '../../../../models/jugador-disponible.model';
 import { Juego } from '../../../../models/juego.model';
 import { SolicitudUnion } from '../../../../models/solicitud-union.model';
@@ -27,7 +28,7 @@ const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 
 @Component({
   selector: 'app-team-roster',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, RolEquipoPipe],
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })

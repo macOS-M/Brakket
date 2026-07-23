@@ -72,11 +72,11 @@
           (change)="cambiarRol(miembro, $any($event.target).value)"
         >
           @for (rol of roles; track rol) {
-          <option [value]="rol" [selected]="rol === miembro.rol">{{ rol }}</option>
+          <option [value]="rol" [selected]="rol === miembro.rol">{{ rol | rolEquipo }}</option>
           }
         </select>
         } @else {
-        <span class="badge badge-rol">{{ miembro.rol }}</span>
+        <span class="badge badge-rol">{{ miembro.rol | rolEquipo }}</span>
         }
       </td>
       @if (esCapitan() && !vistaHistorica()) {
@@ -240,7 +240,7 @@
           attr.aria-label="Rol para {{ s.nombre }}"
         >
           @for (rol of roles; track rol) {
-          <option [value]="rol">{{ rol }}</option>
+          <option [value]="rol">{{ rol | rolEquipo }}</option>
           }
         </select>
         <button
