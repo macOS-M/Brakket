@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 
-/**
- * Progresion. Placeholder de la feature "progression".
- * Pendiente EPIC-14.
- */
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
+
 @Component({
   selector: 'app-progression-view',
   standalone: true,
-  imports: [],
+  imports: [ComingSoonComponent],
   templateUrl: './progression-view.component.html',
   styleUrl: './progression-view.component.scss'
 })

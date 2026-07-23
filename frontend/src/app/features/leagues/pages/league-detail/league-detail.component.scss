@@ -204,3 +204,102 @@
   color: var(--text-muted, #94a3b8);
   border: 1px solid rgba(148, 163, 184, 0.4);
 }
+
+// ----- Torneos de la liga (RF-24, modelo abierto) -----
+
+.torneos-liga {
+  margin-top: 2rem;
+
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+}
+
+.crear-torneo {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: transparent;
+  border: 1px dashed var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover { border-color: var(--accent-text, #ff6a1f); }
+
+  .mas {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill, 999px);
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .crear-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    strong { color: var(--text, #e2e8f0); font-size: 0.875rem; }
+    span { color: var(--text-muted, #94a3b8); font-size: 0.8125rem; }
+  }
+}
+
+.torneos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 760px;
+}
+
+// ----- Zona de peligro / moderacion -----
+
+.btn-danger {
+  background: var(--danger, #ef4444);
+  color: #fff;
+
+  &:hover:not([disabled]) { filter: brightness(1.08); }
+}
+
+.danger-zone {
+  margin-top: 2.5rem;
+  padding: 1.1rem 1.2rem 1.2rem;
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-md, 12px);
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.0625rem;
+    color: var(--danger-text, #f87171);
+  }
+}
+
+.danger-nota {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
+
+.danger-aviso {
+  margin: 0 0 0.9rem;
+  color: var(--text, #e2e8f0);
+  font-size: 0.875rem;
+}
+
+.danger-acciones {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

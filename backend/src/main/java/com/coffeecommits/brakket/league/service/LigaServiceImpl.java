@@ -68,6 +68,9 @@ public class LigaServiceImpl implements LigaService {
                 .nombre(nombre)
                 .juego(juego)
                 .comisionado(comisionado)
+                .descripcion(normalizar(request.descripcion()))
+                .reglas(normalizar(request.reglas()))
+                .fotoUrl(normalizar(request.fotoUrl()))
                 .build());
         return LigaResponse.from(liga);
     }
@@ -102,7 +105,26 @@ public class LigaServiceImpl implements LigaService {
 
         liga.setNombre(nombre);
         liga.setJuego(buscarJuego(request.juegoId()));
+        liga.setDescripcion(normalizar(request.descripcion()));
+        liga.setReglas(normalizar(request.reglas()));
+        liga.setFotoUrl(normalizar(request.fotoUrl()));
         return LigaResponse.from(liga);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarLiga(Long ligaId, String correo, boolean esAdmin) {
+        Liga liga = buscarLiga(ligaId);
+        if (!esAdmin) {
+            Usuario usuario = buscarUsuario(correo);
+            if (!liga.getComisionado().getId().equals(usuario.getId())) {
+                throw new ForbiddenException("Solo el comisionado o un administrador pueden eliminar esta liga");
+            }
+        }
+        // Las temporadas no tienen borrado en cascada en el esquema; se
+        // eliminan primero para no violar la clave foránea.
+        temporadaRepository.deleteByLigaId(ligaId);
+        ligaRepository.delete(liga);
     }
 
     @Override
@@ -207,6 +229,11 @@ public class LigaServiceImpl implements LigaService {
     }
 
     // ---------- helpers ----------
+
+    /** Campos opcionales: el texto en blanco se guarda como null. */
+    private static String normalizar(String valor) {
+        return valor == null || valor.trim().isEmpty() ? null : valor.trim();
+    }
 
     private Liga buscarLiga(Long ligaId) {
         return ligaRepository.findById(ligaId)

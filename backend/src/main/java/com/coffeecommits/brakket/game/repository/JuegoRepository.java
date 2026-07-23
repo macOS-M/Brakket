@@ -10,6 +10,8 @@ public interface JuegoRepository extends JpaRepository<Juego, Long> {
 
     Optional<Juego> findByNombre(String nombre);
 
+    Optional<Juego> findByNombreIgnoreCase(String nombre);
+
     List<Juego> findByActivoTrue();
 
     /** Valida el filtro de disciplina de la búsqueda de equipos (RF-05). */

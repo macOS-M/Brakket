@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 
-/**
- * Twitch. Placeholder de la feature "twitch".
- * Pendiente EPIC-09.
- */
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
+
 @Component({
   selector: 'app-twitch-panel',
   standalone: true,
-  imports: [],
+  imports: [ComingSoonComponent],
   templateUrl: './twitch-panel.component.html',
   styleUrl: './twitch-panel.component.scss'
 })

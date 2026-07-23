@@ -4,6 +4,9 @@ import { finalize } from 'rxjs';
 
 import { ApiService } from '../../../../core/services/api.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 
 interface GameOption {
   id: number;
@@ -32,7 +35,7 @@ interface SocialLinksValue {
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })

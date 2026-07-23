@@ -21,7 +21,7 @@ public class CompetitiveProfileController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('GESTIONAR_TORNEOS')")
+    @PreAuthorize("hasRole('ADMIN')")
     public PerfilCompetitivoResponse crear(
             @Valid @RequestBody PerfilCompetitivoRequest request) {
 
@@ -29,7 +29,7 @@ public class CompetitiveProfileController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('GESTIONAR_TORNEOS')")
+    @PreAuthorize("hasRole('ADMIN')")
     public PerfilCompetitivoResponse actualizar(@PathVariable Long id,
                                                 @Valid @RequestBody PerfilCompetitivoRequest request) {
         return service.actualizar(id, request);

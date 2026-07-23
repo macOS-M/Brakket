@@ -49,5 +49,74 @@
       </form>
       </div>
     }
+
+    <!-- Torneos hospedados en la liga (RF-24: juego→liga→temporada→torneo). -->
+    <div class="torneos-liga">
+      <h2>Torneos de la liga</h2>
+
+      @if (esComisionado()) {
+      <button type="button" class="crear-torneo" (click)="wizardAbierto.set(true)">
+        <span class="mas" aria-hidden="true">+</span>
+        <span class="crear-texto">
+          <strong>Crear torneo en esta liga</strong>
+          <span>El wizard llega con {{ liga.nombre }} preseleccionada; elegí la temporada.</span>
+        </span>
+      </button>
+      }
+
+      @if (torneos().length === 0) {
+      <p class="empty">Esta liga todavía no tiene torneos.</p>
+      } @else {
+      <div class="torneos-lista">
+        @for (torneo of torneos(); track torneo.id) {
+        <app-torneo-card [torneo]="torneo" />
+        }
+      </div>
+      }
+    </div>
+
+    @if (wizardAbierto()) {
+    <app-tournament-wizard
+      [juegoId]="liga.juegoId"
+      [juegoNombre]="liga.juegoNombre"
+      [juegoImagen]="portada()"
+      [ligaIdInicial]="liga.id"
+      (cerrado)="wizardAbierto.set(false)"
+      (creado)="torneoCreado($event)"
+    />
+    }
+
+    @if (puedeEliminar()) {
+    <div class="danger-zone">
+      <h2>{{ esModeracion() ? 'Moderación (admin)' : 'Zona de peligro' }}</h2>
+      @if (esModeracion()) {
+      <p class="danger-nota">
+        Ves esto porque sos administrador: esta liga pertenece a
+        {{ liga.comisionadoNombre }}. Los usuarios comunes no ven esta sección.
+      </p>
+      }
+      @if (errorEliminar()) {
+      <p class="error" role="alert">{{ errorEliminar() }}</p>
+      }
+      @if (confirmandoEliminar()) {
+      <p class="danger-aviso">
+        Se eliminará <strong>{{ liga.nombre }}</strong> con todas sus temporadas. Esta acción no
+        se puede deshacer.
+      </p>
+      <div class="danger-acciones">
+        <button type="button" class="btn btn-danger" [disabled]="eliminando()" (click)="eliminarLiga()">
+          {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar la liga' }}
+        </button>
+        <button type="button" class="btn btn-ghost" [disabled]="eliminando()" (click)="confirmandoEliminar.set(false)">
+          Cancelar
+        </button>
+      </div>
+      } @else {
+      <button type="button" class="btn btn-danger" (click)="confirmandoEliminar.set(true)">
+        Eliminar liga
+      </button>
+      }
+    </div>
+    }
   } }
 </section>

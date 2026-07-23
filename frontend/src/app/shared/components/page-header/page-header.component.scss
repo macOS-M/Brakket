@@ -1,0 +1,41 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--accent-text, #ff6a1f);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: 0;
+  // Paso "display". Antes usaba 1.5rem, que lo dejaba a un solo escalón
+  // del título de tarjeta (1.0625rem) y aplanaba la jerarquía de la página.
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.subtitulo {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+}
+
+.acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

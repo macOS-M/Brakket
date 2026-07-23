@@ -1,27 +1,58 @@
+// Enlace de salto: fuera de pantalla hasta recibir foco, donde baja a la vista.
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1100; // por encima del sidebar móvil y su backdrop
+  padding: 0.55rem 0.9rem;
+  transform: translateY(-150%);
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius-sm, 8px);
+  transition: transform 0.15s ease;
+
+  &:focus {
+    transform: translateY(0);
+  }
+}
+
 .shell {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
   background: var(--bg, #0b1120);
   color: var(--text, #e2e8f0);
 }
 
-.body {
+// El contenido recibe foco por el enlace de salto pero no debe mostrar
+// el anillo de foco: no es un control, solo un destino de navegación.
+.content:focus {
+  outline: none;
+}
+
+.columna {
   display: flex;
+  flex-direction: column;
   flex: 1;
-  min-height: 0;
+  // Sin esto, una tabla ancha estira el flex item y rompe el layout
+  // en lugar de hacer scroll dentro de su propio contenedor.
+  min-width: 0;
 }
 
 .content {
   flex: 1;
-  padding: 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
+  max-width: var(--content-max, 1280px);
+  margin: 0 auto;
+  padding: 1.75rem 2rem;
 }
 
-@media (max-width: 768px) {
-  .body {
-    flex-direction: column;
+@media (max-width: 900px) {
+  .content {
+    // La hamburguesa fija convive con la topbar (que ya le deja aire a la
+    // izquierda), así que el contenido no necesita empujarse hacia abajo.
+    padding: 1.25rem 1rem 1.5rem;
   }
 }

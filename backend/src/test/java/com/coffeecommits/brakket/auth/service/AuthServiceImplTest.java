@@ -12,9 +12,9 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -42,8 +42,16 @@ class AuthServiceImplTest {
     private UsuarioRolRepository usuarioRolRepository;
     @Mock
     private JuegoRepository juegoRepository;
-    @InjectMocks
+
     private AuthServiceImpl authService;
+
+    @BeforeEach
+    void setUp() {
+        // La lista de admins viene de configuración (brakket.admin-emails);
+        // se pasa con mayúsculas y espacios para cubrir la normalización.
+        authService = new AuthServiceImpl(usuarioRepository, rolRepository, usuarioRolRepository,
+                juegoRepository, " Gvalverdem@ucenfotec.ac.cr , dchavarriam@ucenfotec.ac.cr ");
+    }
 
     @Test
     void upsert_crea_usuario_nuevo_y_le_asigna_rol_base_jugador() {
@@ -80,6 +88,51 @@ class AuthServiceImplTest {
         assertThat(existente.getFotoUrl()).isEqualTo("avatar-personal.png");
         verify(usuarioRepository, never()).save(any(Usuario.class));
         verify(usuarioRolRepository, never()).save(any(UsuarioRol.class));
+    }
+
+    @Test
+    void upsert_vincula_google_a_una_cuenta_local_existente_por_correo() {
+        // Cuenta creada por registro local (DD-04): mismo correo, sin googleId.
+        Usuario local = Usuario.builder().id(8L).googleId(null).correo("ana@brakket.gg")
+                .nombre("Ana").passwordHash("$2a$10$hash").build();
+        when(usuarioRepository.findByGoogleId("g-2")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(local));
+        when(usuarioRolRepository.findByUsuarioId(8L)).thenReturn(List.of(
+                UsuarioRol.builder().usuario(local)
+                        .rol(Rol.builder().nombreRol("JUGADOR").build()).build()));
+
+        Usuario result = authService.upsertGoogleUser("g-2", "ana@brakket.gg", "Ana G", "foto.png");
+
+        // Se vincula el googleId a la cuenta existente en vez de intentar un
+        // insert que chocaría con el UNIQUE del correo.
+        assertThat(result.getId()).isEqualTo(8L);
+        assertThat(result.getGoogleId()).isEqualTo("g-2");
+        assertThat(result.getNombre()).isEqualTo("Ana");
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+    }
+
+    @Test
+    void upsert_asigna_admin_ademas_del_rol_base_a_correos_del_equipo() {
+        when(usuarioRepository.findByGoogleId("g-9")).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
+            Usuario u = inv.getArgument(0);
+            u.setId(11L);
+            return u;
+        });
+        when(usuarioRolRepository.findByUsuarioId(11L)).thenReturn(List.of());
+        when(rolRepository.findByNombreRol("JUGADOR"))
+                .thenReturn(Optional.of(Rol.builder().id(5L).nombreRol("JUGADOR").build()));
+        when(rolRepository.findByNombreRol("ADMIN"))
+                .thenReturn(Optional.of(Rol.builder().id(1L).nombreRol("ADMIN").build()));
+
+        authService.upsertGoogleUser("g-9", "gvalverdem@ucenfotec.ac.cr", "Gabriel", null);
+
+        org.mockito.ArgumentCaptor<UsuarioRol> captor =
+                org.mockito.ArgumentCaptor.forClass(UsuarioRol.class);
+        verify(usuarioRolRepository, org.mockito.Mockito.times(2)).save(captor.capture());
+        assertThat(captor.getAllValues())
+                .extracting(ur -> ur.getRol().getNombreRol())
+                .containsExactlyInAnyOrder("JUGADOR", "ADMIN");
     }
 
     @Test

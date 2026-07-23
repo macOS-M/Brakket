@@ -1,0 +1,192 @@
+<section class="page">
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando torneo…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()!">
+    <a class="btn-secondary" routerLink="/tournaments">Volver a torneos</a>
+  </app-empty-state>
+  } @else { @if (torneo(); as torneo) {
+
+  <header class="banner" [style.background]="arte() ? undefined : gradiente()">
+    @if (arte()) {
+    <img class="banner-arte" [src]="arte()" alt="" />
+    }
+    <div class="banner-velo" aria-hidden="true"></div>
+
+    <a class="volver" [routerLink]="['/games', torneo.juegoId]">← {{ torneo.juegoNombre }}</a>
+
+    <div class="banner-contenido">
+      <div class="titulos">
+        <p class="fecha">{{ torneo.fechaInicio | date: "EEEE d 'de' MMMM, HH:mm" }}</p>
+        <h1>{{ torneo.nombre }}</h1>
+        <p class="meta">
+          Organizado por <strong>{{ torneo.organizadorNombre }}</strong>
+          @if (torneo.ligaNombre) {
+          · <a class="liga-link" [routerLink]="['/leagues', torneo.ligaId]">{{ torneo.ligaNombre }}</a>
+          ({{ torneo.temporadaNombre }})
+          } @else {
+          · Comunitario
+          }
+        </p>
+      </div>
+      <div class="stats-torneo">
+        <span class="stat">{{ torneo.formato }}</span>
+        <span class="stat">{{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
+        <span class="stat resaltado">{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos</span>
+        @if (torneo.premio) {
+        <span class="stat premio">🏆 {{ torneo.premio }}</span>
+        }
+        @if (!torneo.publico) {
+        <span class="stat privado">Privado</span>
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (errorEliminar()) {
+  <p class="mensaje-error" role="alert">{{ errorEliminar() }}</p>
+  }
+
+  <nav class="tabs" aria-label="Secciones del torneo">
+    <button
+      type="button"
+      class="tab"
+      [class.activo]="tab() === 'resumen'"
+      (click)="tab.set('resumen')"
+    >
+      Resumen
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.activo]="tab() === 'equipos'"
+      (click)="tab.set('equipos')"
+    >
+      Equipos ({{ torneo.inscritos }})
+    </button>
+  </nav>
+
+  @if (tab() === 'resumen') {
+  <div class="contenido">
+    @if (torneo.descripcion) {
+    <p class="descripcion">{{ torneo.descripcion }}</p>
+    }
+
+    <!-- Inscripción (RF-25): la ve cualquier usuario; actúa el capitán. -->
+    @if (inscripcionExitosa()) {
+    <p class="mensaje-ok" role="status">¡Equipo inscrito! Ya aparece en la pestaña Equipos.</p>
+    } @else if (!abierto()) {
+    <p class="aviso-cerrado">
+      {{ cupoLleno() ? 'El torneo alcanzó su cupo de equipos.' : comenzo() ? 'El torneo ya comenzó.' : 'El torneo no acepta inscripciones.' }}
+    </p>
+    } @else if (!auth.isAuthenticated()) {
+    <div class="inscripcion">
+      <p>¿Querés competir? Iniciá sesión e inscribí a tu equipo.</p>
+      <button type="button" class="btn-primary" (click)="auth.login()">Iniciar sesión</button>
+    </div>
+    } @else if (elegibles().length > 0) {
+    <div class="inscripcion">
+      <label class="label" for="equipo">Inscribí a tu equipo (sos su capitán)</label>
+      <div class="inscripcion-fila">
+        <select
+          id="equipo"
+          [value]="equipoElegido() ?? ''"
+          (change)="equipoElegido.set($any($event.target).value ? +$any($event.target).value : null)"
+        >
+          <option value="" disabled>Elegí un equipo…</option>
+          @for (equipo of elegibles(); track equipo.id) {
+          <option [value]="equipo.id">{{ equipo.nombre }}</option>
+          }
+        </select>
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="!equipoElegido() || inscribiendo()"
+          (click)="inscribir()"
+        >
+          {{ inscribiendo() ? 'Inscribiendo…' : 'Inscribir equipo' }}
+        </button>
+      </div>
+      @if (errorInscripcion()) {
+      <p class="mensaje-error" role="alert">{{ errorInscripcion() }}</p>
+      }
+    </div>
+    } @else {
+    <!-- Sin equipos elegibles: explicar el porqué en vez de ocultar todo. -->
+    <div class="inscripcion">
+      <p>
+        Para inscribirte necesitás ser <strong>capitán</strong> de un equipo de
+        {{ torneo.juegoNombre }} (o sin disciplina definida) con al menos
+        {{ torneo.tamanoEquipo }} jugador(es) activo(s), que aún no esté inscrito.
+      </p>
+      <div class="inscripcion-fila">
+        <a class="btn-primary" routerLink="/teams/nuevo">Crear mi equipo</a>
+        <a class="btn-secondary" routerLink="/teams">Ver mis equipos</a>
+      </div>
+    </div>
+    }
+
+    @if (puedeEliminar()) {
+    <div class="danger-zone">
+      <h2>{{ esModeracion() ? 'Moderación (admin)' : 'Zona de peligro' }}</h2>
+      @if (esModeracion()) {
+      <p class="danger-nota">
+        Ves esto porque sos administrador: este torneo pertenece a
+        {{ torneo.organizadorNombre }}. Los usuarios comunes no ven esta sección.
+      </p>
+      }
+      @if (confirmandoEliminar()) {
+      <p class="danger-aviso">
+        Se eliminará <strong>{{ torneo.nombre }}</strong> con sus inscripciones.
+      </p>
+      <div class="danger-acciones">
+        <button type="button" class="btn-danger" [disabled]="eliminando()" (click)="eliminar()">
+          {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar el torneo' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="confirmandoEliminar.set(false)">
+          Cancelar
+        </button>
+      </div>
+      } @else {
+      <button type="button" class="btn-danger" (click)="confirmandoEliminar.set(true)">
+        Eliminar torneo
+      </button>
+      }
+    </div>
+    }
+  </div>
+  } @else {
+  <div class="contenido">
+    @if (detalle()!.equipos.length === 0) {
+    <app-empty-state
+      titulo="Todavía no hay equipos inscritos"
+      mensaje="Cuando un capitán inscriba a su equipo va a aparecer acá con su plantilla."
+    />
+    } @else {
+    <div class="equipos-grid">
+      @for (equipo of detalle()!.equipos; track equipo.equipoId) {
+      <div class="equipo-card">
+        <div class="equipo-cabecera">
+          <a class="equipo-nombre" [routerLink]="['/team-profile', equipo.equipoId]">
+            {{ equipo.nombre }}
+          </a>
+          <span class="conteo">{{ equipo.jugadores.length }} jugador(es)</span>
+        </div>
+        <ul class="jugadores">
+          @for (jugador of equipo.jugadores; track jugador.usuarioId) {
+          <li>
+            <span class="jugador-nombre">{{ jugador.nombre }}</span>
+            @if (jugador.rol === 'CAPITAN') {
+            <span class="chip-capitan">Capitán</span>
+            }
+          </li>
+          }
+        </ul>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  } }
+</section>

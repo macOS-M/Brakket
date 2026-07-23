@@ -29,11 +29,12 @@ export const routes: Routes = [
         loadChildren: () => import('./features/games/games.routes').then((m) => m.routes)
       },
       {
+        // Lectura pública; los guards de crear/editar viven en sus rutas hijas.
         path: 'leagues',
-        canActivate: [authGuard],
         loadChildren: () => import('./features/leagues/leagues.routes').then((m) => m.routes)
       },
       {
+        // Lectura pública de torneos; crear/inscribir piden sesión al actuar.
         path: 'tournaments',
         loadChildren: () =>
           import('./features/tournaments/tournaments.routes').then((m) => m.routes)
@@ -63,13 +64,18 @@ export const routes: Routes = [
         loadChildren: () => import('./features/twitch/twitch.routes').then((m) => m.routes)
       },
       {
+        // Analítica de audiencia: la consumen quienes gestionan competencias
+        // (RF-49) y el patrocinador a través de su panel comercial (RF-44).
         path: 'analytics',
-        canActivate: [authGuard],
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'COMISIONADO', 'PATROCINADOR'] },
         loadChildren: () => import('./features/analytics/analytics.routes').then((m) => m.routes)
       },
       {
+        // Gestión de patrocinios: administrador o comisionado (RF-42/RF-43).
         path: 'sponsorships',
-        canActivate: [authGuard],
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'COMISIONADO'] },
         loadChildren: () =>
           import('./features/sponsorships/sponsorships.routes').then((m) => m.routes)
       },
