@@ -95,7 +95,7 @@
   border-radius: var(--radius-md, 12px);
   object-fit: cover;
   // Mismo aro que en las tarjetas: la foto oscura no pierde su forma.
-  outline: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  outline: 1px solid var(--border, #334155);
 
   &.sin-logo {
     background: var(--info-bg, rgba(59, 130, 246, 0.12));
@@ -138,6 +138,13 @@
   background: var(--danger-bg, rgba(239, 68, 68, 0.12));
   border: 1px solid var(--danger-text, #f87171);
   color: var(--danger-text, #f87171);
+
+  // El aviso de disuelto enlaza a la plantilla (reactivar/eliminar).
+  .enlace-aviso {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+  }
 }
 
 .aviso-atencion {

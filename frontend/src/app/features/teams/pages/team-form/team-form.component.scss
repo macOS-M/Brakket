@@ -268,7 +268,7 @@ textarea {
   display: grid;
   place-items: center;
   background: var(--surface-2, #1f2937);
-  outline: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  outline: 1px solid var(--border, #334155);
 
   &.sin-logo {
     color: #fff;
