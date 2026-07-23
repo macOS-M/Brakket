@@ -128,7 +128,7 @@
   background: var(--accent);
   border: none;
   border-radius: var(--radius-sm);
-  color: #fff;
+  color: var(--accent-ink, #0b1120);
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -595,7 +595,7 @@
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink, #0b1120);
 
   &:hover {
     background: var(--accent-hover);

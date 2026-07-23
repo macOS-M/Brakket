@@ -19,7 +19,7 @@
     <div class="banner-contenido">
       <div class="cartel" [style.background]="foto() ? undefined : gradiente()">
         @if (foto()) {
-        <img [src]="foto()" alt="" />
+        <img [src]="foto()" alt="" loading="lazy" />
         } @else {
         <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
         }
@@ -44,7 +44,7 @@
             Crear
           </button>
           @if (menuCrearAbierto()) {
-          <div class="menu-crear" role="menu">
+          <div class="menu-crear" role="menu" (keydown.escape)="menuCrearAbierto.set(false)">
             <button type="button" role="menuitem" (click)="abrirWizard()">
               <span class="titulo-opcion">Torneo</span>
               <span class="detalle-opcion">Creá un torneo para tus amigos o tu comunidad.</span>
@@ -156,7 +156,7 @@
     <!-- Galería de capturas reales (RAWG), con scroll horizontal propio. -->
     <div class="galeria" role="list" aria-label="Capturas del juego">
       @for (captura of juego.capturas; track captura) {
-      <img class="galeria-item" role="listitem" [src]="captura" alt="" loading="lazy" />
+      <img class="galeria-item" role="listitem" [src]="captura" [alt]="'Captura de ' + juego.nombre" loading="lazy" />
       }
     </div>
     }
@@ -168,7 +168,7 @@
     <a class="destacado" [routerLink]="['/tournaments', torneo.id]">
       <div class="destacado-arte" [style.background]="foto() ? undefined : gradiente()">
         @if (foto()) {
-        <img [src]="foto()" alt="" />
+        <img [src]="foto()" alt="" loading="lazy" />
         }
       </div>
       <div class="destacado-info">
@@ -192,7 +192,7 @@
       <a class="torneo-mini" [routerLink]="['/tournaments', torneo.id]">
         <div class="mini-arte" [style.background]="foto() ? undefined : gradiente()">
           @if (foto()) {
-          <img [src]="foto()" alt="" />
+          <img [src]="foto()" alt="" loading="lazy" />
           }
           <span class="mini-fecha">{{ torneo.fechaInicio | date: "EEE d, HH:mm" }}</span>
         </div>
@@ -235,7 +235,7 @@
         [style.background]="portadaLiga(liga) ? undefined : gradienteLiga(liga)"
       >
         @if (portadaLiga(liga)) {
-        <img [src]="portadaLiga(liga)" alt="" />
+        <img [src]="portadaLiga(liga)" alt="" loading="lazy" />
         }
         <div class="poster-velo" aria-hidden="true"></div>
         <div class="poster-texto">

@@ -41,6 +41,7 @@
       type="button"
       class="chip-juego"
       [class.activo]="juegoFiltro() === null"
+      [attr.aria-pressed]="juegoFiltro() === null"
       (click)="juegoFiltro.set(null)"
     >
       Todos
@@ -50,6 +51,7 @@
       type="button"
       class="chip-juego"
       [class.activo]="juegoFiltro() === juego.id"
+      [attr.aria-pressed]="juegoFiltro() === juego.id"
       (click)="juegoFiltro.set(juego.id)"
     >
       {{ juego.nombre }}
@@ -65,7 +67,7 @@
     <a class="liga-card" [routerLink]="[liga.id]">
       <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
         @if (foto(liga)) {
-        <img [src]="foto(liga)" [alt]="" />
+        <img [src]="foto(liga)" alt="" loading="lazy" />
         } @else {
         <span class="monograma-grande" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
         }
@@ -91,7 +93,7 @@
     <a class="liga-card" [routerLink]="[liga.id]">
       <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
         @if (foto(liga)) {
-        <img [src]="foto(liga)" [alt]="" />
+        <img [src]="foto(liga)" alt="" loading="lazy" />
         } @else {
         <span class="monograma-grande" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
         }

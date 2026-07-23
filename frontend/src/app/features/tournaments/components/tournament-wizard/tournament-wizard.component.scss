@@ -54,6 +54,11 @@
   place-items: center;
   width: 32px;
   height: 32px;
+
+  @media (pointer: coarse) {
+    width: 44px;
+    height: 44px;
+  }
   padding: 0;
   background: rgba(4, 8, 18, 0.65);
   border: none;
@@ -73,7 +78,8 @@
 
   .juego {
     margin: 0;
-    color: var(--accent-text, #ff6a1f);
+    // Fijo: va sobre el velo oscuro del arte, que no cambia con el tema.
+    color: #ff6a1f;
     font-size: 0.6875rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -326,7 +332,7 @@
   &.activo {
     background: var(--accent, #ff5500);
     border-color: var(--accent, #ff5500);
-    color: #fff;
+    color: var(--accent-ink, #0b1120);
   }
 }
 
@@ -389,7 +395,8 @@
 
 .btn-primary {
   background: var(--accent, #ff5500);
-  color: #fff;
+  // Tinta navy sobre naranja (5.6:1): blanco a este cuerpo no llega a AA.
+  color: var(--accent-ink, #0b1120);
 
   &:hover:not(:disabled) {
     background: var(--accent-hover, #ff6a1f);

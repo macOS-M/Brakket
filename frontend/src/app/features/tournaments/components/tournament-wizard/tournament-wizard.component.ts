@@ -1,4 +1,17 @@
-import { Component, OnInit, computed, effect, inject, input, output, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal
+} from '@angular/core';
 
 import { AjustePartida, CrearTorneoRequest, Torneo } from '../../../../models/tournament.model';
 import { Juego } from '../../../../models/juego.model';
@@ -23,7 +36,11 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './tournament-wizard.component.html',
   styleUrl: './tournament-wizard.component.scss'
 })
-export class TournamentWizardComponent implements OnInit {
+export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('modalRef') private modalRef!: ElementRef<HTMLElement>;
+  /** A quién devolverle el foco al cerrar (el botón "Crear" del hub). */
+  private focoPrevio: HTMLElement | null = null;
+
   private readonly tournamentsService = inject(TournamentsService);
   private readonly leaguesService = inject(LeaguesService);
   private readonly gamesService = inject(GamesService);
@@ -301,5 +318,69 @@ export class TournamentWizardComponent implements OnInit {
     if (!this.guardando()) {
       this.cerrado.emit();
     }
+  }
+
+  // ---------- gestión de foco del modal (WCAG 2.4.3 / patrón dialog) ----------
+
+  /** Al abrir, el foco entra al modal; sin esto, Tab y Escape siguen
+   *  operando la página tapada por el telón. */
+  ngAfterViewInit(): void {
+    this.focoPrevio = document.activeElement as HTMLElement | null;
+    this.modalRef.nativeElement.focus();
+  }
+
+  ngOnDestroy(): void {
+    this.focoPrevio?.focus();
+  }
+
+  /** Trampa de Tab: el foco circula dentro del modal. */
+  atraparTab(event: Event): void {
+    const e = event as KeyboardEvent;
+    const focusables = this.modalRef.nativeElement.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input, select, textarea, summary, [href]');
+    if (focusables.length === 0) {
+      return;
+    }
+    const primero = focusables[0];
+    const ultimo = focusables[focusables.length - 1];
+    if (e.shiftKey && (document.activeElement === primero
+        || document.activeElement === this.modalRef.nativeElement)) {
+      e.preventDefault();
+      ultimo.focus();
+    } else if (!e.shiftKey && document.activeElement === ultimo) {
+      e.preventDefault();
+      primero.focus();
+    }
+  }
+
+  /** Radios con flechas (patrón radiogroup): mover selección y foco. */
+  moverTamano(delta: number, event: Event): void {
+    event.preventDefault();
+    const opciones = this.tamanosPermitidos();
+    const i = opciones.indexOf(this.tamano());
+    const destino = opciones[(i + delta + opciones.length) % opciones.length];
+    this.tamano.set(destino);
+    this.enfocarRadioActivo('.opciones-tamano');
+  }
+
+  moverFormato(delta: number, event: Event): void {
+    event.preventDefault();
+    const soportados = this.formatos().filter((f) => this.soportado(f));
+    if (soportados.length === 0) {
+      return;
+    }
+    const i = soportados.indexOf(this.formato());
+    const destino = soportados[(i + delta + soportados.length) % soportados.length];
+    this.formato.set(destino);
+    this.enfocarRadioActivo('.formatos');
+  }
+
+  private enfocarRadioActivo(selectorGrupo: string): void {
+    // El cambio de selección re-renderiza; el foco sigue a la opción activa.
+    setTimeout(() => {
+      this.modalRef.nativeElement
+        .querySelector<HTMLElement>(`${selectorGrupo} [aria-checked="true"]`)
+        ?.focus();
+    });
   }
 }

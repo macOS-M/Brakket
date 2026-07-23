@@ -393,7 +393,7 @@
 
 .btn-primary {
   background: var(--accent, #ff5500);
-  color: #fff;
+  color: var(--accent-ink, #0b1120);
 
   &:hover {
     background: var(--accent-hover, #ff6a1f);
@@ -538,7 +538,7 @@
     z-index: 1;
     padding: 20px 24px;
 
-    h2 { margin: 0 0 8px; color: #fff; font-size: 1.6rem; font-weight: 800; }
+    h2 { margin: 0 0 8px; color: #fff; font-size: 1.5rem; font-weight: 800; }
   }
 
   .hero-cta {

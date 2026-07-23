@@ -36,6 +36,7 @@
   } @else if (miembros().length === 0) {
   <p class="placeholder">Este equipo no tiene integrantes.</p>
   } @else {
+  <div class="tabla-scroll">
   <table class="tabla">
     <thead>
     <tr>
@@ -66,6 +67,7 @@
       <td>
         @if (esCapitan() && !vistaHistorica()) {
         <select
+          [attr.aria-label]="'Rol de ' + miembro.nombreUsuario"
           [disabled]="miembro.estado !== 'ACTIVO' || guardandoId() === miembro.usuarioId"
           (change)="cambiarRol(miembro, $any($event.target).value)"
         >
@@ -96,6 +98,7 @@
     }
     </tbody>
   </table>
+  </div>
   }
 
   @if (esCapitan() && !vistaHistorica()) {
@@ -105,11 +108,13 @@
     <div class="filtros-busqueda">
       <input
         type="search"
+        aria-label="Buscar jugadores por nombre"
         placeholder="Buscar por nombre…"
         [value]="textoBusqueda()"
         (input)="onTextoBusqueda($any($event.target).value)"
       />
       <select
+        aria-label="Filtrar por juego"
         [value]="juegoIdBusqueda() ?? ''"
         (change)="juegoIdBusqueda.set($any($event.target).value ? +$any($event.target).value : null)"
       >

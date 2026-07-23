@@ -1,11 +1,15 @@
 <div class="telon" (click)="cerrar()" aria-hidden="true"></div>
 
 <div
+  #modalRef
   class="modal"
   role="dialog"
   aria-modal="true"
   aria-label="Crear torneo"
+  tabindex="-1"
   (keydown.escape)="cerrar()"
+  (keydown.tab)="atraparTab($event)"
+  (keydown.shift.tab)="atraparTab($event)"
 >
   <header class="cabecera" [style.background]="juegoImagen() ? undefined : 'var(--surface-2)'">
     @if (juegoImagen()) {
@@ -22,7 +26,7 @@
   <!-- Progreso: General → Equipos → Fecha -->
   <ol class="progreso" aria-label="Pasos">
     @for (etiqueta of pasos; track etiqueta; let i = $index) {
-    <li [class.activo]="paso() === i + 1" [class.hecho]="paso() > i + 1">
+    <li [class.activo]="paso() === i + 1" [class.hecho]="paso() > i + 1" [attr.aria-current]="paso() === i + 1 ? 'step' : null">
       <span class="punto" aria-hidden="true"></span>
       {{ etiqueta }}
     </li>
@@ -110,8 +114,13 @@
           class="opcion"
           role="radio"
           [attr.aria-checked]="tamano() === n"
+          [attr.tabindex]="tamano() === n ? 0 : -1"
           [class.activo]="tamano() === n"
           (click)="tamano.set(n)"
+          (keydown.arrowright)="moverTamano(1, $event)"
+          (keydown.arrowdown)="moverTamano(1, $event)"
+          (keydown.arrowleft)="moverTamano(-1, $event)"
+          (keydown.arrowup)="moverTamano(-1, $event)"
         >
           {{ n }}v{{ n }}
         </button>
@@ -129,9 +138,14 @@
           class="formato-opcion"
           role="radio"
           [attr.aria-checked]="formato() === f"
+          [attr.tabindex]="formato() === f ? 0 : -1"
           [class.activo]="formato() === f"
           [disabled]="!soportado(f)"
           (click)="formato.set(f)"
+          (keydown.arrowright)="moverFormato(1, $event)"
+          (keydown.arrowdown)="moverFormato(1, $event)"
+          (keydown.arrowleft)="moverFormato(-1, $event)"
+          (keydown.arrowup)="moverFormato(-1, $event)"
         >
           <span class="formato-nombre">
             {{ etiquetaDe(f) }}
@@ -209,6 +223,7 @@
           <input
             type="text"
             class="ajuste-clave"
+            aria-label="Nombre de la regla"
             placeholder="Regla"
             maxlength="60"
             [value]="a.clave"
@@ -217,6 +232,7 @@
           <input
             type="text"
             class="ajuste-valor"
+            aria-label="Valor de la regla"
             placeholder="Valor (ej. Soccar, 5 minutos, Europa…)"
             maxlength="120"
             [value]="a.valor"

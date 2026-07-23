@@ -54,19 +54,19 @@
 
   <!-- Tabs estilo Challenger Mode: siempre las cinco secciones. -->
   <nav class="tabs" aria-label="Secciones del torneo">
-    <button type="button" class="tab" [class.activo]="tab() === 'resumen'" (click)="tab.set('resumen')">
+    <button type="button" class="tab" [class.activo]="tab() === 'resumen'" [attr.aria-current]="tab() === 'resumen' ? 'true' : null" (click)="tab.set('resumen')">
       Resumen
     </button>
-    <button type="button" class="tab" [class.activo]="tab() === 'llaves'" (click)="tab.set('llaves')">
+    <button type="button" class="tab" [class.activo]="tab() === 'llaves'" [attr.aria-current]="tab() === 'llaves' ? 'true' : null" (click)="tab.set('llaves')">
       Llaves
     </button>
-    <button type="button" class="tab" [class.activo]="tab() === 'matches'" (click)="tab.set('matches')">
+    <button type="button" class="tab" [class.activo]="tab() === 'matches'" [attr.aria-current]="tab() === 'matches' ? 'true' : null" (click)="tab.set('matches')">
       Matches
     </button>
-    <button type="button" class="tab" [class.activo]="tab() === 'jugadores'" (click)="tab.set('jugadores')">
+    <button type="button" class="tab" [class.activo]="tab() === 'jugadores'" [attr.aria-current]="tab() === 'jugadores' ? 'true' : null" (click)="tab.set('jugadores')">
       Jugadores ({{ jugadores().length }})
     </button>
-    <button type="button" class="tab" [class.activo]="tab() === 'resultados'" (click)="tab.set('resultados')">
+    <button type="button" class="tab" [class.activo]="tab() === 'resultados'" [attr.aria-current]="tab() === 'resultados' ? 'true' : null" (click)="tab.set('resultados')">
       Resultados
     </button>
   </nav>
@@ -171,6 +171,8 @@
             id="gamertag"
             type="text"
             maxlength="100"
+            aria-label="Tu usuario dentro del juego"
+            aria-describedby="pista-gamertag"
             placeholder="Tu usuario dentro del juego"
             [value]="usuarioEnJuego()"
             (input)="usuarioEnJuego.set($any($event.target).value)"
@@ -184,7 +186,7 @@
             {{ inscribiendo() ? 'Inscribiendo…' : 'Inscribir equipo' }}
           </button>
         </div>
-        <span class="pista-gamertag">
+        <span class="pista-gamertag" id="pista-gamertag">
           Tu usuario en {{ torneo.juegoNombre }} le dice al rival a quién invitar
           a la lobby y permite verificar quién jugó.
         </span>
@@ -383,6 +385,7 @@
     <input
       class="buscador-jugadores"
       type="search"
+      aria-label="Buscar jugador o equipo"
       placeholder="Buscar jugador o equipo…"
       [value]="filtroJugador()"
       (input)="filtroJugador.set($any($event.target).value)"

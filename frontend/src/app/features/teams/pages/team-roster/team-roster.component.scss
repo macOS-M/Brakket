@@ -4,7 +4,7 @@
   color: var(--text-muted);
 
   &.error {
-    color: #f87171;
+    color: var(--danger-text);
 
     p {
       margin: 0 0 0.6rem;
@@ -15,16 +15,22 @@
 .btn-reintentar {
   padding: 0.45rem 1rem;
   background: transparent;
-  border: 1px solid var(--brand-cyan, #22d3ee);
+  border: 1px solid var(--accent-text);
   border-radius: 8px;
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 
   &:hover {
-    background: rgba(34, 211, 238, 0.1);
+    background: rgba(255, 106, 31, 0.1);
   }
+}
+
+// La plantilla tiene 5 columnas: en pantallas angostas scrollea ella,
+// no la página.
+.tabla-scroll {
+  overflow-x: auto;
 }
 
 .tabla {
@@ -39,13 +45,13 @@
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border, #334155);
+    border-bottom: 1px solid var(--border);
   }
 
   td {
     padding: 0.65rem 0.75rem;
-    border-bottom: 1px solid var(--border, #334155);
-    color: var(--text, #e2e8f0);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
   }
 
   .fila-inactiva td {
@@ -56,9 +62,9 @@
 .badge {
   display: inline-block;
   padding: 0.15rem 0.55rem;
-  border: 1px solid var(--brand-cyan, #22d3ee);
+  border: 1px solid var(--accent-text);
   border-radius: 999px;
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -70,13 +76,13 @@
 
   &.badge-capitan {
     margin-left: 0.5rem;
-    border-color: #fbbf24;
-    color: #fbbf24;
+    border-color: var(--accent-gold-text);
+    color: var(--accent-gold-text);
   }
 
   &.badge-rol {
-    border-color: var(--border, #334155);
-    color: var(--text, #e2e8f0);
+    border-color: var(--border);
+    color: var(--text);
   }
 }
 
@@ -88,9 +94,9 @@
 .btn-expulsar {
   padding: 0.35rem 0.8rem;
   background: transparent;
-  border: 1px solid #f87171;
+  border: 1px solid var(--danger-text);
   border-radius: 8px;
-  color: #f87171;
+  color: var(--danger-text);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -116,12 +122,12 @@
   h2 {
     margin: 0 0 0.6rem;
     font-size: 1.05rem;
-    color: #f87171;
+    color: var(--danger-text);
   }
 
   .advertencia {
     margin: 0 0 0.9rem;
-    color: var(--text, #e2e8f0);
+    color: var(--text);
     font-size: 0.9rem;
   }
 
@@ -129,22 +135,22 @@
     display: grid;
     gap: 0.35rem;
     margin-bottom: 0.9rem;
-    color: var(--text, #e2e8f0);
+    color: var(--text);
     font-size: 0.88rem;
 
     textarea {
       padding: 0.6rem 0.75rem;
-      background: var(--surface, #111827);
-      border: 1px solid var(--border, #334155);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      color: var(--text, #e2e8f0);
+      color: var(--text);
       font-family: inherit;
       font-size: 0.9rem;
       resize: vertical;
 
       &:focus {
         outline: none;
-        border-color: #f87171;
+        border-color: var(--danger-text);
       }
     }
   }
@@ -156,9 +162,9 @@
 
   .btn-confirmar-expulsion {
     padding: 0.5rem 1.1rem;
-    border: 1px solid #f87171;
+    border: 1px solid var(--danger-text);
     border-radius: 8px;
-    background: #f87171;
+    background: var(--danger);
     color: #111827;
     font-size: 0.85rem;
     font-weight: 600;
@@ -172,10 +178,10 @@
 
   .btn-cancelar {
     padding: 0.5rem 1.1rem;
-    border: 1px solid var(--border, #334155);
+    border: 1px solid var(--border);
     border-radius: 8px;
     background: transparent;
-    color: var(--text, #e2e8f0);
+    color: var(--text);
     font-size: 0.85rem;
     cursor: pointer;
   }
@@ -184,8 +190,8 @@
 .invitar-box {
   margin-top: 2rem;
   padding: 1.25rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border, #334155);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   max-width: 400px;
 
@@ -198,18 +204,18 @@
 .mensaje-exito {
   padding: 0.6rem 0.8rem;
   margin-bottom: 0.75rem;
-  border: 1px solid var(--brand-cyan, #22d3ee);
+  border: 1px solid var(--accent-text);
   border-radius: 8px;
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text);
   font-size: 0.85rem;
 }
 
 .mensaje-error {
   padding: 0.6rem 0.8rem;
   margin-bottom: 0.75rem;
-  border: 1px solid #f87171;
+  border: 1px solid var(--danger-text);
   border-radius: 8px;
-  color: #f87171;
+  color: var(--danger-text);
   font-size: 0.85rem;
 }
 
@@ -226,23 +232,23 @@
     label {
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--text, #e2e8f0);
+      color: var(--text);
     }
 
     input,
     select,
     textarea {
       padding: 0.5rem 0.65rem;
-      background: var(--surface, #111827);
-      border: 1px solid var(--border, #334155);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      color: var(--text, #e2e8f0);
+      color: var(--text);
       font-family: inherit;
       font-size: 0.85rem;
 
       &:focus {
         outline: none;
-        border-color: var(--brand-cyan, #22d3ee);
+        border-color: var(--accent-text);
       }
     }
 
@@ -254,8 +260,8 @@
   .btn-primary {
     align-self: flex-start;
     padding: 0.5rem 1.1rem;
-    background: var(--brand-blue, #2563eb);
-    color: #fff;
+    background: var(--accent);
+    color: var(--accent-ink);
     border: none;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -273,14 +279,14 @@
 .banner-disuelto {
   margin-bottom: 1.25rem;
   padding: 1rem 1.25rem;
-  border: 1px solid #f87171;
+  border: 1px solid var(--danger-text);
   border-radius: 12px;
   background: rgba(248, 113, 113, 0.08);
 
   .titulo {
     margin: 0 0 0.35rem;
     font-weight: 700;
-    color: #f87171;
+    color: var(--danger-text);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-size: 0.85rem;
@@ -288,7 +294,7 @@
 
   p {
     margin: 0;
-    color: var(--text, #e2e8f0);
+    color: var(--text);
   }
 
   .motivo {
@@ -308,13 +314,13 @@
   h2 {
     margin: 0 0 0.75rem;
     font-size: 1.05rem;
-    color: #f87171;
+    color: var(--danger-text);
   }
 
   .advertencia {
     margin: 0 0 0.6rem;
-    color: var(--text, #e2e8f0);
-    font-size: 0.92rem;
+    color: var(--text);
+    font-size: 0.875rem;
   }
 
   .consecuencias {
@@ -329,22 +335,22 @@
     display: grid;
     gap: 0.35rem;
     margin-bottom: 0.9rem;
-    color: var(--text, #e2e8f0);
+    color: var(--text);
     font-size: 0.88rem;
 
     textarea {
       padding: 0.6rem 0.75rem;
-      background: var(--surface, #111827);
-      border: 1px solid var(--border, #334155);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      color: var(--text, #e2e8f0);
+      color: var(--text);
       font-family: inherit;
       font-size: 0.9rem;
       resize: vertical;
 
       &:focus {
         outline: none;
-        border-color: #f87171;
+        border-color: var(--danger-text);
       }
     }
   }
@@ -354,23 +360,23 @@
     align-items: center;
     gap: 0.55rem;
     margin-bottom: 1rem;
-    color: var(--text, #e2e8f0);
-    font-size: 0.92rem;
+    color: var(--text);
+    font-size: 0.875rem;
     cursor: pointer;
 
     input {
       width: 1rem;
       height: 1rem;
-      accent-color: #f87171;
+      accent-color: var(--danger);
     }
   }
 
   .error-disolucion {
     margin: 0 0 0.9rem;
     padding: 0.6rem 0.85rem;
-    border: 1px solid #f87171;
+    border: 1px solid var(--danger-text);
     border-radius: 8px;
-    color: #f87171;
+    color: var(--danger-text);
     font-size: 0.88rem;
   }
 
@@ -379,9 +385,9 @@
     font-size: 0.85rem;
     font-weight: 600;
     border-radius: 8px;
-    border: 1px solid #f87171;
+    border: 1px solid var(--danger-text);
     background: transparent;
-    color: #f87171;
+    color: var(--danger-text);
     cursor: pointer;
 
     &:hover:not(:disabled) {
@@ -399,8 +405,8 @@
 .buscar-jugadores {
   margin-top: 2rem;
   padding: 1.25rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border, #334155);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
 
   h2 {
@@ -417,17 +423,18 @@
   margin-bottom: 1rem;
 
   input[type='text'],
+  input[type='search'],
   select {
     padding: 0.5rem 0.7rem;
-    background: var(--surface, #111827);
-    border: 1px solid var(--border, #334155);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    color: var(--text, #e2e8f0);
+    color: var(--text);
     font-size: 0.85rem;
 
     &:focus {
       outline: none;
-      border-color: var(--brand-cyan, #22d3ee);
+      border-color: var(--accent-text);
     }
   }
 
@@ -442,7 +449,7 @@
 
 .btn-buscar {
   padding: 0.5rem 1.1rem;
-  background: var(--brand-blue, #2563eb);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -459,9 +466,9 @@
 .error-busqueda {
   padding: 0.6rem 0.8rem;
   margin-bottom: 0.75rem;
-  border: 1px solid #f87171;
+  border: 1px solid var(--danger-text);
   border-radius: 8px;
-  color: #f87171;
+  color: var(--danger-text);
   font-size: 0.85rem;
 }
 
@@ -477,14 +484,14 @@
   justify-content: space-between;
   padding: 0.75rem 1rem;
   background: rgba(148, 163, 184, 0.06);
-  border: 1px solid var(--border, #334155);
+  border: 1px solid var(--border);
   border-radius: 8px;
 
   .info-jugador {
     .nombre {
       margin: 0 0 0.2rem;
       font-weight: 600;
-      color: var(--text, #e2e8f0);
+      color: var(--text);
       font-size: 0.9rem;
     }
   }
@@ -492,17 +499,17 @@
 
 .badge-directo {
   font-size: 0.75rem;
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text);
 }
 
 .badge-transferencia {
   font-size: 0.75rem;
-  color: #fbbf24;
+  color: var(--accent-gold-text);
 }
 
 .btn-invitar {
   padding: 0.4rem 0.9rem;
-  background: var(--brand-blue, #2563eb);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -519,7 +526,7 @@
 .invitado-ok {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text);
 }
 
 // ---------- selección múltiple para invitar ----------

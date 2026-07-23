@@ -39,7 +39,8 @@
   margin: 0.15rem 0 0;
   font-size: 0.875rem;
   font-weight: 600;
-  opacity: 0.92;
+  // Texto chico sobre el banner naranja: tinta navy, no blanco (AA).
+  color: var(--accent-ink, #0b1120);
 }
 
 // ----- Grilla de ligas -----
@@ -198,3 +199,10 @@
 }
 
 .sin-otras { color: var(--text-muted); font-size: 0.875rem; }
+
+// Targets táctiles: chips de filtro por juego a 44px solo en táctil.
+@media (pointer: coarse) {
+  .chip-juego {
+    min-height: 44px;
+  }
+}

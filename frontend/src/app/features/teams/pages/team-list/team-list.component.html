@@ -57,7 +57,7 @@
     >
       <div class="cabecera">
         @if (equipo.logo) {
-        <img class="logo" [src]="equipo.logo" [alt]="" />
+        <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
         } @else {
         <span class="logo sin-logo" aria-hidden="true">{{ equipo.nombre.charAt(0) }}</span>
         }
@@ -103,7 +103,7 @@
     >
       <div class="cabecera">
         @if (equipo.logo) {
-        <img class="logo" [src]="equipo.logo" [alt]="" />
+        <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
         } @else {
         <span class="logo sin-logo" aria-hidden="true">{{ equipo.nombre.charAt(0) }}</span>
         }

@@ -23,6 +23,8 @@
         class="hero-carrusel"
         (mouseenter)="heroPausado.set(true)"
         (mouseleave)="heroPausado.set(false)"
+        (focusin)="heroPausado.set(true)"
+        (focusout)="heroPausado.set(false)"
       >
         <div
           class="hero-pista"
@@ -32,6 +34,8 @@
           <a
             class="hero-slide"
             [routerLink]="['/games', hero.id]"
+            [attr.tabindex]="heroVisible() === $index ? null : -1"
+            [attr.aria-hidden]="heroVisible() === $index ? null : true"
             [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
           >
             @if (foto(hero)) {
@@ -46,9 +50,15 @@
           }
         </div>
         @if (heroJuegos().length > 1) {
-        <span class="hero-puntos" aria-hidden="true">
+        <span class="hero-puntos">
           @for (j of heroJuegos(); track j.id; let i = $index) {
-          <span class="hero-punto" [class.activo]="heroVisible() === i"></span>
+          <button
+            type="button"
+            class="hero-punto"
+            [class.activo]="heroVisible() === i"
+            [attr.aria-label]="'Ver ' + j.nombre"
+            (click)="heroIndex.set(i)"
+          ></button>
           }
         </span>
         }
@@ -111,7 +121,7 @@
           [style.background]="juego.imagenUrl ? undefined : gradiente(juego.nombre)"
         >
           @if (juego.imagenUrl) {
-          <img [src]="juego.imagenUrl" alt="" />
+          <img [src]="juego.imagenUrl" alt="" loading="lazy" />
           }
           <div class="poster-velo" aria-hidden="true"></div>
           <span class="poster-nombre">{{ juego.nombre }}</span>
@@ -223,7 +233,7 @@
           <a class="rail-torneo" [routerLink]="['/tournaments', torneo.id]">
             <span class="rail-arte" [style.background]="fotoTorneo(torneo) ? undefined : gradiente(torneo.juegoNombre)">
               @if (fotoTorneo(torneo)) {
-              <img [src]="fotoTorneo(torneo)" alt="" />
+              <img [src]="fotoTorneo(torneo)" alt="" loading="lazy" />
               }
             </span>
             <span class="rail-info">
