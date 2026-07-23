@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { catchError, map, of } from 'rxjs';
 
 import { AuthService } from '../services/auth.service';
 
@@ -16,9 +17,22 @@ export const roleGuard: CanActivateFn = (route) => {
 
   const requiredRoles = (route.data?.['roles'] as string[] | undefined) ?? [];
 
-  if (requiredRoles.length === 0 || authService.hasRole(...requiredRoles)) {
+  if (requiredRoles.length === 0) {
     return true;
   }
 
-  return router.createUrlTree(['/']);
+  const authorize = () => authService.hasRole(...requiredRoles)
+    ? true
+    : router.createUrlTree(['/']);
+
+  // Después de un F5 puede existir JWT, pero /me todavía no terminó. Esperar el
+  // perfil evita rechazar rutas administrativas por una lista de roles temporalmente vacía.
+  if (authService.usuario()) {
+    return authorize();
+  }
+
+  return authService.loadCurrentUser().pipe(
+    map(() => authorize()),
+    catchError(() => of(router.createUrlTree(['/login'])))
+  );
 };

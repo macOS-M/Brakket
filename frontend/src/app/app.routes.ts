@@ -59,7 +59,8 @@ export const routes: Routes = [
       },
       {
         path: 'twitch',
-        canActivate: [authGuard],
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN'] },
         loadChildren: () => import('./features/twitch/twitch.routes').then((m) => m.routes)
       },
       {

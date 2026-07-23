@@ -27,6 +27,7 @@ public class TwitchProperties {
 
     /** Base URL de la API Helix de Twitch. */
     private String apiBaseUrl = "https://api.twitch.tv/helix";
+    private String authBaseUrl = "https://id.twitch.tv/oauth2";
 
     public String getClientId() { return clientId; }
     public void setClientId(String clientId) { this.clientId = clientId; }
@@ -39,4 +40,10 @@ public class TwitchProperties {
 
     public String getApiBaseUrl() { return apiBaseUrl; }
     public void setApiBaseUrl(String apiBaseUrl) { this.apiBaseUrl = apiBaseUrl; }
+    public String getAuthBaseUrl() { return authBaseUrl; }
+    public void setAuthBaseUrl(String authBaseUrl) { this.authBaseUrl = authBaseUrl; }
+    public boolean isConfigured() {
+        return clientId != null && !clientId.isBlank()
+                && clientSecret != null && !clientSecret.isBlank();
+    }
 }

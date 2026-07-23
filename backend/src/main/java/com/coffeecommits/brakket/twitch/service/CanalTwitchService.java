@@ -1,0 +1,130 @@
+package com.coffeecommits.brakket.twitch.service;
+
+import com.coffeecommits.brakket.common.exception.BusinessException;
+import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
+import com.coffeecommits.brakket.config.TwitchProperties;
+import com.coffeecommits.brakket.tournament.model.Partida;
+import com.coffeecommits.brakket.tournament.model.Torneo;
+import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
+import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
+import com.coffeecommits.brakket.twitch.dto.*;
+import com.coffeecommits.brakket.twitch.model.*;
+import com.coffeecommits.brakket.twitch.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.Locale;
+
+@Service
+@RequiredArgsConstructor
+public class CanalTwitchService {
+    private final CanalOficialTwitchRepository canalRepository;
+    private final TransmisionTwitchRepository transmisionRepository;
+    private final IncidenteIntegracionTwitchRepository incidenteRepository;
+    private final TorneoRepository torneoRepository;
+    private final PartidaRepository partidaRepository;
+    private final TwitchGateway twitchGateway;
+    private final TwitchProperties properties;
+
+    @Transactional(readOnly = true)
+    public CanalTwitchResponse obtener() {
+        return canalRepository.findFirstByActivoTrue().map(this::response)
+                .orElse(new CanalTwitchResponse(null, null, normalizar(properties.getChannel()),
+                        null, url(normalizar(properties.getChannel())), "SIN_CONFIGURAR", false,
+                        null, null, properties.isConfigured()));
+    }
+
+    @Transactional
+    public CanalTwitchResponse configurar(ConfigurarCanalTwitchRequest request) {
+        String login = normalizar(request.canal());
+        if (canalRepository.existsByLoginCanalIgnoreCaseAndActivoTrue(login)) {
+            throw new BusinessException("El canal ya está registrado como canal oficial activo.");
+        }
+        canalRepository.findFirstByActivoTrue().ifPresent(anterior -> {
+            anterior.setActivo(false);
+            anterior.setActualizadoEn(LocalDateTime.now());
+        });
+        LocalDateTime ahora = LocalDateTime.now();
+        CanalOficialTwitch canal = canalRepository.save(CanalOficialTwitch.builder()
+                .loginCanal(login).urlCanal(url(login)).estado(EstadoIntegracionTwitch.PENDIENTE)
+                .activo(false).creadoEn(ahora).actualizadoEn(ahora).build());
+        if (!properties.isConfigured()) {
+            canal.setUltimoError("Pendiente de configurar las credenciales de Twitch.");
+            return response(canalRepository.save(canal));
+        }
+        return validarEntidad(canal);
+    }
+
+    @Transactional
+    public CanalTwitchResponse validar() {
+        CanalOficialTwitch canal = canalRepository.findFirstByOrderByIdDesc()
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un canal configurado."));
+        return validarEntidad(canal);
+    }
+
+    @Transactional
+    public TransmisionTwitchResponse asociar(AsociarTransmisionRequest request) {
+        if (request.torneoId() == null && request.partidaId() == null)
+            throw new IllegalArgumentException("Debe indicar un torneo o una partida.");
+        CanalOficialTwitch canal = canalRepository.findFirstByActivoTrue()
+                .orElseThrow(() -> new BusinessException("No existe un canal oficial activo."));
+        Torneo torneo = request.torneoId() == null ? null : torneoRepository.findById(request.torneoId())
+                .orElseThrow(() -> new ResourceNotFoundException("El torneo no existe."));
+        Partida partida = request.partidaId() == null ? null : partidaRepository.findById(request.partidaId())
+                .orElseThrow(() -> new ResourceNotFoundException("La partida no existe."));
+        if (partida != null && torneo != null && !partida.getTorneo().getId().equals(torneo.getId()))
+            throw new BusinessException("La partida no pertenece al torneo indicado.");
+        TwitchGateway.StreamInfo live = twitchGateway.findLiveStream(canal.getLoginCanal());
+        TransmisionTwitch entity = transmisionRepository.save(TransmisionTwitch.builder()
+                .canal(canal).torneo(torneo).partida(partida)
+                .twitchStreamId(live == null ? null : live.id())
+                .estado(live == null ? "SIN_DATOS_EN_VIVO" : "EN_VIVO")
+                .iniciadaEn(live == null ? null : live.startedAt()).creadaEn(LocalDateTime.now()).build());
+        return new TransmisionTwitchResponse(entity.getId(), entity.getTwitchStreamId(),
+                torneo == null ? null : torneo.getId(), partida == null ? null : partida.getId(),
+                entity.getEstado(), entity.getIniciadaEn());
+    }
+
+    private CanalTwitchResponse validarEntidad(CanalOficialTwitch canal) {
+        try {
+            TwitchGateway.ChannelInfo info = twitchGateway.findChannel(canal.getLoginCanal());
+            if (info == null) {
+                canal.setEstado(EstadoIntegracionTwitch.ERROR);
+                canal.setUltimoError("El canal no existe en Twitch.");
+                canal.setActivo(false);
+                throw new ResourceNotFoundException("El canal no existe en Twitch.");
+            }
+            canal.setTwitchUsuarioId(info.id());
+            canal.setNombreMostrado(info.displayName());
+            canal.setEstado(EstadoIntegracionTwitch.ACTIVO);
+            canal.setActivo(true);
+            canal.setUltimoError(null);
+            canal.setUltimaValidacion(LocalDateTime.now());
+            canal.setActualizadoEn(LocalDateTime.now());
+            return response(canalRepository.save(canal));
+        } catch (TwitchUnavailableException ex) {
+            canal.setEstado(EstadoIntegracionTwitch.NO_DISPONIBLE);
+            canal.setActivo(false);
+            canal.setUltimoError(ex.getMessage());
+            canal.setActualizadoEn(LocalDateTime.now());
+            canalRepository.save(canal);
+            incidenteRepository.save(IncidenteIntegracionTwitch.builder().canal(canal)
+                    .tipo("CONEXION").detalle(ex.getMessage()).ocurridoEn(LocalDateTime.now()).build());
+            return response(canal);
+        }
+    }
+
+    private CanalTwitchResponse response(CanalOficialTwitch c) {
+        return new CanalTwitchResponse(c.getId(), c.getTwitchUsuarioId(), c.getLoginCanal(),
+                c.getNombreMostrado(), c.getUrlCanal(), c.getEstado().name(), c.isActivo(),
+                c.getUltimoError(), c.getUltimaValidacion(), properties.isConfigured());
+    }
+    private String normalizar(String value) {
+        if (value == null || value.isBlank()) return null;
+        String clean = value.trim().replaceAll("/+$", "");
+        int slash = clean.lastIndexOf('/');
+        return (slash >= 0 ? clean.substring(slash + 1) : clean).toLowerCase(Locale.ROOT);
+    }
+    private String url(String login) { return login == null ? null : "https://www.twitch.tv/" + login; }
+}

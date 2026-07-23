@@ -26,6 +26,10 @@ public class MetricaChat {
     @JoinColumn(name = "cuenta_twitch_id", nullable = false)
     private CuentaTwitch cuentaTwitch;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transmision_twitch_id")
+    private TransmisionTwitch transmisionTwitch;
+
     @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;
 
