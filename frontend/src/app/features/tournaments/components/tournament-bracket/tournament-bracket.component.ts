@@ -10,6 +10,7 @@ import {
   signal,
   viewChild
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 
 import { Partida } from '../../../../models/tournament.model';
 
@@ -23,6 +24,25 @@ interface RondaPlaceholder {
   numero: number;
   etiqueta: string;
   cruces: number[];
+}
+
+/** Fila de la tabla de posiciones (round robin, suizo y grupos). */
+interface Posicion {
+  equipoId: number;
+  nombre: string;
+  logo: string | null;
+  jugadas: number;
+  ganadas: number;
+  perdidas: number;
+  diferencia: number;
+}
+
+/** Un grupo de la fase de grupos: su tabla y sus jornadas. */
+interface Grupo {
+  indice: number;
+  letra: string;
+  tabla: Posicion[];
+  jornadas: Ronda[];
 }
 
 /** Un riel de la llave: el camino SVG entre una partida y su siguiente cruce. */
@@ -42,21 +62,24 @@ export interface MarcadorEvent {
   resolucion: boolean;
 }
 
+/** Forma de dibujar el formato: árbol único, doble llave, liga o grupos. */
+type TipoVista = 'ARBOL' | 'DOBLE' | 'LIGA' | 'GRUPOS';
+
 /**
- * La llave del torneo (RF-26/27), estilo Challenger Mode: columnas por
- * ronda. Antes de iniciar muestra los cruces "Por decidir" según el cupo;
- * en curso muestra lobby, marcadores y las acciones que correspondan al
- * rol (reportar / confirmar / rechazar / resolver).
+ * La llave del torneo (RF-26/27), estilo Challenger Mode. La vista depende
+ * del formato: árbol de eliminación (columnas por ronda y rieles SVG),
+ * doble eliminación (llave superior, inferior y gran final), round robin
+ * y suizo (tabla de posiciones + jornadas) o fase de grupos (un bloque
+ * por grupo y la llave final).
  *
- * Los rieles entre rondas se dibujan en un SVG medido sobre el DOM real
- * (las tarjetas cambian de alto al abrir formularios). El camino del
- * campeón se pinta en oro, el de tus equipos en acento, y cuando una
- * partida se finaliza el riel hacia el siguiente cruce pulsa una vez.
+ * Los rieles se dibujan midiendo el DOM real (las tarjetas cambian de
+ * alto al abrir formularios) y siguen los enlaces reales de avance
+ * (siguientePartidaId), así valen también para la doble eliminación.
  */
 @Component({
   selector: 'app-tournament-bracket',
   standalone: true,
-  imports: [],
+  imports: [NgTemplateOutlet],
   templateUrl: './tournament-bracket.component.html',
   styleUrl: './tournament-bracket.component.scss'
 })
@@ -66,6 +89,10 @@ export class TournamentBracketComponent {
   readonly partidas = input.required<Partida[]>();
   /** Cupo del torneo: dibuja la llave tentativa antes de generarse. */
   readonly maxEquipos = input.required<number>();
+  /** Código o nombre del formato; define la vista. */
+  readonly formato = input<string>('ELIMINACION_DIRECTA');
+  /** Campeón según el torneo (para coronar tabla o final). */
+  readonly campeonEquipoId = input<number | null>(null);
   readonly misEquipos = input<number[]>([]);
   readonly esGestor = input(false);
   readonly enCurso = input(false);
@@ -98,8 +125,28 @@ export class TournamentBracketComponent {
   private observador: ResizeObserver | null = null;
   private ultimaGeometria = '';
 
-  readonly rondas = computed<Ronda[]>(() => {
-    const lista = this.partidas();
+  /** La vista que corresponde al formato (laxa, igual que el backend). */
+  readonly tipo = computed<TipoVista>(() => {
+    const plano = this.formato().normalize('NFD').replace(/\p{M}/gu, '').toUpperCase();
+    if (/DOBLE/.test(plano)) {
+      return 'DOBLE';
+    }
+    if (/GRUPO/.test(plano)) {
+      return 'GRUPOS';
+    }
+    if (/ROBIN|SUIZO|SWISS/.test(plano)) {
+      return 'LIGA';
+    }
+    return 'ARBOL';
+  });
+
+  /** Las jornadas de una liga se llaman así solo en round robin. */
+  readonly nombreJornada = computed(() =>
+    /ROBIN/i.test(this.formato()) ? 'Jornada' : 'Ronda');
+
+  // ---------- agrupaciones por vista ----------
+
+  private rondasDe(lista: Partida[], etiqueta: (numero: number, total: number) => string): Ronda[] {
     if (lista.length === 0) {
       return [];
     }
@@ -112,10 +159,102 @@ export class TournamentBracketComponent {
       .sort(([a], [b]) => a - b)
       .map(([numero, partidas]) => ({
         numero,
-        etiqueta: this.etiquetaRonda(numero, total),
+        etiqueta: etiqueta(numero, total),
         partidas: partidas.sort((a, b) => a.orden - b.orden)
       }));
+  }
+
+  /** Árbol único (eliminación directa). */
+  readonly rondas = computed<Ronda[]>(() =>
+    this.rondasDe(this.partidas(), (n, t) => this.etiquetaRonda(n, t)));
+
+  readonly rondasSuperior = computed<Ronda[]>(() =>
+    this.rondasDe(
+      this.partidas().filter((p) => p.fase === 'WINNERS'),
+      (n, t) => (n === t ? 'Final superior' : `Ronda ${n}`)));
+
+  readonly rondasInferior = computed<Ronda[]>(() =>
+    this.rondasDe(
+      this.partidas().filter((p) => p.fase === 'LOSERS'),
+      (n, t) => (n === t ? 'Final inferior' : `Inferior ${n}`)));
+
+  readonly granFinal = computed<Partida | null>(() =>
+    this.partidas().find((p) => p.fase === 'GRAN_FINAL') ?? null);
+
+  /** Round robin y suizo: jornadas planas. */
+  readonly jornadas = computed<Ronda[]>(() =>
+    this.rondasDe(this.partidas(), (n) => `${this.nombreJornada()} ${n}`));
+
+  /** Tabla general de la liga (round robin / suizo). */
+  readonly tablaLiga = computed<Posicion[]>(() => this.tabla(this.partidas()));
+
+  readonly grupos = computed<Grupo[]>(() => {
+    const deGrupos = this.partidas().filter((p) => p.fase === 'GRUPOS');
+    const indices = [...new Set(deGrupos.map((p) => p.grupo ?? 0))].sort((a, b) => a - b);
+    return indices.map((indice) => {
+      const propias = deGrupos.filter((p) => (p.grupo ?? 0) === indice);
+      return {
+        indice,
+        letra: String.fromCharCode(65 + indice),
+        tabla: this.tabla(propias),
+        jornadas: this.rondasDe(propias, (n) => `Jornada ${n}`)
+      };
+    });
   });
+
+  /** Llave posterior a los grupos. */
+  readonly llaveFinal = computed<Ronda[]>(() =>
+    this.rondasDe(
+      this.partidas().filter((p) => p.fase === 'ELIMINACION'),
+      (n, t) => this.etiquetaRonda(n, t)));
+
+  /**
+   * Tabla de posiciones desde las partidas cerradas: victorias, diferencia
+   * y puntos a favor (mismos criterios que el backend). Un bye vale una
+   * victoria sin marcador.
+   */
+  private tabla(lista: Partida[]): Posicion[] {
+    const filas = new Map<number, Posicion>();
+    const asegurar = (id: number | null, nombre: string | null, logo: string | null) => {
+      if (id !== null && !filas.has(id)) {
+        filas.set(id, {
+          equipoId: id, nombre: nombre ?? '—', logo,
+          jugadas: 0, ganadas: 0, perdidas: 0, diferencia: 0
+        });
+      }
+    };
+    const favor = new Map<number, number>();
+    for (const p of lista) {
+      asegurar(p.equipoAId, p.equipoANombre, p.equipoALogo);
+      asegurar(p.equipoBId, p.equipoBNombre, p.equipoBLogo);
+      if (p.estado !== 'FINALIZADA' || p.ganadorEquipoId === null) {
+        continue;
+      }
+      for (const lado of ['A', 'B'] as const) {
+        const id = lado === 'A' ? p.equipoAId : p.equipoBId;
+        if (id === null) {
+          continue;
+        }
+        const fila = filas.get(id)!;
+        fila.jugadas++;
+        if (id === p.ganadorEquipoId) {
+          fila.ganadas++;
+        } else {
+          fila.perdidas++;
+        }
+        if (p.marcadorA !== null && p.marcadorB !== null) {
+          const propio = lado === 'A' ? p.marcadorA : p.marcadorB;
+          const rival = lado === 'A' ? p.marcadorB : p.marcadorA;
+          fila.diferencia += propio - rival;
+          favor.set(id, (favor.get(id) ?? 0) + propio);
+        }
+      }
+    }
+    return [...filas.values()].sort((a, b) =>
+      b.ganadas - a.ganadas
+      || b.diferencia - a.diferencia
+      || (favor.get(b.equipoId) ?? 0) - (favor.get(a.equipoId) ?? 0));
+  }
 
   /** Llave tentativa según el cupo, cuando el bracket aún no existe. */
   readonly rondasPlaceholder = computed<RondaPlaceholder[]>(() => {
@@ -135,25 +274,43 @@ export class TournamentBracketComponent {
     return rondas;
   });
 
-  /** Equipo campeón: el ganador de la final, si ya existe. */
+  /** Equipo campeón: lo dice el torneo o, si no, la final del árbol. */
   readonly campeonId = computed<number | null>(() => {
+    if (this.campeonEquipoId() !== null) {
+      return this.campeonEquipoId();
+    }
+    const culmen = this.partidaCulmen();
+    return culmen?.estado === 'FINALIZADA' ? culmen.ganadorEquipoId : null;
+  });
+
+  /** La partida que corona: gran final, final de la llave o final del árbol. */
+  private partidaCulmen(): Partida | null {
     const lista = this.partidas();
     if (lista.length === 0) {
       return null;
     }
-    const total = Math.max(...lista.map((p) => p.ronda));
-    const final = lista.find((p) => p.ronda === total);
-    return final?.estado === 'FINALIZADA' ? final.ganadorEquipoId : null;
-  });
+    if (this.tipo() === 'DOBLE') {
+      return this.granFinal();
+    }
+    if (this.tipo() === 'LIGA') {
+      return null; // la corona vive en la tabla, no en una partida
+    }
+    const arbol = this.tipo() === 'GRUPOS'
+      ? lista.filter((p) => p.fase === 'ELIMINACION')
+      : lista;
+    if (arbol.length === 0) {
+      return null;
+    }
+    const total = Math.max(...arbol.map((p) => p.ronda));
+    return arbol.find((p) => p.ronda === total) ?? null;
+  }
 
-  /** Índice global de tarjeta (orden ronda a ronda) para la cascada. */
+  /** Índice global de tarjeta (orden de dibujo) para la cascada. */
   readonly indicesCascada = computed<Map<number, number>>(() => {
     const indices = new Map<number, number>();
     let i = 0;
-    for (const ronda of this.rondas()) {
-      for (const p of ronda.partidas) {
-        indices.set(p.id, i++);
-      }
+    for (const p of this.partidas()) {
+      indices.set(p.id, i++);
     }
     return indices;
   });
@@ -211,9 +368,9 @@ export class TournamentBracketComponent {
   }
 
   /**
-   * Mide cada tarjeta contra el lienzo y traza el codo hasta su cruce
-   * padre (ronda r, orden o → ronda r+1, orden o>>1). Vale tanto para la
-   * llave real como para la tentativa: ambas marcan data-nodo="r-o".
+   * Mide cada tarjeta contra el lienzo y traza el codo hasta su cruce de
+   * avance. En la llave real el enlace es el de verdad (siguientePartidaId,
+   * data-nodo="p{id}"); en la tentativa rige el árbol binario (r-o).
    */
   private medirRieles(): void {
     const lienzo = this.lienzo()?.nativeElement;
@@ -232,34 +389,48 @@ export class TournamentBracketComponent {
       return;
     }
 
+    const lista = this.partidas();
+    const enlaces: { de: string; a: string; partida: Partida | null }[] = [];
+    if (lista.length === 0) {
+      for (const clave of nodos.keys()) {
+        const [ronda, orden] = clave.split('-').map(Number);
+        const padre = `${ronda + 1}-${orden >> 1}`;
+        if (nodos.has(padre)) {
+          enlaces.push({ de: clave, a: padre, partida: null });
+        }
+      }
+    } else {
+      for (const p of lista) {
+        if (p.siguientePartidaId !== null
+          && nodos.has(`p${p.id}`) && nodos.has(`p${p.siguientePartidaId}`)) {
+          enlaces.push({ de: `p${p.id}`, a: `p${p.siguientePartidaId}`, partida: p });
+        }
+      }
+    }
+
     const desplazamientoX = lienzo.scrollLeft;
-    const porId = new Map(this.partidas().map((p) => [`${p.ronda}-${p.orden}`, p]));
     const campeon = this.campeonId();
     const mios = this.misEquipos();
     const actualizadas = this.recienActualizadas();
 
     const rieles: Riel[] = [];
-    for (const [clave, rect] of nodos) {
-      const [ronda, orden] = clave.split('-').map(Number);
-      const padre = nodos.get(`${ronda + 1}-${orden >> 1}`);
-      if (!padre) {
-        continue;
-      }
+    for (const enlace of enlaces) {
+      const rect = nodos.get(enlace.de)!;
+      const padre = nodos.get(enlace.a)!;
       const x1 = rect.right - base.left + desplazamientoX;
       const y1 = rect.top + rect.height / 2 - base.top;
       const x2 = padre.left - base.left + desplazamientoX;
       const y2 = padre.top + padre.height / 2 - base.top;
       const xm = x1 + (x2 - x1) / 2;
 
-      const partida = porId.get(clave);
-      const ganador = partida?.ganadorEquipoId ?? null;
+      const ganador = enlace.partida?.ganadorEquipoId ?? null;
       rieles.push({
-        id: clave,
+        id: enlace.de,
         d: `M ${x1} ${y1} H ${xm} V ${y2} H ${x2}`,
         campeon: campeon !== null && ganador === campeon,
         mio: campeon === null && ganador !== null && mios.includes(ganador),
-        pulso: partida !== undefined && actualizadas.has(partida.id)
-          && partida.estado === 'FINALIZADA'
+        pulso: enlace.partida !== null && actualizadas.has(enlace.partida.id)
+          && enlace.partida.estado === 'FINALIZADA'
       });
     }
 
@@ -348,7 +519,7 @@ export class TournamentBracketComponent {
 
   enviar(p: Partida): void {
     if (this.marcadorA() === this.marcadorB()) {
-      this.errorLocal.set('En eliminación directa no hay empates: los marcadores deben diferir.');
+      this.errorLocal.set('No hay empates: los marcadores deben diferir para definir un ganador.');
       return;
     }
     this.errorLocal.set(null);
@@ -372,7 +543,7 @@ export class TournamentBracketComponent {
   esFinalCoronada(p: Partida): boolean {
     const campeon = this.campeonId();
     return campeon !== null && p.estado === 'FINALIZADA' && p.ganadorEquipoId === campeon
-      && p.ronda === Math.max(...this.partidas().map((x) => x.ronda));
+      && this.partidaCulmen()?.id === p.id;
   }
 
   private etiquetaRonda(numero: number, total: number): string {

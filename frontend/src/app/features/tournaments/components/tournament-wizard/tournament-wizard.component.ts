@@ -177,12 +177,18 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   /**
-   * El motor de llaves solo genera eliminación directa (deuda declarada en
-   * DD-05): los demás formatos se muestran, pero aún no se pueden elegir.
+   * El motor genera los cinco formatos del catálogo (DD-05 cerrada). El
+   * gate queda por si el catálogo algún día trae un formato sin motor:
+   * ese seguiría marcado "Pronto".
    */
   soportado(formato: string): boolean {
-    const f = formato.toUpperCase();
-    return f === 'ELIMINACION_DIRECTA' || f === 'ELIMINACIÓN DIRECTA';
+    const plano = formato.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase();
+    return /DOBLE|GRUPO|ROBIN|SUIZO|SWISS|ELIMINACION|DIRECTA/.test(plano);
+  }
+
+  /** La fase de grupos necesita cupo para armar grupos y llave (≥ 4). */
+  esFormatoGrupos(): boolean {
+    return /GRUPO/.test(this.formato().normalize('NFD').replace(/\p{M}/gu, '').toUpperCase());
   }
 
   /** El paso actual está completo y se puede avanzar. */
@@ -192,7 +198,8 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
         return this.nombre().trim().length > 0
           && (this.ligaId() === null || this.temporadaId() !== null);
       case 2:
-        return !!this.formato() && this.tamano() > 0 && this.cupo() >= 2;
+        return !!this.formato() && this.tamano() > 0 && this.cupo() >= 2
+          && (!this.esFormatoGrupos() || this.cupo() >= 4);
       case 3:
         return !!this.fechaInicio() && new Date(this.fechaInicio()) > new Date();
     }

@@ -82,8 +82,29 @@ public class Partida {
     @JoinColumn(name = "siguiente_partida_id")
     private Partida siguiente;
 
-    /** Bye: solo hay un equipo y no habrá rival en esta ronda. */
+    /** Sección de la competencia; null en formatos de una sola estructura. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "fase", length = 20)
+    private FaseTorneo fase;
+
+    /** Índice del grupo (0-based) en la fase de grupos. */
+    @Column(name = "grupo")
+    private Integer grupo;
+
+    /** Slot ('A'/'B') del ganador en su siguiente partida; null → orden % 2. */
+    @Column(name = "siguiente_slot", length = 1)
+    private String siguienteSlot;
+
+    /** Descenso de la doble eliminación: adónde cae el perdedor. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "perdedor_siguiente_partida_id")
+    private Partida perdedorSiguiente;
+
+    @Column(name = "perdedor_slot", length = 1)
+    private String perdedorSlot;
+
+    /** Bye: falta al menos un rival y aun así la partida quedó cerrada. */
     public boolean esBye() {
-        return equipoA != null && equipoB == null && estado == EstadoPartida.FINALIZADA;
+        return (equipoA == null || equipoB == null) && estado == EstadoPartida.FINALIZADA;
     }
 }

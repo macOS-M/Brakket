@@ -166,6 +166,9 @@
         <option [value]="c" [selected]="cupo() === c">{{ c }} equipos</option>
         }
       </select>
+      @if (esFormatoGrupos() && cupo() < 4) {
+      <p class="campo-error">La fase de grupos necesita un cupo de al menos 4 equipos.</p>
+      }
     </div>
     } @case (3) {
     <div class="campo">

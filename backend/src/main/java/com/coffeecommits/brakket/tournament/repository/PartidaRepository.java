@@ -26,6 +26,14 @@ public interface PartidaRepository extends JpaRepository<Partida, Long> {
     /** El bracket completo en orden de dibujo: ronda a ronda, slot a slot. */
     List<Partida> findByTorneoIdOrderByRondaAscOrdenAsc(Long torneoId);
 
+    /**
+     * Partidas que alimentan a esta (su ganador o su perdedor ocupa uno de
+     * sus slots): permiten saber si un slot vacío ya no tiene quién lo llene
+     * y la partida debe cerrarse como bye.
+     */
+    @Query("select p from Partida p where p.siguiente.id = :id or p.perdedorSiguiente.id = :id")
+    List<Partida> alimentadoresDe(@Param("id") Long id);
+
     boolean existsByTorneoId(Long torneoId);
 
     /**
@@ -40,4 +48,13 @@ public interface PartidaRepository extends JpaRepository<Partida, Long> {
                   com.coffeecommits.brakket.tournament.model.EstadoPartida.CANCELADA)
             """)
     boolean existsPartidaPendientePorEquipo(@Param("equipoId") Long equipoId);
+
+    // Historial competitivo del equipo (bloquea el borrado físico). Van como
+    // tres derivadas separadas: un OR de paths implícitos en JPQL generaría
+    // inner joins que ignoran las filas con el otro equipo en null.
+    boolean existsByEquipoAId(Long equipoId);
+
+    boolean existsByEquipoBId(Long equipoId);
+
+    boolean existsByGanadorId(Long equipoId);
 }

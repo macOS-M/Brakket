@@ -80,6 +80,10 @@ export interface Partida {
   id: number;
   ronda: number;
   orden: number;
+  /** Sección: WINNERS/LOSERS/GRAN_FINAL (doble elim), GRUPOS/ELIMINACION (fase de grupos). */
+  fase: 'WINNERS' | 'LOSERS' | 'GRAN_FINAL' | 'GRUPOS' | 'ELIMINACION' | null;
+  /** Índice del grupo (0-based) cuando fase = GRUPOS. */
+  grupo: number | null;
   equipoAId: number | null;
   equipoANombre: string | null;
   equipoALogo: string | null;

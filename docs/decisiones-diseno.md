@@ -65,9 +65,17 @@ Brakket es la **capa organizativa por fuera del juego** y el puente son
 las personas:
 
 - **Iniciar torneo** (organizador o ADMIN, ≥2 inscritos): cierra la
-  inscripción, genera el **bracket de eliminación directa** (RF-26/27)
-  redondeando a la potencia de 2 siguiente — los primeros inscritos
-  reciben los byes — y pone el torneo `EN_CURSO`.
+  inscripción, genera la estructura del **formato elegido** (RF-26/27) y
+  pone el torneo `EN_CURSO`. Los cinco formatos del catálogo tienen
+  motor real (V31): eliminación directa (potencia de 2 con byes a los
+  primeros inscritos), doble eliminación (llave inferior + gran final
+  única, sin bracket reset), round robin (método del círculo; campeón
+  por victorias → diferencia → puntos a favor), suizo (⌈log2 n⌉ rondas
+  generadas al cerrarse la anterior, emparejando por marcas y evitando
+  revanchas; los byes rotan) y fase de grupos + eliminación (grupos de
+  ~4 por reparto alterno, avanzan los dos primeros a una llave cruzada
+  1° vs 2° del grupo hermano; exige ≥4 inscritos). En ningún formato
+  hay empates: el marcador debe definir un ganador.
 - **Lobby por partida**: cada cruce recibe nombre y clave autogenerados
   (`BRAKKET-T7-R1M2` + clave dictable). Los capitanes crean esa partida
   privada dentro del juego; Brakket no la crea ni la verifica.
@@ -89,9 +97,8 @@ las personas:
   invitación).
 - Aprobación de inscripciones por el organizador (hoy: inscripción
   directa hasta llenar cupo).
-- Formatos de bracket más allá de eliminación directa (doble
-  eliminación, round robin, suizo): el wizard los ofrece como metadato
-  pero el motor genera eliminación simple (DD-05).
+- La gran final de la doble eliminación es única (sin bracket reset: el
+  invicto no tiene ventaja de "hay que ganarle dos veces").
 - La lobby (nombre y clave) es visible para cualquiera que vea el
   torneo; restringirla a los capitanes participantes queda pendiente.
 - Disputas formales con evidencia adjunta (RF-30+): hoy el rechazo deja

@@ -17,6 +17,7 @@ import com.coffeecommits.brakket.tournament.dto.EquipoInscritoResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoDetalleResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoResponse;
 import com.coffeecommits.brakket.tournament.model.AjustePartida;
+import com.coffeecommits.brakket.tournament.model.FormatoTorneo;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
@@ -116,7 +117,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .organizador(organizador)
                 .nombre(request.nombre().trim())
                 .descripcion(normalizar(request.descripcion()))
-                .formato(request.formato().trim())
+                .formato(formatoValido(request.formato()))
                 .tamanoEquipo(request.tamanoEquipo())
                 .maxEquipos(request.maxEquipos())
                 .fechaInicio(request.fechaInicio())
@@ -304,6 +305,18 @@ public class TorneoServiceImpl implements TorneoService {
 
     private static String normalizar(String valor) {
         return valor == null || valor.trim().isEmpty() ? null : valor.trim();
+    }
+
+    /**
+     * El formato se guarda con su código canónico del catálogo: es lo que
+     * el motor de llaves interpreta al iniciar el torneo (DD-05 cerrada).
+     */
+    private static String formatoValido(String formato) {
+        return FormatoTorneo.interpretar(formato)
+                .orElseThrow(() -> new BusinessException(
+                        "Formato no soportado: %s. Valen eliminación directa, doble eliminación, round robin, suizo o fase de grupos y eliminación"
+                                .formatted(formato)))
+                .name();
     }
 
     /** Descarta pares vacíos y recorta espacios de los ajustes de partida. */

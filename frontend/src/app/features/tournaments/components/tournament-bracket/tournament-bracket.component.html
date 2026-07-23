@@ -1,8 +1,174 @@
+<!-- Tarjeta de partida compartida por todas las vistas (árbol, doble
+     llave, liga y grupos): lobby, marcadores y acciones según el rol. -->
+<ng-template #tarjeta let-p>
+  <article
+    class="partida"
+    [attr.data-nodo]="'p' + p.id"
+    [class.finalizada]="p.estado === 'FINALIZADA'"
+    [class.disputa]="p.estado === 'EN_DISPUTA'"
+    [class.actualizada]="recienActualizadas().has(p.id)"
+    [class.coronada]="esFinalCoronada(p)"
+    [class.entrada]="generacionReciente()"
+    [style.--i]="indicesCascada().get(p.id) ?? 0"
+  >
+    <div class="partida-equipos">
+      <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoAId">
+        <span class="lado-nombre" [class.por-decidir]="!p.equipoANombre">
+          {{ p.equipoANombre ?? (p.bye ? 'Bye' : 'Por decidir') }}
+        </span>
+        <span class="lado-marcador">{{ marcadorDe(p, 'A') }}</span>
+      </div>
+      <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoBId">
+        <span class="lado-nombre" [class.por-decidir]="!p.bye && !p.equipoBNombre">
+          {{ p.bye && !p.equipoBNombre ? 'Bye' : (p.equipoBNombre ?? 'Por decidir') }}
+        </span>
+        <span class="lado-marcador">{{ marcadorDe(p, 'B') }}</span>
+      </div>
+    </div>
+
+    @if (p.estado === 'REPORTADA') {
+    <p class="partida-estado reportada">Reporte enviado: falta la confirmación del rival</p>
+    } @else if (p.estado === 'EN_DISPUTA') {
+    <p class="partida-estado en-disputa">En disputa: resuelve el organizador</p>
+    }
+
+    @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
+    <!-- El puente con el juego: la partida privada que ambos capitanes
+         crean dentro del juego con estas credenciales. Un tap copia. -->
+    <div class="lobby">
+      <button
+        type="button"
+        class="lobby-copiar"
+        [class.copiado]="copiado() === p.id + '-lobby'"
+        (click)="copiarLobby(p, 'lobby', p.lobbyNombre)"
+      >
+        <span class="lobby-etiqueta">Lobby</span>
+        <span class="lobby-valor">{{ p.lobbyNombre }}</span>
+        <span class="lobby-feedback" aria-hidden="true">{{ copiado() === p.id + '-lobby' ? '✓' : '⧉' }}</span>
+        <span class="sr-only">{{ copiado() === p.id + '-lobby' ? 'copiado' : 'copiar nombre del lobby' }}</span>
+      </button>
+      @if (p.lobbyClave) {
+      <button
+        type="button"
+        class="lobby-copiar"
+        [class.copiado]="copiado() === p.id + '-clave'"
+        (click)="copiarLobby(p, 'clave', p.lobbyClave)"
+      >
+        <span class="lobby-etiqueta">Clave</span>
+        <span class="lobby-valor">{{ p.lobbyClave }}</span>
+        <span class="lobby-feedback" aria-hidden="true">{{ copiado() === p.id + '-clave' ? '✓' : '⧉' }}</span>
+        <span class="sr-only">{{ copiado() === p.id + '-clave' ? 'copiada' : 'copiar clave del lobby' }}</span>
+      </button>
+      }
+    </div>
+    }
+
+    @if (reportando() === p.id) {
+    <div class="marcador-form">
+      <label class="marcador-campo">
+        <span>{{ p.equipoANombre }}</span>
+        <input
+          type="number"
+          min="0"
+          max="999"
+          [value]="marcadorA()"
+          (input)="marcadorA.set(+$any($event.target).value)"
+        />
+      </label>
+      <label class="marcador-campo">
+        <span>{{ p.equipoBNombre }}</span>
+        <input
+          type="number"
+          min="0"
+          max="999"
+          [value]="marcadorB()"
+          (input)="marcadorB.set(+$any($event.target).value)"
+        />
+      </label>
+      <div class="marcador-acciones">
+        <button type="button" class="btn-primary" [disabled]="ocupado()" (click)="enviar(p)">
+          {{ ocupado() ? 'Enviando…' : puedeReportar(p) ? 'Reportar' : 'Resolver' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="cerrarMarcador()">Cancelar</button>
+      </div>
+    </div>
+    } @else {
+    <div class="partida-acciones">
+      @if (puedeReportar(p)) {
+      <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
+        Reportar resultado
+      </button>
+      }
+      @if (puedeConfirmar(p)) {
+      <button
+        type="button"
+        class="btn-primary"
+        [disabled]="ocupado()"
+        (click)="confirmar.emit(p)"
+      >
+        Confirmar
+      </button>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="ocupado()"
+        (click)="rechazar.emit(p)"
+      >
+        Rechazar
+      </button>
+      }
+      @if (puedeResolver(p) && !puedeReportar(p) && !puedeConfirmar(p)) {
+      <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
+        Resolver (organizador)
+      </button>
+      }
+    </div>
+    }
+  </article>
+</ng-template>
+
+<!-- Tabla de posiciones (round robin, suizo y cada grupo). -->
+<ng-template #tablaPosiciones let-filas let-etiqueta="etiqueta">
+  <table class="tabla" [attr.aria-label]="etiqueta">
+    <thead>
+      <tr>
+        <th class="col-num">#</th>
+        <th class="col-equipo">Equipo</th>
+        <th class="col-num" title="Partidas jugadas">PJ</th>
+        <th class="col-num" title="Ganadas">G</th>
+        <th class="col-num" title="Perdidas">P</th>
+        <th class="col-num" title="Diferencia de puntos">DIF</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (fila of filas; track fila.equipoId; let i = $index) {
+      <tr
+        [class.campeon]="campeonId() === fila.equipoId"
+        [class.mio]="campeonId() === null && soyCapitanDe(fila.equipoId)"
+      >
+        <td class="col-num">{{ i + 1 }}</td>
+        <td class="col-equipo">
+          {{ fila.nombre }}
+          @if (campeonId() === fila.equipoId) {
+          <span class="corona" aria-label="campeón">🏆</span>
+          }
+        </td>
+        <td class="col-num">{{ fila.jugadas }}</td>
+        <td class="col-num">{{ fila.ganadas }}</td>
+        <td class="col-num">{{ fila.perdidas }}</td>
+        <td class="col-num">{{ fila.diferencia > 0 ? '+' + fila.diferencia : fila.diferencia }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</ng-template>
+
 @if (errorLocal()) {
 <p class="mensaje-error" role="alert">{{ errorLocal() }}</p>
 }
 
 @if (partidas().length === 0) {
+@if (tipo() === 'ARBOL') {
 <!-- La llave tentativa según el cupo, como CM antes de arrancar. -->
 <p class="nota-llave">
   La llave se genera al iniciar el torneo. Así se vería con el cupo completo:
@@ -35,6 +201,15 @@
   </div>
 </div>
 } @else {
+<p class="nota-llave">
+  @switch (tipo()) {
+  @case ('DOBLE') { Las llaves superior e inferior se generan al iniciar el torneo con los equipos inscritos. }
+  @case ('LIGA') { El calendario y la tabla de posiciones se generan al iniciar el torneo con los equipos inscritos. }
+  @case ('GRUPOS') { Los grupos y su llave final se generan al iniciar el torneo con los equipos inscritos. }
+  }
+</p>
+}
+} @else {
 <div class="lienzo" #lienzo>
   <svg
     class="rieles"
@@ -52,138 +227,128 @@
     />
     }
   </svg>
+
+  @switch (tipo()) {
+
+  @case ('ARBOL') {
   <div class="bracket" role="list" aria-label="Llave del torneo">
     @for (ronda of rondas(); track ronda.numero) {
     <div class="ronda" role="listitem">
       <h2 class="ronda-titulo">{{ ronda.etiqueta }}</h2>
       @for (p of ronda.partidas; track p.id) {
-      <article
-        class="partida"
-        [attr.data-nodo]="p.ronda + '-' + p.orden"
-        [class.finalizada]="p.estado === 'FINALIZADA'"
-        [class.disputa]="p.estado === 'EN_DISPUTA'"
-        [class.actualizada]="recienActualizadas().has(p.id)"
-        [class.coronada]="esFinalCoronada(p)"
-        [class.entrada]="generacionReciente()"
-        [style.--i]="indicesCascada().get(p.id) ?? 0"
-      >
-        <div class="partida-equipos">
-          <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoAId">
-            <span class="lado-nombre" [class.por-decidir]="!p.equipoANombre">
-              {{ p.equipoANombre ?? 'Por decidir' }}
-            </span>
-            <span class="lado-marcador">{{ marcadorDe(p, 'A') }}</span>
-          </div>
-          <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoBId">
-            <span class="lado-nombre" [class.por-decidir]="!p.bye && !p.equipoBNombre">
-              {{ p.bye ? 'Bye' : (p.equipoBNombre ?? 'Por decidir') }}
-            </span>
-            <span class="lado-marcador">{{ marcadorDe(p, 'B') }}</span>
-          </div>
-        </div>
-
-        @if (p.estado === 'REPORTADA') {
-        <p class="partida-estado reportada">Reporte enviado: falta la confirmación del rival</p>
-        } @else if (p.estado === 'EN_DISPUTA') {
-        <p class="partida-estado en-disputa">En disputa: resuelve el organizador</p>
-        }
-
-        @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
-        <!-- El puente con el juego: la partida privada que ambos capitanes
-             crean dentro del juego con estas credenciales. Un tap copia. -->
-        <div class="lobby">
-          <button
-            type="button"
-            class="lobby-copiar"
-            [class.copiado]="copiado() === p.id + '-lobby'"
-            (click)="copiarLobby(p, 'lobby', p.lobbyNombre)"
-          >
-            <span class="lobby-etiqueta">Lobby</span>
-            <span class="lobby-valor">{{ p.lobbyNombre }}</span>
-            <span class="lobby-feedback" aria-hidden="true">{{ copiado() === p.id + '-lobby' ? '✓' : '⧉' }}</span>
-            <span class="sr-only">{{ copiado() === p.id + '-lobby' ? 'copiado' : 'copiar nombre del lobby' }}</span>
-          </button>
-          @if (p.lobbyClave) {
-          <button
-            type="button"
-            class="lobby-copiar"
-            [class.copiado]="copiado() === p.id + '-clave'"
-            (click)="copiarLobby(p, 'clave', p.lobbyClave)"
-          >
-            <span class="lobby-etiqueta">Clave</span>
-            <span class="lobby-valor">{{ p.lobbyClave }}</span>
-            <span class="lobby-feedback" aria-hidden="true">{{ copiado() === p.id + '-clave' ? '✓' : '⧉' }}</span>
-            <span class="sr-only">{{ copiado() === p.id + '-clave' ? 'copiada' : 'copiar clave del lobby' }}</span>
-          </button>
-          }
-        </div>
-        }
-
-        @if (reportando() === p.id) {
-        <div class="marcador-form">
-          <label class="marcador-campo">
-            <span>{{ p.equipoANombre }}</span>
-            <input
-              type="number"
-              min="0"
-              max="999"
-              [value]="marcadorA()"
-              (input)="marcadorA.set(+$any($event.target).value)"
-            />
-          </label>
-          <label class="marcador-campo">
-            <span>{{ p.equipoBNombre }}</span>
-            <input
-              type="number"
-              min="0"
-              max="999"
-              [value]="marcadorB()"
-              (input)="marcadorB.set(+$any($event.target).value)"
-            />
-          </label>
-          <div class="marcador-acciones">
-            <button type="button" class="btn-primary" [disabled]="ocupado()" (click)="enviar(p)">
-              {{ ocupado() ? 'Enviando…' : puedeReportar(p) ? 'Reportar' : 'Resolver' }}
-            </button>
-            <button type="button" class="btn-secondary" (click)="cerrarMarcador()">Cancelar</button>
-          </div>
-        </div>
-        } @else {
-        <div class="partida-acciones">
-          @if (puedeReportar(p)) {
-          <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
-            Reportar resultado
-          </button>
-          }
-          @if (puedeConfirmar(p)) {
-          <button
-            type="button"
-            class="btn-primary"
-            [disabled]="ocupado()"
-            (click)="confirmar.emit(p)"
-          >
-            Confirmar
-          </button>
-          <button
-            type="button"
-            class="btn-secondary"
-            [disabled]="ocupado()"
-            (click)="rechazar.emit(p)"
-          >
-            Rechazar
-          </button>
-          }
-          @if (puedeResolver(p) && !puedeReportar(p) && !puedeConfirmar(p)) {
-          <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
-            Resolver (organizador)
-          </button>
-          }
-        </div>
-        }
-      </article>
+      <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: p }" />
       }
     </div>
     }
   </div>
+  }
+
+  @case ('DOBLE') {
+  <section class="seccion">
+    <h2 class="seccion-titulo">Llave superior</h2>
+    <div class="bracket" role="list" aria-label="Llave superior">
+      @for (ronda of rondasSuperior(); track ronda.numero) {
+      <div class="ronda" role="listitem">
+        <h3 class="ronda-titulo">{{ ronda.etiqueta }}</h3>
+        @for (p of ronda.partidas; track p.id) {
+        <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: p }" />
+        }
+      </div>
+      }
+      @if (granFinal(); as gf) {
+      <div class="ronda" role="listitem">
+        <h3 class="ronda-titulo">Gran final</h3>
+        <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: gf }" />
+      </div>
+      }
+    </div>
+  </section>
+  @if (rondasInferior().length > 0) {
+  <section class="seccion">
+    <h2 class="seccion-titulo">
+      Llave inferior
+      <span class="seccion-nota">quien pierde dos veces queda fuera</span>
+    </h2>
+    <div class="bracket" role="list" aria-label="Llave inferior">
+      @for (ronda of rondasInferior(); track ronda.numero) {
+      <div class="ronda" role="listitem">
+        <h3 class="ronda-titulo">{{ ronda.etiqueta }}</h3>
+        @for (p of ronda.partidas; track p.id) {
+        <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: p }" />
+        }
+      </div>
+      }
+    </div>
+  </section>
+  }
+  }
+
+  @case ('LIGA') {
+  <div class="liga">
+    <section class="seccion tabla-seccion">
+      <h2 class="seccion-titulo">Tabla de posiciones</h2>
+      <ng-container
+        *ngTemplateOutlet="tablaPosiciones; context: { $implicit: tablaLiga(), etiqueta: 'Tabla de posiciones' }"
+      />
+    </section>
+    <section class="seccion">
+      <h2 class="seccion-titulo">Calendario</h2>
+      <div class="bracket" role="list" aria-label="Calendario de partidas">
+        @for (ronda of jornadas(); track ronda.numero) {
+        <div class="ronda jornada" role="listitem">
+          <h3 class="ronda-titulo">{{ ronda.etiqueta }}</h3>
+          @for (p of ronda.partidas; track p.id) {
+          <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: p }" />
+          }
+        </div>
+        }
+      </div>
+    </section>
+  </div>
+  }
+
+  @case ('GRUPOS') {
+  @for (g of grupos(); track g.indice) {
+  <section class="seccion">
+    <h2 class="seccion-titulo">Grupo {{ g.letra }}</h2>
+    <div class="liga">
+      <div class="tabla-seccion">
+        <ng-container
+          *ngTemplateOutlet="tablaPosiciones; context: { $implicit: g.tabla, etiqueta: 'Tabla del grupo ' + g.letra }"
+        />
+        <p class="tabla-nota">Los dos primeros avanzan a la llave final.</p>
+      </div>
+      <div class="bracket" role="list" [attr.aria-label]="'Partidas del grupo ' + g.letra">
+        @for (ronda of g.jornadas; track ronda.numero) {
+        <div class="ronda jornada" role="listitem">
+          <h3 class="ronda-titulo">{{ ronda.etiqueta }}</h3>
+          @for (p of ronda.partidas; track p.id) {
+          <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: p }" />
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+  }
+  <section class="seccion">
+    <h2 class="seccion-titulo">Llave final</h2>
+    @if (llaveFinal().length > 0 && llaveFinal()[0].partidas[0].equipoAId === null) {
+    <p class="nota-llave">Se siembra al cerrarse todas las partidas de grupo.</p>
+    }
+    <div class="bracket" role="list" aria-label="Llave final">
+      @for (ronda of llaveFinal(); track ronda.numero) {
+      <div class="ronda" role="listitem">
+        <h3 class="ronda-titulo">{{ ronda.etiqueta }}</h3>
+        @for (p of ronda.partidas; track p.id) {
+        <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: p }" />
+        }
+      </div>
+      }
+    </div>
+  </section>
+  }
+
+  }
 </div>
 }
