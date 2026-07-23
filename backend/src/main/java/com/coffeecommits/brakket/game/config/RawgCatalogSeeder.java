@@ -59,16 +59,25 @@ public class RawgCatalogSeeder implements ApplicationRunner {
             return;
         }
 
-        try {
-            int importados = 0;
-            for (String nombre : CURADOS) {
+        // Try por título: un fallo de RAWG (rate limit, timeout) no debe
+        // abortar el resto del catálogo.
+        int importados = 0;
+        for (String nombre : CURADOS) {
+            try {
                 var existente = juegoRepository.findByNombreIgnoreCase(nombre).orElse(null);
                 if (existente != null) {
-                    // Un curado desactivado se reactiva: es catálogo oficial.
-                    if (!Boolean.TRUE.equals(existente.getActivo())) {
-                        existente.setActivo(true);
-                        juegoRepository.save(existente);
+                    // Curado ya presente: se reactiva y, si su arte era el
+                    // stock de las migraciones viejas, se refresca con RAWG.
+                    existente.setActivo(true);
+                    if (existente.getRating() == null || esArteStock(existente.getImagenUrl())) {
+                        var refresco = externalGameSearchService.buscar(nombre).stream()
+                                .findFirst().orElse(null);
+                        if (refresco != null) {
+                            existente.setImagenUrl(refresco.imagenUrl());
+                            existente.setRawgSlug(refresco.slug());
+                        }
                     }
+                    juegoRepository.save(existente);
                     continue;
                 }
                 var externo = externalGameSearchService.buscar(nombre).stream()
@@ -106,13 +115,19 @@ public class RawgCatalogSeeder implements ApplicationRunner {
                 }
                 juegoRepository.save(juego);
                 importados++;
+            } catch (Exception e) {
+                log.warn("No se pudo sembrar '{}' desde RAWG: {}", nombre, e.getMessage());
             }
-            if (importados > 0) {
-                log.info("Catálogo sembrado con {} juegos populares de RAWG", importados);
-            }
-        } catch (Exception e) {
-            log.warn("No se pudo sembrar el catálogo desde RAWG: {}", e.getMessage());
         }
+        if (importados > 0) {
+            log.info("Catálogo sembrado con {} juegos competitivos de RAWG", importados);
+        }
+        completarFichasFaltantes();
+    }
+
+    /** Arte de las migraciones semilla o del fallback viejo del frontend. */
+    private static boolean esArteStock(String url) {
+        return url == null || url.contains("pexels.com");
     }
 
     /**

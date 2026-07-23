@@ -24,6 +24,7 @@ export interface JuegoRequest {
 
 /** Resultado del buscador externo (RAWG) para precargar el formulario. */
 export interface JuegoExterno {
+  slug?: string;
   nombre: string;
   genero: string;
   imagenUrl: string | null;

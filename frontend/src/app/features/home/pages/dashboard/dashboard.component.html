@@ -104,14 +104,14 @@
       @if (topJuegos().length > 0) {
       <h2 class="seccion">Juegos top</h2>
       <div class="top-juegos">
-        @for (juego of topJuegos(); track juego.id) {
+        @for (juego of topJuegos(); track juego.nombre) {
         <a
           class="poster"
-          [routerLink]="['/games', juego.id]"
-          [style.background]="foto(juego) ? undefined : gradiente(juego.nombre)"
+          [routerLink]="juego.idCatalogo ? ['/games', juego.idCatalogo] : ['/games']"
+          [style.background]="juego.imagenUrl ? undefined : gradiente(juego.nombre)"
         >
-          @if (foto(juego)) {
-          <img [src]="foto(juego)" alt="" />
+          @if (juego.imagenUrl) {
+          <img [src]="juego.imagenUrl" alt="" />
           }
           <div class="poster-velo" aria-hidden="true"></div>
           <span class="poster-nombre">{{ juego.nombre }}</span>

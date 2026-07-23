@@ -79,18 +79,31 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
                 .build());
     }
 
+    /** Cache simple: los "top" de RAWG cambian poco y protegen la cuota. */
+    private volatile List<JuegoExternoResponse> popularesCache = List.of();
+    private volatile long popularesCacheMs = 0;
+
     @Override
     public List<JuegoExternoResponse> populares() {
         if (!disponible()) {
             throw new BusinessException(
                     "El buscador externo no está configurado (falta RAWG_API_KEY en el backend)");
         }
+        long ahora = System.currentTimeMillis();
+        if (!popularesCache.isEmpty() && ahora - popularesCacheMs < 60 * 60 * 1000) {
+            return popularesCache;
+        }
         // Ordenado por popularidad (cantidad de usuarios que lo agregaron).
-        return consultar(uri -> uri.path("/games")
+        List<JuegoExternoResponse> resultado = consultar(uri -> uri.path("/games")
                 .queryParam("key", apiKey)
                 .queryParam("ordering", "-added")
                 .queryParam("page_size", 24)
                 .build());
+        if (!resultado.isEmpty()) {
+            popularesCache = resultado;
+            popularesCacheMs = ahora;
+        }
+        return resultado;
     }
 
     private List<JuegoExternoResponse> consultar(

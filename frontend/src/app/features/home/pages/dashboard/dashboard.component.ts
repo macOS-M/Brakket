@@ -13,7 +13,7 @@ import { TournamentsService } from '../../../tournaments/services/tournaments.se
 import { Invitacion } from '../../../../models/invitacion.model';
 import { Transferencia } from '../../../../models/transferencia.model';
 import { League } from '../../../../models/league.model';
-import { Juego } from '../../../../models/juego.model';
+import { Juego, JuegoExterno } from '../../../../models/juego.model';
 import { Torneo } from '../../../../models/tournament.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -87,12 +87,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Fila de juegos top por popularidad real de RAWG (rating desc). */
   readonly mostrandoMas = signal(false);
 
-  // Estable a propósito: no depende del héroe rotativo (antes la fila
-  // "bailaba" cada 3 s porque excluía al slide visible).
-  readonly topJuegos = computed(() =>
-    [...this.juegos()]
-      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-      .slice(0, this.mostrandoMas() ? 18 : 6));
+  /** Top real de RAWG (no depende del catálogo local). */
+  readonly topRawg = signal<JuegoExterno[]>([]);
+
+  // Estable a propósito (sin carrusel). Si un top ya está en el catálogo,
+  // el póster navega a su página; si no, al catálogo para importarlo.
+  readonly topJuegos = computed(() => {
+    const porNombre = new Map(this.juegos().map((j) => [j.nombre.toLowerCase(), j.id]));
+    const lista = this.topRawg().length > 0
+      ? this.topRawg().map((t) => ({
+          nombre: t.nombre,
+          imagenUrl: t.imagenUrl,
+          idCatalogo: porNombre.get(t.nombre.toLowerCase()) ?? null
+        }))
+      : [...this.juegos()]
+          .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+          .map((j) => ({ nombre: j.nombre, imagenUrl: j.imagenUrl, idCatalogo: j.id }));
+    return lista.slice(0, this.mostrandoMas() ? 18 : 6);
+  });
 
   ngOnDestroy(): void {
     if (this.heroTimer) {
@@ -168,6 +180,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ligas: this.leaguesService.list().pipe(catchError(() => of(null))),
       juegos: this.gamesService.listActivos().pipe(catchError(() => of(null))),
       torneos: this.tournamentsService.listar().pipe(catchError(() => of(null))),
+      topRawg: this.gamesService.topRawg().pipe(catchError(() => of([] as JuegoExterno[]))),
       misCompetencias: conSesion
         ? this.tournamentsService.misCompetencias().pipe(catchError(() => of(null)))
         : of([] as Torneo[])
@@ -177,6 +190,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.ligas.set(res.ligas ?? []);
       this.juegos.set(res.juegos ?? []);
       this.torneos.set(res.torneos ?? []);
+      this.topRawg.set(res.topRawg ?? []);
       this.misCompetencias.set(res.misCompetencias ?? []);
 
       const todoFallo =
