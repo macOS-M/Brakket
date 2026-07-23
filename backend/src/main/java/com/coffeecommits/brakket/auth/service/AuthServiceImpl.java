@@ -9,6 +9,7 @@ import com.coffeecommits.brakket.auth.model.VisibilidadPerfil;
 import com.coffeecommits.brakket.auth.repository.RolRepository;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
+import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +31,9 @@ public class AuthServiceImpl implements AuthService {
     /** Rol base que recibe todo usuario nuevo al autenticarse (sembrado en la migración V2). */
     private static final String ROL_BASE = "JUGADOR";
     private static final String ROL_ADMIN = "ADMIN";
+
+    /** Edad mínima para tener cuenta (RF-18). */
+    private static final int EDAD_MINIMA = 13;
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
@@ -122,6 +127,17 @@ public class AuthServiceImpl implements AuthService {
             usuario.setVisibilidadPerfil(request.visibilidadPerfil());
         }
 
+        // Ajustes personales (RF-18).
+        validarEdadMinima(request.fechaNacimiento());
+        usuario.setNombreCompleto(normalizar(request.nombreCompleto()));
+        usuario.setFechaNacimiento(request.fechaNacimiento());
+        usuario.setTelefono(normalizarTelefono(request.telefono()));
+        usuario.setPais(normalizar(request.pais()));
+        usuario.setCiudad(normalizar(request.ciudad()));
+        usuario.setDireccion(normalizar(request.direccion()));
+        usuario.setCodigoPostal(normalizar(request.codigoPostal()));
+        usuario.setZonaHoraria(normalizar(request.zonaHoraria()));
+
         if (request.juegoIds() != null) {
             Set<Long> juegoIds = new LinkedHashSet<>(request.juegoIds());
             List<Juego> juegos = juegoRepository.findAllById(juegoIds);
@@ -163,7 +179,43 @@ public class AuthServiceImpl implements AuthService {
         return new UsuarioResponse(true, usuario.getId(), usuario.getNombre(),
                 usuario.getCorreo(), usuario.getFotoUrl(), usuario.getBiografia(),
                 usuario.getRedesSociales(), usuario.getVisibilidadPerfil() == null ? null : usuario.getVisibilidadPerfil().name(),
-                juegoIds, roles);
+                juegoIds, roles,
+                usuario.getNombreCompleto(), usuario.getFechaNacimiento(), usuario.getTelefono(),
+                usuario.getPais(), usuario.getCiudad(), usuario.getDireccion(),
+                usuario.getCodigoPostal(), usuario.getZonaHoraria());
+    }
+
+    /**
+     * Deja el teléfono en formato marcable: solo dígitos, conservando el
+     * {@code +} inicial si venía con prefijo internacional. Así "+506 8888-7777"
+     * y "+50688887777" quedan guardados igual.
+     */
+    private String normalizarTelefono(String telefono) {
+        if (esTextoVacio(telefono)) {
+            return null;
+        }
+        String limpio = telefono.trim();
+        boolean internacional = limpio.startsWith("+");
+        String digitos = limpio.replaceAll("\\D", "");
+
+        if (digitos.length() < 8 || digitos.length() > 15) {
+            throw new BusinessException("El teléfono debe tener entre 8 y 15 dígitos.");
+        }
+        return internacional ? "+" + digitos : digitos;
+    }
+
+    /**
+     * La plataforma organiza competencias con premios y datos de contacto, así
+     * que no admite menores de {@value #EDAD_MINIMA} años.
+     */
+    private void validarEdadMinima(LocalDate fechaNacimiento) {
+        if (fechaNacimiento == null) {
+            return;
+        }
+        if (fechaNacimiento.plusYears(EDAD_MINIMA).isAfter(LocalDate.now())) {
+            throw new BusinessException(
+                    "Debés tener al menos %d años para usar la plataforma.".formatted(EDAD_MINIMA));
+        }
     }
 
     private boolean esTextoVacio(String valor) {

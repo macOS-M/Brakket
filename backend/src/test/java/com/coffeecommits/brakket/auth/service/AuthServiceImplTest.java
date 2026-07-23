@@ -9,6 +9,7 @@ import com.coffeecommits.brakket.auth.model.VisibilidadPerfil;
 import com.coffeecommits.brakket.auth.repository.RolRepository;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
+import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -176,7 +178,8 @@ class AuthServiceImplTest {
             "Biografía nueva",
             "https://x.com/ana\nhttps://twitch.tv/ana",
             VisibilidadPerfil.PRIVATE,
-            List.of(1L, 2L)
+            List.of(1L, 2L),
+            null, null, null, null, null, null, null, null
         ));
 
         assertThat(usuario.getNombre()).isEqualTo("Ana Pro");
@@ -196,7 +199,8 @@ class AuthServiceImplTest {
         when(usuarioRolRepository.findByUsuarioId(7L)).thenReturn(List.of());
 
         UsuarioResponse resp = authService.updateCurrentUser("ana@brakket.gg", new PerfilUsuarioRequest(
-            "Ana", "   ", null, "", null, null));
+            "Ana", "   ", null, "", null, null,
+            null, null, null, null, null, null, null, null));
 
         assertThat(usuario.getNombre()).isEqualTo("Ana");
         assertThat(usuario.getFotoUrl()).isNull();
@@ -205,6 +209,63 @@ class AuthServiceImplTest {
         assertThat(usuario.getVisibilidadPerfil()).isEqualTo(VisibilidadPerfil.PRIVATE);
         assertThat(resp.visibilidadPerfil()).isEqualTo("PRIVATE");
         assertThat(resp.juegoIds()).isEmpty();
+    }
+
+    @Test
+    void updateCurrentUser_guarda_los_ajustes_personales() {
+        Usuario usuario = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg")
+            .visibilidadPerfil(VisibilidadPerfil.PUBLIC).build();
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(usuario));
+        when(usuarioRolRepository.findByUsuarioId(7L)).thenReturn(List.of());
+
+        UsuarioResponse resp = authService.updateCurrentUser("ana@brakket.gg", new PerfilUsuarioRequest(
+            "Ana", null, null, null, null, null,
+            "  Ana Sofía Rojas  ", LocalDate.of(1999, 5, 20), "+506 8888-7777", "Costa Rica",
+            "San José", "Av. Central 123", "10101", "America/Costa_Rica"));
+
+        assertThat(usuario.getNombreCompleto()).isEqualTo("Ana Sofía Rojas");
+        assertThat(usuario.getFechaNacimiento()).isEqualTo(LocalDate.of(1999, 5, 20));
+        // El teléfono se guarda normalizado: espacios y guiones no cuentan.
+        assertThat(usuario.getTelefono()).isEqualTo("+50688887777");
+        assertThat(usuario.getPais()).isEqualTo("Costa Rica");
+        assertThat(usuario.getCiudad()).isEqualTo("San José");
+        assertThat(usuario.getDireccion()).isEqualTo("Av. Central 123");
+        assertThat(usuario.getCodigoPostal()).isEqualTo("10101");
+        assertThat(usuario.getZonaHoraria()).isEqualTo("America/Costa_Rica");
+        assertThat(resp.telefono()).isEqualTo("+50688887777");
+        assertThat(resp.nombreCompleto()).isEqualTo("Ana Sofía Rojas");
+    }
+
+    @Test
+    void updateCurrentUser_rechaza_un_telefono_con_muy_pocos_digitos() {
+        Usuario usuario = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg")
+            .visibilidadPerfil(VisibilidadPerfil.PUBLIC).build();
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(usuario));
+
+        PerfilUsuarioRequest request = new PerfilUsuarioRequest(
+            "Ana", null, null, null, null, null,
+            null, null, "123", null, null, null, null, null);
+
+        assertThatThrownBy(() -> authService.updateCurrentUser("ana@brakket.gg", request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("8 y 15 dígitos");
+    }
+
+    @Test
+    void updateCurrentUser_rechaza_menores_de_trece_anios() {
+        Usuario usuario = Usuario.builder().id(7L).nombre("Ana").correo("ana@brakket.gg")
+            .visibilidadPerfil(VisibilidadPerfil.PUBLIC).build();
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(usuario));
+
+        PerfilUsuarioRequest request = new PerfilUsuarioRequest(
+            "Ana", null, null, null, null, null,
+            null, LocalDate.now().minusYears(12), null, null, null, null, null, null);
+
+        assertThatThrownBy(() -> authService.updateCurrentUser("ana@brakket.gg", request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("13");
+        // La validación corre antes de escribir nada.
+        assertThat(usuario.getFechaNacimiento()).isNull();
     }
 
     @Test

@@ -46,7 +46,35 @@ Sin perfil valen los defaults (1v1…5v5, todos los formatos del
 catálogo); con perfil, el wizard y el backend acotan el tamaño de
 equipo a la plantilla mínima/máxima definida.
 
+## DD-05 · Ajustes personales del perfil (2026-07-23)
+
+RF-18 se amplía: el perfil separa la **identidad pública** (nombre visible,
+avatar, biografía, redes, juegos) de los **ajustes personales** privados
+(nombre legal, fecha de nacimiento, teléfono, dirección, ciudad, país,
+código postal y zona horaria, migración V26). Solo el dueño de la cuenta
+los ve: viajan en `GET/PUT /api/me` y no en el perfil público.
+
+Todos se guardan con el mismo `PUT /api/me` que el resto del perfil: un
+solo formulario, un solo botón de guardar. Dos reglas en el backend:
+
+- **Teléfono normalizado**: se guarda solo con dígitos, conservando el
+  `+` del prefijo internacional, y se exige entre 8 y 15 dígitos. Así
+  "+506 8888-7777" y "+50688887777" quedan idénticos en la base.
+- **Edad mínima de 13 años**, validada en el backend
+  (`BusinessException`) y reflejada en el `max` del datepicker.
+
+**Sin verificación de teléfono.** Se evaluó un flujo de código por SMS y
+se descartó: no hay proveedor contratado, y un "verificado" que en
+realidad no verifica nada es peor que no tenerlo. Si más adelante se
+necesita (premios, avisos urgentes), entra como columna
+`telefono_verificado` más su flujo propio, sin tocar lo ya guardado.
+
 ## Deuda técnica registrada
+
+- Teléfono sin verificar (ver DD-05): no hay proveedor de SMS ni columna
+  de verificación.
+- Los ajustes personales no tienen aún flujo de exportación/borrado de
+  datos personales a pedido del usuario.
 
 - Invitaciones a torneos privados (hoy: privado = oculto, sin flujo de
   invitación).
