@@ -47,7 +47,8 @@ describe('TeamRosterComponent', () => {
       obtenerPorId: () => of(equipoActivo),
       cambiarRol: () => of({}),
       disolver: () => of(equipoDisuelto),
-      invitar: () => of({})
+      invitar: () => of({}),
+      expulsar: () => of({})
     };
 
     const authServiceMock = {
@@ -183,5 +184,61 @@ describe('TeamRosterComponent', () => {
 
     expect(spy).toHaveBeenCalledWith(1, { jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: null });
     expect(component.invitacionEnviada()).toBeTrue();
+  });
+
+  // RF-10: la causa de la expulsión es obligatoria.
+  it('should not expel a member without a cause', () => {
+    init();
+    const spy = spyOn(teamsService, 'expulsar').and.callThrough();
+    component.iniciarExpulsion(miembro({ usuarioId: 2 }));
+    component.causaExpulsion.set('   ');
+
+    component.confirmarExpulsion();
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(component.errorExpulsion()).toBe('La causa de la expulsión es obligatoria.');
+  });
+
+  // RF-10: al confirmar se envía la causa recortada y se recarga la plantilla.
+  it('should expel the member with the trimmed cause and reload the roster', () => {
+    init();
+    const expulsarSpy = spyOn(teamsService, 'expulsar').and.callThrough();
+    const reloadSpy = spyOn(teamsService, 'listMiembros').and.callThrough();
+    component.iniciarExpulsion(miembro({ usuarioId: 2 }));
+    component.causaExpulsion.set('  Inasistencia reiterada  ');
+
+    component.confirmarExpulsion();
+
+    expect(expulsarSpy).toHaveBeenCalledWith(1, 2, { causa: 'Inasistencia reiterada' });
+    expect(component.miembroAExpulsar()).toBeNull();
+    expect(reloadSpy).toHaveBeenCalled();
+  });
+
+  // RF-10: cancelar la confirmación no realiza la baja.
+  it('should not expel when the confirmation is cancelled', () => {
+    init();
+    const spy = spyOn(teamsService, 'expulsar').and.callThrough();
+    component.iniciarExpulsion(miembro({ usuarioId: 2 }));
+    component.causaExpulsion.set('Inasistencia');
+
+    component.cancelarExpulsion();
+    component.confirmarExpulsion();
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(component.miembroAExpulsar()).toBeNull();
+  });
+
+  it('should surface the backend message when the expulsion fails', () => {
+    init();
+    spyOn(teamsService, 'expulsar').and.returnValue(
+      throwError(() => ({ error: { message: 'No se puede expulsar al unico capitan' } }))
+    );
+    component.iniciarExpulsion(miembro({ usuarioId: 2 }));
+    component.causaExpulsion.set('Inasistencia');
+
+    component.confirmarExpulsion();
+
+    expect(component.errorExpulsion()).toBe('No se puede expulsar al unico capitan');
+    expect(component.miembroAExpulsar()).not.toBeNull();
   });
 });

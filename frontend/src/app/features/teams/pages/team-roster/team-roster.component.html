@@ -43,6 +43,9 @@
       <th>Estado</th>
       <th>Incorporación</th>
       <th>Rol</th>
+      @if (esCapitan() && !vistaHistorica()) {
+      <th></th>
+      }
     </tr>
     </thead>
     <tbody>
@@ -74,10 +77,65 @@
         <span class="badge badge-rol">{{ miembro.rol }}</span>
         }
       </td>
+      @if (esCapitan() && !vistaHistorica()) {
+      <td class="celda-acciones">
+        <!-- RF-10: solo integrantes activos y nunca la propia fila del capitán -->
+        @if (miembro.estado === 'ACTIVO' && miembro.rol !== 'CAPITAN') {
+        <button
+          type="button"
+          class="btn-expulsar"
+          [disabled]="expulsando()"
+          (click)="iniciarExpulsion(miembro)"
+        >
+          Expulsar
+        </button>
+        }
+      </td>
+      }
     </tr>
     }
     </tbody>
   </table>
+  }
+
+  <!-- RF-10: confirmación de expulsión con causa obligatoria -->
+  @if (miembroAExpulsar(); as miembro) {
+  <div class="expulsion-box">
+    <h2>Expulsar a {{ miembro.nombreUsuario }}</h2>
+    <p class="advertencia">
+      El integrante quedará fuera de la plantilla y será notificado.
+      Esta acción queda registrada con fecha, causa y responsable.
+    </p>
+
+    <label class="campo-causa">
+      Causa de la expulsión *
+      <textarea
+        rows="2"
+        maxlength="500"
+        placeholder="Ej. Inasistencia reiterada a las prácticas"
+        [value]="causaExpulsion()"
+        (input)="causaExpulsion.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    @if (errorExpulsion()) {
+    <p class="mensaje-error">{{ errorExpulsion() }}</p>
+    }
+
+    <div class="acciones">
+      <button
+        type="button"
+        class="btn-confirmar-expulsion"
+        [disabled]="expulsando() || !causaExpulsion().trim()"
+        (click)="confirmarExpulsion()"
+      >
+        {{ expulsando() ? 'Expulsando...' : 'Confirmar expulsión' }}
+      </button>
+      <button type="button" class="btn-cancelar" [disabled]="expulsando()" (click)="cancelarExpulsion()">
+        Cancelar
+      </button>
+    </div>
+  </div>
   }
 
   @if (esCapitan() && !vistaHistorica()) {
