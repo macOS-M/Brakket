@@ -41,6 +41,8 @@ class TeamJoinRequestServiceImplTest {
     @Mock
     private UsuarioRepository usuarioRepository;
     @Mock
+    private com.coffeecommits.brakket.auth.repository.UsuarioRolRepository usuarioRolRepository;
+    @Mock
     private MiembroEquipoRepository miembroEquipoRepository;
     @Mock
     private SolicitudUnionRepository solicitudRepository;
@@ -56,7 +58,7 @@ class TeamJoinRequestServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new TeamJoinRequestServiceImpl(equipoRepository, usuarioRepository,
-                miembroEquipoRepository, solicitudRepository, notificationService);
+                usuarioRolRepository, miembroEquipoRepository, solicitudRepository, notificationService);
         lenient().when(usuarioRepository.findByCorreo("ana@x.com")).thenReturn(Optional.of(jugador));
         lenient().when(usuarioRepository.findByCorreo("capi@x.com")).thenReturn(Optional.of(capitan));
         lenient().when(solicitudRepository.save(any(SolicitudUnion.class)))

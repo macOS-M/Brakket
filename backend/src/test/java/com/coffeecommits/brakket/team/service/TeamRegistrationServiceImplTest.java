@@ -3,6 +3,7 @@ package com.coffeecommits.brakket.team.service;
 import com.coffeecommits.brakket.admin.repository.LogAuditoriaRepository;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
+import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
@@ -46,6 +47,8 @@ class TeamRegistrationServiceImplTest {
     private EquipoRepository equipoRepository;
     @Mock
     private UsuarioRepository usuarioRepository;
+    @Mock
+    private UsuarioRolRepository usuarioRolRepository;
     @Mock
     private JuegoRepository juegoRepository;
     @Mock
@@ -96,7 +99,7 @@ class TeamRegistrationServiceImplTest {
         when(equipoRepository.save(equipo)).thenReturn(equipo);
         when(redSocialRepository.findByEquipoId(10L)).thenReturn(List.of());
 
-        EquipoResponse resp = service.editar(10L, request("Nuevo Nombre", "", null, null, 4L), CORREO);
+        EquipoResponse resp = service.editar(10L, request("Nuevo Nombre", "", null, null, 4L), CORREO, false);
 
         assertThat(resp.nombre()).isEqualTo("Nuevo Nombre");
         assertThat(resp.logo()).isNull();                       // "" = borrar
@@ -113,7 +116,7 @@ class TeamRegistrationServiceImplTest {
                 .thenReturn(Optional.of(MiembroEquipo.builder()
                         .rol("SUPLENTE").estado("ACTIVO").build()));
 
-        assertThatThrownBy(() -> service.editar(10L, request("Otro", null, null, null, null), CORREO))
+        assertThatThrownBy(() -> service.editar(10L, request("Otro", null, null, null, null), CORREO, false))
                 .isInstanceOf(AccessDeniedException.class);
         verify(equipoRepository, never()).save(any());
     }
@@ -123,7 +126,7 @@ class TeamRegistrationServiceImplTest {
         when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipo())); // versión actual: 4
         actorEsCapitanActivo();
 
-        assertThatThrownBy(() -> service.editar(10L, request("Otro", null, null, null, 3L), CORREO))
+        assertThatThrownBy(() -> service.editar(10L, request("Otro", null, null, null, 3L), CORREO, false))
                 .isInstanceOf(ObjectOptimisticLockingFailureException.class);
         verify(equipoRepository, never()).save(any());
     }
@@ -135,7 +138,7 @@ class TeamRegistrationServiceImplTest {
         Equipo otro = Equipo.builder().id(99L).nombre("fnatic").capitan(capitan()).build();
         when(equipoRepository.findByNombreIgnoreCase("FNATIC")).thenReturn(Optional.of(otro));
 
-        assertThatThrownBy(() -> service.editar(10L, request("FNATIC", null, null, null, null), CORREO))
+        assertThatThrownBy(() -> service.editar(10L, request("FNATIC", null, null, null, null), CORREO, false))
                 .isInstanceOf(BusinessException.class);
         verify(equipoRepository, never()).save(any());
     }
@@ -147,7 +150,7 @@ class TeamRegistrationServiceImplTest {
         when(equipoRepository.findById(10L)).thenReturn(Optional.of(disuelto));
         actorEsCapitanActivo();
 
-        assertThatThrownBy(() -> service.editar(10L, request("Otro", null, null, null, null), CORREO))
+        assertThatThrownBy(() -> service.editar(10L, request("Otro", null, null, null, null), CORREO, false))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("disuelto");
     }
@@ -165,7 +168,7 @@ class TeamRegistrationServiceImplTest {
         when(inscripcionRepository.findByEquipoId(10L)).thenReturn(List.of(
                 Inscripcion.builder().torneo(futuro).estado("PENDIENTE").build()));
 
-        assertThatThrownBy(() -> service.editar(10L, request(null, null, null, 7L, null), CORREO))
+        assertThatThrownBy(() -> service.editar(10L, request(null, null, null, 7L, null), CORREO, false))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("torneo");
     }
@@ -186,7 +189,7 @@ class TeamRegistrationServiceImplTest {
         when(equipoRepository.save(equipo)).thenReturn(equipo);
         when(redSocialRepository.findByEquipoId(10L)).thenReturn(List.of());
 
-        EquipoResponse resp = service.editar(10L, request(null, null, null, 7L, null), CORREO);
+        EquipoResponse resp = service.editar(10L, request(null, null, null, 7L, null), CORREO, false);
 
         assertThat(resp.juegoId()).isEqualTo(7L);
     }

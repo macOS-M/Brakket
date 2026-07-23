@@ -42,6 +42,12 @@ export class TeamPublicProfileComponent implements OnInit {
       && perfil.plantilla.some((m) => m.usuarioId === uid && m.rol === 'CAPITAN');
   });
 
+  /** El ADMIN modera cualquier equipo: ve Ajustes y gestión sin ser miembro. */
+  readonly esAdmin = computed(() => this.auth.hasRole('ADMIN'));
+
+  /** Quién puede gestionar el equipo desde este perfil. */
+  readonly puedeGestionar = computed(() => this.esCapitan() || this.esAdmin());
+
   /** Le falta identidad al equipo: el capitán ve la tarjeta de setup. */
   readonly perfilIncompleto = computed(() => {
     const perfil = this.perfil();

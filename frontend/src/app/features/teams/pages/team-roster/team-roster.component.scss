@@ -304,6 +304,87 @@
   }
 }
 
+// Ciclo de vida del equipo disuelto: reactivar (acción segura, destacada)
+// o eliminar definitivamente (peligrosa, con confirmación explícita).
+.acciones-disuelto {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+  }
+
+  .advertencia {
+    margin: 0 0 0.9rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+
+  .acciones-fila {
+    margin-bottom: 1rem;
+  }
+
+  .btn-reactivar {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  .confirmacion {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+    font-size: 0.875rem;
+  }
+
+  .error-disolucion {
+    margin: 0 0 0.75rem;
+    color: var(--danger-text);
+    font-size: 0.875rem;
+  }
+
+  .btn-disolver {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--danger-text);
+    background: transparent;
+    color: var(--danger-text);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: rgba(248, 113, 113, 0.12);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+}
+
 .zona-peligro {
   margin-top: 2rem;
   padding: 1.25rem 1.5rem;

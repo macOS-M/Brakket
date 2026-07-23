@@ -52,7 +52,7 @@
       </nav>
 
       <!-- La disolución vive en la plantilla, con su confirmación completa. -->
-      <a class="rail-borrar" [routerLink]="['/teams', equipoId(), 'plantilla']">Disolver equipo</a>
+      <a class="rail-borrar" [routerLink]="['/teams', equipoId(), 'plantilla']" fragment="disolver">Disolver equipo</a>
     </aside>
     }
 
@@ -85,6 +85,27 @@
             <span id="nombre-error" class="field-error">El nombre es obligatorio (máx. 120 caracteres).</span>
             }
           </div>
+
+          @if (!esEdicion && esAdmin()) {
+          <div class="field">
+            <label class="label" for="capitanCorreo">Capitán designado (correo) *</label>
+            <input
+              id="capitanCorreo"
+              type="email"
+              formControlName="capitanCorreo"
+              placeholder="jugador@correo.com"
+              [class.invalido]="form.controls.capitanCorreo.invalid && form.controls.capitanCorreo.touched"
+              [attr.aria-invalid]="form.controls.capitanCorreo.invalid && form.controls.capitanCorreo.touched"
+            />
+            <span class="field-pista">
+              Como administrador, el equipo se crea para otros jugadores: indicá
+              el correo del jugador que será su capitán. Vos no formás parte del roster.
+            </span>
+            @if (form.controls.capitanCorreo.invalid && form.controls.capitanCorreo.touched) {
+            <span class="field-error">Debe ser un correo válido.</span>
+            }
+          </div>
+          }
 
           <div class="field">
             <label class="label" for="juegoId">Disciplina / juego principal *</label>

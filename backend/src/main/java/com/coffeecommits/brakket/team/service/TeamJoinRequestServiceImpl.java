@@ -2,6 +2,7 @@ package com.coffeecommits.brakket.team.service;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
+import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
@@ -34,17 +35,20 @@ public class TeamJoinRequestServiceImpl implements TeamJoinRequestService {
 
     private final EquipoRepository equipoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioRolRepository usuarioRolRepository;
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final SolicitudUnionRepository solicitudRepository;
     private final NotificationService notificationService;
 
     public TeamJoinRequestServiceImpl(EquipoRepository equipoRepository,
                                       UsuarioRepository usuarioRepository,
+                                      UsuarioRolRepository usuarioRolRepository,
                                       MiembroEquipoRepository miembroEquipoRepository,
                                       SolicitudUnionRepository solicitudRepository,
                                       NotificationService notificationService) {
         this.equipoRepository = equipoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.usuarioRolRepository = usuarioRolRepository;
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.solicitudRepository = solicitudRepository;
         this.notificationService = notificationService;
@@ -57,6 +61,10 @@ public class TeamJoinRequestServiceImpl implements TeamJoinRequestService {
         Equipo equipo = equipoRepository.findById(equipoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
 
+        if (usuarioRolRepository.existsByUsuarioIdAndRolNombreRol(jugador.getId(), "ADMIN")) {
+            throw new BusinessException(
+                    "Un administrador de la plataforma no puede formar parte de equipos");
+        }
         if (!ESTADO_ACTIVO.equals(equipo.getEstado())) {
             throw new BusinessException("El equipo no está activo");
         }

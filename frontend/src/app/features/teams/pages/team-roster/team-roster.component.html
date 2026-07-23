@@ -28,6 +28,53 @@
   </div>
   }
 
+  <!-- Ciclo de vida del equipo disuelto: volver a la cancha o dejar de estorbar.
+       Lo ve el capitán del equipo o un ADMIN (moderación). -->
+  @if (vistaHistorica() && (esCapitan() || esAdmin())) {
+  <section class="acciones-disuelto">
+    <h2>¿Y ahora qué?</h2>
+    <p class="advertencia">
+      Podés <strong>reactivar</strong> el equipo para que vuelva a competir con su
+      historial intacto, o <strong>eliminarlo definitivamente</strong> para que no
+      quede estorbando. La eliminación solo procede si el equipo no tiene
+      historial competitivo (torneos, partidas o transferencias) y no se puede
+      deshacer.
+    </p>
+
+    @if (errorCicloVida()) {
+    <p class="error-disolucion" role="alert">{{ errorCicloVida() }}</p>
+    }
+
+    <div class="acciones-fila">
+      <button
+        type="button"
+        class="btn-reactivar"
+        [disabled]="reactivando() || eliminando()"
+        (click)="reactivarEquipo()"
+      >
+        {{ reactivando() ? 'Reactivando...' : 'Reactivar equipo' }}
+      </button>
+    </div>
+
+    <label class="confirmacion">
+      <input
+        type="checkbox"
+        [checked]="confirmaEliminacion()"
+        (change)="confirmaEliminacion.set($any($event.target).checked)"
+      />
+      Entiendo que eliminar el equipo es permanente y quiero hacerlo.
+    </label>
+    <button
+      type="button"
+      class="btn-disolver"
+      [disabled]="!confirmaEliminacion() || eliminando() || reactivando()"
+      (click)="eliminarEquipo()"
+    >
+      {{ eliminando() ? 'Eliminando...' : 'Eliminar equipo definitivamente' }}
+    </button>
+  </section>
+  }
+
   @if (cargando()) {
   <p class="placeholder">Cargando plantilla...</p>
   } @else if (error()) {
@@ -314,9 +361,9 @@
   }
   }
 
-  <!-- Disolver es exclusivo del capitán: nadie más debe ver esta zona. -->
-  @if (esCapitan() && !cargando() && !error() && !vistaHistorica()) {
-  <section class="zona-peligro">
+  <!-- Disolver: el capitán del equipo, o un ADMIN como moderación. -->
+  @if ((esCapitan() || esAdmin()) && !cargando() && !error() && !vistaHistorica()) {
+  <section class="zona-peligro" id="disolver">
     <h2>Disolver equipo</h2>
     <p class="advertencia">
       Esta acción cierra formalmente la participación del equipo y no se puede deshacer desde

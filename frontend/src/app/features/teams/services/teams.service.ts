@@ -103,6 +103,16 @@ export class TeamsService {
     return this.api.patch<Equipo>(`/teams/${equipoId}/disolver`, request);
   }
 
+  /** Revierte la disolución: el equipo vuelve a ACTIVO. */
+  reactivar(equipoId: number): Observable<Equipo> {
+    return this.api.patch<Equipo>(`/teams/${equipoId}/reactivar`, {});
+  }
+
+  /** Borrado definitivo (capitán con el equipo disuelto, o ADMIN). */
+  eliminar(equipoId: number): Observable<void> {
+    return this.api.delete<void>(`/teams/${equipoId}`);
+  }
+
   buscarJugadores(
     equipoId: number,
     texto: string,

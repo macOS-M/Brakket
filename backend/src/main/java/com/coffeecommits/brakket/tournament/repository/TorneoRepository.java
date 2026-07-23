@@ -15,6 +15,9 @@ public interface TorneoRepository extends JpaRepository<Torneo, Long> {
 
     List<Torneo> findByTemporadaId(Long temporadaId);
 
+    /** ¿El equipo figura como campeón de algún torneo? (historial protegido) */
+    boolean existsByCampeonId(Long equipoId);
+
     /** Torneos públicos de un juego, próximos primero. */
     List<Torneo> findByJuegoIdAndPublicoTrueOrderByFechaInicioAsc(Long juegoId);
 

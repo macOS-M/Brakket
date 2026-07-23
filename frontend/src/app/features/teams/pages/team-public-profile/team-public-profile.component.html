@@ -42,6 +42,10 @@
   @if (equipo.estado === 'DISUELTO') {
   <p class="aviso aviso-peligro" role="status">
     Este equipo está disuelto. Su información histórica se conserva.
+    @if (puedeGestionar()) {
+    Desde la <a class="enlace-aviso" [routerLink]="['/teams', equipo.id, 'plantilla']">plantilla</a>
+    podés reactivarlo o eliminarlo definitivamente.
+    }
   </p>
   } @else if (equipo.estado !== 'ACTIVO') {
   <p class="aviso aviso-atencion" role="status">
@@ -63,7 +67,7 @@
         Estadísticas
       </button>
     </nav>
-    @if (esCapitan()) {
+    @if (puedeGestionar()) {
     <a class="btn-ajustes" [routerLink]="['/teams', equipo.id, 'editar']">⚙ Ajustes</a>
     }
   </div>
@@ -194,7 +198,7 @@
     } @else {
     <app-empty-state mensaje="Este equipo no tiene integrantes activos visibles." />
     }
-    @if (esCapitan() && equipo.estado === 'ACTIVO') {
+    @if (puedeGestionar() && equipo.estado === 'ACTIVO') {
     <a class="btn-secondary gestionar" [routerLink]="['/teams', equipo.id, 'plantilla']">
       Gestionar plantilla e invitaciones
     </a>

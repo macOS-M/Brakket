@@ -232,7 +232,9 @@ export class TeamListComponent implements OnInit, OnDestroy {
   }
 
   puedeSolicitar(equipo: EquipoBusqueda): boolean {
+    // Los ADMIN moderan la plataforma: no juegan ni piden unirse a equipos.
     return this.auth.isAuthenticated()
+      && !this.auth.hasRole('ADMIN')
       && equipo.estado === 'ACTIVO'
       && !this.misIds().has(equipo.id)
       && !this.solicitados().has(equipo.id);

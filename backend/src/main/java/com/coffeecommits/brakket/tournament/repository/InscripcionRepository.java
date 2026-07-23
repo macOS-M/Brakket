@@ -17,6 +17,9 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     boolean existsByTorneoIdAndEquipoId(Long torneoId, Long equipoId);
 
+    /** ¿El equipo tiene CUALQUIER inscripción (histórica o vigente)? */
+    boolean existsByEquipoId(Long equipoId);
+
     /** Inscripciones vigentes de un torneo (las que ocupan cupo). */
     @Query("""
             select count(i) from Inscripcion i

@@ -23,7 +23,8 @@ public class TeamRegistrationController {
     @ResponseStatus(HttpStatus.CREATED)
     public EquipoResponse crear(@Valid @RequestBody CrearEquipoRequest request,
                                 Authentication authentication) {
-        return teamRegistrationService.crear(request, authentication.getName());
+        return teamRegistrationService.crear(
+                request, authentication.getName(), esAdmin(authentication));
     }
 
     @GetMapping("/{equipoId}")
@@ -41,6 +42,12 @@ public class TeamRegistrationController {
     public EquipoResponse editar(@PathVariable Long equipoId,
                                  @Valid @RequestBody EditarEquipoRequest request,
                                  Authentication authentication) {
-        return teamRegistrationService.editar(equipoId, request, authentication.getName());
+        return teamRegistrationService.editar(
+                equipoId, request, authentication.getName(), esAdmin(authentication));
+    }
+
+    private static boolean esAdmin(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 }

@@ -31,6 +31,14 @@ public record CrearEquipoRequest(
         @NotNull(message = "El juego principal es obligatorio")
         Long juegoId,
 
-        List<@URL(message = "El enlace debe tener formato de URL valido") String> redesSociales
+        List<@URL(message = "El enlace debe tener formato de URL valido") String> redesSociales,
+
+        /**
+         * Correo del jugador que será capitán. Obligatorio cuando quien crea
+         * es un ADMIN: los administradores arman el equipo para otros
+         * jugadores, no forman parte de él. Los jugadores lo dejan null.
+         */
+        @Size(max = 254, message = "El correo del capitán no puede superar los 254 caracteres")
+        String capitanCorreo
 ) {
 }

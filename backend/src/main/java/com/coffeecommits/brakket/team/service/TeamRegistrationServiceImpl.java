@@ -4,6 +4,7 @@ import com.coffeecommits.brakket.admin.model.LogAuditoria;
 import com.coffeecommits.brakket.admin.repository.LogAuditoriaRepository;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
+import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
@@ -39,6 +40,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
     private final EquipoRepository equipoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioRolRepository usuarioRolRepository;
     private final JuegoRepository juegoRepository;
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final EquipoRedSocialRepository redSocialRepository;
@@ -47,6 +49,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
     public TeamRegistrationServiceImpl(EquipoRepository equipoRepository,
                                        UsuarioRepository usuarioRepository,
+                                       UsuarioRolRepository usuarioRolRepository,
                                        JuegoRepository juegoRepository,
                                        MiembroEquipoRepository miembroEquipoRepository,
                                        EquipoRedSocialRepository redSocialRepository,
@@ -54,6 +57,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                                        LogAuditoriaRepository logAuditoriaRepository) {
         this.equipoRepository = equipoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.usuarioRolRepository = usuarioRolRepository;
         this.juegoRepository = juegoRepository;
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.redSocialRepository = redSocialRepository;
@@ -63,10 +67,15 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
     @Override
     @Transactional
-    public EquipoResponse crear(CrearEquipoRequest request, String creadorCorreo) {
+    public EquipoResponse crear(CrearEquipoRequest request, String creadorCorreo, boolean esAdmin) {
 
         Usuario creador = usuarioRepository.findByCorreo(creadorCorreo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", creadorCorreo));
+
+        // Los administradores moderan, no juegan: el equipo lo crean PARA
+        // otros jugadores, designando por correo a su capitán. Un jugador
+        // normal queda él mismo como capitán y miembro fundador.
+        Usuario capitan = esAdmin ? capitanDesignado(request, creador) : creador;
 
         equipoRepository.findByNombre(request.nombre()).ifPresent(e -> {
             throw new BusinessException(
@@ -87,7 +96,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                 .descripcion(request.descripcion())
                 .sitioWeb(request.sitioWeb())
                 .videoUrl(request.videoUrl())
-                .capitan(creador)
+                .capitan(capitan)
                 .juego(juego)
                 .build();
 
@@ -101,7 +110,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
         MiembroEquipo miembro = MiembroEquipo.builder()
                 .equipo(equipoGuardado)
-                .usuario(creador)
+                .usuario(capitan)
                 .estado("ACTIVO")
                 .fechaUnion(LocalDate.now())
                 .rol("CAPITAN")
@@ -142,7 +151,8 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
      */
     @Override
     @Transactional
-    public EquipoResponse editar(Long equipoId, EditarEquipoRequest request, String actorCorreo) {
+    public EquipoResponse editar(Long equipoId, EditarEquipoRequest request,
+                                 String actorCorreo, boolean esAdmin) {
 
         Equipo equipo = equipoRepository.findById(equipoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
@@ -152,12 +162,14 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
         // La capitanía vigente vive en miembro_equipo (RF-09 permite transferirla
         // y tener más de un capitán); equipo.capitan solo registra al fundador.
+        // El ADMIN edita cualquier equipo como moderación, sea o no miembro.
         boolean esCapitanActivo = miembroEquipoRepository
                 .findByEquipoIdAndUsuarioId(equipoId, actor.getId())
                 .filter(m -> "CAPITAN".equals(m.getRol()) && "ACTIVO".equals(m.getEstado()))
                 .isPresent();
-        if (!esCapitanActivo) {
-            throw new AccessDeniedException("Solo el capitán del equipo puede editar su información.");
+        if (!esCapitanActivo && !esAdmin) {
+            throw new AccessDeniedException(
+                    "Solo el capitán del equipo (o un administrador) puede editar su información.");
         }
 
         if ("DISUELTO".equals(equipo.getEstado())) {
@@ -264,6 +276,32 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
      * Los estados cerrados siguen la misma convención que RF-03; revisar
      * cuando el módulo tournament formalice sus estados.
      */
+    /**
+     * El jugador que capitaneará un equipo creado por un ADMIN: debe venir
+     * indicado por correo, existir, no estar bloqueado y no ser otro
+     * administrador (los ADMIN no forman parte de equipos).
+     */
+    private Usuario capitanDesignado(CrearEquipoRequest request, Usuario creador) {
+        String correo = request.capitanCorreo() == null ? "" : request.capitanCorreo().trim();
+        if (correo.isEmpty()) {
+            throw new BusinessException(
+                    "Un administrador crea el equipo para otros jugadores: indicá el correo del capitán designado.");
+        }
+        Usuario capitan = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new BusinessException(
+                        "No existe un usuario con el correo '%s' para designar como capitán.".formatted(correo)));
+        if (capitan.getId().equals(creador.getId())
+                || usuarioRolRepository.existsByUsuarioIdAndRolNombreRol(capitan.getId(), "ADMIN")) {
+            throw new BusinessException(
+                    "Un administrador no puede formar parte de un equipo: designá a un jugador como capitán.");
+        }
+        if (Boolean.TRUE.equals(capitan.getBloqueado())) {
+            throw new BusinessException(
+                    "El usuario designado como capitán está bloqueado en la plataforma.");
+        }
+        return capitan;
+    }
+
     private boolean participaEnTorneoActivo(Long equipoId) {
         java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
         List<Inscripcion> inscripciones = inscripcionRepository.findByEquipoId(equipoId);

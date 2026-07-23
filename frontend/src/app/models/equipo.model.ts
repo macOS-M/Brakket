@@ -61,6 +61,11 @@ export interface CrearEquipoRequest {
   videoUrl: string | null;
   juegoId: number;
   redesSociales: string[];
+  /**
+   * Correo del jugador que será capitán. Obligatorio cuando quien crea es
+   * un ADMIN (los administradores no forman parte de equipos).
+   */
+  capitanCorreo?: string | null;
 }
 
 /**

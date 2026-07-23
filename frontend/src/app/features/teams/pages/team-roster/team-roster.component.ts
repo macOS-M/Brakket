@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Subject, debounceTime, forkJoin, of, switchMap, takeUntil } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -34,6 +34,7 @@ const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 
 })
 export class TeamRosterComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly teamsService = inject(TeamsService);
   private readonly gamesService = inject(GamesService);
   private readonly authService = inject(AuthService);
@@ -54,6 +55,8 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
       (m) => m.usuarioId === miId && m.rol === 'CAPITAN' && m.estado === 'ACTIVO'
     );
   });
+  /** El ADMIN modera cualquier equipo (reactivar/eliminar) sin ser miembro. */
+  readonly esAdmin = computed(() => this.authService.hasRole('ADMIN'));
 
   // RF-08: datos del equipo para encabezado y vista histórica si está disuelto.
   readonly equipo = signal<Equipo | null>(null);
@@ -92,6 +95,12 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
   readonly disolviendo = signal(false);
   readonly errorDisolucion = signal<string | null>(null);
   readonly equipoDisuelto = signal<Equipo | null>(null);
+
+  // Ciclo de vida del equipo disuelto: reactivarlo o eliminarlo de verdad.
+  readonly reactivando = signal(false);
+  readonly eliminando = signal(false);
+  readonly confirmaEliminacion = signal(false);
+  readonly errorCicloVida = signal<string | null>(null);
 
   // RF-11: buscar jugadores disponibles.
   readonly juegos = signal<Juego[]>([]);
@@ -186,6 +195,7 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
       next: (miembros) => {
         this.miembros.set(miembros);
         this.cargando.set(false);
+        this.irAlFragmento();
       },
       error: (err) => {
         this.error.set(err?.status === 404
@@ -194,6 +204,20 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
         this.cargando.set(false);
       }
     });
+  }
+
+  /**
+   * El enlace "Disolver equipo" de Ajustes llega con #disolver; la zona
+   * existe recién cuando la plantilla cargó, así que el scroll va a mano
+   * (el anchorScrolling del router dispararía antes del render).
+   */
+  private irAlFragmento(): void {
+    const fragmento = this.route.snapshot.fragment;
+    if (!fragmento) {
+      return;
+    }
+    setTimeout(() =>
+      document.getElementById(fragmento)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
   /** Reintento del criterio "error de carga" de RF-08. */
@@ -375,6 +399,44 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.disolviendo.set(false);
         this.errorDisolucion.set(err?.error?.message ?? 'No se pudo disolver el equipo.');
+      }
+    });
+  }
+
+  /** Revierte la disolución: el equipo vuelve a ACTIVO y la vista a gestión. */
+  reactivarEquipo(): void {
+    if (this.reactivando() || this.eliminando()) {
+      return;
+    }
+    this.reactivando.set(true);
+    this.errorCicloVida.set(null);
+    this.teamsService.reactivar(this.equipoId).subscribe({
+      next: (equipo) => {
+        this.reactivando.set(false);
+        this.equipo.set(equipo);
+        this.equipoDisuelto.set(null);
+        this.confirmaDisolucion.set(false);
+        this.motivoDisolucion.set('');
+      },
+      error: (err) => {
+        this.reactivando.set(false);
+        this.errorCicloVida.set(err?.error?.message ?? 'No se pudo reactivar el equipo.');
+      }
+    });
+  }
+
+  /** Borrado definitivo del equipo disuelto (capitán o ADMIN). */
+  eliminarEquipo(): void {
+    if (!this.confirmaEliminacion() || this.eliminando() || this.reactivando()) {
+      return;
+    }
+    this.eliminando.set(true);
+    this.errorCicloVida.set(null);
+    this.teamsService.eliminar(this.equipoId).subscribe({
+      next: () => this.router.navigate(['/teams']),
+      error: (err) => {
+        this.eliminando.set(false);
+        this.errorCicloVida.set(err?.error?.message ?? 'No se pudo eliminar el equipo.');
       }
     });
   }
