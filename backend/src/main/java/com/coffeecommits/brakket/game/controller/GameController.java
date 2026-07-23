@@ -64,8 +64,11 @@ public class GameController {
      */
     @PostMapping("/importar-externo")
     @PreAuthorize("isAuthenticated()")
-    public JuegoResponse importarExterno(@Valid @RequestBody ImportarJuegoRequest request) {
-        return gameService.importarDesdeExterno(request.nombre());
+    public JuegoResponse importarExterno(@Valid @RequestBody ImportarJuegoRequest request,
+                                         org.springframework.security.core.Authentication authentication) {
+        boolean esAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return gameService.importarDesdeExterno(request.nombre(), esAdmin);
     }
 
     @PostMapping

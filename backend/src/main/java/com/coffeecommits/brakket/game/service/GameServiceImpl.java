@@ -85,7 +85,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     @Transactional
-    public JuegoResponse importarDesdeExterno(String nombre) {
+    public JuegoResponse importarDesdeExterno(String nombre, boolean esAdmin) {
         String buscado = nombre == null ? "" : nombre.trim();
         if (buscado.isEmpty()) {
             throw new BusinessException("Indicá el nombre del juego a importar");
@@ -95,13 +95,7 @@ public class GameServiceImpl implements GameService {
         // consultar la API.
         Juego existente = juegoRepository.findByNombreIgnoreCase(buscado).orElse(null);
         if (existente != null) {
-            // Un juego desactivado fue curado fuera por un ADMIN: importarlo
-            // de nuevo no debe resucitarlo (DD-01).
-            if (!Boolean.TRUE.equals(existente.getActivo())) {
-                throw new BusinessException(
-                        "El título '%s' no está disponible en el catálogo".formatted(existente.getNombre()));
-            }
-            return JuegoResponse.fromEntity(existente);
+            return reactivarSiCorresponde(existente, esAdmin);
         }
 
         var resultados = externalGameSearchService.buscar(buscado);
@@ -118,11 +112,7 @@ public class GameServiceImpl implements GameService {
         // contra el catálogo propio con el nombre definitivo.
         Juego porNombreFinal = juegoRepository.findByNombreIgnoreCase(elegido.nombre()).orElse(null);
         if (porNombreFinal != null) {
-            if (!Boolean.TRUE.equals(porNombreFinal.getActivo())) {
-                throw new BusinessException(
-                        "El título '%s' no está disponible en el catálogo".formatted(porNombreFinal.getNombre()));
-            }
-            return JuegoResponse.fromEntity(porNombreFinal);
+            return reactivarSiCorresponde(porNombreFinal, esAdmin);
         }
 
         Juego juego = Juego.builder()
@@ -136,6 +126,43 @@ public class GameServiceImpl implements GameService {
                 .build();
         enriquecerDesdeRawg(juego, elegido.slug());
         return JuegoResponse.fromEntity(juegoRepository.save(juego));
+    }
+
+    /**
+     * Un juego desactivado fue curado fuera por un ADMIN (DD-01): un usuario
+     * común no lo resucita al importarlo, pero un ADMIN sí (y de paso se le
+     * completa la ficha RAWG si le faltaba).
+     */
+    private JuegoResponse reactivarSiCorresponde(Juego existente, boolean esAdmin) {
+        if (!Boolean.TRUE.equals(existente.getActivo())) {
+            if (!esAdmin) {
+                throw new BusinessException(
+                        "El título '%s' fue desactivado por un administrador".formatted(existente.getNombre()));
+            }
+            existente.setActivo(true);
+            if (existente.getRating() == null) {
+                enriquecerPorNombre(existente);
+            }
+            juegoRepository.save(existente);
+        }
+        return JuegoResponse.fromEntity(existente);
+    }
+
+    /** Resuelve el slug buscando por nombre (juegos previos a V28 sin slug). */
+    private void enriquecerPorNombre(Juego juego) {
+        try {
+            String slug = juego.getRawgSlug();
+            if (slug == null) {
+                slug = externalGameSearchService.buscar(juego.getNombre()).stream()
+                        .filter(r -> r.nombre().equalsIgnoreCase(juego.getNombre()))
+                        .map(r -> r.slug())
+                        .findFirst().orElse(null);
+                juego.setRawgSlug(slug);
+            }
+            enriquecerDesdeRawg(juego, slug);
+        } catch (Exception e) {
+            // Sin ficha no se bloquea nada: el juego queda con datos básicos.
+        }
     }
 
     /**

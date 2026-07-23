@@ -21,6 +21,8 @@
         class="hero"
         [routerLink]="['/games', hero.id]"
         [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+        (mouseenter)="heroPausado.set(true)"
+        (mouseleave)="heroPausado.set(false)"
       >
         @if (foto(hero)) {
         <img [src]="foto(hero)" alt="" />
@@ -35,6 +37,13 @@
           }
           <span class="hero-cta">Ver juego →</span>
         </div>
+        @if (heroJuegos().length > 1) {
+        <span class="hero-puntos" aria-hidden="true">
+          @for (j of heroJuegos(); track j.id; let i = $index) {
+          <span class="hero-punto" [class.activo]="heroJuego()?.id === j.id"></span>
+          }
+        </span>
+        }
       </a>
       }
 
@@ -101,6 +110,9 @@
         </a>
         }
       </div>
+      <button type="button" class="ver-mas" (click)="mostrandoMas.set(!mostrandoMas())">
+        {{ mostrandoMas() ? 'Ver menos ↑' : 'Ver más juegos ↓' }}
+      </button>
       }
 
       <!-- Pendientes accionables / invitación a entrar -->

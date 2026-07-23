@@ -95,7 +95,7 @@ class GameServiceImplTest {
         Juego activo = Juego.builder().id(3L).nombre("Valorant").genero("Shooter").activo(true).build();
         when(juegoRepository.findByNombreIgnoreCase("valorant")).thenReturn(Optional.of(activo));
 
-        JuegoResponse resp = gameService.importarDesdeExterno("valorant");
+        JuegoResponse resp = gameService.importarDesdeExterno("valorant", false);
 
         assertThat(resp.id()).isEqualTo(3L);
         verify(externalGameSearchService, never()).buscar(any());
@@ -106,9 +106,9 @@ class GameServiceImplTest {
         Juego inactivo = Juego.builder().id(3L).nombre("Valorant").genero("Shooter").activo(false).build();
         when(juegoRepository.findByNombreIgnoreCase("valorant")).thenReturn(Optional.of(inactivo));
 
-        assertThatThrownBy(() -> gameService.importarDesdeExterno("valorant"))
+        assertThatThrownBy(() -> gameService.importarDesdeExterno("valorant", false))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("no está disponible");
+                .hasMessageContaining("desactivado por un administrador");
         verify(externalGameSearchService, never()).buscar(any());
         verify(juegoRepository, never()).save(any(Juego.class));
     }
@@ -125,7 +125,7 @@ class GameServiceImplTest {
             return j;
         });
 
-        JuegoResponse resp = gameService.importarDesdeExterno("apex");
+        JuegoResponse resp = gameService.importarDesdeExterno("apex", false);
 
         assertThat(resp.nombre()).isEqualTo("Apex Legends");
         assertThat(resp.genero()).isEqualTo("Shooter");
@@ -138,7 +138,7 @@ class GameServiceImplTest {
         when(juegoRepository.findByNombreIgnoreCase("juego-inventado")).thenReturn(Optional.empty());
         when(externalGameSearchService.buscar("juego-inventado")).thenReturn(List.of());
 
-        assertThatThrownBy(() -> gameService.importarDesdeExterno("juego-inventado"))
+        assertThatThrownBy(() -> gameService.importarDesdeExterno("juego-inventado", false))
                 .isInstanceOf(BusinessException.class);
         verify(juegoRepository, never()).save(any(Juego.class));
     }

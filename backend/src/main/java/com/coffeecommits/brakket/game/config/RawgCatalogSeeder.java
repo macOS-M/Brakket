@@ -41,6 +41,7 @@ public class RawgCatalogSeeder implements ApplicationRunner {
             return;
         }
         if (juegoRepository.findByActivoTrue().size() >= MINIMO_CATALOGO) {
+            completarFichasFaltantes();
             return;
         }
 
@@ -86,6 +87,51 @@ public class RawgCatalogSeeder implements ApplicationRunner {
             }
         } catch (Exception e) {
             log.warn("No se pudo sembrar el catálogo desde RAWG: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Backfill: juegos sembrados antes de V28 quedaron sin ficha (rating,
+     * capturas…). Se completan al arrancar, una sola vez cada uno.
+     */
+    private void completarFichasFaltantes() {
+        try {
+            int completados = 0;
+            for (Juego juego : juegoRepository.findByActivoTrue()) {
+                if (juego.getRating() != null || completados >= 30) {
+                    continue;
+                }
+                String slug = juego.getRawgSlug();
+                if (slug == null) {
+                    slug = externalGameSearchService.buscar(juego.getNombre()).stream()
+                            .filter(r -> r.nombre().equalsIgnoreCase(juego.getNombre()))
+                            .map(r -> r.slug())
+                            .findFirst().orElse(null);
+                }
+                var detalle = externalGameSearchService.detalle(slug);
+                if (detalle == null) {
+                    continue;
+                }
+                juego.setRawgSlug(slug);
+                juego.setDescripcion(juego.getDescripcion() == null
+                        ? detalle.descripcion() : juego.getDescripcion());
+                juego.setFechaLanzamiento(detalle.fechaLanzamiento());
+                juego.setRating(detalle.rating());
+                juego.setMetacritic(detalle.metacritic());
+                juego.setSitioWeb(detalle.sitioWeb());
+                juego.setPlataformas(detalle.plataformas().isEmpty()
+                        ? null : String.join(" · ", detalle.plataformas()));
+                juego.setEtiquetas(detalle.etiquetas().isEmpty()
+                        ? null : String.join(", ", detalle.etiquetas()));
+                juego.setCapturas(detalle.capturas());
+                juegoRepository.save(juego);
+                completados++;
+            }
+            if (completados > 0) {
+                log.info("Ficha RAWG completada para {} juegos del catálogo", completados);
+            }
+        } catch (Exception e) {
+            log.warn("No se pudieron completar fichas desde RAWG: {}", e.getMessage());
         }
     }
 }

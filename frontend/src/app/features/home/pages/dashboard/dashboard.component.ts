@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
@@ -32,7 +32,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private readonly teamsService = inject(TeamsService);
   private readonly transfersService = inject(TransfersService);
   private readonly leaguesService = inject(LeaguesService);
@@ -67,20 +67,38 @@ export class DashboardComponent implements OnInit {
     () => this.invitaciones().length === 0 && this.transferencias().length === 0
   );
 
-  /** Héroe: el primer juego con arte del catálogo. */
+  /** Carousel del héroe: los juegos más jugados (rating RAWG), rotando. */
+  readonly heroIndex = signal(0);
+  readonly heroPausado = signal(false);
+  private heroTimer: ReturnType<typeof setInterval> | null = null;
+
+  readonly heroJuegos = computed(() =>
+    [...this.juegos()]
+      .filter((j) => j.imagenUrl)
+      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+      .slice(0, 5));
+
   readonly heroJuego = computed(() => {
-    const juegos = this.juegos();
-    return juegos.find((j) => j.imagenUrl) ?? juegos[0] ?? null;
+    const lista = this.heroJuegos();
+    return lista.length > 0 ? lista[this.heroIndex() % lista.length] : this.juegos()[0] ?? null;
   });
 
   /** Fila de juegos top por popularidad real de RAWG (rating desc). */
+  readonly mostrandoMas = signal(false);
+
   readonly topJuegos = computed(() => {
     const hero = this.heroJuego();
     return [...this.juegos()]
       .filter((j) => j.id !== hero?.id)
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-      .slice(0, 6);
+      .slice(0, this.mostrandoMas() ? 18 : 6);
   });
+
+  ngOnDestroy(): void {
+    if (this.heroTimer) {
+      clearInterval(this.heroTimer);
+    }
+  }
 
   /** Rail de próximos torneos (referencia "Upcoming Tournaments"). */
   readonly proximosTorneos = computed(() => this.torneos().slice(0, 5));
@@ -124,6 +142,12 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    // Rotación del héroe cada 3 s; se pausa con el cursor encima.
+    this.heroTimer = setInterval(() => {
+      if (!this.heroPausado() && this.heroJuegos().length > 1) {
+        this.heroIndex.update((i) => (i + 1) % this.heroJuegos().length);
+      }
+    }, 3000);
   }
 
   cargar(): void {
