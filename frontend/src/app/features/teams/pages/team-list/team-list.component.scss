@@ -256,6 +256,9 @@
   border-radius: var(--radius-md, 12px);
   background: var(--surface-2, #1f2937);
   object-fit: cover;
+  // Aro fino: una foto de logo con zonas oscuras se funde con la tarjeta
+  // y "pierde" su forma; el aro garantiza que el tile siempre se lea.
+  outline: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
 
   &.sin-logo {
     color: #fff;

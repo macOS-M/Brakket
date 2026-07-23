@@ -268,6 +268,7 @@ textarea {
   display: grid;
   place-items: center;
   background: var(--surface-2, #1f2937);
+  outline: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
 
   &.sin-logo {
     color: #fff;
@@ -281,7 +282,8 @@ textarea {
 .rail-nombre {
   margin: 4px 0 0;
   max-width: 100%;
-  font-size: 0.95rem;
+  // Paso "body" del ramp, en negrita: nombre compacto en el rail.
+  font-size: 0.875rem;
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
