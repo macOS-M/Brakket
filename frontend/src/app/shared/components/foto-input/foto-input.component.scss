@@ -123,3 +123,110 @@
   color: var(--danger-text, #f87171);
   font-size: 0.8125rem;
 }
+
+// ----- Recortador de marco fijo -----
+
+.recorte-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 8, 18, 0.72);
+}
+
+.recorte-dialogo {
+  width: min(480px, calc(100vw - 2rem));
+  padding: 1.25rem 1.4rem 1.4rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-modal, 0 24px 80px rgba(0, 0, 0, 0.55));
+
+  h2 {
+    margin: 0 0 4px;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+}
+
+.recorte-pista {
+  margin: 0 0 14px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
+
+// El marco: ventana fija sobre la imagen; el usuario mueve la foto debajo.
+.recorte-marco {
+  position: relative;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 2px dashed var(--accent, #ff5500);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-3, #0d1526);
+  cursor: grab;
+  touch-action: none;
+
+  &:active { cursor: grabbing; }
+
+  img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: none;
+    user-select: none;
+    pointer-events: none;
+  }
+}
+
+.recorte-zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 16px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  font-weight: 600;
+
+  input[type='range'] {
+    flex: 1;
+    accent-color: var(--accent, #ff5500);
+  }
+}
+
+.recorte-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.recorte-usar,
+.recorte-cancelar {
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease-out, border-color 0.2s ease-out;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.recorte-usar {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover:not(:disabled) { background: var(--accent-hover, #ff6a1f); }
+}
+
+.recorte-cancelar {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:hover:not(:disabled) { background: var(--surface-2, #1f2937); }
+}

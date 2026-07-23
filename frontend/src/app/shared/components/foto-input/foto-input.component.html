@@ -46,4 +46,65 @@
   @if (errorSubida()) {
   <p class="error" role="alert">{{ errorSubida() }}</p>
   }
+
+  @if (recorte(); as r) {
+  <!-- Recortador de marco fijo: la imagen se acomoda dentro del cuadro;
+       lo que queda afuera se corta antes de subir. -->
+  <div class="recorte-fondo" (click)="cancelarRecorte()">
+    <div
+      class="recorte-dialogo"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="'Encuadrar ' + etiqueta().toLowerCase()"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="cancelarRecorte()"
+    >
+      <h2>Ajustá el encuadre</h2>
+      <p class="recorte-pista">
+        Arrastrá la imagen y usá el zoom; lo que quede fuera del marco se recorta.
+      </p>
+
+      <div
+        class="recorte-marco"
+        [style.width.px]="marco.w"
+        [style.height.px]="marco.h"
+        (pointerdown)="iniciarArrastre($event)"
+        (pointermove)="arrastrar($event)"
+        (pointerup)="soltarArrastre()"
+        (pointercancel)="soltarArrastre()"
+      >
+        <img
+          [src]="r.url"
+          alt=""
+          draggable="false"
+          [style.width.px]="anchoImagen()"
+          [style.transform]="'translate(' + ox() + 'px, ' + oy() + 'px)'"
+        />
+      </div>
+
+      <label class="recorte-zoom">
+        Zoom
+        <input
+          type="range"
+          min="1"
+          max="3"
+          step="0.01"
+          [value]="zoom()"
+          (input)="alZoom(+$any($event.target).value)"
+          aria-label="Nivel de acercamiento"
+        />
+      </label>
+
+      <div class="recorte-acciones">
+        <button type="button" class="recorte-usar" [disabled]="subiendo()" (click)="confirmarRecorte()">
+          {{ subiendo() ? 'Subiendo…' : 'Usar recorte' }}
+        </button>
+        <button type="button" class="recorte-cancelar" [disabled]="subiendo()" (click)="cancelarRecorte()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+  }
 </div>
