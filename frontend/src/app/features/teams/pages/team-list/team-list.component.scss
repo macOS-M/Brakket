@@ -206,8 +206,8 @@
   max-width: calc(100% - 5.5rem);
   font-family: var(--font-data, 'Barlow Condensed', sans-serif);
   // Susurro de verdad: en una grilla donde el mismo juego se repite,
-  // una marca grande se vuelve papel tapiz. Más chica y más tenue.
-  font-size: 1.25rem;
+  // una marca grande se vuelve papel tapiz. Un paso menos del ramp (headline).
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
