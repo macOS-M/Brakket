@@ -30,6 +30,8 @@ export class TournamentWizardComponent implements OnInit {
   readonly juegoId = input.required<number>();
   readonly juegoNombre = input.required<string>();
   readonly juegoImagen = input<string | null>(null);
+  /** Liga propia preseleccionada (al crear desde el detalle de la liga). */
+  readonly ligaIdInicial = input<number | null>(null);
 
   readonly cerrado = output<void>();
   readonly creado = output<Torneo>();
@@ -108,8 +110,14 @@ export class TournamentWizardComponent implements OnInit {
   ngOnInit(): void {
     const usuarioId = Number(this.auth.usuario()?.id);
     this.leaguesService.list().subscribe({
-      next: (ligas) => this.misLigas.set(
-        ligas.filter((l) => l.comisionadoId === usuarioId && l.juegoId === this.juegoId())),
+      next: (ligas) => {
+        this.misLigas.set(
+          ligas.filter((l) => l.comisionadoId === usuarioId && l.juegoId === this.juegoId()));
+        const inicial = this.ligaIdInicial();
+        if (inicial && this.misLigas().some((l) => l.id === inicial)) {
+          this.elegirLiga(String(inicial));
+        }
+      },
       error: () => this.misLigas.set([])
     });
 

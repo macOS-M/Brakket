@@ -111,6 +111,19 @@
       <p class="mensaje-error" role="alert">{{ errorInscripcion() }}</p>
       }
     </div>
+    } @else {
+    <!-- Sin equipos elegibles: explicar el porqué en vez de ocultar todo. -->
+    <div class="inscripcion">
+      <p>
+        Para inscribirte necesitás ser <strong>capitán</strong> de un equipo de
+        {{ torneo.juegoNombre }} (o sin disciplina definida) con al menos
+        {{ torneo.tamanoEquipo }} jugador(es) activo(s), que aún no esté inscrito.
+      </p>
+      <div class="inscripcion-fila">
+        <a class="btn-primary" routerLink="/teams/nuevo">Crear mi equipo</a>
+        <a class="btn-secondary" routerLink="/teams">Ver mis equipos</a>
+      </div>
+    </div>
     }
 
     @if (puedeEliminar()) {

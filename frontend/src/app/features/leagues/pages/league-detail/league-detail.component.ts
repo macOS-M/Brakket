@@ -5,7 +5,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { League, Season, SeasonRequest } from '../../../../models/league.model';
+import { Torneo } from '../../../../models/tournament.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { TournamentsService } from '../../../tournaments/services/tournaments.service';
+import { TorneoCardComponent } from '../../../tournaments/components/torneo-card/torneo-card.component';
+import { TournamentWizardComponent } from '../../../tournaments/components/tournament-wizard/tournament-wizard.component';
 import { portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
@@ -15,13 +19,14 @@ import { portadaGradiente } from '../../../../shared/utils/cover';
 @Component({
   selector: 'app-league-detail',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, TorneoCardComponent, TournamentWizardComponent],
   templateUrl: './league-detail.component.html',
   styleUrl: './league-detail.component.scss'
 })
 export class LeagueDetailComponent {
   private readonly fb = inject(FormBuilder);
   private readonly leaguesService = inject(LeaguesService);
+  private readonly tournamentsService = inject(TournamentsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -55,6 +60,10 @@ export class LeagueDetailComponent {
   readonly eliminando = signal(false);
   readonly errorEliminar = signal<string | null>(null);
 
+  /** Torneos hospedados en esta liga (RF-24). */
+  readonly torneos = signal<Torneo[]>([]);
+  readonly wizardAbierto = signal(false);
+
   private ligaId!: number;
 
   readonly seasonForm = this.fb.group({
@@ -74,12 +83,30 @@ export class LeagueDetailComponent {
       next: (liga) => {
         this.league.set(liga);
         this.loading.set(false);
+        this.cargarTorneos(liga);
       },
       error: () => {
         this.error.set('No se pudo cargar la liga.');
         this.loading.set(false);
       }
     });
+  }
+
+  private cargarTorneos(liga: League): void {
+    // Se piden los del juego y se filtra por liga: el listado ya viene
+    // con la trazabilidad juego→liga→temporada→torneo resuelta.
+    this.tournamentsService.listar(liga.juegoId).subscribe({
+      next: (torneos) => this.torneos.set(torneos.filter((t) => t.ligaId === this.ligaId)),
+      error: () => this.torneos.set([])
+    });
+  }
+
+  torneoCreado(torneo: Torneo): void {
+    this.wizardAbierto.set(false);
+    const liga = this.league();
+    if (liga) {
+      this.cargarTorneos(liga);
+    }
   }
 
   private cargarTemporadas(): void {
