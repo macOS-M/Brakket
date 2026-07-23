@@ -6,10 +6,13 @@ import com.coffeecommits.brakket.game.dto.JuegoExternoResponse;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +56,15 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
     public RawgGameSearchServiceImpl(RestClient.Builder restClientBuilder,
                                      @Value("${brakket.rawg.base-url}") String baseUrl,
                                      @Value("${brakket.rawg.api-key:}") String apiKey) {
-        this.restClient = restClientBuilder.baseUrl(baseUrl).build();
+        // Sin timeouts explícitos, una red "agujero negro" (TCP que nunca
+        // responde) colgaría el seeder del arranque y los threads de /top.
+        this.restClient = restClientBuilder
+                .baseUrl(baseUrl)
+                .requestFactory(ClientHttpRequestFactoryBuilder.detect()
+                        .build(ClientHttpRequestFactorySettings.defaults()
+                                .withConnectTimeout(Duration.ofSeconds(5))
+                                .withReadTimeout(Duration.ofSeconds(10))))
+                .build();
         this.apiKey = apiKey;
     }
 
@@ -80,8 +91,13 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
     }
 
     /** Cache simple: los "top" de RAWG cambian poco y protegen la cuota. */
+    private static final long CACHE_OK_MS = 60 * 60 * 1000;
+    /** Un fallo/vacío también se recuerda: si RAWG está caído, el endpoint
+     *  público no debe pegarle a la API en cada visita anónima. */
+    private static final long CACHE_FALLO_MS = 5 * 60 * 1000;
     private volatile List<JuegoExternoResponse> popularesCache = List.of();
     private volatile long popularesCacheMs = 0;
+    private volatile boolean popularesCachePoblado = false;
 
     @Override
     public List<JuegoExternoResponse> populares() {
@@ -90,19 +106,27 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
                     "El buscador externo no está configurado (falta RAWG_API_KEY en el backend)");
         }
         long ahora = System.currentTimeMillis();
-        if (!popularesCache.isEmpty() && ahora - popularesCacheMs < 60 * 60 * 1000) {
+        long vigencia = popularesCache.isEmpty() ? CACHE_FALLO_MS : CACHE_OK_MS;
+        if (popularesCachePoblado && ahora - popularesCacheMs < vigencia) {
             return popularesCache;
         }
         // Ordenado por popularidad (cantidad de usuarios que lo agregaron).
-        List<JuegoExternoResponse> resultado = consultar(uri -> uri.path("/games")
-                .queryParam("key", apiKey)
-                .queryParam("ordering", "-added")
-                .queryParam("page_size", 24)
-                .build());
-        if (!resultado.isEmpty()) {
-            popularesCache = resultado;
+        List<JuegoExternoResponse> resultado;
+        try {
+            resultado = consultar(uri -> uri.path("/games")
+                    .queryParam("key", apiKey)
+                    .queryParam("ordering", "-added")
+                    .queryParam("page_size", 24)
+                    .build());
+        } catch (BusinessException e) {
+            popularesCache = List.of();
             popularesCacheMs = ahora;
+            popularesCachePoblado = true;
+            throw e;
         }
+        popularesCache = resultado;
+        popularesCacheMs = ahora;
+        popularesCachePoblado = true;
         return resultado;
     }
 

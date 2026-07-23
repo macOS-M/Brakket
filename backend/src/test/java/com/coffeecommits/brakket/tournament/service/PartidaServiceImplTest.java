@@ -93,6 +93,11 @@ class PartidaServiceImplTest {
                                 ? a.getOrden() - b.getOrden()
                                 : a.getRonda() - b.getRonda())
                         .toList());
+        // La lectura con lock resuelve contra las "persistidas" del test.
+        lenient().when(partidaRepository.bloquearPorId(any(Long.class))).thenAnswer(inv ->
+                guardadas.stream()
+                        .filter(g -> g.getId().equals(inv.<Long>getArgument(0)))
+                        .findFirst());
     }
 
     private List<Equipo> equipos(int n) {
@@ -173,16 +178,21 @@ class PartidaServiceImplTest {
 
     /** Partida 1v2 de un torneo EN_CURSO con capitanes 10 (A) y 20 (B). */
     private Partida partidaJugable() {
+        return partidaJugable(0);
+    }
+
+    private Partida partidaJugable(int orden) {
         torneo.setEstado(EstadoTorneo.EN_CURSO);
         Partida fin = Partida.builder().id(300L).torneo(torneo).ronda(2).orden(0)
                 .estado(EstadoPartida.PENDIENTE).build();
-        Partida p = Partida.builder().id(200L).torneo(torneo).ronda(1).orden(0)
+        Partida p = Partida.builder().id(200L).torneo(torneo).ronda(1).orden(orden)
                 .equipoA(Equipo.builder().id(10L).nombre("Azules").build())
                 .equipoB(Equipo.builder().id(20L).nombre("Rojos").build())
                 .estado(EstadoPartida.PENDIENTE)
                 .siguiente(fin)
                 .build();
-        lenient().when(partidaRepository.findById(200L)).thenReturn(Optional.of(p));
+        lenient().when(partidaRepository.bloquearPorId(200L)).thenReturn(Optional.of(p));
+        lenient().when(partidaRepository.bloquearPorId(300L)).thenReturn(Optional.of(fin));
         lenient().when(usuarioRepository.findByCorreo(CAPITAN_A))
                 .thenReturn(Optional.of(Usuario.builder().id(10L).correo(CAPITAN_A).build()));
         lenient().when(usuarioRepository.findByCorreo(CAPITAN_B))
@@ -261,5 +271,112 @@ class PartidaServiceImplTest {
                 new ReportarResultadoRequest(2, 1)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("rondas previas");
+    }
+
+    @Test
+    void iniciar_con_2_equipos_genera_solo_la_final() {
+        inscribir(equipos(2));
+
+        List<PartidaResponse> bracket = service.iniciarTorneo(7L, ORGANIZADOR, false);
+
+        assertThat(bracket).hasSize(1);
+        PartidaResponse fin = bracket.get(0);
+        assertThat(fin.ronda()).isEqualTo(1);
+        assertThat(fin.equipoAId()).isNotNull();
+        assertThat(fin.equipoBId()).isNotNull();
+        assertThat(fin.lobbyNombre()).isNotNull();
+        assertThat(fin.estado()).isEqualTo("PENDIENTE");
+    }
+
+    @Test
+    void iniciar_con_3_equipos_manda_el_bye_directo_a_la_final() {
+        inscribir(equipos(3));
+
+        List<PartidaResponse> bracket = service.iniciarTorneo(7L, ORGANIZADOR, false);
+
+        // Cupo 4: un bye (finalizado) + una semifinal real + la final.
+        assertThat(bracket).hasSize(3);
+        PartidaResponse bye = bracket.stream().filter(PartidaResponse::bye).findFirst().orElseThrow();
+        assertThat(bye.estado()).isEqualTo("FINALIZADA");
+        PartidaResponse fin = bracket.stream().filter(p -> p.ronda() == 2).findFirst().orElseThrow();
+        // El primer inscrito (bye, orden 0) ya espera en el slot A de la final.
+        assertThat(fin.equipoAId()).isEqualTo(bye.equipoAId());
+        assertThat(fin.equipoBId()).isNull();
+        assertThat(fin.lobbyNombre()).isNull();
+    }
+
+    @Test
+    void ganador_de_partida_con_orden_impar_avanza_al_slot_b() {
+        Partida p = partidaJugable(1);
+
+        service.reportar(200L, CAPITAN_A, new ReportarResultadoRequest(3, 1));
+        service.confirmar(200L, CAPITAN_B);
+
+        assertThat(p.getSiguiente().getEquipoB().getId()).isEqualTo(10L);
+        assertThat(p.getSiguiente().getEquipoA()).isNull();
+    }
+
+    @Test
+    void doble_reporte_y_reporte_sobre_disputa_quedan_bloqueados() {
+        Partida p = partidaJugable();
+
+        service.reportar(200L, CAPITAN_A, new ReportarResultadoRequest(3, 1));
+        assertThatThrownBy(() -> service.reportar(200L, CAPITAN_B,
+                new ReportarResultadoRequest(1, 3)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("ya tiene un resultado");
+
+        service.rechazar(200L, CAPITAN_B);
+        assertThatThrownBy(() -> service.reportar(200L, CAPITAN_A,
+                new ReportarResultadoRequest(3, 1)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("disputa");
+    }
+
+    @Test
+    void resolver_tambien_rechaza_empates() {
+        partidaJugable();
+        assertThatThrownBy(() -> service.resolver(200L, ORGANIZADOR, false,
+                new ReportarResultadoRequest(1, 1)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("empates");
+    }
+
+    @Test
+    void una_partida_cerrada_o_de_torneo_finalizado_no_admite_acciones() {
+        Partida p = partidaJugable();
+        p.setEstado(EstadoPartida.FINALIZADA);
+        assertThatThrownBy(() -> service.reportar(200L, CAPITAN_A,
+                new ReportarResultadoRequest(2, 1)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("cerrada");
+
+        p.setEstado(EstadoPartida.PENDIENTE);
+        torneo.setEstado(EstadoTorneo.FINALIZADO);
+        assertThatThrownBy(() -> service.confirmar(200L, CAPITAN_B))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no está en curso");
+    }
+
+    @Test
+    void el_bracket_publico_oculta_la_clave_de_lobby_a_quien_no_es_capitan_del_cruce() {
+        Partida p = partidaJugable();
+        p.setLobbyNombre("BRAKKET-T7-R1M1");
+        p.setLobbyClave("abcd2345");
+        when(partidaRepository.findByTorneoIdOrderByRondaAscOrdenAsc(7L)).thenReturn(List.of(p));
+
+        // Espectador anónimo: ve el cruce y el nombre, nunca la clave.
+        List<PartidaResponse> anonimo = service.obtenerBracket(7L, null, false);
+        assertThat(anonimo.get(0).lobbyNombre()).isEqualTo("BRAKKET-T7-R1M1");
+        assertThat(anonimo.get(0).lobbyClave()).isNull();
+
+        // Capitán de un equipo del cruce: la clave viaja.
+        when(inscripcionRepository.equiposCapitaneadosEnTorneo(10L, 7L)).thenReturn(List.of(10L));
+        List<PartidaResponse> capitan = service.obtenerBracket(7L, CAPITAN_A, false);
+        assertThat(capitan.get(0).lobbyClave()).isEqualTo("abcd2345");
+
+        // El organizador ve todas las claves.
+        List<PartidaResponse> organizador = service.obtenerBracket(7L, ORGANIZADOR, false);
+        assertThat(organizador.get(0).lobbyClave()).isEqualTo("abcd2345");
     }
 }

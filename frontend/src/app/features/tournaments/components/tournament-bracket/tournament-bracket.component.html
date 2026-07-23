@@ -59,7 +59,9 @@
            crean dentro del juego con estas credenciales. -->
       <div class="lobby">
         <span class="lobby-dato"><span class="lobby-etiqueta">Lobby</span> {{ p.lobbyNombre }}</span>
+        @if (p.lobbyClave) {
         <span class="lobby-dato"><span class="lobby-etiqueta">Clave</span> {{ p.lobbyClave }}</span>
+        }
       </div>
       }
 

@@ -130,9 +130,15 @@
           role="radio"
           [attr.aria-checked]="formato() === f"
           [class.activo]="formato() === f"
+          [disabled]="!soportado(f)"
           (click)="formato.set(f)"
         >
-          <span class="formato-nombre">{{ etiquetaDe(f) }}</span>
+          <span class="formato-nombre">
+            {{ etiquetaDe(f) }}
+            @if (!soportado(f)) {
+            <span class="formato-pronto">Pronto</span>
+            }
+          </span>
           <span class="formato-descripcion">{{ descripcionDe(f) }}</span>
         </button>
         }

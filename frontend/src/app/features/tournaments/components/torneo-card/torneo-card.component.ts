@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { Torneo } from '../../../../models/tournament.model';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
+import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
 
 /**
  * Tarjeta de torneo con la anatomía de la referencia Challenger Mode:
@@ -12,7 +13,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 @Component({
   selector: 'app-torneo-card',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, FormatoTorneoPipe],
   templateUrl: './torneo-card.component.html',
   styleUrl: './torneo-card.component.scss'
 })

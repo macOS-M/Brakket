@@ -159,6 +159,15 @@ export class TournamentWizardComponent implements OnInit {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
+  /**
+   * El motor de llaves solo genera eliminación directa (deuda declarada en
+   * DD-05): los demás formatos se muestran, pero aún no se pueden elegir.
+   */
+  soportado(formato: string): boolean {
+    const f = formato.toUpperCase();
+    return f === 'ELIMINACION_DIRECTA' || f === 'ELIMINACIÓN DIRECTA';
+  }
+
   /** El paso actual está completo y se puede avanzar. */
   readonly pasoValido = computed(() => {
     switch (this.paso()) {
@@ -202,8 +211,12 @@ export class TournamentWizardComponent implements OnInit {
       next: (catalogo) => {
         if (catalogo.length > 0) {
           this.formatos.set(catalogo.map((f) => f.nombre));
-          if (!catalogo.some((f) => f.nombre === this.formato())) {
-            this.formato.set(catalogo[0].nombre);
+          // El seleccionado debe existir en el catálogo y estar soportado.
+          const actualValido = catalogo.some(
+            (f) => f.nombre === this.formato() && this.soportado(f.nombre));
+          if (!actualValido) {
+            const primero = catalogo.find((f) => this.soportado(f.nombre)) ?? catalogo[0];
+            this.formato.set(primero.nombre);
           }
         }
       },

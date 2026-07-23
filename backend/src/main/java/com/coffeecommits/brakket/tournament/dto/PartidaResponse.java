@@ -3,9 +3,9 @@ package com.coffeecommits.brakket.tournament.dto;
 import com.coffeecommits.brakket.tournament.model.Partida;
 
 /**
- * Partida del bracket aplanada para el frontend. La lobby es visible para
- * cualquiera que vea el torneo: en la demo simplifica; restringirla a los
- * participantes queda como deuda registrada.
+ * Partida del bracket aplanada para el frontend. El nombre de la lobby es
+ * público (identifica el cruce), pero la clave solo viaja a quien puede
+ * entrar a la partida privada: capitanes de ese cruce, organizador o ADMIN.
  */
 public record PartidaResponse(
         Long id,
@@ -27,7 +27,12 @@ public record PartidaResponse(
         String lobbyClave,
         Long siguientePartidaId
 ) {
+    /** Vista completa: para quien actúa sobre la partida (capitán/gestor). */
     public static PartidaResponse from(Partida p) {
+        return from(p, true);
+    }
+
+    public static PartidaResponse from(Partida p, boolean incluirClave) {
         return new PartidaResponse(
                 p.getId(),
                 p.getRonda(),
@@ -45,7 +50,7 @@ public record PartidaResponse(
                 p.getEstado() == null ? null : p.getEstado().name(),
                 p.esBye(),
                 p.getLobbyNombre(),
-                p.getLobbyClave(),
+                incluirClave ? p.getLobbyClave() : null,
                 p.getSiguiente() == null ? null : p.getSiguiente().getId()
         );
     }

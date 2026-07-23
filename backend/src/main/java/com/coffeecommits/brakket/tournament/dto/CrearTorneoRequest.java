@@ -1,6 +1,7 @@
 package com.coffeecommits.brakket.tournament.dto;
 
 import com.coffeecommits.brakket.tournament.model.AjustePartida;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -52,6 +53,6 @@ public record CrearTorneoRequest(
 
         /** Reglas de partida (opcional): pares clave/valor tipo "Game settings". */
         @Size(max = 15, message = "Máximo 15 ajustes de partida")
-        List<AjustePartida> ajustesPartida
+        List<@Valid AjustePartida> ajustesPartida
 ) {
 }

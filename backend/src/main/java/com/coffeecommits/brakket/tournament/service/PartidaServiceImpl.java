@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 public class PartidaServiceImpl implements PartidaService {
@@ -84,17 +85,38 @@ public class PartidaServiceImpl implements PartidaService {
         Torneo torneo = torneoRepository.findById(torneoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Torneo", torneoId));
         // Misma visibilidad que el torneo: uno privado solo existe para su dueño.
-        if (!Boolean.TRUE.equals(torneo.getPublico()) && !esAdmin
-                && !esOrganizador(torneo, correoOpcional)) {
+        boolean gestor = esAdmin || esOrganizador(torneo, correoOpcional);
+        if (!Boolean.TRUE.equals(torneo.getPublico()) && !gestor) {
             throw new ResourceNotFoundException("Torneo", torneoId);
         }
-        return obtenerBracketInterno(torneoId);
+        if (gestor) {
+            return obtenerBracketInterno(torneoId);
+        }
+        // La clave de lobby solo viaja a los capitanes de ese cruce: es la
+        // credencial para entrar a la partida privada, no un dato de espectador.
+        Set<Long> misEquipos = correoOpcional == null
+                ? Set.of()
+                : usuarioRepository.findByCorreo(correoOpcional)
+                        .map(u -> Set.copyOf(
+                                inscripcionRepository.equiposCapitaneadosEnTorneo(u.getId(), torneoId)))
+                        .orElse(Set.of());
+        return partidaRepository.findByTorneoIdOrderByRondaAscOrdenAsc(torneoId).stream()
+                .map(p -> PartidaResponse.from(p, participaEn(p, misEquipos)))
+                .toList();
+    }
+
+    private static boolean participaEn(Partida p, Set<Long> equipos) {
+        return (p.getEquipoA() != null && equipos.contains(p.getEquipoA().getId()))
+                || (p.getEquipoB() != null && equipos.contains(p.getEquipoB().getId()));
     }
 
     @Override
     @Transactional
     public PartidaResponse reportar(Long partidaId, String correo, ReportarResultadoRequest request) {
         Partida partida = buscarPartidaJugable(partidaId);
+        if (partida.getEstado() == EstadoPartida.EN_DISPUTA) {
+            throw new BusinessException("La partida está en disputa: la resuelve el organizador");
+        }
         if (partida.getEstado() != EstadoPartida.PENDIENTE) {
             throw new BusinessException("La partida ya tiene un resultado reportado");
         }
@@ -205,7 +227,13 @@ public class PartidaServiceImpl implements PartidaService {
         partida.setEstado(EstadoPartida.FINALIZADA);
         partidaRepository.save(partida);
 
-        Partida siguiente = partida.getSiguiente();
+        // Re-lectura con lock: si las dos partidas que alimentan a la misma
+        // siguiente terminan a la vez, la segunda espera y ve el slot que la
+        // primera ya escribió (y la lobby se asigna cuando están ambos).
+        Partida siguiente = partida.getSiguiente() == null
+                ? null
+                : partidaRepository.bloquearPorId(partida.getSiguiente().getId())
+                        .orElse(partida.getSiguiente());
         if (siguiente == null) {
             Torneo torneo = partida.getTorneo();
             torneo.setEstado(EstadoTorneo.FINALIZADO);
@@ -250,9 +278,13 @@ public class PartidaServiceImpl implements PartidaService {
                 .toList();
     }
 
-    /** Partida sobre la que se puede actuar: torneo EN_CURSO y rivales definidos. */
+    /**
+     * Partida sobre la que se puede actuar: torneo EN_CURSO y rivales
+     * definidos. Se lee con bloqueo de fila para que dos acciones
+     * simultáneas (confirmar vs rechazar, doble reporte) se serialicen.
+     */
     private Partida buscarPartidaJugable(Long partidaId) {
-        Partida partida = partidaRepository.findById(partidaId)
+        Partida partida = partidaRepository.bloquearPorId(partidaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Partida", partidaId));
         if (partida.getTorneo().getEstado() != EstadoTorneo.EN_CURSO) {
             throw new BusinessException("El torneo no está en curso");

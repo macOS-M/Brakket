@@ -1,8 +1,8 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Subject, debounceTime, forkJoin, of, takeUntil } from 'rxjs';
+import { Subject, debounceTime, forkJoin, of, switchMap, takeUntil } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 import { Equipo } from '../../../../models/equipo.model';
@@ -39,6 +39,8 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   /** La búsqueda corre sola mientras se escribe (con debounce). */
   private readonly busquedaEnVivo$ = new Subject<void>();
+  /** Disparador único de la búsqueda (tecleo con debounce o botón directo). */
+  private readonly buscar$ = new Subject<void>();
 
   readonly roles = ROLES_EQUIPO;
   readonly miembros = signal<MiembroEquipo[]>([]);
@@ -111,6 +113,19 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
   readonly respondiendoSolicitud = signal<number | null>(null);
   readonly errorSolicitudes = signal<string | null>(null);
 
+  /**
+   * El usuario (GET /me) y la plantilla llegan en cualquier orden; un chequeo
+   * imperativo tras cargar miembros se pierde si /me aún no respondió. El
+   * effect reacciona cuando ambos estén y pide las solicitudes una sola vez.
+   */
+  private solicitudesPedidas = false;
+  private readonly solicitudesAlSerCapitan = effect(() => {
+    if (this.esCapitan() && !this.vistaHistorica() && !this.solicitudesPedidas) {
+      this.solicitudesPedidas = true;
+      this.cargarSolicitudes();
+    }
+  });
+
   ngOnInit(): void {
     this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
     this.cargarEquipo();
@@ -120,7 +135,33 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
     });
     this.busquedaEnVivo$
       .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe(() => this.buscarJugadores());
+      .subscribe(() => this.buscar$.next());
+    // Un único stream con switchMap: si el usuario sigue escribiendo, la
+    // respuesta vieja se cancela y no pisa a la nueva (out-of-order).
+    this.buscar$
+      .pipe(
+        switchMap(() => {
+          this.buscando.set(true);
+          this.errorBusqueda.set(null);
+          return this.teamsService.buscarJugadores(
+            this.equipoId, this.textoBusqueda().trim(),
+            this.juegoIdBusqueda(), this.soloDisponibles()
+          ).pipe(
+            catchError((err) => {
+              this.errorBusqueda.set(err?.error?.message ?? 'No se pudo completar la busqueda.');
+              return of(null);
+            })
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((pagina) => {
+        this.buscando.set(false);
+        if (pagina) {
+          // El backend pagina; el template itera la lista de la página.
+          this.resultados.set(pagina.items);
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -143,9 +184,6 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
       next: (miembros) => {
         this.miembros.set(miembros);
         this.cargando.set(false);
-        if (this.esCapitan() && !this.vistaHistorica()) {
-          this.cargarSolicitudes();
-        }
       },
       error: (err) => {
         this.error.set(err?.status === 404
@@ -346,21 +384,7 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
   }
 
   buscarJugadores(): void {
-    this.buscando.set(true);
-    this.errorBusqueda.set(null);
-    this.teamsService.buscarJugadores(
-      this.equipoId, this.textoBusqueda().trim(), this.juegoIdBusqueda(), this.soloDisponibles()
-    ).subscribe({
-      next: (pagina) => {
-        // El backend ahora pagina; el template itera la lista de la página.
-        this.resultados.set(pagina.items);
-        this.buscando.set(false);
-      },
-      error: (err) => {
-        this.buscando.set(false);
-        this.errorBusqueda.set(err?.error?.message ?? 'No se pudo completar la busqueda.');
-      }
-    });
+    this.buscar$.next();
   }
 
 }

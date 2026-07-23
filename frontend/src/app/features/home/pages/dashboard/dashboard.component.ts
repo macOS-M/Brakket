@@ -112,8 +112,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Rail de próximos torneos (referencia "Upcoming Tournaments"). */
-  readonly proximosTorneos = computed(() => this.torneos().slice(0, 5));
+  /** Rail de próximos torneos (referencia "Upcoming Tournaments"): solo
+   *  competencias con futuro (abiertas o en curso), las más cercanas primero. */
+  readonly proximosTorneos = computed(() =>
+    this.torneos()
+      .filter((t) => t.estado === 'INSCRIPCION_ABIERTA' || t.estado === 'EN_CURSO')
+      .sort((a, b) => a.fechaInicio.localeCompare(b.fechaInicio))
+      .slice(0, 5));
 
   /**
    * "Tus competencias": lo accionable primero (referencia CM) — torneos en
@@ -145,6 +150,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return { texto: '● En curso', clase: 'en-curso' };
       case 'FINALIZADO':
         return { texto: 'Finalizado', clase: 'neutro' };
+      case 'CANCELADO':
+        return { texto: 'Cancelado', clase: 'neutro' };
       default:
         return torneo.inscritos >= torneo.maxEquipos
           ? { texto: 'Cupo lleno', clase: 'ambar' }

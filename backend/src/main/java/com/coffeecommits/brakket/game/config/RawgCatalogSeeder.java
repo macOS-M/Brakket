@@ -68,6 +68,10 @@ public class RawgCatalogSeeder implements ApplicationRunner {
                 if (existente != null) {
                     // Curado ya presente: se reactiva y, si su arte era el
                     // stock de las migraciones viejas, se refresca con RAWG.
+                    // Tradeoff asumido: con el catálogo bajo el mínimo, la
+                    // garantía de demo pesa más que una desactivación ADMIN
+                    // previa (DD-01); con >= MINIMO_CATALOGO activos este
+                    // bloque no corre y la decisión del ADMIN se respeta.
                     existente.setActivo(true);
                     if (existente.getRating() == null || esArteStock(existente.getImagenUrl())) {
                         var refresco = externalGameSearchService.buscar(nombre).stream()

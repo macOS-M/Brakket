@@ -250,6 +250,12 @@ public class TorneoServiceImpl implements TorneoService {
                         "Solo el organizador o un administrador pueden eliminar este torneo");
             }
         }
+        // Un torneo con la llave en juego no se borra por accidente (se
+        // llevaría bracket y resultados por el ON DELETE CASCADE).
+        if (torneo.getEstado() == EstadoTorneo.EN_CURSO) {
+            throw new BusinessException(
+                    "El torneo está en curso: terminalo o resolvé sus partidas antes de eliminarlo");
+        }
         // Las inscripciones caen por el ON DELETE CASCADE del esquema.
         torneoRepository.delete(torneo);
     }

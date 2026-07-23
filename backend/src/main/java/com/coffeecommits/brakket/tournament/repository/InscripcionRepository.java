@@ -89,6 +89,24 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
             """)
     boolean esCapitanActivo(@Param("usuarioId") Long usuarioId, @Param("equipoId") Long equipoId);
 
+    /**
+     * Equipos inscritos en el torneo cuyo capitán activo es el usuario: los
+     * únicos cruces cuya clave de lobby puede ver (además del organizador).
+     */
+    @Query("""
+            select i.equipo.id from Inscripcion i
+            where i.torneo.id = :torneoId
+              and i.estado not in ('RECHAZADA', 'CANCELADA')
+              and exists (
+                  select 1 from MiembroEquipo m
+                  where m.equipo.id = i.equipo.id
+                    and m.usuario.id = :usuarioId
+                    and m.rol = 'CAPITAN'
+                    and m.estado = 'ACTIVO')
+            """)
+    List<Long> equiposCapitaneadosEnTorneo(@Param("usuarioId") Long usuarioId,
+                                           @Param("torneoId") Long torneoId);
+
     @Query("""
             select count(m) from MiembroEquipo m
             where m.equipo.id = :equipoId and m.estado = 'ACTIVO'

@@ -231,4 +231,16 @@ class TorneoServiceImplTest {
         torneoService.eliminarTorneo(7L, "tercero@x.com", true);
         verify(torneoRepository).delete(torneo);
     }
+
+    @Test
+    void eliminar_un_torneo_en_curso_esta_bloqueado() {
+        Torneo torneo = torneoAbierto();
+        torneo.setEstado(EstadoTorneo.EN_CURSO);
+        when(torneoRepository.findById(7L)).thenReturn(Optional.of(torneo));
+
+        assertThatThrownBy(() -> torneoService.eliminarTorneo(7L, "tercero@x.com", true))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("en curso");
+        verify(torneoRepository, never()).delete(torneo);
+    }
 }

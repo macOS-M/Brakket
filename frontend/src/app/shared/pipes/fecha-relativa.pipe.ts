@@ -6,8 +6,12 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
  * Fecha con urgencia, como la referencia Challenger Mode: "En 16 minutos",
  * "Hoy, 19:00", "Mañana, 00:45", "viernes, 13:00", "24/8, 16:00". Para
  * fechas pasadas: "Comenzó hace 2 h". Hace que el panel se sienta vivo.
+ *
+ * <p>Impuro a propósito: el resultado depende del reloj, no solo del input.
+ * Un pipe puro cachearía "En 16 minutos" para siempre en una pantalla que
+ * queda abierta (demo 24/7). El cálculo es aritmética barata por CD.</p>
  */
-@Pipe({ name: 'fechaRelativa', standalone: true })
+@Pipe({ name: 'fechaRelativa', standalone: true, pure: false })
 export class FechaRelativaPipe implements PipeTransform {
   transform(valor: string | Date | null | undefined): string {
     if (!valor) {
@@ -45,7 +49,9 @@ export class FechaRelativaPipe implements PipeTransform {
     if (fecha.toDateString() === manana.toDateString()) {
       return `Mañana, ${hora}`;
     }
-    if (diffMin < 60 * 24 * 7) {
+    // Hasta 6 días: con 7 el mismo día de semana reaparece y "martes, 19:00"
+    // se leería como hoy.
+    if (diffMin < 60 * 24 * 6) {
       return `${DIAS[fecha.getDay()]}, ${hora}`;
     }
     return `${fecha.getDate()}/${fecha.getMonth() + 1}, ${hora}`;

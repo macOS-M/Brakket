@@ -30,7 +30,7 @@
         </p>
       </div>
       <div class="stats-torneo">
-        <span class="stat">{{ torneo.formato }}</span>
+        <span class="stat">{{ torneo.formato | formatoTorneo }}</span>
         <span class="stat">{{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
         <span class="stat resaltado">{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos</span>
         @if (enCurso()) {
@@ -101,7 +101,7 @@
         </div>
         <div class="formato-card">
           <p class="formato-etiqueta">Formato</p>
-          <p class="formato-valor">{{ torneo.formato }}</p>
+          <p class="formato-valor">{{ torneo.formato | formatoTorneo }}</p>
         </div>
         @if (torneo.premio) {
         <div class="formato-card">
@@ -138,6 +138,10 @@
            El organizador también puede inscribir a su propio equipo. -->
       @if (inscripcionExitosa()) {
       <p class="mensaje-ok" role="status">¡Equipo inscrito! Ya aparece en la pestaña Jugadores.</p>
+      }
+      <!-- Un capitán de varios equipos puede inscribir otro tras el primero:
+           el formulario vuelve mientras queden elegibles y cupo. -->
+      @if (inscripcionExitosa() && elegibles().length === 0) {
       } @else if (!abierto()) {
       @if (!enCurso() && !finalizado()) {
       <p class="aviso-cerrado">
@@ -333,7 +337,9 @@
         Anterior
       </button>
     </div>
-    <p class="matches-conteo">{{ matchesFiltrados().length }} matches</p>
+    <p class="matches-conteo">
+      {{ matchesFiltrados().length }} {{ matchesFiltrados().length === 1 ? 'partida' : 'partidas' }}
+    </p>
     <div class="matches-lista">
       @for (p of matchesFiltrados(); track p.id) {
       <article class="match-fila" [class.finalizada]="p.estado === 'FINALIZADA'">
@@ -355,7 +361,9 @@
           </div>
         </div>
         @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
-        <p class="match-lobby">{{ p.lobbyNombre }} · clave {{ p.lobbyClave }}</p>
+        <p class="match-lobby">
+          {{ p.lobbyNombre }}@if (p.lobbyClave) { · clave {{ p.lobbyClave }}}
+        </p>
         }
       </article>
       }

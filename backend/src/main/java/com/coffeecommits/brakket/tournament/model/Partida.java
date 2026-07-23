@@ -2,6 +2,7 @@ package com.coffeecommits.brakket.tournament.model;
 
 import com.coffeecommits.brakket.team.model.Equipo;
 import jakarta.persistence.*;
+import org.hibernate.annotations.DynamicUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +20,7 @@ import lombok.Setter;
  */
 @Entity
 @Table(name = "partida")
+@DynamicUpdate // dos semifinales concurrentes escriben slots distintos de la final sin pisarse
 @Getter
 @Setter
 @NoArgsConstructor

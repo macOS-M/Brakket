@@ -13,6 +13,7 @@ import {
   TournamentBracketComponent
 } from '../../components/tournament-bracket/tournament-bracket.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
+import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
 
 type TabDetalle = 'resumen' | 'llaves' | 'matches' | 'jugadores' | 'resultados';
 type FiltroMatch = 'todos' | 'pendientes' | 'finalizadas';
@@ -42,7 +43,7 @@ interface EventoTimeline {
 @Component({
   selector: 'app-tournament-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent],
+  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent, FormatoTorneoPipe],
   templateUrl: './tournament-detail.component.html',
   styleUrl: './tournament-detail.component.scss'
 })
@@ -229,7 +230,8 @@ export class TournamentDetailComponent {
         cumplido: arranco
       },
       {
-        fecha: this.finalizado() ? null : null,
+        // La API no expone fechaFin del torneo; el hito no lleva fecha.
+        fecha: null,
         titulo: 'Final',
         detalle: this.finalizado()
           ? `Campeón: ${t.campeonNombre ?? '—'}.`
