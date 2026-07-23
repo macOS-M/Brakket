@@ -213,3 +213,38 @@
     background: var(--surface-2, #1f2937);
   }
 }
+
+// ---------- split mis equipos / demás + tarjeta clickeable ----------
+
+.seccion-titulo { font-size: 1.05rem; margin: 20px 0 12px; }
+
+.equipo-card.clickeable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+
+  &:hover, &:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+}
+
+.chip-solicitado {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--success-text);
+}
+
+.mensaje-ok {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: 0.875rem;
+}
+
+.mensaje-error {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  font-size: 0.875rem;
+}

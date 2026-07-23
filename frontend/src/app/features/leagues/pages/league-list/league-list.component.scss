@@ -171,3 +171,30 @@
     background: var(--surface-2, #1f2937);
   }
 }
+
+// ---------- filtro por juego + split mis ligas / demás ----------
+
+.seccion-titulo { font-size: 1.05rem; margin: 20px 0 12px; }
+
+.filtro-juegos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.chip-juego {
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover { color: var(--text); border-color: var(--accent); }
+  &.activo { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+}
+
+.sin-otras { color: var(--text-muted); font-size: 0.875rem; }

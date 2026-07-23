@@ -35,8 +35,59 @@
     <span class="banner-emoji" aria-hidden="true">🏆</span>
   </div>
 
+  @if (juegosDisponibles().length > 1) {
+  <div class="filtro-juegos" role="group" aria-label="Filtrar ligas por juego">
+    <button
+      type="button"
+      class="chip-juego"
+      [class.activo]="juegoFiltro() === null"
+      (click)="juegoFiltro.set(null)"
+    >
+      Todos
+    </button>
+    @for (juego of juegosDisponibles(); track juego.id) {
+    <button
+      type="button"
+      class="chip-juego"
+      [class.activo]="juegoFiltro() === juego.id"
+      (click)="juegoFiltro.set(juego.id)"
+    >
+      {{ juego.nombre }}
+    </button>
+    }
+  </div>
+  }
+
+  @if (mias().length > 0) {
+  <h2 class="seccion-titulo">Mis ligas</h2>
   <div class="grid">
-    @for (liga of leagues(); track liga.id) {
+    @for (liga of mias(); track liga.id) {
+    <a class="liga-card" [routerLink]="[liga.id]">
+      <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
+        @if (foto(liga)) {
+        <img [src]="foto(liga)" [alt]="" />
+        } @else {
+        <span class="monograma-grande" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
+        }
+        @if (liga.juegoNombre) {
+        <span class="juego-chip">{{ liga.juegoNombre }}</span>
+        }
+      </div>
+      <div class="cuerpo">
+        <h2 class="nombre">{{ liga.nombre }}</h2>
+        <p class="meta">Sos el comisionado</p>
+      </div>
+    </a>
+    }
+  </div>
+  <h2 class="seccion-titulo">Todas las ligas</h2>
+  }
+
+  @if (otras().length === 0 && mias().length > 0) {
+  <p class="sin-otras">Ninguna otra liga coincide con el filtro.</p>
+  } @else {
+  <div class="grid">
+    @for (liga of otras(); track liga.id) {
     <a class="liga-card" [routerLink]="[liga.id]">
       <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
         @if (foto(liga)) {
@@ -55,5 +106,6 @@
     </a>
     }
   </div>
+  }
   }
 </section>

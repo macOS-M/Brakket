@@ -1,12 +1,13 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap, takeUntil } from 'rxjs';
 
 import { EquipoBusqueda, Pagina } from '../../../../models/equipo.model';
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
 import { TeamsService } from '../../services/teams.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
@@ -34,6 +35,8 @@ const TAMANO_PAGINA = 12;
 export class TeamListComponent implements OnInit, OnDestroy {
   private readonly teamsService = inject(TeamsService);
   private readonly gamesService = inject(GamesService);
+  private readonly router = inject(Router);
+  readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
   /** Página solicitada; switchMap cancela el request anterior si llega otro. */
@@ -54,8 +57,26 @@ export class TeamListComponent implements OnInit, OnDestroy {
   readonly juegos = signal<Juego[]>([]);
   readonly disciplinas = signal<string[]>([]);
 
+  /** Mis equipos primero; el resto de la búsqueda va aparte. */
+  readonly misEquipos = signal<EquipoBusqueda[]>([]);
+  private readonly misIds = computed(() => new Set(this.misEquipos().map((e) => e.id)));
+  readonly otros = computed(() =>
+    (this.pagina()?.items ?? []).filter((e) => !this.misIds().has(e.id)));
+
+  /** Solicitudes enviadas en esta sesión, para no re-ofrecer el botón. */
+  readonly solicitados = signal<Set<number>>(new Set());
+  readonly solicitandoId = signal<number | null>(null);
+  readonly avisoSolicitud = signal<string | null>(null);
+  readonly errorSolicitud = signal<string | null>(null);
+
   ngOnInit(): void {
     this.cargarJuegos();
+    if (this.auth.isAuthenticated()) {
+      this.teamsService.misEquipos().subscribe({
+        next: (equipos) => this.misEquipos.set(equipos),
+        error: () => this.misEquipos.set([])
+      });
+    }
 
     // Un único stream de búsqueda: cada emisión cancela el request en vuelo,
     // así una respuesta vieja nunca pisa a una más reciente.
@@ -123,6 +144,37 @@ export class TeamListComponent implements OnInit, OnDestroy {
       return;
     }
     this.buscar(page);
+  }
+
+  /** Toda la tarjeta navega: los míos a la plantilla, el resto al perfil. */
+  abrir(equipo: EquipoBusqueda, esMio: boolean): void {
+    this.router.navigate(esMio ? ['/teams', equipo.id, 'plantilla'] : ['/team-profile', equipo.id]);
+  }
+
+  puedeSolicitar(equipo: EquipoBusqueda): boolean {
+    return this.auth.isAuthenticated()
+      && equipo.estado === 'ACTIVO'
+      && !this.misIds().has(equipo.id)
+      && !this.solicitados().has(equipo.id);
+  }
+
+  solicitarUnion(equipo: EquipoBusqueda, event: Event): void {
+    event.stopPropagation();
+    this.solicitandoId.set(equipo.id);
+    this.avisoSolicitud.set(null);
+    this.errorSolicitud.set(null);
+    this.teamsService.solicitarUnion(equipo.id, null).subscribe({
+      next: () => {
+        this.solicitandoId.set(null);
+        this.solicitados.update((set) => new Set(set).add(equipo.id));
+        this.avisoSolicitud.set(
+          `Solicitud enviada a ${equipo.nombre}: su capitán la va a revisar.`);
+      },
+      error: (err) => {
+        this.solicitandoId.set(null);
+        this.errorSolicitud.set(err?.error?.message ?? 'No se pudo enviar la solicitud.');
+      }
+    });
   }
 
   private cargarJuegos(): void {

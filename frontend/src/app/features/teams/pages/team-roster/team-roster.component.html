@@ -104,10 +104,10 @@
 
     <div class="filtros-busqueda">
       <input
-        type="text"
-        placeholder="Buscar por nombre..."
+        type="search"
+        placeholder="Buscar por nombre…"
         [value]="textoBusqueda()"
-        (input)="textoBusqueda.set($any($event.target).value)"
+        (input)="onTextoBusqueda($any($event.target).value)"
       />
       <select
         [value]="juegoIdBusqueda() ?? ''"
@@ -155,9 +155,10 @@
         <button
           type="button"
           class="btn-invitar"
-          (click)="usarEnFormulario(jugador)"
+          [class.seleccionado]="estaSeleccionado(jugador.id)"
+          (click)="toggleSeleccion(jugador)"
         >
-          Usar este jugador
+          {{ estaSeleccionado(jugador.id) ? '✓ Seleccionado' : '+ Seleccionar' }}
         </button>
       </div>
       }
@@ -209,43 +210,105 @@
 
   @if (esCapitan() && !vistaHistorica()) {
   <div class="invitar-box">
-    <h2>Invitar jugador</h2>
+    <h2>Invitar jugadores</h2>
 
-    @if (invitacionEnviada()) {
-    <p class="mensaje-exito">Invitación enviada correctamente.</p>
+    @if (resumenInvitaciones()) {
+    <p class="mensaje-exito">{{ resumenInvitaciones() }}</p>
     }
     @if (errorInvitar()) {
     <p class="mensaje-error">{{ errorInvitar() }}</p>
     }
 
-    <form [formGroup]="invitarForm" (ngSubmit)="invitar()" class="form-invitar">
-      <div class="campo">
-        <label for="jugadorId">ID del jugador *</label>
-        <input id="jugadorId" type="number" formControlName="jugadorId" />
-      </div>
-
-      <div class="campo">
-        <label for="rolPropuesto">Rol propuesto *</label>
-        <select id="rolPropuesto" formControlName="rolPropuesto">
+    @if (seleccionados().length === 0) {
+    <p class="pista-invitar">
+      Buscá jugadores arriba y seleccioná uno o varios: acá les asignás el rol
+      y les enviás la invitación de una sola vez.
+    </p>
+    } @else {
+    <ul class="seleccion-lista">
+      @for (s of seleccionados(); track s.id) {
+      <li class="seleccion-item">
+        <span class="seleccion-nombre">{{ s.nombre }} <span class="seleccion-id">ID {{ s.id }}</span></span>
+        <select
+          [value]="s.rol"
+          (change)="cambiarRolSeleccion(s.id, $any($event.target).value)"
+          attr.aria-label="Rol para {{ s.nombre }}"
+        >
           @for (rol of roles; track rol) {
           <option [value]="rol">{{ rol }}</option>
           }
         </select>
-      </div>
+        <button
+          type="button"
+          class="seleccion-quitar"
+          (click)="quitarSeleccion(s.id)"
+          attr.aria-label="Quitar a {{ s.nombre }}"
+        >
+          ✕
+        </button>
+      </li>
+      }
+    </ul>
 
-      <div class="campo">
-        <label for="mensaje">Mensaje (opcional)</label>
-        <textarea id="mensaje" formControlName="mensaje" rows="2"></textarea>
-      </div>
+    <label class="campo-mensaje">
+      Mensaje (opcional, va en todas las invitaciones)
+      <textarea
+        rows="2"
+        maxlength="300"
+        [value]="mensajeInvitacion()"
+        (input)="mensajeInvitacion.set($any($event.target).value)"
+      ></textarea>
+    </label>
 
-      <button type="submit" class="btn-primary" [disabled]="invitando()">
-        {{ invitando() ? 'Enviando...' : 'Enviar invitación' }}
-      </button>
-    </form>
+    <button type="button" class="btn-primary" [disabled]="invitando()" (click)="invitarSeleccionados()">
+      {{ invitando() ? 'Enviando…' : seleccionados().length === 1 ? 'Enviar invitación' : 'Enviar ' + seleccionados().length + ' invitaciones' }}
+    </button>
+    }
+  </div>
+
+  <!-- Solicitudes de unión: jugadores que pidieron entrar al equipo. -->
+  @if (solicitudes().length > 0) {
+  <div class="solicitudes-box">
+    <h2>Solicitudes de unión ({{ solicitudes().length }})</h2>
+    @if (errorSolicitudes()) {
+    <p class="mensaje-error">{{ errorSolicitudes() }}</p>
+    }
+    <ul class="solicitudes-lista">
+      @for (s of solicitudes(); track s.id) {
+      <li class="solicitud-item">
+        <div>
+          <p class="solicitud-nombre">{{ s.jugadorNombre }} <span class="seleccion-id">ID {{ s.jugadorId }}</span></p>
+          @if (s.mensaje) {
+          <p class="solicitud-mensaje">"{{ s.mensaje }}"</p>
+          }
+        </div>
+        <div class="solicitud-acciones">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="respondiendoSolicitud() === s.id"
+            (click)="responderSolicitud(s, true)"
+          >
+            Aceptar
+          </button>
+          <button
+            type="button"
+            class="btn-cancelar"
+            [disabled]="respondiendoSolicitud() === s.id"
+            (click)="responderSolicitud(s, false)"
+          >
+            Rechazar
+          </button>
+        </div>
+      </li>
+      }
+    </ul>
   </div>
   }
+  }
 
-  @if (!cargando() && !error() && !vistaHistorica()) {
+  <!-- Disolver es exclusivo del capitán: nadie más debe ver esta zona. -->
+  @if (esCapitan() && !cargando() && !error() && !vistaHistorica()) {
   <section class="zona-peligro">
     <h2>Disolver equipo</h2>
     <p class="advertencia">

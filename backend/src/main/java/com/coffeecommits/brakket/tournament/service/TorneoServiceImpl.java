@@ -184,12 +184,8 @@ public class TorneoServiceImpl implements TorneoService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
 
-        if (equipo.getJuego() != null
-                && !equipo.getJuego().getId().equals(torneo.getJuego().getId())) {
-            throw new BusinessException(
-                    "El equipo compite en %s, no en %s".formatted(
-                            equipo.getJuego().getNombre(), torneo.getJuego().getNombre()));
-        }
+        // El juego del equipo es su disciplina favorita, no una restricción:
+        // cualquier equipo puede competir en torneos de otros juegos.
         long plantilla = inscripcionRepository.countMiembrosActivos(equipoId);
         if (plantilla < torneo.getTamanoEquipo()) {
             throw new BusinessException(
@@ -211,11 +207,12 @@ public class TorneoServiceImpl implements TorneoService {
     @Transactional(readOnly = true)
     public List<EquipoElegibleResponse> equiposElegibles(Long torneoId, String correo) {
         Usuario usuario = buscarUsuario(correo);
-        Torneo torneo = buscarVisible(torneoId, correo, false);
+        buscarVisible(torneoId, correo, false); // 404 si es privado y ajeno
 
+
+        // Sin filtro por juego: la disciplina del equipo es preferencia,
+        // no requisito (cualquier equipo compite donde quiera).
         return inscripcionRepository.equiposCapitaneadosPor(usuario.getId()).stream()
-                .filter(equipo -> equipo.getJuego() == null
-                        || equipo.getJuego().getId().equals(torneo.getJuego().getId()))
                 .filter(equipo -> !inscripcionRepository
                         .existsByTorneoIdAndEquipoId(torneoId, equipo.getId()))
                 .map(EquipoElegibleResponse::from)

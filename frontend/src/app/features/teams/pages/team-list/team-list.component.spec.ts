@@ -55,7 +55,7 @@ describe('TeamListComponent', () => {
 
     expect(component.pagina()?.items).toEqual([]);
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(texto).toContain('Ningún equipo coincide con los criterios indicados');
+    expect(texto).toContain('Ningún otro equipo coincide con los criterios indicados');
   });
 
   it('envía los filtros seleccionados como query params tras el debounce', fakeAsync(() => {

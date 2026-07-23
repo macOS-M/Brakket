@@ -15,6 +15,7 @@ import { AsignarRolRequest, ExpulsarIntegranteRequest, MiembroEquipo } from '../
 import { Invitacion, InvitarJugadorRequest, ResponderInvitacionRequest } from '../../../models/invitacion.model';
 import { EquipoResumenPublico, PerfilEquipoPublico } from '../../../models/perfil-equipo-publico.model';
 import { JugadorDisponible } from '../../../models/jugador-disponible.model';
+import { SolicitudUnion } from '../../../models/solicitud-union.model';
 
 @Injectable({ providedIn: 'root' })
 export class TeamsService {
@@ -77,6 +78,25 @@ export class TeamsService {
 
   responderInvitacion(invitacionId: number, request: ResponderInvitacionRequest): Observable<Invitacion> {
     return this.api.patch<Invitacion>(`/invitaciones/${invitacionId}/responder`, request);
+  }
+
+  /** Equipos donde el usuario autenticado es miembro activo. */
+  misEquipos(): Observable<EquipoBusqueda[]> {
+    return this.api.get<EquipoBusqueda[]>('/teams/mios');
+  }
+
+  /** Un jugador pide unirse a un equipo ajeno; responde el capitán. */
+  solicitarUnion(equipoId: number, mensaje: string | null): Observable<SolicitudUnion> {
+    return this.api.post<SolicitudUnion>(`/teams/${equipoId}/solicitudes`, { mensaje });
+  }
+
+  /** Solicitudes pendientes del equipo (solo su capitán). */
+  solicitudesPendientes(equipoId: number): Observable<SolicitudUnion[]> {
+    return this.api.get<SolicitudUnion[]>(`/teams/${equipoId}/solicitudes`);
+  }
+
+  responderSolicitud(solicitudId: number, aceptar: boolean): Observable<SolicitudUnion> {
+    return this.api.patch<SolicitudUnion>(`/solicitudes/${solicitudId}/responder`, { aceptar });
   }
 
   disolver(equipoId: number, request: DisolverEquipoRequest): Observable<Equipo> {

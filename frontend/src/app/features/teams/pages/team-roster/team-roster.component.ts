@@ -1,15 +1,25 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Subject, debounceTime, forkJoin, of, takeUntil } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
 import { JugadorDisponible } from '../../../../models/jugador-disponible.model';
 import { Juego } from '../../../../models/juego.model';
+import { SolicitudUnion } from '../../../../models/solicitud-union.model';
 import { TeamsService } from '../../services/teams.service';
 import { GamesService } from '../../../games/services/games.service';
 import { AuthService } from '../../../../core/services/auth.service';
+
+/** Jugador elegido para invitar, con el rol que le propone el capitán. */
+interface SeleccionInvitacion {
+  id: number;
+  nombre: string;
+  rol: string;
+}
 
 /** Orden de presentación de la plantilla (RF-08): capitán primero. */
 const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 2, COACH: 3 };
@@ -21,12 +31,14 @@ const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })
-export class TeamRosterComponent implements OnInit {
+export class TeamRosterComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly teamsService = inject(TeamsService);
   private readonly gamesService = inject(GamesService);
   private readonly authService = inject(AuthService);
-  private readonly fb = inject(FormBuilder);
+  private readonly destroy$ = new Subject<void>();
+  /** La búsqueda corre sola mientras se escribe (con debounce). */
+  private readonly busquedaEnVivo$ = new Subject<void>();
 
   readonly roles = ROLES_EQUIPO;
   readonly miembros = signal<MiembroEquipo[]>([]);
@@ -89,11 +101,15 @@ export class TeamRosterComponent implements OnInit {
 
   private equipoId!: number;
 
-  readonly invitarForm = this.fb.nonNullable.group({
-    jugadorId: [null as number | null, [Validators.required]],
-    rolPropuesto: ['TITULAR', [Validators.required]],
-    mensaje: ['']
-  });
+  /** Selección múltiple para invitar de una vez, cada uno con su rol. */
+  readonly seleccionados = signal<SeleccionInvitacion[]>([]);
+  readonly mensajeInvitacion = signal('');
+  readonly resumenInvitaciones = signal<string | null>(null);
+
+  // Solicitudes de unión pendientes (las ve y responde el capitán).
+  readonly solicitudes = signal<SolicitudUnion[]>([]);
+  readonly respondiendoSolicitud = signal<number | null>(null);
+  readonly errorSolicitudes = signal<string | null>(null);
 
   ngOnInit(): void {
     this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
@@ -102,6 +118,14 @@ export class TeamRosterComponent implements OnInit {
     this.gamesService.listActivos().subscribe({
       next: (juegos) => this.juegos.set(juegos)
     });
+    this.busquedaEnVivo$
+      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .subscribe(() => this.buscarJugadores());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /** RF-08: carga nombre y estado del equipo; si falla, la plantilla sigue siendo usable. */
@@ -119,6 +143,9 @@ export class TeamRosterComponent implements OnInit {
       next: (miembros) => {
         this.miembros.set(miembros);
         this.cargando.set(false);
+        if (this.esCapitan() && !this.vistaHistorica()) {
+          this.cargarSolicitudes();
+        }
       },
       error: (err) => {
         this.error.set(err?.status === 404
@@ -156,30 +183,98 @@ export class TeamRosterComponent implements OnInit {
     });
   }
 
-  invitar(): void {
-    if (this.invitarForm.invalid) {
-      this.invitarForm.markAllAsTouched();
+  // ---------- invitaciones múltiples ----------
+
+  estaSeleccionado(jugadorId: number): boolean {
+    return this.seleccionados().some((s) => s.id === jugadorId);
+  }
+
+  toggleSeleccion(jugador: JugadorDisponible): void {
+    if (this.estaSeleccionado(jugador.id)) {
+      this.quitarSeleccion(jugador.id);
       return;
     }
+    this.seleccionados.update((lista) => [
+      ...lista,
+      { id: jugador.id, nombre: jugador.nombre, rol: 'TITULAR' }
+    ]);
+    this.resumenInvitaciones.set(null);
+  }
 
+  quitarSeleccion(jugadorId: number): void {
+    this.seleccionados.update((lista) => lista.filter((s) => s.id !== jugadorId));
+  }
+
+  cambiarRolSeleccion(jugadorId: number, rol: string): void {
+    this.seleccionados.update((lista) =>
+      lista.map((s) => (s.id === jugadorId ? { ...s, rol } : s)));
+  }
+
+  /** Envía una invitación por cada seleccionado, cada uno con su rol. */
+  invitarSeleccionados(): void {
+    const lista = this.seleccionados();
+    if (lista.length === 0 || this.invitando()) {
+      return;
+    }
     this.invitando.set(true);
     this.errorInvitar.set(null);
-    this.invitacionEnviada.set(false);
-    const valores = this.invitarForm.getRawValue();
+    this.resumenInvitaciones.set(null);
+    const mensaje = this.mensajeInvitacion().trim() || null;
 
-    this.teamsService.invitar(this.equipoId, {
-      jugadorId: valores.jugadorId!,
-      rolPropuesto: valores.rolPropuesto,
-      mensaje: valores.mensaje || null
-    }).subscribe({
+    forkJoin(lista.map((s) =>
+      this.teamsService.invitar(this.equipoId, {
+        jugadorId: s.id,
+        rolPropuesto: s.rol,
+        mensaje
+      }).pipe(
+        map(() => ({ seleccion: s, error: null as string | null })),
+        catchError((err) => of({
+          seleccion: s,
+          error: (err?.error?.message ?? 'no se pudo invitar') as string | null
+        }))
+      )
+    )).subscribe((resultados) => {
+      this.invitando.set(false);
+      const fallidos = resultados.filter((r) => r.error !== null);
+      const enviados = resultados.length - fallidos.length;
+      // Los fallidos quedan seleccionados para reintentar o quitar.
+      this.seleccionados.set(fallidos.map((f) => f.seleccion));
+      if (enviados > 0) {
+        this.mensajeInvitacion.set('');
+        this.resumenInvitaciones.set(
+          enviados === 1 ? 'Invitación enviada.' : `${enviados} invitaciones enviadas.`);
+      }
+      if (fallidos.length > 0) {
+        this.errorInvitar.set(fallidos
+          .map((f) => `${f.seleccion.nombre}: ${f.error}`)
+          .join(' · '));
+      }
+    });
+  }
+
+  // ---------- solicitudes de unión ----------
+
+  private cargarSolicitudes(): void {
+    this.teamsService.solicitudesPendientes(this.equipoId).subscribe({
+      next: (solicitudes) => this.solicitudes.set(solicitudes),
+      error: () => this.solicitudes.set([])
+    });
+  }
+
+  responderSolicitud(solicitud: SolicitudUnion, aceptar: boolean): void {
+    this.respondiendoSolicitud.set(solicitud.id);
+    this.errorSolicitudes.set(null);
+    this.teamsService.responderSolicitud(solicitud.id, aceptar).subscribe({
       next: () => {
-        this.invitando.set(false);
-        this.invitacionEnviada.set(true);
-        this.invitarForm.reset({ jugadorId: null, rolPropuesto: 'TITULAR', mensaje: '' });
+        this.respondiendoSolicitud.set(null);
+        this.solicitudes.update((lista) => lista.filter((s) => s.id !== solicitud.id));
+        if (aceptar) {
+          this.cargarMiembros();
+        }
       },
       error: (err) => {
-        this.invitando.set(false);
-        this.errorInvitar.set(err?.error?.message ?? 'No se pudo enviar la invitacion.');
+        this.respondiendoSolicitud.set(null);
+        this.errorSolicitudes.set(err?.error?.message ?? 'No se pudo responder la solicitud.');
       }
     });
   }
@@ -244,6 +339,12 @@ export class TeamRosterComponent implements OnInit {
     });
   }
 
+  /** Cada tecla dispara la búsqueda con debounce (sin botón obligatorio). */
+  onTextoBusqueda(valor: string): void {
+    this.textoBusqueda.set(valor);
+    this.busquedaEnVivo$.next();
+  }
+
   buscarJugadores(): void {
     this.buscando.set(true);
     this.errorBusqueda.set(null);
@@ -262,7 +363,4 @@ export class TeamRosterComponent implements OnInit {
     });
   }
 
-  usarEnFormulario(jugador: JugadorDisponible): void {
-    this.invitarForm.patchValue({ jugadorId: jugador.id });
-  }
 }
