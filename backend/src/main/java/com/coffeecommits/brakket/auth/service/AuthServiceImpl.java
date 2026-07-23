@@ -71,13 +71,27 @@ public class AuthServiceImpl implements AuthService {
                     }
                     return existing;
                 })
-                .orElseGet(() -> usuarioRepository.save(Usuario.builder()
-                        .googleId(googleId)
-                        .correo(correo)
-                        .nombre(nombre)
-                        .fotoUrl(fotoUrl)
-                        .visibilidadPerfil(VisibilidadPerfil.PUBLIC)
-                        .build()));
+                // Si el correo ya existe (cuenta local, DD-04) se le vincula el
+                // googleId en vez de intentar un insert que violaría el UNIQUE
+                // del correo y dejaría el login con Google roto para esa cuenta.
+                .orElseGet(() -> usuarioRepository.findByCorreo(correo)
+                        .map(existente -> {
+                            existente.setGoogleId(googleId);
+                            if (esTextoVacio(existente.getNombre())) {
+                                existente.setNombre(nombre);
+                            }
+                            if (esTextoVacio(existente.getFotoUrl())) {
+                                existente.setFotoUrl(fotoUrl);
+                            }
+                            return existente;
+                        })
+                        .orElseGet(() -> usuarioRepository.save(Usuario.builder()
+                                .googleId(googleId)
+                                .correo(correo)
+                                .nombre(nombre)
+                                .fotoUrl(fotoUrl)
+                                .visibilidadPerfil(VisibilidadPerfil.PUBLIC)
+                                .build())));
 
         asegurarRol(usuario, ROL_BASE);
         if (correosAdmin.contains(correo.trim().toLowerCase(Locale.ROOT))) {

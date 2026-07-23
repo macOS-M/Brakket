@@ -59,3 +59,16 @@ equipo a la plantilla mínima/máxima definida.
   (vuelta al modelo estricto de la ERS si el curso lo exige).
 - Editar liga con override de ADMIN (hoy el PUT es solo del dueño; el
   ADMIN modera vía eliminación).
+- Ciclo de vida del torneo: no hay endpoint que transicione `EstadoTorneo`
+  (queda `INSCRIPCION_ABIERTA`; las fechas frenan inscripciones pero el
+  estado no avanza). Colateral conocido: un equipo con inscripción
+  `CONFIRMADA` no puede disolverse hasta que exista esa gestión.
+- Hospedar torneo no valida que `fechaInicio` caiga dentro del rango de
+  la temporada elegida.
+- Carrera en el cupo de inscripción (count-then-insert sin bloqueo): dos
+  capitanes simultáneos en el último cupo pueden excederlo en 1.
+- Mensajes del login local revelan si un correo existe y su método de
+  acceso (enumeración de cuentas); tampoco hay rate-limit en
+  `/api/auth/login`.
+- Desactivar juego chequea ligas pero no torneos comunitarios activos;
+  eliminar liga arrastra en cascada torneos con equipos inscritos.

@@ -91,16 +91,26 @@ class GameServiceImplTest {
     }
 
     @Test
-    void importar_devuelve_el_existente_reactivandolo_sin_consultar_la_api() {
-        Juego inactivo = Juego.builder().id(3L).nombre("Valorant").genero("Shooter").activo(false).build();
-        when(juegoRepository.findByNombreIgnoreCase("valorant")).thenReturn(Optional.of(inactivo));
-        when(juegoRepository.save(inactivo)).thenReturn(inactivo);
+    void importar_devuelve_el_existente_sin_consultar_la_api() {
+        Juego activo = Juego.builder().id(3L).nombre("Valorant").genero("Shooter").activo(true).build();
+        when(juegoRepository.findByNombreIgnoreCase("valorant")).thenReturn(Optional.of(activo));
 
         JuegoResponse resp = gameService.importarDesdeExterno("valorant");
 
         assertThat(resp.id()).isEqualTo(3L);
-        assertThat(resp.activo()).isTrue();
         verify(externalGameSearchService, never()).buscar(any());
+    }
+
+    @Test
+    void importar_no_resucita_un_juego_desactivado_por_un_admin() {
+        Juego inactivo = Juego.builder().id(3L).nombre("Valorant").genero("Shooter").activo(false).build();
+        when(juegoRepository.findByNombreIgnoreCase("valorant")).thenReturn(Optional.of(inactivo));
+
+        assertThatThrownBy(() -> gameService.importarDesdeExterno("valorant"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no está disponible");
+        verify(externalGameSearchService, never()).buscar(any());
+        verify(juegoRepository, never()).save(any(Juego.class));
     }
 
     @Test

@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, input, output, signal } from '@angular/core';
 
 import { CrearTorneoRequest, Torneo } from '../../../../models/tournament.model';
 import { League, Season } from '../../../../models/league.model';
@@ -55,7 +55,19 @@ export class TournamentWizardComponent implements OnInit {
   readonly fechaInicio = signal('');
   readonly premio = signal('');
 
-  readonly misLigas = signal<League[]>([]);
+  private readonly ligasDisponibles = signal<League[]>([]);
+
+  /**
+   * Ligas propias del juego. Computado sobre auth.usuario() para que se
+   * recalcule si /me responde después de abrir el wizard: leer el id una
+   * sola vez en ngOnInit dejaba la lista vacía en ese caso.
+   */
+  readonly misLigas = computed(() => {
+    const usuarioId = Number(this.auth.usuario()?.id);
+    return this.ligasDisponibles().filter(
+      (l) => l.comisionadoId === usuarioId && l.juegoId === this.juegoId());
+  });
+
   readonly temporadas = signal<Season[]>([]);
   readonly formatos = signal<string[]>([
     'Eliminación directa',
@@ -107,18 +119,25 @@ export class TournamentWizardComponent implements OnInit {
     }
   });
 
+  private preseleccionAplicada = false;
+
+  constructor() {
+    // La preselección espera a que /me y el listado de ligas respondan;
+    // se aplica una sola vez para no pisar un cambio manual a Comunitario.
+    effect(() => {
+      const inicial = this.ligaIdInicial();
+      if (!this.preseleccionAplicada && inicial
+        && this.misLigas().some((l) => l.id === inicial)) {
+        this.preseleccionAplicada = true;
+        this.elegirLiga(String(inicial));
+      }
+    });
+  }
+
   ngOnInit(): void {
-    const usuarioId = Number(this.auth.usuario()?.id);
     this.leaguesService.list().subscribe({
-      next: (ligas) => {
-        this.misLigas.set(
-          ligas.filter((l) => l.comisionadoId === usuarioId && l.juegoId === this.juegoId()));
-        const inicial = this.ligaIdInicial();
-        if (inicial && this.misLigas().some((l) => l.id === inicial)) {
-          this.elegirLiga(String(inicial));
-        }
-      },
-      error: () => this.misLigas.set([])
+      next: (ligas) => this.ligasDisponibles.set(ligas),
+      error: () => this.ligasDisponibles.set([])
     });
 
     this.perfilService.listarFormatos().subscribe({

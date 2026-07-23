@@ -91,13 +91,15 @@ public class GameServiceImpl implements GameService {
             throw new BusinessException("Indicá el nombre del juego a importar");
         }
 
-        // Idempotente: si ya está en el catálogo se devuelve (reactivándolo
-        // si estaba dado de baja), sin volver a consultar la API.
+        // Idempotente: si ya está en el catálogo se devuelve sin volver a
+        // consultar la API.
         Juego existente = juegoRepository.findByNombreIgnoreCase(buscado).orElse(null);
         if (existente != null) {
+            // Un juego desactivado fue curado fuera por un ADMIN: importarlo
+            // de nuevo no debe resucitarlo (DD-01).
             if (!Boolean.TRUE.equals(existente.getActivo())) {
-                existente.setActivo(true);
-                juegoRepository.save(existente);
+                throw new BusinessException(
+                        "El título '%s' no está disponible en el catálogo".formatted(existente.getNombre()));
             }
             return JuegoResponse.fromEntity(existente);
         }
@@ -117,8 +119,8 @@ public class GameServiceImpl implements GameService {
         Juego porNombreFinal = juegoRepository.findByNombreIgnoreCase(elegido.nombre()).orElse(null);
         if (porNombreFinal != null) {
             if (!Boolean.TRUE.equals(porNombreFinal.getActivo())) {
-                porNombreFinal.setActivo(true);
-                juegoRepository.save(porNombreFinal);
+                throw new BusinessException(
+                        "El título '%s' no está disponible en el catálogo".formatted(porNombreFinal.getNombre()));
             }
             return JuegoResponse.fromEntity(porNombreFinal);
         }

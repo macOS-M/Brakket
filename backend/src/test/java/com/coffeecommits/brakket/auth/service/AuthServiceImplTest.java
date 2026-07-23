@@ -91,6 +91,27 @@ class AuthServiceImplTest {
     }
 
     @Test
+    void upsert_vincula_google_a_una_cuenta_local_existente_por_correo() {
+        // Cuenta creada por registro local (DD-04): mismo correo, sin googleId.
+        Usuario local = Usuario.builder().id(8L).googleId(null).correo("ana@brakket.gg")
+                .nombre("Ana").passwordHash("$2a$10$hash").build();
+        when(usuarioRepository.findByGoogleId("g-2")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(local));
+        when(usuarioRolRepository.findByUsuarioId(8L)).thenReturn(List.of(
+                UsuarioRol.builder().usuario(local)
+                        .rol(Rol.builder().nombreRol("JUGADOR").build()).build()));
+
+        Usuario result = authService.upsertGoogleUser("g-2", "ana@brakket.gg", "Ana G", "foto.png");
+
+        // Se vincula el googleId a la cuenta existente en vez de intentar un
+        // insert que chocaría con el UNIQUE del correo.
+        assertThat(result.getId()).isEqualTo(8L);
+        assertThat(result.getGoogleId()).isEqualTo("g-2");
+        assertThat(result.getNombre()).isEqualTo("Ana");
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+    }
+
+    @Test
     void upsert_asigna_admin_ademas_del_rol_base_a_correos_del_equipo() {
         when(usuarioRepository.findByGoogleId("g-9")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
