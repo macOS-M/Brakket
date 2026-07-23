@@ -83,7 +83,10 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         Equipo equipoNuevo = Equipo.builder()
                 .nombre(request.nombre())
                 .logo(request.logo())
+                .bannerUrl(request.bannerUrl())
                 .descripcion(request.descripcion())
+                .sitioWeb(request.sitioWeb())
+                .videoUrl(request.videoUrl())
                 .capitan(creador)
                 .juego(juego)
                 .build();

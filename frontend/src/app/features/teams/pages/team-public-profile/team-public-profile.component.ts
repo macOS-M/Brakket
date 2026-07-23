@@ -4,24 +4,49 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { PerfilEquipoPublico } from '../../../../models/perfil-equipo-publico.model';
 import { TeamsService } from '../../services/teams.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
+
+type TabPerfil = 'resumen' | 'miembros' | 'estadisticas';
 
 @Component({
   selector: 'app-team-public-profile',
   standalone: true,
-  imports: [DatePipe, RouterLink, StatCardComponent, StatusBadgeComponent, EmptyStateComponent],
+  imports: [DatePipe, RouterLink, StatCardComponent, StatusBadgeComponent, EmptyStateComponent, RolEquipoPipe],
   templateUrl: './team-public-profile.component.html',
   styleUrl: './team-public-profile.component.scss'
 })
 export class TeamPublicProfileComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly teamsService = inject(TeamsService);
+  readonly auth = inject(AuthService);
 
   readonly perfil = signal<PerfilEquipoPublico | null>(null);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+
+  /** Tabs del perfil (referencia Challenger Mode). */
+  readonly tab = signal<TabPerfil>('resumen');
+
+  /**
+   * La capitanía vigente vive en la plantilla (RF-09 permite transferirla);
+   * el capitán ve Invitar y Ajustes directo desde el perfil.
+   */
+  readonly esCapitan = computed(() => {
+    const perfil = this.perfil();
+    const uid = Number(this.auth.usuario()?.id);
+    return !!perfil && !!uid
+      && perfil.plantilla.some((m) => m.usuarioId === uid && m.rol === 'CAPITAN');
+  });
+
+  /** Le falta identidad al equipo: el capitán ve la tarjeta de setup. */
+  readonly perfilIncompleto = computed(() => {
+    const perfil = this.perfil();
+    return !!perfil && (!perfil.logo || !perfil.bannerUrl || !perfil.descripcion);
+  });
 
   /** Partidas totales; el backend solo entrega victorias y derrotas. */
   readonly partidas = computed(() => {

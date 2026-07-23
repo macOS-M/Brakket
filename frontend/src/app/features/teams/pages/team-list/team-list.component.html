@@ -60,8 +60,18 @@
       (keydown.enter)="abrir(equipo, true)"
     >
       <div class="banda">
-        <div class="banda-fondo" aria-hidden="true" [style.background]="portada(equipo)"></div>
-        @if (equipo.juegoNombre) {
+        <!-- Con banner propio, el banner manda; sin banner, el gradiente
+             del juego con su marca de agua como fallback. -->
+        <div
+          class="banda-fondo"
+          aria-hidden="true"
+          [style.background]="equipo.bannerUrl ? undefined : portada(equipo)"
+        >
+          @if (equipo.bannerUrl) {
+          <img [src]="equipo.bannerUrl" alt="" loading="lazy" (error)="equipo.bannerUrl = null" />
+          }
+        </div>
+        @if (!equipo.bannerUrl && equipo.juegoNombre) {
         <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
         }
         <app-status-badge class="estado-flotante" [estado]="equipo.estado" />
@@ -142,8 +152,18 @@
       (keydown.enter)="abrir(equipo, false)"
     >
       <div class="banda">
-        <div class="banda-fondo" aria-hidden="true" [style.background]="portada(equipo)"></div>
-        @if (equipo.juegoNombre) {
+        <!-- Con banner propio, el banner manda; sin banner, el gradiente
+             del juego con su marca de agua como fallback. -->
+        <div
+          class="banda-fondo"
+          aria-hidden="true"
+          [style.background]="equipo.bannerUrl ? undefined : portada(equipo)"
+        >
+          @if (equipo.bannerUrl) {
+          <img [src]="equipo.bannerUrl" alt="" loading="lazy" (error)="equipo.bannerUrl = null" />
+          }
+        </div>
+        @if (!equipo.bannerUrl && equipo.juegoNombre) {
         <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
         }
         <app-status-badge class="estado-flotante" [estado]="equipo.estado" />

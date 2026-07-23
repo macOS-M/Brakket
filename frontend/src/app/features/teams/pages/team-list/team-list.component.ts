@@ -223,9 +223,12 @@ export class TeamListComponent implements OnInit, OnDestroy {
     return colorDeNombre(nombre);
   }
 
-  /** Toda la tarjeta navega: los míos a la plantilla, el resto al perfil. */
+  /**
+   * Toda tarjeta navega al perfil con tabs (referencia CM): desde ahí el
+   * capitán tiene Invitar, Ajustes y la gestión de plantilla a un click.
+   */
   abrir(equipo: EquipoBusqueda, esMio: boolean): void {
-    this.router.navigate(esMio ? ['/teams', equipo.id, 'plantilla'] : ['/team-profile', equipo.id]);
+    this.router.navigate(['/team-profile', equipo.id]);
   }
 
   puedeSolicitar(equipo: EquipoBusqueda): boolean {

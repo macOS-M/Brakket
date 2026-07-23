@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
@@ -11,7 +11,7 @@ import { TeamsService } from '../../services/teams.service';
 @Component({
   selector: 'app-team-form',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeaderComponent, FotoInputComponent],
+  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent, FotoInputComponent],
   templateUrl: './team-form.component.html',
   styleUrl: './team-form.component.scss'
 })
@@ -30,6 +30,9 @@ export class TeamFormComponent implements OnInit {
 
   /** null = modo "crear"; con valor = modo "editar" ese equipo. */
   readonly equipoId = signal<number | null>(null);
+
+  /** Sección activa del panel de ajustes (referencia Challenger Mode). */
+  readonly seccion = signal<'acerca' | 'apariencia'>('acerca');
 
   /** Versión del equipo leída en el GET; viaja en el PUT (concurrencia optimista). */
   private readonly version = signal<number | null>(null);
@@ -146,7 +149,10 @@ export class TeamFormComponent implements OnInit {
     this.teamsService.crear({
       nombre: valores.nombre,
       logo: valores.logo || null,
+      bannerUrl: valores.bannerUrl || null,
       descripcion: valores.descripcion || null,
+      sitioWeb: valores.sitioWeb || null,
+      videoUrl: valores.videoUrl || null,
       juegoId: valores.juegoId!,
       redesSociales: valores.redesSociales
     }).subscribe({

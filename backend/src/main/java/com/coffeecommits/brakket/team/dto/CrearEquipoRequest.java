@@ -16,8 +16,17 @@ public record CrearEquipoRequest(
         @URL(message = "El logo debe ser una URL valida")
         String logo,
 
+        @URL(message = "El banner debe ser una URL valida")
+        String bannerUrl,
+
         @Size(max = 500, message = "La descripcion no puede superar los 500 caracteres")
         String descripcion,
+
+        @URL(message = "El sitio web debe ser una URL valida")
+        String sitioWeb,
+
+        @URL(message = "El video debe ser una URL valida")
+        String videoUrl,
 
         @NotNull(message = "El juego principal es obligatorio")
         Long juegoId,

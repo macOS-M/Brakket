@@ -25,6 +25,7 @@ export interface EquipoBusqueda {
   id: number;
   nombre: string;
   logo: string | null;
+  bannerUrl: string | null;
   descripcion: string | null;
   juegoId: number | null;
   juegoNombre: string | null;
@@ -54,7 +55,10 @@ export interface Pagina<T> {
 export interface CrearEquipoRequest {
   nombre: string;
   logo: string | null;
+  bannerUrl: string | null;
   descripcion: string | null;
+  sitioWeb: string | null;
+  videoUrl: string | null;
   juegoId: number;
   redesSociales: string[];
 }
