@@ -50,14 +50,35 @@ public class RawgCatalogSeeder implements ApplicationRunner {
                 if (juegoRepository.findByNombreIgnoreCase(externo.nombre()).isPresent()) {
                     continue;
                 }
-                juegoRepository.save(Juego.builder()
+                Juego juego = Juego.builder()
                         .nombre(externo.nombre())
                         .genero(externo.genero() == null || externo.genero().isBlank()
                                 ? "Sin clasificar"
                                 : externo.genero())
                         .imagenUrl(externo.imagenUrl())
+                        .rawgSlug(externo.slug())
                         .activo(true)
-                        .build());
+                        .build();
+                // Ficha completa (descripción, rating, capturas…) al sembrar;
+                // si falla para un título, ese entra con los datos básicos.
+                try {
+                    var detalle = externalGameSearchService.detalle(externo.slug());
+                    if (detalle != null) {
+                        juego.setDescripcion(detalle.descripcion());
+                        juego.setFechaLanzamiento(detalle.fechaLanzamiento());
+                        juego.setRating(detalle.rating());
+                        juego.setMetacritic(detalle.metacritic());
+                        juego.setSitioWeb(detalle.sitioWeb());
+                        juego.setPlataformas(detalle.plataformas().isEmpty()
+                                ? null : String.join(" · ", detalle.plataformas()));
+                        juego.setEtiquetas(detalle.etiquetas().isEmpty()
+                                ? null : String.join(", ", detalle.etiquetas()));
+                        juego.setCapturas(detalle.capturas());
+                    }
+                } catch (Exception e) {
+                    log.debug("Sin ficha RAWG para {}: {}", externo.nombre(), e.getMessage());
+                }
+                juegoRepository.save(juego);
                 importados++;
             }
             if (importados > 0) {

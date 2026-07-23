@@ -5,6 +5,14 @@ export interface Juego {
   descripcion: string | null;
   imagenUrl: string | null;
   activo: boolean;
+  /** Ficha enriquecida desde RAWG (V28); todo opcional. */
+  fechaLanzamiento?: string | null;
+  rating?: number | null;
+  metacritic?: number | null;
+  plataformas?: string | null;
+  etiquetas?: string | null;
+  sitioWeb?: string | null;
+  capturas?: string[];
 }
 
 export interface JuegoRequest {

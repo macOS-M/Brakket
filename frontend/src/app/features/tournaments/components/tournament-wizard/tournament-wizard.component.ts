@@ -1,8 +1,10 @@
 import { Component, OnInit, computed, effect, inject, input, output, signal } from '@angular/core';
 
 import { AjustePartida, CrearTorneoRequest, Torneo } from '../../../../models/tournament.model';
+import { Juego } from '../../../../models/juego.model';
 import { League, Season } from '../../../../models/league.model';
 import { TournamentsService } from '../../services/tournaments.service';
+import { GamesService } from '../../../games/services/games.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
 import { CompetitiveProfileService } from '../../../../core/services/competitive-profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -24,6 +26,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class TournamentWizardComponent implements OnInit {
   private readonly tournamentsService = inject(TournamentsService);
   private readonly leaguesService = inject(LeaguesService);
+  private readonly gamesService = inject(GamesService);
   private readonly perfilService = inject(CompetitiveProfileService);
   private readonly auth = inject(AuthService);
 
@@ -60,15 +63,40 @@ export class TournamentWizardComponent implements OnInit {
    * ambos capitanes deben aplicar al crear la lobby privada en el juego.
    */
   readonly ajustes = signal<AjustePartida[]>([]);
-  readonly ajustesSugeridos = [
-    'Modo de juego', 'Arena / Mapa', 'Duración', 'Puntaje máximo', 'Región', 'Overtime'
-  ];
+
+  /** Ficha del juego (RAWG): alimenta las sugerencias de ajustes. */
+  private readonly juegoFicha = signal<Juego | null>(null);
+
+  readonly ajustesSugeridos = computed(() => {
+    const base = ['Modo de juego', 'Arena / Mapa', 'Duración', 'Puntaje máximo', 'Región', 'Overtime'];
+    if (this.juegoFicha()?.plataformas) {
+      base.push('Plataforma');
+    }
+    return base;
+  });
 
   agregarAjuste(clave = ''): void {
     if (clave && this.ajustes().some((a) => a.clave === clave)) {
       return;
     }
-    this.ajustes.update((lista) => [...lista, { clave, valor: '' }]);
+    this.ajustes.update((lista) => [...lista, { clave, valor: this.valorSugerido(clave) }]);
+  }
+
+  /** Prefill con datos reales del juego cuando la ficha RAWG los trae. */
+  private valorSugerido(clave: string): string {
+    const juego = this.juegoFicha();
+    if (!juego) {
+      return '';
+    }
+    if (clave === 'Plataforma') {
+      return juego.plataformas ?? '';
+    }
+    if (clave === 'Modo de juego' && juego.etiquetas) {
+      const modos = juego.etiquetas.split(', ')
+        .filter((t) => ['Multiplayer', 'PvP', 'Co-op', 'Online Co-Op', 'Singleplayer'].includes(t));
+      return modos.join(', ');
+    }
+    return '';
   }
 
   quitarAjuste(indice: number): void {
@@ -163,6 +191,11 @@ export class TournamentWizardComponent implements OnInit {
     this.leaguesService.list().subscribe({
       next: (ligas) => this.ligasDisponibles.set(ligas),
       error: () => this.ligasDisponibles.set([])
+    });
+
+    this.gamesService.obtenerPorId(this.juegoId()).subscribe({
+      next: (juego) => this.juegoFicha.set(juego),
+      error: () => this.juegoFicha.set(null)
     });
 
     this.perfilService.listarFormatos().subscribe({

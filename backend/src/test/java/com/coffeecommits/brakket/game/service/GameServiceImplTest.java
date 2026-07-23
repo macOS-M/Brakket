@@ -117,7 +117,7 @@ class GameServiceImplTest {
     void importar_crea_el_juego_con_los_datos_del_catalogo_externo() {
         when(juegoRepository.findByNombreIgnoreCase("apex")).thenReturn(Optional.empty());
         when(externalGameSearchService.buscar("apex")).thenReturn(List.of(
-                new JuegoExternoResponse("Apex Legends", "Shooter", "https://media.rawg.io/apex.jpg")));
+                new JuegoExternoResponse("apex-legends", "Apex Legends", "Shooter", "https://media.rawg.io/apex.jpg")));
         when(juegoRepository.findByNombreIgnoreCase("Apex Legends")).thenReturn(Optional.empty());
         when(juegoRepository.save(any(Juego.class))).thenAnswer(inv -> {
             Juego j = inv.getArgument(0);

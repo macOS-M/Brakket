@@ -193,7 +193,7 @@
           (Brakket no las aplica en el juego: son el contrato del torneo).
         </span>
         <div class="ajustes-sugeridos">
-          @for (s of ajustesSugeridos; track s) {
+          @for (s of ajustesSugeridos(); track s) {
           <button type="button" class="chip-ajuste" (click)="agregarAjuste(s)">+ {{ s }}</button>
           }
           <button type="button" class="chip-ajuste" (click)="agregarAjuste()">+ Personalizado</button>

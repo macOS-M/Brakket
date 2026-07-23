@@ -110,8 +110,55 @@
 
   @if (tab() === 'descripcion') {
   <div class="contenido">
+    <!-- Ficha del juego: datos reales de RAWG guardados al importar. -->
+    @if (juego.rating || juego.metacritic || juego.fechaLanzamiento || juego.plataformas) {
+    <div class="ficha-juego">
+      @if (juego.rating) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">★ {{ juego.rating }}</span>
+        <span class="ficha-etiqueta">Comunidad</span>
+      </div>
+      }
+      @if (juego.metacritic) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">{{ juego.metacritic }}</span>
+        <span class="ficha-etiqueta">Metacritic</span>
+      </div>
+      }
+      @if (juego.fechaLanzamiento) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">{{ juego.fechaLanzamiento | date: 'y' }}</span>
+        <span class="ficha-etiqueta">Lanzamiento</span>
+      </div>
+      }
+      @if (juego.plataformas) {
+      <div class="ficha-dato ficha-plataformas">
+        <span class="ficha-valor">{{ juego.plataformas }}</span>
+        <span class="ficha-etiqueta">Plataformas</span>
+      </div>
+      }
+    </div>
+    }
+
+    @if (juego.etiquetas) {
+    <div class="tags-juego">
+      @for (tag of juego.etiquetas.split(', '); track tag) {
+      <span class="tag-juego">{{ tag }}</span>
+      }
+    </div>
+    }
+
     @if (juego.descripcion) {
     <p class="descripcion">{{ juego.descripcion }}</p>
+    }
+
+    @if (juego.capturas && juego.capturas.length > 0) {
+    <!-- Galería de capturas reales (RAWG), con scroll horizontal propio. -->
+    <div class="galeria" role="list" aria-label="Capturas del juego">
+      @for (captura of juego.capturas; track captura) {
+      <img class="galeria-item" role="listitem" [src]="captura" alt="" loading="lazy" />
+      }
+    </div>
     }
 
     <!-- Torneo destacado (referencia CM "Recommended tournaments"):

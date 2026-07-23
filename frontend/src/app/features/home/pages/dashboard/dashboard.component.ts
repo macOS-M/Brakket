@@ -73,11 +73,12 @@ export class DashboardComponent implements OnInit {
     return juegos.find((j) => j.imagenUrl) ?? juegos[0] ?? null;
   });
 
-  /** Fila de juegos top (excluye el héroe para no repetirlo). */
+  /** Fila de juegos top por popularidad real de RAWG (rating desc). */
   readonly topJuegos = computed(() => {
     const hero = this.heroJuego();
-    return this.juegos()
+    return [...this.juegos()]
       .filter((j) => j.id !== hero?.id)
+      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
       .slice(0, 6);
   });
 

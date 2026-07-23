@@ -131,9 +131,33 @@ public class GameServiceImpl implements GameService {
                         ? "Sin clasificar"
                         : elegido.genero())
                 .imagenUrl(elegido.imagenUrl())
+                .rawgSlug(elegido.slug())
                 .activo(true)
                 .build();
+        enriquecerDesdeRawg(juego, elegido.slug());
         return JuegoResponse.fromEntity(juegoRepository.save(juego));
+    }
+
+    /**
+     * Ficha completa desde RAWG en el momento del import (una sola vez por
+     * juego; después todo sale de la BD sin gastar cuota). Nunca bloquea:
+     * si RAWG falla, el juego entra con los datos básicos.
+     */
+    private void enriquecerDesdeRawg(Juego juego, String slug) {
+        var detalle = externalGameSearchService.detalle(slug);
+        if (detalle == null) {
+            return;
+        }
+        juego.setDescripcion(detalle.descripcion());
+        juego.setFechaLanzamiento(detalle.fechaLanzamiento());
+        juego.setRating(detalle.rating());
+        juego.setMetacritic(detalle.metacritic());
+        juego.setSitioWeb(detalle.sitioWeb());
+        juego.setPlataformas(detalle.plataformas().isEmpty()
+                ? null : String.join(" · ", detalle.plataformas()));
+        juego.setEtiquetas(detalle.etiquetas().isEmpty()
+                ? null : String.join(", ", detalle.etiquetas()));
+        juego.setCapturas(detalle.capturas());
     }
 
     @Override

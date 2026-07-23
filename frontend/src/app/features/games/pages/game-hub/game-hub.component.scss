@@ -630,3 +630,64 @@
     background: var(--danger-bg, rgba(239, 68, 68, 0.12));
   }
 }
+
+// ---------- ficha RAWG + galería ----------
+
+.ficha-juego {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ficha-dato {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 10px 16px;
+  min-width: 96px;
+
+  .ficha-valor { display: block; font-weight: 800; color: var(--text); }
+  .ficha-etiqueta {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+}
+
+.ficha-plataformas { max-width: 420px; .ficha-valor { font-size: 0.85rem; font-weight: 600; } }
+
+.tags-juego {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.tag-juego {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.galeria {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.galeria-item {
+  flex: 0 0 300px;
+  height: 170px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
