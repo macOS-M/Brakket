@@ -8,25 +8,41 @@ import { EquipoElegible, Partida, TorneoDetalle } from '../../../../models/tourn
 import { TournamentsService } from '../../services/tournaments.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import {
+  MarcadorEvent,
+  TournamentBracketComponent
+} from '../../components/tournament-bracket/tournament-bracket.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
-type TabDetalle = 'resumen' | 'equipos' | 'llaves';
+type TabDetalle = 'resumen' | 'llaves' | 'matches' | 'jugadores' | 'resultados';
+type FiltroMatch = 'todos' | 'pendientes' | 'finalizadas';
 
-interface Ronda {
-  numero: number;
-  etiqueta: string;
-  partidas: Partida[];
+interface JugadorTorneo {
+  usuarioId: number;
+  nombre: string;
+  rol: string;
+  equipoId: number;
+  equipoNombre: string;
+  /** Gamertag del capitán (la identidad del equipo dentro del juego). */
+  usuarioEnJuego: string | null;
+}
+
+interface EventoTimeline {
+  fecha: string | null;
+  titulo: string;
+  detalle: string;
+  cumplido: boolean;
 }
 
 /**
- * Detalle de torneo (RF-24/RF-25) + torneo en vivo (RF-26/27/29): banner,
- * tabs Resumen / Equipos / Llaves, inscripción con gamertag, inicio del
- * bracket por el organizador y resultados reporta-confirma con lobby.
+ * Detalle de torneo estilo Challenger Mode (RF-24/25/26/27/29): tabs
+ * Resumen / Llaves / Matches / Jugadores / Resultados, inscripción con
+ * gamertag, inicio del bracket y resultados reporta-confirma.
  */
 @Component({
   selector: 'app-tournament-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, EmptyStateComponent],
+  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent],
   templateUrl: './tournament-detail.component.html',
   styleUrl: './tournament-detail.component.scss'
 })
@@ -57,15 +73,17 @@ export class TournamentDetailComponent {
   readonly partidas = signal<Partida[]>([]);
   readonly iniciando = signal(false);
   readonly errorLlaves = signal<string | null>(null);
-  /** Partida con el formulario de marcador abierto (reporte o resolución). */
-  readonly reportando = signal<number | null>(null);
-  readonly marcadorA = signal(0);
-  readonly marcadorB = signal(0);
   readonly enviandoResultado = signal(false);
+
+  readonly filtroMatch = signal<FiltroMatch>('todos');
+  readonly filtroJugador = signal('');
 
   private readonly torneoId: number;
 
   readonly torneo = computed(() => this.detalle()?.torneo ?? null);
+
+  /** Tolerante a respuestas del backend previas a V26. */
+  readonly ajustes = computed(() => this.torneo()?.ajustesPartida ?? []);
 
   readonly arte = computed(() => {
     const t = this.torneo();
@@ -124,24 +142,101 @@ export class TournamentDetailComponent {
       .map((e) => e.equipoId);
   });
 
-  /** El bracket agrupado por ronda, con etiquetas humanas (Final, Semis…). */
-  readonly rondas = computed<Ronda[]>(() => {
-    const lista = this.partidas();
-    if (lista.length === 0) {
+  // ---------- Matches ----------
+
+  readonly matches = computed<Partida[]>(() =>
+    [...this.partidas()].sort((a, b) => a.ronda - b.ronda || a.orden - b.orden));
+
+  readonly matchesFiltrados = computed<Partida[]>(() => {
+    const filtro = this.filtroMatch();
+    return this.matches().filter((p) => {
+      if (filtro === 'pendientes') {
+        return p.estado !== 'FINALIZADA' && p.estado !== 'CANCELADA';
+      }
+      if (filtro === 'finalizadas') {
+        return p.estado === 'FINALIZADA';
+      }
+      return true;
+    });
+  });
+
+  // ---------- Jugadores ----------
+
+  readonly jugadores = computed<JugadorTorneo[]>(() =>
+    (this.detalle()?.equipos ?? []).flatMap((e) =>
+      e.jugadores.map((j) => ({
+        usuarioId: j.usuarioId,
+        nombre: j.nombre,
+        rol: j.rol,
+        equipoId: e.equipoId,
+        equipoNombre: e.nombre,
+        usuarioEnJuego: j.rol === 'CAPITAN' ? e.usuarioEnJuego ?? null : null
+      }))));
+
+  readonly jugadoresFiltrados = computed<JugadorTorneo[]>(() => {
+    const filtro = this.filtroJugador().trim().toLowerCase();
+    if (!filtro) {
+      return this.jugadores();
+    }
+    return this.jugadores().filter((j) =>
+      j.nombre.toLowerCase().includes(filtro)
+      || j.equipoNombre.toLowerCase().includes(filtro)
+      || (j.usuarioEnJuego ?? '').toLowerCase().includes(filtro));
+  });
+
+  // ---------- Resultados ----------
+
+  readonly partidasFinalizadas = computed<Partida[]>(() =>
+    this.matches().filter((p) => p.estado === 'FINALIZADA' && !p.bye));
+
+  /** Subcampeón: el perdedor de la final (la ronda más alta). */
+  readonly subcampeon = computed<string | null>(() => {
+    if (!this.finalizado() || this.partidas().length === 0) {
+      return null;
+    }
+    const total = Math.max(...this.partidas().map((p) => p.ronda));
+    const final = this.partidas().find((p) => p.ronda === total);
+    if (!final || final.ganadorEquipoId === null) {
+      return null;
+    }
+    return final.ganadorEquipoId === final.equipoAId ? final.equipoBNombre : final.equipoANombre;
+  });
+
+  /** Línea temporal estilo CM: inscripción → inicio → final. */
+  readonly lineaTemporal = computed<EventoTimeline[]>(() => {
+    const t = this.torneo();
+    if (!t) {
       return [];
     }
-    const total = Math.max(...lista.map((p) => p.ronda));
-    const porRonda = new Map<number, Partida[]>();
-    for (const p of lista) {
-      porRonda.set(p.ronda, [...(porRonda.get(p.ronda) ?? []), p]);
-    }
-    return [...porRonda.entries()]
-      .sort(([a], [b]) => a - b)
-      .map(([numero, partidas]) => ({
-        numero,
-        etiqueta: this.etiquetaRonda(numero, total),
-        partidas: partidas.sort((a, b) => a.orden - b.orden)
-      }));
+    const arranco = this.enCurso() || this.finalizado();
+    return [
+      {
+        fecha: null,
+        titulo: 'Inscripción',
+        detalle: arranco
+          ? 'Registro terminado: ya no podés inscribirte.'
+          : this.cupoLleno()
+            ? 'Cupo lleno: quedan las inscripciones confirmadas.'
+            : 'Los capitanes pueden inscribir a su equipo.',
+        cumplido: arranco || this.cupoLleno()
+      },
+      {
+        fecha: t.fechaInicio,
+        titulo: 'Comenzar',
+        detalle: arranco
+          ? 'El torneo ha comenzado: la llave está en juego.'
+          : 'El organizador inicia el torneo y se genera la llave.',
+        cumplido: arranco
+      },
+      {
+        fecha: this.finalizado() ? null : null,
+        titulo: 'Final',
+        detalle: this.finalizado()
+          ? `Campeón: ${t.campeonNombre ?? '—'}.`
+          : 'La final corona al campeón del torneo.',
+        cumplido: this.finalizado()
+      }
+    ];
   });
 
   constructor() {
@@ -200,7 +295,7 @@ export class TournamentDetailComponent {
         this.elegibles.update((lista) => lista.filter((e) => e.id !== equipoId));
         this.equipoElegido.set(null);
         this.usuarioEnJuego.set('');
-        this.tab.set('equipos');
+        this.tab.set('jugadores');
       },
       error: (err) => {
         this.inscribiendo.set(false);
@@ -259,7 +354,6 @@ export class TournamentDetailComponent {
       }
       this.partidas.set(partidas);
       this.enviandoResultado.set(false);
-      this.reportando.set(null);
     });
   }
 
@@ -270,49 +364,12 @@ export class TournamentDetailComponent {
     });
   }
 
-  soyCapitanDe(equipoId: number | null): boolean {
-    return equipoId !== null && this.misEquipos().includes(equipoId);
-  }
-
-  /** Capitán de cualquiera de los dos equipos, con la partida lista. */
-  puedeReportar(p: Partida): boolean {
-    return this.enCurso() && p.estado === 'PENDIENTE'
-      && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId));
-  }
-
-  /** Confirmar/rechazar es del capitán del equipo que NO reportó. */
-  puedeConfirmar(p: Partida): boolean {
-    if (!this.enCurso() || p.estado !== 'REPORTADA' || p.reportadoPorEquipoId === null) {
-      return false;
-    }
-    const rival = p.reportadoPorEquipoId === p.equipoAId ? p.equipoBId : p.equipoAId;
-    return this.soyCapitanDe(rival);
-  }
-
-  /** El gestor destraba cualquier partida activa (rival ausente, disputa…). */
-  puedeResolver(p: Partida): boolean {
-    return this.enCurso() && this.esGestor() && !p.bye
-      && p.equipoAId !== null && p.equipoBId !== null
-      && (p.estado === 'PENDIENTE' || p.estado === 'REPORTADA' || p.estado === 'EN_DISPUTA');
-  }
-
-  abrirMarcador(p: Partida): void {
-    this.reportando.set(p.id);
-    this.marcadorA.set(p.marcadorA ?? 0);
-    this.marcadorB.set(p.marcadorB ?? 0);
-    this.errorLlaves.set(null);
-  }
-
-  enviarReporte(p: Partida, comoResolucion: boolean): void {
-    if (this.marcadorA() === this.marcadorB()) {
-      this.errorLlaves.set('En eliminación directa no hay empates: los marcadores deben diferir.');
-      return;
-    }
+  onMarcador(evento: MarcadorEvent): void {
     this.enviandoResultado.set(true);
     this.errorLlaves.set(null);
-    const peticion = comoResolucion
-      ? this.tournamentsService.resolver(p.id, this.marcadorA(), this.marcadorB())
-      : this.tournamentsService.reportar(p.id, this.marcadorA(), this.marcadorB());
+    const peticion = evento.resolucion
+      ? this.tournamentsService.resolver(evento.partida.id, evento.marcadorA, evento.marcadorB)
+      : this.tournamentsService.reportar(evento.partida.id, evento.marcadorA, evento.marcadorB);
     peticion.subscribe({
       next: () => this.refrescarLlaves(),
       error: (err) => {
@@ -322,7 +379,7 @@ export class TournamentDetailComponent {
     });
   }
 
-  confirmarResultado(p: Partida): void {
+  onConfirmar(p: Partida): void {
     this.enviandoResultado.set(true);
     this.errorLlaves.set(null);
     this.tournamentsService.confirmar(p.id).subscribe({
@@ -334,7 +391,7 @@ export class TournamentDetailComponent {
     });
   }
 
-  rechazarResultado(p: Partida): void {
+  onRechazar(p: Partida): void {
     this.enviandoResultado.set(true);
     this.errorLlaves.set(null);
     this.tournamentsService.rechazar(p.id).subscribe({
@@ -346,20 +403,18 @@ export class TournamentDetailComponent {
     });
   }
 
-  private etiquetaRonda(numero: number, total: number): string {
-    const desdeElFinal = total - numero;
-    if (desdeElFinal === 0) {
-      return 'Final';
+  estadoDePartida(p: Partida): string {
+    switch (p.estado) {
+      case 'PENDIENTE':
+        return p.equipoAId !== null && p.equipoBId !== null ? 'En espera' : 'Por decidir';
+      case 'REPORTADA':
+        return 'Reportada';
+      case 'EN_DISPUTA':
+        return 'En disputa';
+      case 'FINALIZADA':
+        return p.bye ? 'Bye' : 'Finalizada';
+      default:
+        return p.estado;
     }
-    if (desdeElFinal === 1) {
-      return 'Semifinales';
-    }
-    if (desdeElFinal === 2) {
-      return 'Cuartos de final';
-    }
-    if (desdeElFinal === 3) {
-      return 'Octavos de final';
-    }
-    return `Ronda ${numero}`;
   }
 }

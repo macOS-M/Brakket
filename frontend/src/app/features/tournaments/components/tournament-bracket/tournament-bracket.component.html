@@ -1,0 +1,132 @@
+@if (errorLocal()) {
+<p class="mensaje-error" role="alert">{{ errorLocal() }}</p>
+}
+
+@if (partidas().length === 0) {
+<!-- La llave tentativa según el cupo, como CM antes de arrancar. -->
+<p class="nota-llave">
+  La llave se genera al iniciar el torneo. Así se vería con el cupo completo:
+</p>
+<div class="bracket tentativa" role="list" aria-label="Llave tentativa">
+  @for (ronda of rondasPlaceholder(); track ronda.numero) {
+  <div class="ronda" role="listitem">
+    <h2 class="ronda-titulo">{{ ronda.etiqueta }}</h2>
+    @for (c of ronda.cruces; track c) {
+    <article class="partida pendiente-definir">
+      <div class="partida-equipos">
+        <div class="lado"><span class="lado-nombre por-decidir">Por decidir</span></div>
+        <div class="lado"><span class="lado-nombre por-decidir">Por decidir</span></div>
+      </div>
+    </article>
+    }
+  </div>
+  }
+</div>
+} @else {
+<div class="bracket" role="list" aria-label="Llave del torneo">
+  @for (ronda of rondas(); track ronda.numero) {
+  <div class="ronda" role="listitem">
+    <h2 class="ronda-titulo">{{ ronda.etiqueta }}</h2>
+    @for (p of ronda.partidas; track p.id) {
+    <article
+      class="partida"
+      [class.finalizada]="p.estado === 'FINALIZADA'"
+      [class.disputa]="p.estado === 'EN_DISPUTA'"
+    >
+      <div class="partida-equipos">
+        <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoAId">
+          <span class="lado-nombre" [class.por-decidir]="!p.equipoANombre">
+            {{ p.equipoANombre ?? 'Por decidir' }}
+          </span>
+          <span class="lado-marcador">{{ marcadorDe(p, 'A') }}</span>
+        </div>
+        <div class="lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoBId">
+          <span class="lado-nombre" [class.por-decidir]="!p.bye && !p.equipoBNombre">
+            {{ p.bye ? 'Bye' : (p.equipoBNombre ?? 'Por decidir') }}
+          </span>
+          <span class="lado-marcador">{{ marcadorDe(p, 'B') }}</span>
+        </div>
+      </div>
+
+      @if (p.estado === 'REPORTADA') {
+      <p class="partida-estado reportada">Reporte enviado: falta la confirmación del rival</p>
+      } @else if (p.estado === 'EN_DISPUTA') {
+      <p class="partida-estado en-disputa">En disputa: resuelve el organizador</p>
+      }
+
+      @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
+      <!-- El puente con el juego: la partida privada que ambos capitanes
+           crean dentro del juego con estas credenciales. -->
+      <div class="lobby">
+        <span class="lobby-dato"><span class="lobby-etiqueta">Lobby</span> {{ p.lobbyNombre }}</span>
+        <span class="lobby-dato"><span class="lobby-etiqueta">Clave</span> {{ p.lobbyClave }}</span>
+      </div>
+      }
+
+      @if (reportando() === p.id) {
+      <div class="marcador-form">
+        <label class="marcador-campo">
+          <span>{{ p.equipoANombre }}</span>
+          <input
+            type="number"
+            min="0"
+            max="999"
+            [value]="marcadorA()"
+            (input)="marcadorA.set(+$any($event.target).value)"
+          />
+        </label>
+        <label class="marcador-campo">
+          <span>{{ p.equipoBNombre }}</span>
+          <input
+            type="number"
+            min="0"
+            max="999"
+            [value]="marcadorB()"
+            (input)="marcadorB.set(+$any($event.target).value)"
+          />
+        </label>
+        <div class="marcador-acciones">
+          <button type="button" class="btn-primary" [disabled]="ocupado()" (click)="enviar(p)">
+            {{ ocupado() ? 'Enviando…' : puedeReportar(p) ? 'Reportar' : 'Resolver' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="cerrarMarcador()">Cancelar</button>
+        </div>
+      </div>
+      } @else {
+      <div class="partida-acciones">
+        @if (puedeReportar(p)) {
+        <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
+          Reportar resultado
+        </button>
+        }
+        @if (puedeConfirmar(p)) {
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="ocupado()"
+          (click)="confirmar.emit(p)"
+        >
+          Confirmar
+        </button>
+        <button
+          type="button"
+          class="btn-secondary"
+          [disabled]="ocupado()"
+          (click)="rechazar.emit(p)"
+        >
+          Rechazar
+        </button>
+        }
+        @if (puedeResolver(p) && !puedeReportar(p) && !puedeConfirmar(p)) {
+        <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
+          Resolver (organizador)
+        </button>
+        }
+      </div>
+      }
+    </article>
+    }
+  </div>
+  }
+</div>
+}
