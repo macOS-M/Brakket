@@ -12,32 +12,49 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
     /** Rol base que recibe todo usuario nuevo al autenticarse (sembrado en la migración V2). */
     private static final String ROL_BASE = "JUGADOR";
+    private static final String ROL_ADMIN = "ADMIN";
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final UsuarioRolRepository usuarioRolRepository;
     private final JuegoRepository juegoRepository;
 
+    /**
+     * Correos que reciben ADMIN al iniciar sesión. El seed de la migración V8
+     * solo cubría cuentas ya existentes al migrar: en una base recién creada
+     * las migraciones corren antes del primer login y nadie quedaba admin.
+     */
+    private final Set<String> correosAdmin;
+
     public AuthServiceImpl(UsuarioRepository usuarioRepository,
                            RolRepository rolRepository,
                            UsuarioRolRepository usuarioRolRepository,
-                           JuegoRepository juegoRepository) {
+                           JuegoRepository juegoRepository,
+                           @Value("${brakket.admin-emails:}") String adminEmails) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.usuarioRolRepository = usuarioRolRepository;
         this.juegoRepository = juegoRepository;
+        this.correosAdmin = Arrays.stream((adminEmails == null ? "" : adminEmails).split(","))
+                .map(correo -> correo.trim().toLowerCase(Locale.ROOT))
+                .filter(correo -> !correo.isEmpty())
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -54,15 +71,32 @@ public class AuthServiceImpl implements AuthService {
                     }
                     return existing;
                 })
-                .orElseGet(() -> usuarioRepository.save(Usuario.builder()
-                        .googleId(googleId)
-                        .correo(correo)
-                        .nombre(nombre)
-                        .fotoUrl(fotoUrl)
-                        .visibilidadPerfil(VisibilidadPerfil.PUBLIC)
-                        .build()));
+                // Si el correo ya existe (cuenta local, DD-04) se le vincula el
+                // googleId en vez de intentar un insert que violaría el UNIQUE
+                // del correo y dejaría el login con Google roto para esa cuenta.
+                .orElseGet(() -> usuarioRepository.findByCorreo(correo)
+                        .map(existente -> {
+                            existente.setGoogleId(googleId);
+                            if (esTextoVacio(existente.getNombre())) {
+                                existente.setNombre(nombre);
+                            }
+                            if (esTextoVacio(existente.getFotoUrl())) {
+                                existente.setFotoUrl(fotoUrl);
+                            }
+                            return existente;
+                        })
+                        .orElseGet(() -> usuarioRepository.save(Usuario.builder()
+                                .googleId(googleId)
+                                .correo(correo)
+                                .nombre(nombre)
+                                .fotoUrl(fotoUrl)
+                                .visibilidadPerfil(VisibilidadPerfil.PUBLIC)
+                                .build())));
 
-        asegurarRolBase(usuario);
+        asegurarRol(usuario, ROL_BASE);
+        if (correosAdmin.contains(correo.trim().toLowerCase(Locale.ROOT))) {
+            asegurarRol(usuario, ROL_ADMIN);
+        }
         return usuario;
     }
 
@@ -102,17 +136,17 @@ public class AuthServiceImpl implements AuthService {
         return responseDe(usuario);
     }
 
-    /** Asigna el rol base al usuario si aún no lo tiene (idempotente). */
-    private void asegurarRolBase(Usuario usuario) {
+    /** Asigna un rol al usuario si aún no lo tiene (idempotente). */
+    private void asegurarRol(Usuario usuario, String nombreRol) {
         boolean yaLoTiene = usuarioRolRepository.findByUsuarioId(usuario.getId()).stream()
-                .anyMatch(ur -> ROL_BASE.equals(ur.getRol().getNombreRol()));
+                .anyMatch(ur -> nombreRol.equals(ur.getRol().getNombreRol()));
         if (yaLoTiene) {
             return;
         }
-        Rol rolBase = rolRepository.findByNombreRol(ROL_BASE)
+        Rol rol = rolRepository.findByNombreRol(nombreRol)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Rol base '%s' no existe (revisar migración V2)".formatted(ROL_BASE)));
-        usuarioRolRepository.save(UsuarioRol.builder().usuario(usuario).rol(rolBase).build());
+                        "Rol '%s' no existe (revisar migración V2)".formatted(nombreRol)));
+        usuarioRolRepository.save(UsuarioRol.builder().usuario(usuario).rol(rol).build());
     }
 
     private List<String> rolesDe(Long usuarioId) {

@@ -1,97 +1,156 @@
 .page {
-  padding: 1.5rem 0;
-
-  h1 {
-    margin: 0 0 1.25rem;
-  }
-
-  .placeholder {
-    display: inline-block;
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--brand-cyan, #22d3ee);
-    border-radius: 8px;
-    color: var(--text-muted, #94a3b8);
-
-    &.error {
-      border-color: #f87171;
-      color: #f87171;
-    }
-  }
+  padding: 0 0 1.5rem;
 }
 
 .lista {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  max-width: 500px;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 640px;
 }
 
-.invitacion-card {
+.item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1rem;
   background: var(--surface, #111827);
-  border: 1px solid var(--border, #334155);
-  border-radius: 12px;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+}
 
-  .info {
-    .equipo {
-      margin: 0 0 0.25rem;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text, #e2e8f0);
-    }
+.item-cuerpo {
+  flex: 1;
+  min-width: 0;
+}
 
-    .detalle {
-      margin: 0 0 0.25rem;
-      font-size: 0.85rem;
-      color: var(--text-muted, #94a3b8);
+.item-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-      strong {
-        color: var(--brand-cyan, #22d3ee);
-      }
-    }
+.item-titulo {
+  margin: 0;
+  color: var(--text, #e2e8f0);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-    .mensaje {
-      margin: 0;
-      font-size: 0.8rem;
-      font-style: italic;
-      color: var(--text-muted, #94a3b8);
-    }
+.item-detalle {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+
+  strong {
+    color: var(--text, #e2e8f0);
+    font-weight: 600;
+  }
+}
+
+.item-mensaje {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+
+.item-fecha {
+  margin: 0.35rem 0 0;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+// ----- Botones -----
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--on-brand, #fff);
+
+  &:not(:disabled):hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:not(:disabled):hover {
+    background: var(--surface-2, #1f2937);
+  }
+}
+
+.btn-danger {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--danger-text, #f87171);
+
+  &:not(:disabled):hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: var(--danger-text, #f87171);
+  }
+}
+
+@media (max-width: 560px) {
+  .item {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .acciones {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex-shrink: 0;
+    flex-direction: row;
+
+    .btn-primary,
+    .btn-danger {
+      flex: 1;
+    }
   }
 }
 
-.btn-aceptar,
-.btn-rechazar {
-  padding: 0.4rem 0.9rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    transition: none;
   }
-}
-
-.btn-aceptar {
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
-}
-
-.btn-rechazar {
-  background: transparent;
-  border-color: #f87171;
-  color: #f87171;
 }

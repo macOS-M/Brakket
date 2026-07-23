@@ -250,12 +250,14 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
      * cuando el módulo tournament formalice sus estados.
      */
     private boolean participaEnTorneoActivo(Long equipoId) {
-        LocalDate hoy = LocalDate.now();
+        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
         List<Inscripcion> inscripciones = inscripcionRepository.findByEquipoId(equipoId);
         return inscripciones.stream()
                 .filter(inscripcion -> inscripcion.getEstado() == null
                         || !INSCRIPCION_ESTADOS_CERRADOS.contains(inscripcion.getEstado().toUpperCase()))
                 .map(Inscripcion::getTorneo)
-                .anyMatch(torneo -> !hoy.isAfter(torneo.getFechaFin()));
+                // Sin fecha de fin (torneo del modelo abierto) se considera
+                // activo mientras su inscripción siga vigente.
+                .anyMatch(torneo -> torneo.getFechaFin() == null || !ahora.isAfter(torneo.getFechaFin()));
     }
 }

@@ -1,25 +1,59 @@
 <section class="page">
-  <header class="page-head">
-    <h1>Ligas</h1>
-    <a class="btn btn-primary" routerLink="nuevo">+ Nueva liga</a>
-  </header>
+  <app-page-header titulo="Ligas" subtitulo="Las competencias organizadas por la comunidad">
+    @if (auth.isAuthenticated()) {
+    <a class="btn-primary" routerLink="nuevo">+ Nueva liga</a>
+    }
+  </app-page-header>
 
   @if (loading()) {
-    <p class="muted">Cargando ligas…</p>
+  <app-empty-state modo="cargando" mensaje="Cargando ligas…" />
   } @else if (error()) {
-    <p class="error">{{ error() }}</p>
+  <app-empty-state modo="error" titulo="No se pudieron cargar" [mensaje]="error()" />
   } @else if (leagues().length === 0) {
-    <p class="empty">Aún no hay ligas. Creá la primera con <strong>Nueva liga</strong>.</p>
+  <app-empty-state
+    titulo="Aún no hay ligas"
+    [mensaje]="
+      auth.isAuthenticated()
+        ? 'Creá la primera liga para empezar a organizar temporadas y torneos.'
+        : 'Iniciá sesión y creá la primera liga de la comunidad.'
+    "
+  >
+    @if (auth.isAuthenticated()) {
+    <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
+    }
+  </app-empty-state>
   } @else {
-    <ul class="league-list">
-      @for (liga of leagues(); track liga.id) {
-        <li class="league-card">
-          <a [routerLink]="[liga.id]" class="league-link">
-            <span class="league-name">{{ liga.nombre }}</span>
-            <span class="league-meta">{{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}</span>
-          </a>
-        </li>
-      }
-    </ul>
+  <!-- Banner promocional (referencia Aquament) con el conteo real. -->
+  <div class="banner">
+    <span class="banner-emoji" aria-hidden="true">🎮</span>
+    <div class="banner-texto">
+      <p class="banner-titulo">
+        {{ leagues().length }} {{ leagues().length === 1 ? 'liga te espera' : 'ligas te esperan' }}
+      </p>
+      <p class="banner-detalle">Abrí una para ver sus temporadas y su calendario.</p>
+    </div>
+    <span class="banner-emoji" aria-hidden="true">🏆</span>
+  </div>
+
+  <div class="grid">
+    @for (liga of leagues(); track liga.id) {
+    <a class="liga-card" [routerLink]="[liga.id]">
+      <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
+        @if (foto(liga)) {
+        <img [src]="foto(liga)" [alt]="" />
+        } @else {
+        <span class="monograma-grande" aria-hidden="true">{{ liga.nombre.charAt(0) }}</span>
+        }
+        @if (liga.juegoNombre) {
+        <span class="juego-chip">{{ liga.juegoNombre }}</span>
+        }
+      </div>
+      <div class="cuerpo">
+        <h2 class="nombre">{{ liga.nombre }}</h2>
+        <p class="meta">Comisionado: {{ liga.comisionadoNombre }}</p>
+      </div>
+    </a>
+    }
+  </div>
   }
 </section>

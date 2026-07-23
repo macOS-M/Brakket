@@ -26,6 +26,17 @@ public interface MiembroEquipoRepository extends JpaRepository<MiembroEquipo, Lo
 
     List<MiembroEquipo> findByUsuarioId(Long usuarioId);
 
+    /**
+     * Membresías activas de un lote de usuarios, con el equipo ya traído, para
+     * armar los badges de "requiere transferencia" en una sola query en vez de
+     * una por candidato.
+     */
+    @Query("""
+            select m from MiembroEquipo m
+            join fetch m.equipo
+            where m.usuario.id in :usuarioIds and m.estado = 'ACTIVO'""")
+    List<MiembroEquipo> findActivosByUsuarioIds(@Param("usuarioIds") List<Long> usuarioIds);
+
     Optional<MiembroEquipo> findByEquipoIdAndUsuarioId(Long equipoId, Long usuarioId);
 
     long countByEquipoIdAndRolAndEstado(Long equipoId, String rol, String estado);

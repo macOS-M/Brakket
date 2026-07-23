@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, switchMap, tap } from 'rxjs';
 
 import { Usuario } from '../../models/usuario.model';
 import { ApiService } from './api.service';
@@ -62,6 +62,38 @@ export class AuthService {
    */
   handleAuthCallback(token: string): void {
     this.tokenService.setToken(token);
+  }
+
+  /** Inicio de sesion local (DD-04): mismo JWT que el flujo de Google. */
+  loginLocal(correo: string, password: string): Observable<Usuario> {
+    return this.api
+      .post<{ token: string }>('/auth/login', { correo, password })
+      .pipe(switchMap(({ token }) => this.procesarToken(token)));
+  }
+
+  /** Registro local (DD-04). Devuelve el usuario ya cargado. */
+  registroLocal(nombre: string, correo: string, password: string): Observable<Usuario> {
+    return this.api
+      .post<{ token: string }>('/auth/registro', { nombre, correo, password })
+      .pipe(switchMap(({ token }) => this.procesarToken(token)));
+  }
+
+  /** Persiste el token y trae el perfil; el llamador decide la navegación. */
+  private procesarToken(token: string): Observable<Usuario> {
+    this.tokenService.setToken(token);
+    return this.loadCurrentUser();
+  }
+
+  /** Ruta de aterrizaje tras autenticarse, segun rol y perfil. */
+  rutaPostLogin(usuario: Usuario): string {
+    if (this.hasRole('ADMIN')) {
+      return '/admin';
+    }
+    if (!this.isProfileComplete(usuario)) {
+      return '/profile';
+    }
+    // La raíz es el landing institucional; el dashboard vive en /inicio.
+    return '/inicio';
   }
 
   updateCurrentUser(payload: {

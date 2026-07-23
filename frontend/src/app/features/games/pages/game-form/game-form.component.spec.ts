@@ -37,7 +37,20 @@ describe('GameFormComponent', () => {
   });
 
   it('should mark the form invalid when required fields are empty', () => {
-    component.form.setValue({ nombre: '', genero: '', descripcion: '' });
+    component.form.setValue({ nombre: '', genero: '', descripcion: '', imagenUrl: '' });
     expect(component.form.invalid).toBeTrue();
+  });
+
+  it('elegir un resultado externo precarga nombre, género y portada', () => {
+    component.elegir({
+      nombre: 'Valorant',
+      genero: 'Shooter',
+      imagenUrl: 'https://media.rawg.io/valorant.jpg'
+    });
+
+    expect(component.form.value.nombre).toBe('Valorant');
+    expect(component.form.value.genero).toBe('Shooter');
+    expect(component.form.value.imagenUrl).toBe('https://media.rawg.io/valorant.jpg');
+    expect(component.resultados()).toBeNull();
   });
 });

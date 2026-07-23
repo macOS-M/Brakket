@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 
-/**
- * Notificaciones. Placeholder de la feature "notifications".
- * Pendiente EPIC-12.
- */
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
+
 @Component({
   selector: 'app-notification-list',
   standalone: true,
-  imports: [],
+  imports: [ComingSoonComponent],
   templateUrl: './notification-list.component.html',
   styleUrl: './notification-list.component.scss'
 })

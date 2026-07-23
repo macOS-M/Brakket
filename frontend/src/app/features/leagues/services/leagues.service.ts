@@ -4,10 +4,12 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import {
   GameOption,
+  FormatOption,
   League,
   LeagueRequest,
   Season,
-  SeasonRequest
+  SeasonRequest,
+  UpdateSeasonRequest
 } from '../../../models/league.model';
 
 /**
@@ -38,6 +40,11 @@ export class LeaguesService {
     return this.api.put<League>(`/leagues/${id}`, body);
   }
 
+  /** Elimina una liga y sus temporadas (solo comisionado o admin). */
+  delete(id: number): Observable<void> {
+    return this.api.delete<void>(`/leagues/${id}`);
+  }
+
   /** Temporadas de una liga. */
   listSeasons(ligaId: number): Observable<Season[]> {
     return this.api.get<Season[]>(`/leagues/${ligaId}/seasons`);
@@ -46,6 +53,14 @@ export class LeaguesService {
   /** Agrega una temporada a la liga. */
   createSeason(ligaId: number, body: SeasonRequest): Observable<Season> {
     return this.api.post<Season>(`/leagues/${ligaId}/seasons`, body);
+  }
+
+  updateSeason(ligaId: number, seasonId: number, body: UpdateSeasonRequest): Observable<Season> {
+    return this.api.put<Season>(`/leagues/${ligaId}/seasons/${seasonId}`, body);
+  }
+
+  seasonFormats(ligaId: number): Observable<FormatOption[]> {
+    return this.api.get<FormatOption[]>(`/leagues/${ligaId}/season-formats`);
   }
 
   /** Juegos activos disponibles para el selector del formulario. */

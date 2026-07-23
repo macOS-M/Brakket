@@ -85,7 +85,7 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
 
         var torneos = inscripcionRepository.findByEquipoId(equipo.getId()).stream()
                 .map(i -> new PerfilEquipoPublicoResponse.TorneoRelacionado(i.getTorneo().getId(),
-                        i.getTorneo().getNombre(), i.getTorneo().getEstado(), i.getTorneo().getFechaInicio(),
+                        i.getTorneo().getNombre(), i.getTorneo().getEstado().name(), i.getTorneo().getFechaInicio(),
                         i.getTorneo().getFechaFin(), i.getEstado()))
                 .toList();
 

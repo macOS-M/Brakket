@@ -1,161 +1,172 @@
-.page {
-  padding: 1.5rem 0;
-
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-
-    h1 {
-      margin: 0;
-    }
-  }
-
-  .placeholder {
-    display: inline-block;
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--brand-cyan, #22d3ee);
-    border-radius: 8px;
-    color: var(--text-muted, #94a3b8);
-
-    &.error {
-      border-color: #f87171;
-      color: #f87171;
-    }
-  }
-}
+// ----- Filtros -----
 
 .filtros {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.35rem;
+}
 
-  .filtro {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
+.buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 220px;
+  min-width: 200px;
+
+  svg {
+    position: absolute;
+    left: 0.7rem;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--text-subtle, #64748b);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.55rem 0.75rem 0.55rem 2.1rem;
     background: var(--surface, #111827);
     border: 1px solid var(--border, #334155);
-    border-radius: 8px;
+    border-radius: var(--radius-sm, 8px);
     color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.875rem;
 
-    &.texto {
-      flex: 1 1 220px;
-      min-width: 200px;
+    &::placeholder {
+      color: var(--text-subtle, #64748b);
     }
 
     &:focus {
       outline: none;
-      border-color: var(--brand-cyan, #22d3ee);
+      border-color: var(--accent-text, #ff6a1f);
     }
   }
 }
 
-.estado-error {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.filtro {
+  padding: 0.55rem 0.75rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.875rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-text, #ff6a1f);
+  }
 }
+
+// ----- Grilla de equipos -----
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.1rem;
 }
 
 .equipo-card {
   display: flex;
   flex-direction: column;
+  padding: 1rem 1.1rem 1.1rem;
   background: var(--surface, #111827);
-  border: 1px solid var(--border, #334155);
-  border-radius: 12px;
-  overflow: hidden;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  transition: border-color 0.15s ease, transform 0.15s ease;
 
-  .portada {
-    position: relative;
-
-    .logo {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-
-      &.placeholder-logo {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--brand-cyan, #22d3ee);
-        background: rgba(148, 163, 184, 0.08);
-      }
-    }
-
-    .estado {
-      position: absolute;
-      top: 0.6rem;
-      right: 0.6rem;
-      padding: 0.15rem 0.6rem;
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      border-radius: 999px;
-      background: rgba(34, 211, 238, 0.15);
-      color: var(--brand-cyan, #22d3ee);
-
-      &.disuelto {
-        background: rgba(248, 113, 113, 0.15);
-        color: #f87171;
-      }
-    }
-  }
-
-  .info {
-    padding: 1rem 1.1rem 0.5rem;
-    flex: 1;
-
-    .nombre {
-      margin: 0 0 0.2rem;
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--text, #e2e8f0);
-    }
-
-    .juego {
-      margin: 0 0 0.5rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--brand-cyan, #22d3ee);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .descripcion {
-      margin: 0;
-      font-size: 0.85rem;
-      color: var(--text-muted, #94a3b8);
-      line-height: 1.4;
-    }
-  }
-
-  .acciones {
-    display: flex;
-    gap: 0.6rem;
-    padding: 0.9rem 1.1rem 1.1rem;
+  &:hover {
+    border-color: var(--border, #334155);
+    transform: translateY(-2px);
   }
 }
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm, 8px);
+  object-fit: cover;
+
+  &.sin-logo {
+    background: var(--info-bg, rgba(59, 130, 246, 0.12));
+    color: var(--info-text, #60a5fa);
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+}
+
+.identidad {
+  flex: 1;
+  min-width: 0;
+
+  .nombre {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .juego {
+    margin: 0.15rem 0 0;
+    color: var(--accent-text, #ff6a1f);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.descripcion {
+  flex: 1;
+  margin: 0 0 0.9rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  // Recorta a 2 líneas para que las tarjetas queden parejas en la grilla.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+// ----- Paginación -----
 
 .paginacion {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
 
   .indicador {
-    font-size: 0.85rem;
     color: var(--text-muted, #94a3b8);
+    font-size: 0.8125rem;
   }
 
   button:disabled {
@@ -164,28 +175,41 @@
   }
 }
 
+// ----- Botones -----
+
 .btn-primary,
 .btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
   border: 1px solid transparent;
-  cursor: pointer;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .btn-primary {
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
 }
 
 .btn-secondary {
+  flex: 1;
   background: transparent;
   border-color: var(--border, #334155);
   color: var(--text, #e2e8f0);
   text-align: center;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-2, #1f2937);
+  }
 }

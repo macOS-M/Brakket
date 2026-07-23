@@ -1,3 +1,186 @@
+// RF-08: visualización de la plantilla
+.placeholder {
+  padding: 1.5rem 0;
+  color: var(--text-muted, #94a3b8);
+
+  &.error {
+    color: #f87171;
+
+    p {
+      margin: 0 0 0.6rem;
+    }
+  }
+}
+
+.btn-reintentar {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid var(--brand-cyan, #22d3ee);
+  border-radius: 8px;
+  color: var(--brand-cyan, #22d3ee);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(34, 211, 238, 0.1);
+  }
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border, #334155);
+  }
+
+  td {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--border, #334155);
+    color: var(--text, #e2e8f0);
+  }
+
+  .fila-inactiva td {
+    opacity: 0.55;
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--brand-cyan, #22d3ee);
+  border-radius: 999px;
+  color: var(--brand-cyan, #22d3ee);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+
+  &.inactivo {
+    border-color: var(--text-muted, #94a3b8);
+    color: var(--text-muted, #94a3b8);
+  }
+
+  &.badge-capitan {
+    margin-left: 0.5rem;
+    border-color: #fbbf24;
+    color: #fbbf24;
+  }
+
+  &.badge-rol {
+    border-color: var(--border, #334155);
+    color: var(--text, #e2e8f0);
+  }
+}
+
+// RF-10: expulsión de integrantes
+.celda-acciones {
+  text-align: right;
+}
+
+.btn-expulsar {
+  padding: 0.35rem 0.8rem;
+  background: transparent;
+  border: 1px solid #f87171;
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.expulsion-box {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.04);
+  max-width: 480px;
+
+  h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+    color: #f87171;
+  }
+
+  .advertencia {
+    margin: 0 0 0.9rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.9rem;
+  }
+
+  .campo-causa {
+    display: grid;
+    gap: 0.35rem;
+    margin-bottom: 0.9rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.88rem;
+
+    textarea {
+      padding: 0.6rem 0.75rem;
+      background: var(--surface, #111827);
+      border: 1px solid var(--border, #334155);
+      border-radius: 8px;
+      color: var(--text, #e2e8f0);
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+
+      &:focus {
+        outline: none;
+        border-color: #f87171;
+      }
+    }
+  }
+
+  .acciones {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .btn-confirmar-expulsion {
+    padding: 0.5rem 1.1rem;
+    border: 1px solid #f87171;
+    border-radius: 8px;
+    background: #f87171;
+    color: #111827;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-cancelar {
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--border, #334155);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text, #e2e8f0);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+}
+
 .invitar-box {
   margin-top: 2rem;
   padding: 1.25rem;
@@ -210,4 +393,131 @@
       cursor: not-allowed;
     }
   }
+}
+
+// ===== RF-11: buscar jugadores disponibles =====
+.buscar-jugadores {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+  }
+}
+
+.filtros-busqueda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  input[type='text'],
+  select {
+    padding: 0.5rem 0.7rem;
+    background: var(--surface, #111827);
+    border: 1px solid var(--border, #334155);
+    border-radius: 8px;
+    color: var(--text, #e2e8f0);
+    font-size: 0.85rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--brand-cyan, #22d3ee);
+    }
+  }
+
+  .check-disponibles {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted, #94a3b8);
+  }
+}
+
+.btn-buscar {
+  padding: 0.5rem 1.1rem;
+  background: var(--brand-blue, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.error-busqueda {
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #f87171;
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.85rem;
+}
+
+.resultados-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.resultado-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(148, 163, 184, 0.06);
+  border: 1px solid var(--border, #334155);
+  border-radius: 8px;
+
+  .info-jugador {
+    .nombre {
+      margin: 0 0 0.2rem;
+      font-weight: 600;
+      color: var(--text, #e2e8f0);
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.badge-directo {
+  font-size: 0.75rem;
+  color: var(--brand-cyan, #22d3ee);
+}
+
+.badge-transferencia {
+  font-size: 0.75rem;
+  color: #fbbf24;
+}
+
+.btn-invitar {
+  padding: 0.4rem 0.9rem;
+  background: var(--brand-blue, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.invitado-ok {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-cyan, #22d3ee);
 }

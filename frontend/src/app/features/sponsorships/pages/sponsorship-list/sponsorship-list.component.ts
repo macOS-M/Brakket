@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 
-/**
- * Patrocinios. Placeholder de la feature "sponsorships".
- * Pendiente EPIC-11.
- */
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
+
 @Component({
   selector: 'app-sponsorship-list',
   standalone: true,
-  imports: [],
+  imports: [ComingSoonComponent],
   templateUrl: './sponsorship-list.component.html',
   styleUrl: './sponsorship-list.component.scss'
 })

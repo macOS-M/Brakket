@@ -32,4 +32,18 @@ public class Liga {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comisionado_id", nullable = false)
     private Usuario comisionado;
+
+    @Column(name = "descripcion", length = 1000)
+    private String descripcion;
+
+    @Column(name = "reglas", length = 4000)
+    private String reglas;
+
+    /** Foto propia de la liga; si falta, el frontend usa el arte del juego. */
+    @Column(name = "foto_url", length = 500)
+    private String fotoUrl;
+
+    @Column(name = "activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }

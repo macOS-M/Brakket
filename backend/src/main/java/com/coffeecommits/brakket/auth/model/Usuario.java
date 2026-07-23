@@ -30,8 +30,13 @@ public class Usuario {
     @Column(name = "correo", nullable = false, length = 180, unique = true)
     private String correo;
 
-    @Column(name = "google_id", nullable = false, length = 180, unique = true)
+    /** Nulo en cuentas locales (login con correo y contraseña, DD-04). */
+    @Column(name = "google_id", length = 180, unique = true)
     private String googleId;
+
+    /** Hash BCrypt; nulo en cuentas que entran solo con Google. */
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
 
     @Column(name = "foto_url", length = 500)
     private String fotoUrl;

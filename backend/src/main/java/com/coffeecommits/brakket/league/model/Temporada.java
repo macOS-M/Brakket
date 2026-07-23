@@ -1,5 +1,6 @@
 package com.coffeecommits.brakket.league.model;
 
+import com.coffeecommits.brakket.game.model.FormatoCompetitivo;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,4 +35,21 @@ public class Temporada {
 
     @Column(name = "fecha_fin", nullable = false)
     private LocalDate fechaFin;
+
+    @Column(name = "reglas", nullable = false, columnDefinition = "TEXT")
+    private String reglas;
+
+    @Column(name = "estado", nullable = false, length = 30)
+    private String estado;
+
+    @Column(name = "cupo_equipos", nullable = false)
+    private Integer cupoEquipos;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "formato_id")
+    private FormatoCompetitivo formato;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 }

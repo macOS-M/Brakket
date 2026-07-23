@@ -158,8 +158,8 @@ class TeamRegistrationServiceImplTest {
         Juego fifa = Juego.builder().id(7L).nombre("FIFA").genero("Deportes").activo(true).build();
         when(juegoRepository.findById(7L)).thenReturn(Optional.of(fifa));
         Torneo futuro = Torneo.builder()
-                .fechaInicio(LocalDate.now().plusDays(1))
-                .fechaFin(LocalDate.now().plusDays(10))
+                .fechaInicio(LocalDate.now().plusDays(1).atStartOfDay())
+                .fechaFin(LocalDate.now().plusDays(10).atStartOfDay())
                 .build();
         when(inscripcionRepository.findByEquipoId(10L)).thenReturn(List.of(
                 Inscripcion.builder().torneo(futuro).estado("PENDIENTE").build()));
@@ -177,8 +177,8 @@ class TeamRegistrationServiceImplTest {
         Juego fifa = Juego.builder().id(7L).nombre("FIFA").genero("Deportes").activo(true).build();
         when(juegoRepository.findById(7L)).thenReturn(Optional.of(fifa));
         Torneo futuro = Torneo.builder()
-                .fechaInicio(LocalDate.now().plusDays(1))
-                .fechaFin(LocalDate.now().plusDays(10))
+                .fechaInicio(LocalDate.now().plusDays(1).atStartOfDay())
+                .fechaFin(LocalDate.now().plusDays(10).atStartOfDay())
                 .build();
         when(inscripcionRepository.findByEquipoId(10L)).thenReturn(List.of(
                 Inscripcion.builder().torneo(futuro).estado("CANCELADA").build()));

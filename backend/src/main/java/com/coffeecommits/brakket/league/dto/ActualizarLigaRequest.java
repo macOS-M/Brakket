@@ -13,6 +13,15 @@ public record ActualizarLigaRequest(
         String nombre,
 
         @NotNull(message = "Debe seleccionar un juego")
-        Long juegoId
+        Long juegoId,
+
+        @Size(max = 1000, message = "La descripción no puede superar los 1000 caracteres")
+        String descripcion,
+
+        @Size(max = 4000, message = "Las reglas no pueden superar los 4000 caracteres")
+        String reglas,
+
+        @Size(max = 500, message = "La URL de la foto no puede superar los 500 caracteres")
+        String fotoUrl
 ) {
 }

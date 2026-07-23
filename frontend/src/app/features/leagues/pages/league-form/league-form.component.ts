@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { GameOption, League, LeagueRequest } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 /**
  * Formulario para crear una liga o configurar (editar) una existente (RF-22).
@@ -13,7 +14,7 @@ import { LeaguesService } from '../../services/leagues.service';
 @Component({
   selector: 'app-league-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent],
   templateUrl: './league-form.component.html',
   styleUrl: './league-form.component.scss'
 })
@@ -39,7 +40,10 @@ export class LeagueFormComponent {
 
   readonly form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(150)]],
-    juegoId: [null as number | null, [Validators.required]]
+    juegoId: [null as number | null, [Validators.required]],
+    descripcion: ['', [Validators.maxLength(1000)]],
+    reglas: ['', [Validators.maxLength(4000)]],
+    fotoUrl: ['', [Validators.maxLength(500)]]
   });
 
   constructor() {
@@ -48,6 +52,12 @@ export class LeagueFormComponent {
       error: () => this.error.set('No se pudieron cargar los juegos disponibles.')
     });
 
+    // Venir desde el hub de un juego preselecciona ese juego (?juegoId=).
+    const juegoParam = this.route.snapshot.queryParamMap.get('juegoId');
+    if (juegoParam) {
+      this.form.patchValue({ juegoId: Number(juegoParam) });
+    }
+
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       const id = Number(idParam);
@@ -55,7 +65,13 @@ export class LeagueFormComponent {
       this.leaguesService.getById(id).subscribe({
         next: (liga: League) => {
           this.ligaCargada.set(liga);
-          this.form.patchValue({ nombre: liga.nombre, juegoId: liga.juegoId });
+          this.form.patchValue({
+            nombre: liga.nombre,
+            juegoId: liga.juegoId,
+            descripcion: liga.descripcion ?? '',
+            reglas: liga.reglas ?? '',
+            fotoUrl: liga.fotoUrl ?? ''
+          });
         },
         error: () => this.error.set('No se pudo cargar la liga.')
       });
@@ -64,6 +80,15 @@ export class LeagueFormComponent {
 
   get esEdicion(): boolean {
     return this.leagueId() !== null;
+  }
+
+  /** Vista previa: la foto elegida o, sin foto, el arte del juego (edición). */
+  get fotoPreview(): string | null {
+    const propia = this.form.value.fotoUrl?.trim();
+    if (propia) {
+      return propia;
+    }
+    return this.ligaCargada()?.juegoImagenUrl ?? null;
   }
 
   submit(): void {
@@ -76,7 +101,10 @@ export class LeagueFormComponent {
 
     const body: LeagueRequest = {
       nombre: this.form.value.nombre!.trim(),
-      juegoId: Number(this.form.value.juegoId)
+      juegoId: Number(this.form.value.juegoId),
+      descripcion: this.form.value.descripcion?.trim() || null,
+      reglas: this.form.value.reglas?.trim() || null,
+      fotoUrl: this.form.value.fotoUrl?.trim() || null
     };
 
     const id = this.leagueId();

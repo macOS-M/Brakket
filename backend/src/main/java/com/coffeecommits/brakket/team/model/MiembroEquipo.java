@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "miembro_equipo")
@@ -39,4 +40,15 @@ public class MiembroEquipo {
 
     @Column(name = "rol", nullable = false, length = 30)
     private String rol;
+
+    // RF-10: trazabilidad de la baja cuando el integrante es expulsado.
+    @Column(name = "fecha_baja")
+    private LocalDateTime fechaBaja;
+
+    @Column(name = "causa_baja", length = 500)
+    private String causaBaja;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsable_baja_id")
+    private Usuario responsableBaja;
 }
