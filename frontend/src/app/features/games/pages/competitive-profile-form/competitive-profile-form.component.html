@@ -1,0 +1,99 @@
+<section class="page">
+  <a class="back-link" routerLink="/games">← Volver al catálogo</a>
+
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">RF-21 · Configuración competitiva</p>
+      <h1>{{ editando() ? 'Editar perfil competitivo' : 'Crear perfil competitivo' }}</h1>
+      <p>Define cómo se disputarán los torneos de <strong>{{ juegoNombre() || 'este juego' }}</strong>.</p>
+    </div>
+    <span class="status" [class.configured]="editando()">
+      {{ editando() ? 'Configurado' : 'Pendiente' }}
+    </span>
+  </header>
+
+  @if (confirmacion()) {
+    <div class="message success" role="status">{{ confirmacion() }}</div>
+  }
+  @if (error()) {
+    <div class="message error" role="alert">{{ error() }}</div>
+  }
+
+  @if (cargando()) {
+    <div class="loading">Cargando configuración...</div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <section class="panel">
+        <div class="section-heading">
+          <span class="step">01</span>
+          <div><h2>Modalidad y plantilla</h2><p>Establece la composición permitida por participante.</p></div>
+        </div>
+
+        <div class="mode-grid">
+          <label class="choice-card" [class.selected]="form.controls.modalidad.value === 'INDIVIDUAL'">
+            <input type="radio" formControlName="modalidad" value="INDIVIDUAL" />
+            <span class="choice-title">Individual</span>
+            <span class="choice-copy">Cada inscripción representa a una persona.</span>
+          </label>
+          <label class="choice-card" [class.selected]="form.controls.modalidad.value === 'EQUIPOS'">
+            <input type="radio" formControlName="modalidad" value="EQUIPOS" />
+            <span class="choice-title">Por equipos</span>
+            <span class="choice-copy">Cada inscripción utiliza una plantilla.</span>
+          </label>
+        </div>
+
+        <div class="size-grid">
+          <label>Tamaño mínimo
+            <input type="number" min="1" formControlName="plantillaMinima"
+              [readonly]="form.controls.modalidad.value === 'INDIVIDUAL'" />
+          </label>
+          <label>Tamaño máximo
+            <input type="number" min="1" formControlName="plantillaMaxima"
+              [readonly]="form.controls.modalidad.value === 'INDIVIDUAL'" />
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <span class="step">02</span>
+          <div><h2>Formatos compatibles</h2><p>Selecciona uno o más formatos habilitados.</p></div>
+        </div>
+        <div class="option-grid">
+          @for (formato of formatos(); track formato.id) {
+            <label class="check-card" [class.selected]="estaSeleccionado('formatosIds', formato.id)">
+              <input type="checkbox" [checked]="estaSeleccionado('formatosIds', formato.id)"
+                (change)="alternar('formatosIds', formato.id, $any($event.target).checked)" />
+              <span>{{ formato.nombre.replaceAll('_', ' ') }}</span>
+            </label>
+          }
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <span class="step">03</span>
+          <div><h2>Estadísticas relevantes</h2><p>Las obligatorias deben permanecer seleccionadas para activar el perfil.</p></div>
+        </div>
+        <div class="option-grid">
+          @for (estadistica of estadisticas(); track estadistica.id) {
+            <label class="check-card" [class.selected]="estaSeleccionado('estadisticasIds', estadistica.id)">
+              <input type="checkbox" [checked]="estaSeleccionado('estadisticasIds', estadistica.id)"
+                [disabled]="estadistica.obligatorio"
+                (change)="alternar('estadisticasIds', estadistica.id, $any($event.target).checked)" />
+              <span>{{ estadistica.nombre.replaceAll('_', ' ') }}</span>
+              @if (estadistica.obligatorio) { <small>Obligatoria</small> }
+            </label>
+          }
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="btn-secondary" type="button" (click)="volver()">Cancelar</button>
+        <button class="btn-primary" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando...' : (editando() ? 'Actualizar perfil' : 'Crear perfil') }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

@@ -14,7 +14,6 @@ import com.coffeecommits.brakket.transfer.dto.ResponderTransferenciaRequest;
 import com.coffeecommits.brakket.transfer.dto.TransferenciaResponse;
 import com.coffeecommits.brakket.transfer.model.SolicitudTransferencia;
 import com.coffeecommits.brakket.transfer.repository.SolicitudTransferenciaRepository;
-import com.coffeecommits.brakket.transfer.service.HistorialTransferenciaService; // RF-14
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

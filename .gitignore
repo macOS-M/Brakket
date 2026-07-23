@@ -24,3 +24,10 @@ brakket-backend/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Herramientas de agentes de IA (uso individual, no del equipo)
+.claude/
+.impeccable/
+.github/skills/
+.github/hooks/
+

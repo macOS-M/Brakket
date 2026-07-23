@@ -1,47 +1,252 @@
 .sidebar {
-  width: 220px;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width, 232px);
   flex-shrink: 0;
-  padding: 1.25rem 0.75rem;
-  background: var(--surface, #111827);
-  border-right: 1px solid var(--border, #1f2937);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  padding: 1.25rem 0.75rem 1rem;
+  background: var(--surface-3, #0d1526);
+  border-right: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
 
-  nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
+// ----- Marca -----
 
-    a {
-      display: block;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      color: var(--text-muted, #94a3b8);
-      text-decoration: none;
-      font-size: 0.95rem;
-      transition: background 0.15s ease, color 0.15s ease;
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 0.5rem 1.25rem;
+  color: var(--text, #e2e8f0);
+  font-weight: 800;
+  font-size: 1.0625rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
 
-      &:hover {
-        background: var(--surface-2, #1f2937);
-        color: var(--text, #e2e8f0);
-      }
-
-      &.active {
-        background: var(--surface-2, #1f2937);
-        color: var(--brand-cyan, #22d3ee);
-        border-left: 3px solid var(--brand-blue, #2563eb);
-      }
-    }
+  .logo {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: var(--accent-text, #ff6a1f);
+    stroke-width: 1.8;
+    stroke-linejoin: round;
   }
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border, #1f2937);
+// ----- Navegación -----
 
-    nav {
-      flex-direction: row;
-      flex-wrap: wrap;
+.nav {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+
+  // Scrollbar discreta: la barra por defecto de Windows rompe el tema oscuro.
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, #334155) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border, #334155);
+    border-radius: var(--radius-pill, 999px);
+  }
+}
+
+.grupo-titulo {
+  margin: 0 0 0.35rem 0.75rem;
+  color: var(--text-subtle, #64748b);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.grupo a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  // Píldora (referencia Aquament): el ítem activo se rellena con el
+  // acento y la tinta navy, en vez de la barra lateral de 3px.
+  border-radius: var(--radius-pill, 999px);
+  color: var(--text-muted, #94a3b8);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+  }
+
+  &.active {
+    background: var(--accent, #ff5500);
+    color: #fff;
+    font-weight: 700;
+
+    .icono-caja {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .icono {
+      stroke: #fff;
+    }
+
+    .chip-pronto {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+  }
+
+  &.pendiente {
+    color: var(--text-subtle, #64748b);
+  }
+}
+
+.icono-caja {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface, #111827);
+  transition: background 0.15s ease;
+}
+
+.icono {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.etiqueta {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-pronto {
+  flex-shrink: 0;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--neutral-bg, rgba(148, 163, 184, 0.1));
+  color: var(--text-subtle, #64748b);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// ----- Control de tema -----
+
+.btn-tema {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  // 44px de alto: mínimo de objetivo táctil de WCAG 2.5.5.
+  min-height: 44px;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+  }
+}
+
+.texto-tema {
+  flex: 1;
+  text-align: left;
+}
+
+// ----- Móvil -----
+
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1002;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  cursor: pointer;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+}
+
+.menu-backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .menu-toggle {
+    display: grid;
+  }
+
+  .menu-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(2, 6, 23, 0.6);
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+
+    &.abierto {
+      transform: translateX(0);
     }
   }
 }

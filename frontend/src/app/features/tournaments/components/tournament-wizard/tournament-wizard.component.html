@@ -1,0 +1,215 @@
+<div class="telon" (click)="cerrar()" aria-hidden="true"></div>
+
+<div
+  class="modal"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Crear torneo"
+  (keydown.escape)="cerrar()"
+>
+  <header class="cabecera" [style.background]="juegoImagen() ? undefined : 'var(--surface-2)'">
+    @if (juegoImagen()) {
+    <img class="cabecera-arte" [src]="juegoImagen()" alt="" />
+    }
+    <div class="cabecera-velo" aria-hidden="true"></div>
+    <button type="button" class="cerrar" (click)="cerrar()" aria-label="Cerrar">✕</button>
+    <div class="cabecera-texto">
+      <p class="juego">{{ juegoNombre() }}</p>
+      <h2>Crear torneo</h2>
+    </div>
+  </header>
+
+  <!-- Progreso: General → Equipos → Fecha -->
+  <ol class="progreso" aria-label="Pasos">
+    @for (etiqueta of pasos; track etiqueta; let i = $index) {
+    <li [class.activo]="paso() === i + 1" [class.hecho]="paso() > i + 1">
+      <span class="punto" aria-hidden="true"></span>
+      {{ etiqueta }}
+    </li>
+    }
+  </ol>
+
+  <div class="cuerpo">
+    @if (ligaId() === null) {
+    <!-- Aviso estilo referencia: torneo comunitario vs hospedado en liga. -->
+    <p class="info-banner">
+      Estás creando un torneo comunitario. Para darle más estructura (temporadas,
+      historial), hospedalo en una de tus ligas.
+    </p>
+    }
+
+    @switch (paso()) { @case (1) {
+    <div class="campo">
+      <label for="w-nombre">Nombre *</label>
+      <input
+        id="w-nombre"
+        type="text"
+        placeholder="Ej. Copa Nocturna 5v5"
+        maxlength="150"
+        [value]="nombre()"
+        (input)="nombre.set($any($event.target).value)"
+      />
+    </div>
+
+    <div class="campo">
+      <label for="w-hospedaje">¿Dónde vive el torneo?</label>
+      <select id="w-hospedaje" (change)="elegirLiga($any($event.target).value)">
+        <option value="" [selected]="ligaId() === null">
+          Comunitario (organizado por vos, sin liga)
+        </option>
+        @for (liga of misLigas(); track liga.id) {
+        <option [value]="liga.id" [selected]="ligaId() === liga.id">
+          Liga: {{ liga.nombre }}
+        </option>
+        }
+      </select>
+      @if (misLigas().length === 0) {
+      <span class="pista">Si querés hospedarlo en una liga tuya de este juego, creala primero.</span>
+      }
+    </div>
+
+    @if (ligaId() !== null) {
+    <div class="campo">
+      <label for="w-temporada">Temporada *</label>
+      <select
+        id="w-temporada"
+        (change)="temporadaId.set($any($event.target).value ? +$any($event.target).value : null)"
+      >
+        <option value="" [selected]="temporadaId() === null" disabled>Elegí una temporada…</option>
+        @for (temporada of temporadas(); track temporada.id) {
+        <option [value]="temporada.id" [selected]="temporadaId() === temporada.id">
+          {{ temporada.nombre }}
+        </option>
+        }
+      </select>
+      @if (temporadas().length === 0) {
+      <span class="pista">Esa liga todavía no tiene temporadas.</span>
+      }
+    </div>
+    }
+
+    <div class="campo">
+      <label for="w-descripcion">Descripción</label>
+      <textarea
+        id="w-descripcion"
+        rows="3"
+        maxlength="1000"
+        placeholder="Premios, reglas rápidas, a quién está dirigido…"
+        [value]="descripcion()"
+        (input)="descripcion.set($any($event.target).value)"
+      ></textarea>
+    </div>
+
+    } @case (2) {
+    <div class="campo">
+      <label>Jugadores por equipo *</label>
+      <div class="opciones-tamano" role="radiogroup" aria-label="Jugadores por equipo">
+        @for (n of tamanosPermitidos(); track n) {
+        <button
+          type="button"
+          class="opcion"
+          role="radio"
+          [attr.aria-checked]="tamano() === n"
+          [class.activo]="tamano() === n"
+          (click)="tamano.set(n)"
+        >
+          {{ n }}v{{ n }}
+        </button>
+        }
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>Formato *</label>
+      <!-- Tarjetas con descripción, como el "Select bracket template". -->
+      <div class="formatos" role="radiogroup" aria-label="Formato del torneo">
+        @for (f of formatos(); track f) {
+        <button
+          type="button"
+          class="formato-opcion"
+          role="radio"
+          [attr.aria-checked]="formato() === f"
+          [class.activo]="formato() === f"
+          (click)="formato.set(f)"
+        >
+          <span class="formato-nombre">{{ etiquetaDe(f) }}</span>
+          <span class="formato-descripcion">{{ descripcionDe(f) }}</span>
+        </button>
+        }
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="w-cupo">Cupo de equipos *</label>
+      <select id="w-cupo" (change)="cupo.set(+$any($event.target).value)">
+        @for (c of cupos; track c) {
+        <option [value]="c" [selected]="cupo() === c">{{ c }} equipos</option>
+        }
+      </select>
+    </div>
+    } @case (3) {
+    <div class="campo">
+      <label for="w-fecha">Fecha y hora de inicio *</label>
+      <input
+        id="w-fecha"
+        type="datetime-local"
+        [value]="fechaInicio()"
+        (input)="fechaInicio.set($any($event.target).value)"
+      />
+      @if (fechaInicio() && !pasoValido()) {
+      <span class="error-campo">La fecha debe ser futura.</span>
+      }
+    </div>
+
+    <!-- Configuración avanzada (referencia CM): visibilidad y premio. -->
+    <details class="avanzada">
+      <summary>Configuración avanzada</summary>
+      <label class="check">
+        <input
+          type="checkbox"
+          [checked]="!publico()"
+          (change)="publico.set(!$any($event.target).checked)"
+        />
+        No listado (oculto: solo vos lo ves; las invitaciones llegan pronto)
+      </label>
+      <div class="campo">
+        <label for="w-premio">Premio personalizado</label>
+        <input
+          id="w-premio"
+          type="text"
+          maxlength="200"
+          placeholder="Ej. ₡50 000 + skin del battle pass"
+          [value]="premio()"
+          (input)="premio.set($any($event.target).value)"
+        />
+      </div>
+    </details>
+
+    <p class="resumen">
+      <strong>{{ nombre() }}</strong> · {{ tamano() }}v{{ tamano() }} · {{ etiquetaDe(formato()) }} ·
+      {{ cupo() }} equipos · {{ publico() ? 'Público' : 'No listado' }}
+      @if (premio().trim()) { · 🏆 {{ premio() }} }
+    </p>
+    } }
+
+    @if (error()) {
+    <p class="mensaje-error" role="alert">{{ error() }}</p>
+    }
+  </div>
+
+  <footer class="pie">
+    @if (paso() > 1) {
+    <button type="button" class="btn-secondary" (click)="volver()">Volver</button>
+    }
+    <span class="separador"></span>
+    @if (paso() < 3) {
+    <button type="button" class="btn-primary" [disabled]="!pasoValido()" (click)="siguiente()">
+      Siguiente
+    </button>
+    } @else {
+    <button type="button" class="btn-primary" [disabled]="!pasoValido() || guardando()" (click)="crear()">
+      {{ guardando() ? 'Creando…' : 'Crear torneo' }}
+    </button>
+    }
+  </footer>
+</div>

@@ -1,37 +1,153 @@
 <section class="page">
-  <div class="header">
-    <h1>Catálogo de juegos</h1>
-    <a class="btn-primary" routerLink="/games/nuevo">+ Nuevo juego</a>
-  </div>
+  <!-- Sin botón de alta manual: el catálogo se siembra solo desde la API
+       y el buscador agrega lo que falte (el formulario /games/nuevo queda
+       como ruta de respaldo para ADMIN/COMISIONADO). -->
+  <app-page-header titulo="Juegos" subtitulo="Elegí el título donde querés competir" />
 
   @if (cargando()) {
-  <p class="placeholder">Cargando juegos...</p>
+  <app-empty-state modo="cargando" mensaje="Cargando juegos…" />
   } @else if (error()) {
-  <p class="placeholder error">{{ error() }}</p>
-  } @else if (juegos().length === 0) {
-  <p class="placeholder">Todavía no hay juegos registrados.</p>
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()!">
+    <button type="button" class="btn-secondary" (click)="cargarJuegos()">Reintentar</button>
+  </app-empty-state>
+  } @else if (juegos().length === 0 && !busqueda().trim()) {
+  <app-empty-state
+    titulo="El catálogo se está preparando"
+    mensaje="Los títulos populares se cargan solos desde el catálogo global. Buscá un juego para agregarlo ya."
+  />
   } @else {
-  <div class="grid">
-    @for (juego of juegos(); track juego.id) {
-    <div class="juego-card">
-      @if (juego.imagenUrl) {
-      <img class="imagen" [src]="juego.imagenUrl" [alt]="juego.nombre" />
-      } @else {
-      <div class="imagen placeholder-imagen">Sin imagen</div>
-      }
-      <div class="info">
-        <p class="nombre">{{ juego.nombre }}</p>
-        <p class="genero">{{ juego.genero }}</p>
-        @if (juego.descripcion) {
-        <p class="descripcion">{{ juego.descripcion }}</p>
+
+  <!-- Escaparate (referencia Challenger Mode): dos filas en marquesina que
+       recorren el catálogo en sentidos opuestos. Decorativas: la grilla de
+       abajo es la navegación real, así que van ocultas para lectores de
+       pantalla y quietas con reduced-motion. -->
+  @if (marquesina(); as fila) {
+  <div class="escaparate" aria-hidden="true">
+    <div class="marquesina">
+      <div class="pista">
+        @for (juego of fila; track $index) {
+        <div class="tarjeta-mini" [style.background]="foto(juego) ? undefined : portada(juego)">
+          @if (foto(juego)) {
+          <img [src]="foto(juego)" alt="" loading="lazy" />
+          }
+        </div>
         }
       </div>
-      <div class="acciones">
-        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'editar']">Editar</a>
-        <button class="btn-danger" type="button" (click)="desactivar(juego)">Desactivar</button>
+    </div>
+    <div class="marquesina reversa">
+      <div class="pista">
+        @for (juego of fila; track $index) {
+        <div class="tarjeta-mini" [style.background]="foto(juego) ? undefined : portada(juego)">
+          @if (foto(juego)) {
+          <img [src]="foto(juego)" alt="" loading="lazy" />
+          }
+        </div>
+        }
       </div>
     </div>
+  </div>
+  }
+
+  <label class="buscador">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </svg>
+    <input
+      type="search"
+      placeholder="Buscar juego…"
+      [value]="busqueda()"
+      (input)="alBuscar($any($event.target).value)"
+    />
+    <span class="sr-only">Buscar juego por nombre</span>
+  </label>
+
+  <div class="chips" role="group" aria-label="Filtrar por género">
+    <button
+      type="button"
+      class="chip"
+      [class.activo]="generoActivo() === null"
+      [attr.aria-pressed]="generoActivo() === null"
+      (click)="filtrarPorGenero(null)"
+    >
+      Todos
+    </button>
+    @for (genero of generos(); track genero) {
+    <button
+      type="button"
+      class="chip"
+      [class.activo]="generoActivo() === genero"
+      [attr.aria-pressed]="generoActivo() === genero"
+      (click)="filtrarPorGenero(genero)"
+    >
+      {{ genero }}
+    </button>
     }
   </div>
+
+  @if (errorImportar()) {
+  <p class="mensaje-error" role="alert">{{ errorImportar() }}</p>
+  }
+
+  @if (juegosFiltrados().length === 0 && externos().length === 0 && !buscandoExternos()) {
+  <app-empty-state
+    titulo="Sin resultados"
+    [mensaje]="
+      auth.isAuthenticated()
+        ? 'Ningún juego coincide con la búsqueda, ni acá ni en el catálogo global.'
+        : 'Ningún juego coincide. Iniciá sesión para buscar en el catálogo global.'
+    "
+  >
+    <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </app-empty-state>
+  } @else {
+  <div class="grid">
+    @for (juego of juegosFiltrados(); track juego.id) {
+    <a class="juego-card" [routerLink]="['/games', juego.id]">
+      <div class="portada" [style.background]="foto(juego) ? undefined : portada(juego)">
+        @if (foto(juego)) {
+        <img [src]="foto(juego)" [alt]="" loading="lazy" />
+        } @else {
+        <span class="monograma-grande" aria-hidden="true">{{ inicial(juego) }}</span>
+        }
+      </div>
+      <span class="nombre">{{ juego.nombre }}</span>
+      @if (juego.genero) {
+      <span class="genero">{{ juego.genero }}</span>
+      }
+    </a>
+    }
+
+    <!-- Resultados del catálogo global (RAWG) que aún no están acá: un
+         clic los agrega y navega a su hub. Sin formulario. -->
+    @for (externo of externos(); track externo.nombre) {
+    <button
+      type="button"
+      class="juego-card externo"
+      [disabled]="importando() !== null"
+      (click)="agregarExterno(externo)"
+    >
+      <div class="portada">
+        @if (externo.imagenUrl) {
+        <img [src]="externo.imagenUrl" [alt]="" loading="lazy" />
+        } @else {
+        <span class="monograma-grande" aria-hidden="true">{{ externo.nombre.charAt(0) }}</span>
+        }
+        <span class="chip-agregar">
+          {{ importando() === externo.nombre ? 'Agregando…' : '+ Agregar' }}
+        </span>
+      </div>
+      <span class="nombre">{{ externo.nombre }}</span>
+      @if (externo.genero) {
+      <span class="genero">{{ externo.genero }}</span>
+      }
+    </button>
+    }
+  </div>
+
+  @if (buscandoExternos()) {
+  <p class="buscando-externos" role="status">Buscando en el catálogo global…</p>
+  }
+  }
   }
 </section>

@@ -1,14 +1,108 @@
 <section class="page">
-  <div class="encabezado"><div><p class="eyebrow">Comunidad competitiva</p><h1>Equipos</h1><p>Explora perfiles, integrantes y trayectoria competitiva.</p></div><a class="crear" routerLink="/teams/nuevo">Crear equipo</a></div>
-  <label class="buscador"><span>Buscar equipo</span><input #criterio type="search" placeholder="Nombre del equipo" (input)="buscar(criterio.value)" /></label>
-  @if (cargando()) { <p class="placeholder">Cargando equipos...</p> }
-  @else if (error()) { <p class="placeholder">{{ error() }}</p> }
-  @else if (!equipos().length) { <p class="placeholder">No hay equipos registrados.</p> }
-  @else {
-    <ul class="equipos" aria-label="Resultados de equipos">
-      @for (equipo of equipos(); track equipo.id) {
-        <li><a [routerLink]="['/team-profile', equipo.id]"><span class="avatar">{{ equipo.nombre.slice(0, 2).toUpperCase() }}</span><span><strong>{{ equipo.nombre }}</strong><small>{{ equipo.juegoNombre || 'Sin juego principal' }} · {{ equipo.integrantesActivos }} integrantes</small></span><span class="ver">Ver perfil →</span></a></li>
+  <app-page-header titulo="Equipos" subtitulo="Buscá equipos y consultá sus plantillas">
+    <a class="btn-primary" routerLink="/teams/nuevo">+ Nuevo equipo</a>
+  </app-page-header>
+
+  <form class="filtros" [formGroup]="filtros">
+    <label class="buscador">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input
+        type="search"
+        formControlName="q"
+        placeholder="Buscar por nombre…"
+        [attr.maxlength]="largoMaximoTexto"
+        aria-label="Texto de búsqueda"
+      />
+    </label>
+    <select class="filtro" formControlName="juegoId" aria-label="Filtrar por juego">
+      <option value="">Todos los juegos</option>
+      @for (juego of juegos(); track juego.id) {
+      <option [value]="juego.id">{{ juego.nombre }}</option>
       }
-    </ul>
-  }
+    </select>
+    <select class="filtro" formControlName="disciplina" aria-label="Filtrar por disciplina">
+      <option value="">Todas las disciplinas</option>
+      @for (disciplina of disciplinas(); track disciplina) {
+      <option [value]="disciplina">{{ disciplina }}</option>
+      }
+    </select>
+    <select class="filtro" formControlName="estado" aria-label="Filtrar por estado">
+      <option value="">Cualquier estado</option>
+      <option value="ACTIVO">Activo</option>
+      <option value="DISUELTO">Disuelto</option>
+    </select>
+    <button class="btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar</button>
+  </form>
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Buscando equipos…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo buscar" [mensaje]="error()">
+    <button class="btn-secondary" type="button" (click)="reintentar()">Reintentar</button>
+  </app-empty-state>
+  } @else if (pagina() && pagina()!.items.length === 0) {
+  <app-empty-state
+    titulo="Sin resultados"
+    mensaje="Ningún equipo coincide con los criterios indicados."
+  >
+    <button class="btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </app-empty-state>
+  } @else if (pagina()) {
+  <div class="grid">
+    @for (equipo of pagina()!.items; track equipo.id) {
+    <article class="equipo-card">
+      <div class="cabecera">
+        @if (equipo.logo) {
+        <img class="logo" [src]="equipo.logo" [alt]="" />
+        } @else {
+        <span class="logo sin-logo" aria-hidden="true">{{ equipo.nombre.charAt(0) }}</span>
+        }
+        <div class="identidad">
+          <h2 class="nombre">{{ equipo.nombre }}</h2>
+          @if (equipo.juegoNombre) {
+          <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+          }
+        </div>
+        <app-status-badge [estado]="equipo.estado" />
+      </div>
+
+      @if (equipo.descripcion) {
+      <p class="descripcion">{{ equipo.descripcion }}</p>
+      }
+
+      <div class="acciones">
+        <a class="btn-secondary" [routerLink]="['/team-profile', equipo.id]">Ver perfil</a>
+        <a class="btn-secondary" [routerLink]="['/teams', equipo.id, 'plantilla']">Plantilla</a>
+      </div>
+    </article>
+    }
+  </div>
+
+  @if (pagina()!.totalPages > 1) {
+  <nav class="paginacion" aria-label="Paginación de resultados">
+    <button
+      class="btn-secondary"
+      type="button"
+      [disabled]="pagina()!.page === 0"
+      (click)="irAPagina(pagina()!.page - 1)"
+    >
+      ← Anterior
+    </button>
+    <span class="indicador">
+      Página {{ pagina()!.page + 1 }} de {{ pagina()!.totalPages }} ·
+      {{ pagina()!.totalElements }} equipos
+    </span>
+    <button
+      class="btn-secondary"
+      type="button"
+      [disabled]="pagina()!.page + 1 >= pagina()!.totalPages"
+      (click)="irAPagina(pagina()!.page + 1)"
+    >
+      Siguiente →
+    </button>
+  </nav>
+  } }
 </section>

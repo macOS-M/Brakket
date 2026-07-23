@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 
-/**
- * Analitica de audiencia. Placeholder de la feature "analytics".
- * Pendiente EPIC-10.
- */
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
+
 @Component({
   selector: 'app-analytics-dashboard',
   standalone: true,
-  imports: [],
+  imports: [ComingSoonComponent],
   templateUrl: './analytics-dashboard.component.html',
   styleUrl: './analytics-dashboard.component.scss'
 })

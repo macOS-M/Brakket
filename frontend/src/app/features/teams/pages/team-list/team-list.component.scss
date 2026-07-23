@@ -1,1 +1,215 @@
-.page { max-width: 1000px; margin: 0 auto; padding: 1.5rem 0; }.encabezado { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }.eyebrow { margin: 0 0 .3rem; color: var(--brand-cyan); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }.encabezado h1 { margin: 0; }.encabezado p:not(.eyebrow) { margin-bottom: 0; color: var(--text-muted); }.crear { padding: .65rem .85rem; border-radius: 8px; background: var(--brand-blue); color: white; text-decoration: none; white-space: nowrap; }.buscador { display: grid; gap: .4rem; max-width: 460px; margin-bottom: 1.25rem; color: var(--text-muted); font-size: .85rem; }.buscador input { width: 100%; padding: .7rem .8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); }.placeholder { display: inline-block; padding: .75rem 1rem; border: 1px dashed var(--brand-cyan); border-radius: 8px; color: var(--text-muted); }.equipos { display: grid; gap: .7rem; margin: 0; padding: 0; list-style: none; }.equipos a { display: flex; align-items: center; gap: .8rem; padding: .9rem 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }.equipos a:hover { border-color: var(--brand-cyan); transform: translateY(-1px); }.equipos strong, .equipos small { display: block; }.equipos small { margin-top: .2rem; color: var(--text-muted); }.avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; background: #0e7490; color: white; font-weight: 800; }.ver { margin-left: auto; color: var(--brand-cyan); font-size: .9rem; white-space: nowrap; } @media (max-width: 600px) { .encabezado { align-items: start; flex-direction: column; }.ver { display: none; } }
+// ----- Filtros -----
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.35rem;
+}
+
+.buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 220px;
+  min-width: 200px;
+
+  svg {
+    position: absolute;
+    left: 0.7rem;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--text-subtle, #64748b);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.55rem 0.75rem 0.55rem 2.1rem;
+    background: var(--surface, #111827);
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.875rem;
+
+    &::placeholder {
+      color: var(--text-subtle, #64748b);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-text, #ff6a1f);
+    }
+  }
+}
+
+.filtro {
+  padding: 0.55rem 0.75rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.875rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}
+
+// ----- Grilla de equipos -----
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.1rem;
+}
+
+.equipo-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.1rem 1.1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--border, #334155);
+    transform: translateY(-2px);
+  }
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm, 8px);
+  object-fit: cover;
+
+  &.sin-logo {
+    background: var(--info-bg, rgba(59, 130, 246, 0.12));
+    color: var(--info-text, #60a5fa);
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+}
+
+.identidad {
+  flex: 1;
+  min-width: 0;
+
+  .nombre {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .juego {
+    margin: 0.15rem 0 0;
+    color: var(--accent-text, #ff6a1f);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.descripcion {
+  flex: 1;
+  margin: 0 0 0.9rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  // Recorta a 2 líneas para que las tarjetas queden parejas en la grilla.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+// ----- Paginación -----
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+
+  .indicador {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.8125rem;
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// ----- Botones -----
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-secondary {
+  flex: 1;
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-2, #1f2937);
+  }
+}

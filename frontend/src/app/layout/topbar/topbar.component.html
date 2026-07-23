@@ -1,0 +1,101 @@
+<header class="topbar">
+  <div class="buscador-global">
+    <svg class="lupa" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
+    </svg>
+    <input
+      type="search"
+      placeholder="Buscar ligas, equipos o juegos…"
+      aria-label="Buscar ligas, equipos o juegos"
+      [value]="consulta()"
+      (input)="alEscribir($any($event.target).value)"
+      (focus)="alEnfocar()"
+      (keydown.escape)="cerrar()"
+      (keydown.arrowDown)="enfocarPrimero($event)"
+    />
+
+    @if (abierto()) {
+    <div class="resultados-panel">
+      @if (buscando()) {
+      <p class="resultados-estado" role="status">Buscando…</p>
+      } @else if (sinResultados()) {
+      <p class="resultados-estado" role="status">
+        Nada coincide con «{{ consulta().trim() }}».
+      </p>
+      } @else { @if (resultados(); as res) { @if (res.ligas.length > 0) {
+      <p class="resultados-grupo">Ligas</p>
+      @for (liga of res.ligas; track liga.id) {
+      <a class="resultado" [routerLink]="['/leagues', liga.id]" (click)="cerrar()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 4h10v5a5 5 0 0 1-10 0zM5 5H3v2a3 3 0 0 0 3 3M19 5h2v2a3 3 0 0 1-3 3M9 21h6M12 14v7" />
+        </svg>
+        <span class="resultado-nombre">{{ liga.nombre }}</span>
+        @if (liga.juegoNombre) {
+        <span class="resultado-meta">{{ liga.juegoNombre }}</span>
+        }
+      </a>
+      } } @if (res.equipos.length > 0) {
+      <p class="resultados-grupo">Equipos</p>
+      @for (equipo of res.equipos; track equipo.id) {
+      <a class="resultado" [routerLink]="['/team-profile', equipo.id]" (click)="cerrar()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M18 20h4a6 6 0 0 0-4-5.6" />
+        </svg>
+        <span class="resultado-nombre">{{ equipo.nombre }}</span>
+        @if (equipo.juegoNombre) {
+        <span class="resultado-meta">{{ equipo.juegoNombre }}</span>
+        }
+      </a>
+      } } @if (res.juegos.length > 0) {
+      <p class="resultados-grupo">Juegos</p>
+      @for (juego of res.juegos; track juego.id) {
+      <a
+        class="resultado"
+        [routerLink]="['/games', juego.id, 'perfil-competitivo']"
+        (click)="cerrar()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 8h10a4 4 0 0 1 4 4v2a3 3 0 0 1-5.2 2L14 15h-4l-1.8 1A3 3 0 0 1 3 14v-2a4 4 0 0 1 4-4zM8 11v3M6.5 12.5h3" />
+        </svg>
+        <span class="resultado-nombre">{{ juego.nombre }}</span>
+        @if (juego.genero) {
+        <span class="resultado-meta">{{ juego.genero }}</span>
+        }
+      </a>
+      } } } }
+    </div>
+    }
+  </div>
+
+  <div class="acciones">
+    <a
+      class="btn-campana"
+      routerLink="/notifications"
+      title="Notificaciones (pronto)"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 15V10a6 6 0 1 0-12 0v5l-2 3h16zM10 21h4" />
+      </svg>
+      <span class="sr-only">Notificaciones (pronto)</span>
+    </a>
+
+    @if (usuario()?.authenticated) {
+    <a class="usuario" routerLink="/profile">
+      <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+      <span class="datos">
+        <span class="nombre">{{ usuario()?.nombre || 'Mi perfil' }}</span>
+        <span class="rol">{{ rolPrincipal() }}</span>
+      </span>
+    </a>
+    <button type="button" class="btn-salir" (click)="logout()">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15 17l5-5-5-5M20 12H9M12 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h6" />
+      </svg>
+      <span class="sr-only">Cerrar sesión</span>
+    </button>
+    } @else {
+    <button type="button" class="btn-entrar" (click)="login()">Iniciar sesión</button>
+    }
+  </div>
+</header>

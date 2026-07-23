@@ -4,8 +4,14 @@ export interface League {
   nombre: string;
   juegoId: number;
   juegoNombre: string;
+  /** Arte del juego: portada por defecto cuando la liga no tiene foto. */
+  juegoImagenUrl: string | null;
   comisionadoId: number;
   comisionadoNombre: string;
+  descripcion: string | null;
+  reglas: string | null;
+  fotoUrl: string | null;
+  activo: boolean;
 }
 
 /** Temporada de una liga. */
@@ -15,7 +21,20 @@ export interface Season {
   nombre: string;
   fechaInicio: string;
   fechaFin: string;
+  juegoId: number;
+  juegoNombre: string;
+  reglas: string;
+  estado: SeasonStatus;
+  cupoEquipos: number;
+  formatoId: number;
+  formatoNombre: string;
+  version: number;
+  mensaje?: string;
 }
+
+export type SeasonStatus = 'PLANIFICADA' | 'ACTIVA' | 'FINALIZADA' | 'CANCELADA';
+
+export interface FormatOption { id: number; nombre: string; }
 
 /** Opción de juego para el selector del formulario de liga. */
 export interface GameOption {
@@ -27,6 +46,9 @@ export interface GameOption {
 export interface LeagueRequest {
   nombre: string;
   juegoId: number;
+  descripcion: string | null;
+  reglas: string | null;
+  fotoUrl: string | null;
 }
 
 /** Cuerpo para agregar una temporada. */
@@ -34,4 +56,10 @@ export interface SeasonRequest {
   nombre: string;
   fechaInicio: string;
   fechaFin: string;
+  reglas: string;
+  estado: SeasonStatus;
+  cupoEquipos: number;
+  formatoId: number;
 }
+
+export interface UpdateSeasonRequest { configuracion: SeasonRequest; version: number; }

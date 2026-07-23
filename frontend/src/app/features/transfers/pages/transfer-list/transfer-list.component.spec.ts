@@ -47,24 +47,63 @@ describe('TransferListComponent', () => {
     httpMock.verify();
   });
 
+  function responderCarga(
+    pendientes: Transferencia[] = [],
+    enviadas: Transferencia[] = []
+  ): void {
+    httpMock.expectOne(`${environment.apiUrl}/transfers/pendientes`).flush(pendientes);
+    httpMock.expectOne(`${environment.apiUrl}/transfers/enviadas`).flush(enviadas);
+  }
+
   it('should create', () => {
-    httpMock.expectOne(`${environment.apiUrl}/transfers/enviadas`).flush([]);
+    responderCarga();
     expect(component).toBeTruthy();
   });
 
-  it('muestra las solicitudes enviadas con su estado y aprobaciones', () => {
-    httpMock.expectOne(`${environment.apiUrl}/transfers/enviadas`).flush([transferencia]);
+  it('muestra pendientes por responder y enviadas por separado', () => {
+    responderCarga([transferencia], [transferencia]);
     fixture.detectChanges();
 
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(texto).toContain('Jugador Estrella');
+    expect(texto).toContain('Pendientes de mi respuesta');
+    expect(texto).toContain('Solicitudes enviadas');
     expect(texto).toContain('Origen FC → Destino FC');
-    expect(texto).toContain('Pendiente');
+    expect(component.pendientes()).toHaveSize(1);
+    expect(component.enviadas()).toHaveSize(1);
+  });
+
+  it('responder envía la decisión y recarga las listas', () => {
+    responderCarga([transferencia]);
+
+    component.responder(transferencia, 'ACEPTAR');
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/transfers/1/responder`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ decision: 'ACEPTAR' });
+    req.flush({ ...transferencia, aprobacionJugador: 'ACEPTADA' });
+
+    // Tras responder se recargan ambas listas.
+    responderCarga();
+    expect(component.mensaje()).toContain('falta la aprobación');
+  });
+
+  it('muestra el error del backend cuando la respuesta falla', () => {
+    responderCarga([transferencia]);
+
+    component.responder(transferencia, 'RECHAZAR');
+    httpMock
+      .expectOne(`${environment.apiUrl}/transfers/1/responder`)
+      .flush(
+        { success: false, message: 'La solicitud ya fue resuelta' },
+        { status: 409, statusText: 'Conflict' }
+      );
+
+    expect(component.error()).toContain('ya fue resuelta');
   });
 
   it('muestra un error recuperable cuando la carga falla', () => {
     httpMock
-      .expectOne(`${environment.apiUrl}/transfers/enviadas`)
+      .expectOne(`${environment.apiUrl}/transfers/pendientes`)
       .flush({ message: 'error' }, { status: 500, statusText: 'Server Error' });
 
     expect(component.error()).toContain('No se pudieron cargar');

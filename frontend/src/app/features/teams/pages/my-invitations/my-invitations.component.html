@@ -1,0 +1,59 @@
+<section class="page">
+  <app-page-header
+    titulo="Mis invitaciones"
+    subtitulo="Invitaciones a equipos que esperan tu respuesta"
+  />
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando invitaciones…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudieron cargar tus invitaciones" [mensaje]="error()">
+    <button type="button" class="btn-secondary" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else if (invitaciones().length === 0) {
+  <app-empty-state
+    titulo="Sin invitaciones"
+    mensaje="No tenés invitaciones pendientes. Cuando un equipo te invite, la verás acá."
+  />
+  } @else {
+  <ul class="lista">
+    @for (inv of invitaciones(); track inv.id) {
+    <li class="item">
+      <div class="item-cuerpo">
+        <div class="item-encabezado">
+          <p class="item-titulo">{{ inv.equipoNombre }}</p>
+          <app-status-badge [estado]="inv.estado" />
+        </div>
+        <p class="item-detalle">
+          Rol propuesto: <strong>{{ inv.rolPropuesto }}</strong> · invitó
+          {{ inv.creadoPorNombre }}
+        </p>
+        @if (inv.mensaje) {
+        <p class="item-mensaje">“{{ inv.mensaje }}”</p>
+        }
+        <p class="item-fecha">Recibida el {{ inv.fechaCreacion | date: 'd MMM y' }}</p>
+      </div>
+
+      <div class="acciones">
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="respondiendoId() === inv.id"
+          (click)="responder(inv, true)"
+        >
+          {{ respondiendoId() === inv.id ? 'Procesando…' : 'Aceptar' }}
+        </button>
+        <button
+          type="button"
+          class="btn-danger"
+          [disabled]="respondiendoId() === inv.id"
+          (click)="responder(inv, false)"
+        >
+          Rechazar
+        </button>
+      </div>
+    </li>
+    }
+  </ul>
+  }
+</section>

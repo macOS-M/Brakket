@@ -8,7 +8,11 @@ import java.util.List;
 
 public interface TemporadaRepository extends JpaRepository<Temporada, Long> {
 
-    List<Temporada> findByLigaId(Long ligaId);
+    List<Temporada> findByLigaIdOrderByFechaInicioAsc(Long ligaId);
+
+    boolean existsByLigaIdAndNombreIgnoreCase(Long ligaId, String nombre);
+
+    boolean existsByLigaIdAndNombreIgnoreCaseAndIdNot(Long ligaId, String nombre, Long id);
 
     /**
      * Existe una temporada de la liga cuyo rango [fechaInicio, fechaFin] se
@@ -16,4 +20,9 @@ public interface TemporadaRepository extends JpaRepository<Temporada, Long> {
      */
     boolean existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
             Long ligaId, LocalDate fechaFinNueva, LocalDate fechaInicioNueva);
+
+    boolean existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqualAndIdNot(
+            Long ligaId, LocalDate fechaFinNueva, LocalDate fechaInicioNueva, Long id);
+
+    void deleteByLigaId(Long ligaId);
 }
