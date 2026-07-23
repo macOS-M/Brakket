@@ -165,8 +165,8 @@ export class SidebarComponent {
           exact: false,
           proximamente: false,
           roles: ['ADMIN', 'COMISIONADO']
-        },ya sale bien
-        
+        },
+
         {
           ruta: '/analytics',
           etiqueta: 'Analítica',
