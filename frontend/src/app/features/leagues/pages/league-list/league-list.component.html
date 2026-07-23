@@ -10,18 +10,20 @@
   } @else if (error()) {
   <app-empty-state modo="error" titulo="No se pudieron cargar" [mensaje]="error()" />
   } @else if (leagues().length === 0) {
-  <app-empty-state
-    titulo="Aún no hay ligas"
-    [mensaje]="
-      auth.isAuthenticated()
-        ? 'Creá la primera liga para empezar a organizar temporadas y torneos.'
-        : 'Iniciá sesión y creá la primera liga de la comunidad.'
-    "
-  >
+  <div class="vacio" role="status">
+    <span class="vacio-emoji" aria-hidden="true">🏆</span>
+    <p class="vacio-titulo">Aún no hay ligas</p>
+    <p class="vacio-mensaje">
+      {{
+        auth.isAuthenticated()
+          ? 'Creá la primera liga para empezar a organizar temporadas y torneos.'
+          : 'Iniciá sesión y creá la primera liga de la comunidad.'
+      }}
+    </p>
     @if (auth.isAuthenticated()) {
-    <a class="btn-secondary" routerLink="nuevo">+ Nueva liga</a>
+    <a class="btn-primary" routerLink="nuevo">Fundá la primera liga</a>
     }
-  </app-empty-state>
+  </div>
   } @else {
   <!-- Banner promocional (referencia Aquament) con el conteo real. -->
   <div class="banner">
@@ -61,10 +63,10 @@
   }
 
   @if (mias().length > 0) {
-  <h2 class="seccion-titulo">Mis ligas</h2>
+  <h2 class="seccion-titulo">Mis ligas <span class="conteo">{{ mias().length }}</span></h2>
   <div class="grid">
     @for (liga of mias(); track liga.id) {
-    <a class="liga-card" [routerLink]="[liga.id]">
+    <a class="liga-card entra-tarjeta" [routerLink]="[liga.id]">
       <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
         @if (foto(liga)) {
         <img [src]="foto(liga)" alt="" loading="lazy" />
@@ -82,7 +84,7 @@
     </a>
     }
   </div>
-  <h2 class="seccion-titulo">Todas las ligas</h2>
+  <h2 class="seccion-titulo">Todas las ligas <span class="conteo">{{ otras().length }}</span></h2>
   }
 
   @if (otras().length === 0 && mias().length > 0) {
@@ -90,7 +92,7 @@
   } @else {
   <div class="grid">
     @for (liga of otras(); track liga.id) {
-    <a class="liga-card" [routerLink]="[liga.id]">
+    <a class="liga-card entra-tarjeta" [routerLink]="[liga.id]">
       <div class="portada" [style.background]="foto(liga) ? undefined : portada(liga.nombre)">
         @if (foto(liga)) {
         <img [src]="foto(liga)" alt="" loading="lazy" />

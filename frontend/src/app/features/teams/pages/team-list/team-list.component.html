@@ -45,37 +45,56 @@
   }
 
   @if (misEquipos().length > 0) {
-  <h2 class="seccion-titulo">Mis equipos</h2>
+  <div class="seccion-titulo">
+    <h2>Mis equipos</h2>
+    <span class="conteo">{{ misEquipos().length }}</span>
+  </div>
   <div class="grid">
     @for (equipo of misEquipos(); track equipo.id) {
     <article
-      class="equipo-card clickeable"
+      class="equipo-card clickeable entra-tarjeta"
       role="link"
       tabindex="0"
       (click)="abrir(equipo, true)"
       (keydown.enter)="abrir(equipo, true)"
     >
-      <div class="cabecera">
-        @if (equipo.logo) {
-        <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
-        } @else {
-        <span class="logo sin-logo" aria-hidden="true">{{ equipo.nombre.charAt(0) }}</span>
+      <div class="banda" [style.background]="portada(equipo)">
+        @if (equipo.juegoNombre) {
+        <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
         }
+      </div>
+      <div class="cuerpo">
+        <div class="cabecera">
+          @if (equipo.logo) {
+          <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
+          } @else {
+          <span
+            class="logo sin-logo"
+            aria-hidden="true"
+            [style.background]="colorDe(equipo.nombre)"
+          >{{ equipo.nombre.charAt(0) }}</span>
+          }
+          <app-status-badge [estado]="equipo.estado" />
+        </div>
         <div class="identidad">
           <h2 class="nombre">{{ equipo.nombre }}</h2>
           @if (equipo.juegoNombre) {
           <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
           }
         </div>
-        <app-status-badge [estado]="equipo.estado" />
+        @if (equipo.descripcion) {
+        <p class="descripcion">{{ equipo.descripcion }}</p>
+        }
       </div>
-      @if (equipo.descripcion) {
-      <p class="descripcion">{{ equipo.descripcion }}</p>
-      }
     </article>
     }
   </div>
-  <h2 class="seccion-titulo">Todos los equipos</h2>
+  <div class="seccion-titulo">
+    <h2>Todos los equipos</h2>
+    @if (pagina()) {
+    <span class="conteo">{{ pagina()!.totalElements }}</span>
+    }
+  </div>
   }
 
   @if (cargando()) {
@@ -95,47 +114,58 @@
   <div class="grid">
     @for (equipo of otros(); track equipo.id) {
     <article
-      class="equipo-card clickeable"
+      class="equipo-card clickeable entra-tarjeta"
       role="link"
       tabindex="0"
       (click)="abrir(equipo, false)"
       (keydown.enter)="abrir(equipo, false)"
     >
-      <div class="cabecera">
-        @if (equipo.logo) {
-        <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
-        } @else {
-        <span class="logo sin-logo" aria-hidden="true">{{ equipo.nombre.charAt(0) }}</span>
+      <div class="banda" [style.background]="portada(equipo)">
+        @if (equipo.juegoNombre) {
+        <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
         }
+      </div>
+      <div class="cuerpo">
+        <div class="cabecera">
+          @if (equipo.logo) {
+          <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
+          } @else {
+          <span
+            class="logo sin-logo"
+            aria-hidden="true"
+            [style.background]="colorDe(equipo.nombre)"
+          >{{ equipo.nombre.charAt(0) }}</span>
+          }
+          <app-status-badge [estado]="equipo.estado" />
+        </div>
         <div class="identidad">
           <h2 class="nombre">{{ equipo.nombre }}</h2>
           @if (equipo.juegoNombre) {
           <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
           }
         </div>
-        <app-status-badge [estado]="equipo.estado" />
-      </div>
 
-      @if (equipo.descripcion) {
-      <p class="descripcion">{{ equipo.descripcion }}</p>
-      }
+        @if (equipo.descripcion) {
+        <p class="descripcion">{{ equipo.descripcion }}</p>
+        }
 
-      @if (puedeSolicitar(equipo)) {
-      <div class="acciones">
-        <button
-          class="btn-secondary"
-          type="button"
-          [disabled]="solicitandoId() === equipo.id"
-          (click)="solicitarUnion(equipo, $event)"
-        >
-          {{ solicitandoId() === equipo.id ? 'Enviando…' : 'Solicitar unirme' }}
-        </button>
+        @if (puedeSolicitar(equipo)) {
+        <div class="acciones">
+          <button
+            class="btn-secondary"
+            type="button"
+            [disabled]="solicitandoId() === equipo.id"
+            (click)="solicitarUnion(equipo, $event)"
+          >
+            {{ solicitandoId() === equipo.id ? 'Enviando…' : 'Solicitar unirme' }}
+          </button>
+        </div>
+        } @else if (solicitados().has(equipo.id)) {
+        <div class="acciones">
+          <span class="chip-solicitado">Solicitud enviada ✓</span>
+        </div>
+        }
       </div>
-      } @else if (solicitados().has(equipo.id)) {
-      <div class="acciones">
-        <span class="chip-solicitado">Solicitud enviada ✓</span>
-      </div>
-      }
     </article>
     }
   </div>

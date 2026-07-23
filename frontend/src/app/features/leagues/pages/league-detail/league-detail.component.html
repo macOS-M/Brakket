@@ -15,7 +15,7 @@
       </div></div>
       @if (!seasons().length) { <p class="empty">Esta liga aún no tiene temporadas.</p> }
       @else { <div class="season-list"> @for (temporada of seasons(); track temporada.id) {
-        <article class="season-card"><div class="date-box"><strong>{{ temporada.fechaInicio | date:'dd' }}</strong><span>{{ temporada.fechaInicio | date:'MMM yyyy' }}</span></div>
+        <article class="season-card entra-tarjeta"><div class="date-box"><strong>{{ temporada.fechaInicio | date:'dd' }}</strong><span>{{ temporada.fechaInicio | date:'MMM yyyy' }}</span></div>
           <div class="season-content"><div class="season-heading"><h3>{{ temporada.nombre }}</h3><span class="status"
             [class.status-planned]="temporada.estado === 'PLANIFICADA'"
             [class.status-active]="temporada.estado === 'ACTIVA'"
@@ -30,7 +30,7 @@
     @if (esComisionado() && showingForm()) {
       <div class="modal-backdrop" (pointerdown)="registrarInicioEnFondo($event)" (pointerup)="cerrarDesdeFondo($event)">
       <form [formGroup]="seasonForm" (ngSubmit)="guardarTemporada()" class="season-form modal" role="dialog" aria-modal="true" aria-labelledby="season-modal-title" (click)="$event.stopPropagation()">
-        <div class="section-title"><div><span class="eyebrow">RF-23</span><h2 id="season-modal-title">{{ editingId() ? 'Actualizar temporada' : 'Crear temporada' }}</h2></div></div>
+        <div class="section-title"><div><span class="eyebrow">Temporada</span><h2 id="season-modal-title">{{ editingId() ? 'Actualizar temporada' : 'Crear temporada' }}</h2></div></div>
         @if (!liga.activo) { <p class="error">La liga está inactiva. No se pueden crear ni modificar temporadas.</p> }
         <div class="form-grid">
           <label class="field wide"><span>Nombre</span><input formControlName="nombre" placeholder="Ej. Apertura 2026"></label>
@@ -69,7 +69,7 @@
       } @else {
       <div class="torneos-lista">
         @for (torneo of torneos(); track torneo.id) {
-        <app-torneo-card [torneo]="torneo" />
+        <app-torneo-card class="entra-tarjeta" [torneo]="torneo" />
         }
       </div>
       }

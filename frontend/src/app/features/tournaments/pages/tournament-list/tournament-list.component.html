@@ -13,12 +13,14 @@
     <button type="button" class="btn-secondary" (click)="cargar()">Reintentar</button>
   </app-empty-state>
   } @else if (torneos().length === 0) {
-  <app-empty-state
-    titulo="Todavía no hay torneos"
-    mensaje="Entrá a la página de un juego y creá el primero: cualquier usuario puede organizar."
-  >
-    <a class="btn-primary" routerLink="/games">Ir a juegos</a>
-  </app-empty-state>
+  <div class="vacio" role="status">
+    <span class="vacio-emoji" aria-hidden="true">🏆</span>
+    <p class="vacio-titulo">Todavía no hay torneos</p>
+    <p class="vacio-mensaje">
+      Entrá a la página de un juego y creá el primero: cualquier usuario puede organizar.
+    </p>
+    <a class="btn-primary" routerLink="/games">Organizá el primero</a>
+  </div>
   } @else {
 
   <div class="chips" role="group" aria-label="Filtrar por jugadores por equipo">
@@ -51,13 +53,13 @@
   } @else {
 
   @if (mios().length > 0) {
-  <h2 class="seccion-titulo">Mis torneos</h2>
+  <h2 class="seccion-titulo">Mis torneos <span class="conteo">{{ mios().length }}</span></h2>
   <div class="lista">
     @for (torneo of mios(); track torneo.id) {
-    <app-torneo-card [torneo]="torneo" />
+    <app-torneo-card class="entra-tarjeta" [torneo]="torneo" />
     }
   </div>
-  <h2 class="seccion-titulo">Todos los torneos</h2>
+  <h2 class="seccion-titulo">Todos los torneos <span class="conteo">{{ otros().length }}</span></h2>
   }
 
   @if (otros().length === 0 && mios().length > 0) {
@@ -65,7 +67,7 @@
   } @else {
   <div class="lista">
     @for (torneo of otros(); track torneo.id) {
-    <app-torneo-card [torneo]="torneo" />
+    <app-torneo-card class="entra-tarjeta" [torneo]="torneo" />
     }
   </div>
   }

@@ -34,7 +34,7 @@
         <span class="stat">{{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
         <span class="stat resaltado">{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos</span>
         @if (enCurso()) {
-        <span class="stat en-curso">● En curso</span>
+        <span class="stat en-curso"><span class="punto-vivo" aria-hidden="true"></span> En curso</span>
         } @else if (finalizado()) {
         <span class="stat finalizado">Finalizado</span>
         }
@@ -76,7 +76,7 @@
   <div class="contenido resumen-grid">
     <div class="resumen-principal">
       @if (finalizado() && torneo.campeonNombre) {
-      <div class="campeon-banner" role="status">
+      <div class="campeon-banner" role="status" [class.celebrando]="celebracion()">
         <span class="campeon-copa" aria-hidden="true">🏆</span>
         <div>
           <p class="campeon-titulo">Campeón del torneo</p>
@@ -463,6 +463,11 @@
     }
   </div>
   }
+  }
+
+  @if (celebracion()) {
+  <!-- Ceremonia del campeón: overlay de confetti, 2.8s y desaparece. -->
+  <canvas class="confeti" #confeti aria-hidden="true"></canvas>
   }
   } }
 </section>

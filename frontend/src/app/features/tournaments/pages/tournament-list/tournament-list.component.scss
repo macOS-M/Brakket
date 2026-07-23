@@ -70,8 +70,62 @@
   }
 }
 
-.seccion-titulo { font-size: 1.05rem; margin: 20px 0 12px; }
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.0625rem;
+  margin: 24px 0 12px;
+}
+
+// Chip de conteo: píldora sobre superficie elevada con la cifra en ancho fijo.
+.conteo {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface-2, #1f2937);
+  color: var(--text-muted, #94a3b8);
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 .sin-otros { color: var(--text-muted); font-size: 0.875rem; }
+
+// Estado vacío con decoración juguetona (referencia Aquament).
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  background: var(--surface, #111827);
+  border: 1px dashed var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  text-align: center;
+}
+
+.vacio-emoji {
+  font-size: 3.5rem; // decorativo: exento del ramp tipográfico
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  user-select: none;
+}
+
+.vacio-titulo {
+  margin: 8px 0 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text, #e2e8f0);
+}
+
+.vacio-mensaje {
+  margin: 0 0 8px;
+  max-width: 46ch;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+}
 
 // Targets táctiles: los chips de tamaño suben a 44px solo en táctil.
 @media (pointer: coarse) {
