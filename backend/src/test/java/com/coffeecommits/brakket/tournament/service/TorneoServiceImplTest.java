@@ -17,6 +17,7 @@ import com.coffeecommits.brakket.tournament.dto.CrearTorneoRequest;
 import com.coffeecommits.brakket.tournament.dto.TorneoDetalleResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoResponse;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
+import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
@@ -78,7 +79,7 @@ class TorneoServiceImplTest {
                 .id(7L).juego(juego()).organizador(usuario())
                 .nombre("Copa Nocturna").formato("Eliminación directa")
                 .tamanoEquipo(5).maxEquipos(8)
-                .fechaInicio(FUTURO).estado(Torneo.ESTADO_ABIERTO).publico(true)
+                .fechaInicio(FUTURO).estado(EstadoTorneo.INSCRIPCION_ABIERTA).publico(true)
                 .build();
     }
 
@@ -96,7 +97,7 @@ class TorneoServiceImplTest {
         TorneoResponse resp = torneoService.crearTorneo(CORREO, false, request(null, FUTURO));
 
         assertThat(resp.id()).isEqualTo(7L);
-        assertThat(resp.estado()).isEqualTo("ABIERTO");
+        assertThat(resp.estado()).isEqualTo("INSCRIPCION_ABIERTA");
         assertThat(resp.ligaId()).isNull();
         assertThat(resp.organizadorNombre()).isEqualTo("Ana");
     }

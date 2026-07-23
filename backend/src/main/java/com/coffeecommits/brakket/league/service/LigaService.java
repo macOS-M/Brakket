@@ -1,9 +1,11 @@
 package com.coffeecommits.brakket.league.service;
 
 import com.coffeecommits.brakket.league.dto.ActualizarLigaRequest;
+import com.coffeecommits.brakket.league.dto.ActualizarTemporadaRequest;
 import com.coffeecommits.brakket.league.dto.CrearLigaRequest;
 import com.coffeecommits.brakket.league.dto.CrearTemporadaRequest;
 import com.coffeecommits.brakket.league.dto.JuegoOpcionResponse;
+import com.coffeecommits.brakket.league.dto.FormatoOpcionResponse;
 import com.coffeecommits.brakket.league.dto.LigaResponse;
 import com.coffeecommits.brakket.league.dto.TemporadaResponse;
 
@@ -41,6 +43,11 @@ public interface LigaService {
 
     /** Agrega una temporada a la liga. Solo el comisionado puede hacerlo. */
     TemporadaResponse crearTemporada(Long ligaId, String correoComisionado, CrearTemporadaRequest request);
+
+    TemporadaResponse actualizarTemporada(Long ligaId, Long temporadaId, String correoComisionado,
+                                          ActualizarTemporadaRequest request);
+
+    List<FormatoOpcionResponse> listarFormatosDisponibles(Long ligaId);
 
     /** Juegos activos disponibles para asociar a una liga (selector del formulario). */
     List<JuegoOpcionResponse> listarJuegosDisponibles();

@@ -67,7 +67,7 @@ export class TournamentDetailComponent {
 
   readonly abierto = computed(() => {
     const t = this.torneo();
-    return !!t && t.estado === 'ABIERTO' && !this.comenzo() && !this.cupoLleno();
+    return !!t && t.estado === 'INSCRIPCION_ABIERTA' && !this.comenzo() && !this.cupoLleno();
   });
 
   readonly esOrganizador = computed(() => {

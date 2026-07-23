@@ -2,13 +2,16 @@ package com.coffeecommits.brakket.team.dto;
 
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 
+import java.time.LocalDate;
+
 public record MiembroEquipoResponse(
         Long id,
         Long equipoId,
         Long usuarioId,
         String nombreUsuario,
         String rol,
-        String estado
+        String estado,
+        LocalDate fechaUnion
 ) {
 
     public static MiembroEquipoResponse fromEntity(MiembroEquipo miembro) {
@@ -18,7 +21,8 @@ public record MiembroEquipoResponse(
                 miembro.getUsuario().getId(),
                 miembro.getUsuario().getNombre(),
                 miembro.getRol(),
-                miembro.getEstado()
+                miembro.getEstado(),
+                miembro.getFechaUnion()
         );
     }
 }

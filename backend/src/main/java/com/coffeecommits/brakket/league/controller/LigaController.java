@@ -1,6 +1,8 @@
 package com.coffeecommits.brakket.league.controller;
 
 import com.coffeecommits.brakket.league.dto.ActualizarLigaRequest;
+import com.coffeecommits.brakket.league.dto.ActualizarTemporadaRequest;
+import com.coffeecommits.brakket.league.dto.FormatoOpcionResponse;
 import com.coffeecommits.brakket.league.dto.CrearLigaRequest;
 import com.coffeecommits.brakket.league.dto.CrearTemporadaRequest;
 import com.coffeecommits.brakket.league.dto.JuegoOpcionResponse;
@@ -106,5 +108,18 @@ public class LigaController {
                                             @Valid @RequestBody CrearTemporadaRequest request,
                                             Authentication authentication) {
         return ligaService.crearTemporada(id, authentication.getName(), request);
+    }
+
+    @PutMapping("/{id}/seasons/{temporadaId}")
+    public TemporadaResponse actualizarTemporada(@PathVariable Long id,
+                                                 @PathVariable Long temporadaId,
+                                                 @Valid @RequestBody ActualizarTemporadaRequest request,
+                                                 Authentication authentication) {
+        return ligaService.actualizarTemporada(id, temporadaId, authentication.getName(), request);
+    }
+
+    @GetMapping("/{id}/season-formats")
+    public List<FormatoOpcionResponse> formatos(@PathVariable Long id) {
+        return ligaService.listarFormatosDisponibles(id);
     }
 }

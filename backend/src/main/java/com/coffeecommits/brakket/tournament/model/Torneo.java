@@ -27,8 +27,6 @@ import java.time.LocalDateTime;
 @Builder
 public class Torneo {
 
-    public static final String ESTADO_ABIERTO = "ABIERTO";
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -69,8 +67,9 @@ public class Torneo {
     @Column(name = "fecha_fin")
     private LocalDateTime fechaFin;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 40)
-    private String estado;
+    private EstadoTorneo estado;
 
     /** Público: se lista y acepta inscripciones; privado: solo lo ve su organizador. */
     @Column(name = "publico", nullable = false)

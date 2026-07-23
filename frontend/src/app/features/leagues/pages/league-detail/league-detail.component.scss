@@ -1,171 +1,65 @@
+.page {
+  padding: 1.5rem 0;
+  max-width: 980px;
+}
+
+.back {
+  color: var(--text-muted, #94a3b8);
+  text-decoration: none;
+  font-size: 0.9rem;
+
+  &:hover {
+    color: var(--brand-cyan, #22d3ee);
+  }
+}
+
+.league-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.5rem 0 1.5rem;
+
+  h1 {
+    margin: 0.25rem 0 0.35rem;
+  }
+
+  .meta {
+    margin: 0;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.9rem;
+  }
+}
+
+.seasons {
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.2rem;
+  }
+}
+
 .muted {
   color: var(--text-muted, #94a3b8);
 }
 
 .error {
-  margin: 0 0 1rem;
-  padding: 0.65rem 0.9rem;
-  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
-  border: 1px solid var(--danger-text, #f87171);
-  border-radius: var(--radius-sm, 8px);
-  color: var(--danger-text, #f87171);
-  font-size: 0.875rem;
-}
-
-// ----- Banner (foto de la liga o arte del juego) -----
-
-.banner {
-  position: relative;
-  overflow: hidden;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  margin-bottom: 1.25rem;
-  border-radius: var(--radius-xl, 20px);
-}
-
-.banner-arte {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.banner-velo {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(4, 8, 18, 0.88) 0%, rgba(4, 8, 18, 0.35) 55%, rgba(4, 8, 18, 0.15) 100%);
-}
-
-.volver {
-  position: relative;
-  align-self: flex-start;
-  margin: 1rem 0 0 1.25rem;
-  padding: 0.3rem 0.7rem;
-  border-radius: var(--radius-pill, 999px);
-  background: rgba(4, 8, 18, 0.65);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-decoration: none;
-
-  &:hover {
-    background: rgba(4, 8, 18, 0.85);
-  }
-}
-
-.banner-contenido {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 1.25rem;
-}
-
-.titulos h1 {
+  color: #ef4444;
   margin: 0;
-  // Blanca y en negrita sobre el velo oscuro: AA de texto grande.
-  color: #fff;
-  font-size: 2rem;
-  font-weight: 800;
-  text-wrap: balance;
-}
-
-.meta {
-  margin: 0.25rem 0 0;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.juego-link {
-  color: #fff;
-  font-weight: 700;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-.btn-chrome {
-  padding: 0.45rem 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: var(--radius-sm, 8px);
-  background: rgba(4, 8, 18, 0.65);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-decoration: none;
-
-  &:hover {
-    background: rgba(4, 8, 18, 0.85);
-  }
-}
-
-// ----- Descripción y reglas -----
-
-.descripcion {
-  max-width: 70ch;
-  margin: 0 0 1rem;
-  color: var(--text-muted, #94a3b8);
-  font-size: 0.875rem;
-  line-height: 1.65;
-  text-wrap: pretty;
-}
-
-.reglas {
-  margin-bottom: 1.5rem;
-  padding: 0.9rem 1.1rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
-  border-radius: var(--radius-md, 12px);
-
-  summary {
-    color: var(--text, #e2e8f0);
-    font-size: 0.875rem;
-    font-weight: 700;
-    cursor: pointer;
-
-    &:hover {
-      color: var(--accent-text, #ff6a1f);
-    }
-  }
-
-  p {
-    max-width: 70ch;
-    margin: 0.75rem 0 0;
-    color: var(--text-muted, #94a3b8);
-    font-size: 0.875rem;
-    line-height: 1.65;
-    white-space: pre-wrap;
-  }
-}
-
-// ----- Temporadas -----
-
-.seasons h2 {
-  margin: 0 0 0.9rem;
-  font-size: 1.0625rem;
-  font-weight: 600;
 }
 
 .empty {
-  color: var(--text-subtle, #8496ad);
-  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--brand-cyan, #22d3ee);
+  border-radius: 8px;
+  color: var(--text-muted, #94a3b8);
 }
 
 .season-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  margin: 0 0 1.25rem;
-  padding: 0;
   list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
 }
 
 .season-card {
@@ -173,92 +67,145 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap;
-  padding: 0.7rem 0.9rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
-  border-radius: var(--radius-sm, 8px);
-}
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
 
-.season-name {
-  color: var(--text, #e2e8f0);
-  font-size: 0.875rem;
-  font-weight: 700;
-}
+  .season-name {
+    font-weight: 600;
+  }
 
-.season-dates {
-  color: var(--text-muted, #94a3b8);
-  font-family: var(--font-data, 'Barlow Condensed', sans-serif);
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-}
-
-// ----- Formulario de temporada -----
-
-.season-form {
-  margin-top: 0.5rem;
-  padding: 1rem 1.1rem 1.1rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
-  border-radius: var(--radius-md, 12px);
-
-  h3 {
-    margin: 0 0 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 700;
+  .season-dates {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.85rem;
   }
 }
 
-.row {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+.season-content { flex: 1; min-width: 0; h3, p { margin: 0; } }
+.season-heading, .section-title, .actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.season-actions { display: flex; align-items: center; gap: .75rem; }
+.eyebrow { color: var(--brand-cyan, #22d3ee); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.status, .chips span { padding: .25rem .55rem; border-radius: 999px; background: rgba(34, 211, 238, .12); color: var(--brand-cyan, #22d3ee); font-size: .72rem; font-weight: 700; }
+.status.inactive { color: #f87171; background: rgba(239, 68, 68, .12); }
+.status.status-planned { color: #60a5fa; background: rgba(59, 130, 246, .16); border: 1px solid rgba(96, 165, 250, .28); }
+.status.status-active { color: #4ade80; background: rgba(34, 197, 94, .16); border: 1px solid rgba(74, 222, 128, .28); }
+.status.status-finished { color: #c4b5fd; background: rgba(139, 92, 246, .16); border: 1px solid rgba(196, 181, 253, .28); }
+.status.status-cancelled { color: #f87171; background: rgba(239, 68, 68, .16); border: 1px solid rgba(248, 113, 113, .3); }
+.date-box { display: grid; min-width: 72px; text-align: center; strong { font-size: 1.5rem; } span { color: var(--text-muted, #94a3b8); font-size: .72rem; text-transform: uppercase; } }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0; }
+.rules { white-space: pre-wrap; color: var(--text-muted, #94a3b8); }
+.success { padding: .75rem 1rem; border: 1px solid rgba(34, 197, 94, .4); border-radius: 8px; color: #4ade80; background: rgba(34, 197, 94, .08); }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+.field.wide, .field.full { grid-column: 1 / -1; }
 
-  @media (max-width: 700px) {
-    grid-template-columns: 1fr;
+.season-form {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.85rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
   }
 }
 
 .field {
   display: grid;
-  gap: 0.35rem;
-}
+  gap: 0.4rem;
+  flex: 1 1 160px;
 
-.label {
-  color: var(--text-muted, #94a3b8);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-input {
-  width: 100%;
-  padding: 0.5rem 0.7rem;
-  background: var(--surface-2, #1f2937);
-  border: 1px solid var(--border, #334155);
-  border-radius: var(--radius-sm, 8px);
-  color: var(--text, #e2e8f0);
-  font-family: inherit;
-  font-size: 0.875rem;
-
-  &::placeholder {
-    color: var(--text-subtle, #8496ad);
+  .label {
+    font-weight: 600;
+    font-size: 0.85rem;
   }
 
-  &:focus {
-    outline: none;
-    border-color: var(--accent-text, #ff6a1f);
+  input, select, textarea {
+    padding: 0.55rem 0.7rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--brand-blue, #2563eb);
+    }
   }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 6, 23, .78);
+  backdrop-filter: blur(4px);
+}
+
+.season-form.modal {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 2rem);
+  margin: 0;
+  overflow-y: auto;
+  background: var(--surface, #0f172a);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+}
+
+@media (max-width: 680px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .season-card, .league-head { align-items: flex-start; flex-direction: column; }
+  .section-title, .season-actions { align-items: flex-start; flex-direction: column; }
 }
 
 .field-error {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--danger-text, #f87171);
-  font-size: 0.8125rem;
+  color: #ef4444;
+  font-size: 0.8rem;
 }
 
-// ----- Torneos de la liga -----
+.btn {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  justify-self: start;
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--brand-blue, #2563eb);
+  color: #fff;
+
+  &:hover:not([disabled]) {
+    filter: brightness(1.08);
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+// ----- Torneos de la liga (RF-24, modelo abierto) -----
 
 .torneos-liga {
   margin-top: 2rem;
@@ -283,11 +230,8 @@ input {
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease;
 
-  &:hover {
-    border-color: var(--accent-text, #ff6a1f);
-  }
+  &:hover { border-color: var(--accent-text, #ff6a1f); }
 
   .mas {
     display: grid;
@@ -307,15 +251,8 @@ input {
     flex-direction: column;
     gap: 0.1rem;
 
-    strong {
-      color: var(--text, #e2e8f0);
-      font-size: 0.875rem;
-    }
-
-    span {
-      color: var(--text-muted, #94a3b8);
-      font-size: 0.8125rem;
-    }
+    strong { color: var(--text, #e2e8f0); font-size: 0.875rem; }
+    span { color: var(--text-muted, #94a3b8); font-size: 0.8125rem; }
   }
 }
 
@@ -326,57 +263,14 @@ input {
   max-width: 760px;
 }
 
-// ----- Botones -----
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm, 8px);
-  font-family: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s ease;
-
-  &[disabled] {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.btn-primary {
-  background: var(--accent, #ff5500);
-  color: #fff;
-
-  &:hover:not([disabled]) {
-    background: var(--accent-hover, #ff6a1f);
-  }
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: var(--border, #334155);
-  color: var(--text, #e2e8f0);
-
-  &:hover:not([disabled]) {
-    background: var(--surface-2, #1f2937);
-  }
-}
+// ----- Zona de peligro / moderacion -----
 
 .btn-danger {
   background: var(--danger, #ef4444);
   color: #fff;
 
-  &:hover:not([disabled]) {
-    filter: brightness(1.08);
-  }
+  &:hover:not([disabled]) { filter: brightness(1.08); }
 }
-
-// ----- Zona de peligro -----
 
 .danger-zone {
   margin-top: 2.5rem;
@@ -392,6 +286,12 @@ input {
   }
 }
 
+.danger-nota {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
+
 .danger-aviso {
   margin: 0 0 0.9rem;
   color: var(--text, #e2e8f0);
@@ -402,10 +302,4 @@ input {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
-}
-
-.danger-nota {
-  margin: 0 0 0.75rem;
-  color: var(--text-muted, #94a3b8);
-  font-size: 0.8125rem;
 }

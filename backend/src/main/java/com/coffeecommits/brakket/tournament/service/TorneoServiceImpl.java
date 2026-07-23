@@ -17,6 +17,7 @@ import com.coffeecommits.brakket.tournament.dto.EquipoInscritoResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoDetalleResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoResponse;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
+import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
@@ -114,7 +115,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .tamanoEquipo(request.tamanoEquipo())
                 .maxEquipos(request.maxEquipos())
                 .fechaInicio(request.fechaInicio())
-                .estado(Torneo.ESTADO_ABIERTO)
+                .estado(EstadoTorneo.INSCRIPCION_ABIERTA)
                 .publico(request.publico() == null || request.publico())
                 .premio(normalizar(request.premio()))
                 .build());
@@ -157,7 +158,7 @@ public class TorneoServiceImpl implements TorneoService {
         Usuario usuario = buscarUsuario(correo);
         Torneo torneo = buscarVisible(torneoId, correo, false);
 
-        if (!Torneo.ESTADO_ABIERTO.equalsIgnoreCase(torneo.getEstado())) {
+        if (torneo.getEstado() != EstadoTorneo.INSCRIPCION_ABIERTA) {
             throw new BusinessException("El torneo ya no acepta inscripciones");
         }
         if (!torneo.getFechaInicio().isAfter(LocalDateTime.now())) {

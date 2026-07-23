@@ -18,7 +18,8 @@ public record LigaResponse(
         String comisionadoNombre,
         String descripcion,
         String reglas,
-        String fotoUrl
+        String fotoUrl,
+        Boolean activo
 ) {
     public static LigaResponse from(Liga liga) {
         return new LigaResponse(
@@ -31,7 +32,8 @@ public record LigaResponse(
                 liga.getComisionado().getNombre(),
                 liga.getDescripcion(),
                 liga.getReglas(),
-                liga.getFotoUrl()
+                liga.getFotoUrl(),
+                liga.getActivo()
         );
     }
 }

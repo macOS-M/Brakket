@@ -50,7 +50,7 @@ public record TorneoResponse(
                 torneo.getMaxEquipos(),
                 inscritos,
                 torneo.getFechaInicio(),
-                torneo.getEstado(),
+                torneo.getEstado() == null ? null : torneo.getEstado().name(),
                 torneo.getPublico(),
                 torneo.getPremio()
         );

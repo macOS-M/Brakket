@@ -32,7 +32,7 @@ export class TorneoCardComponent {
 
   readonly badge = computed(() => {
     const t = this.torneo();
-    if (t.estado !== 'ABIERTO') {
+    if (t.estado !== 'INSCRIPCION_ABIERTA') {
       return { texto: t.estado.toLowerCase(), tono: 'neutro' };
     }
     if (this.comenzo()) {

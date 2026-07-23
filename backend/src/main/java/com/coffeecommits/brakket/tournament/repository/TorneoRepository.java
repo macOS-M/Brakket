@@ -1,13 +1,17 @@
 package com.coffeecommits.brakket.tournament.repository;
 
+import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 public interface TorneoRepository extends JpaRepository<Torneo, Long> {
+
+    Collection<EstadoTorneo> ESTADOS_CERRADOS =
+            EnumSet.of(EstadoTorneo.FINALIZADO, EstadoTorneo.CANCELADO);
 
     List<Torneo> findByTemporadaId(Long temporadaId);
 
@@ -20,10 +24,17 @@ public interface TorneoRepository extends JpaRepository<Torneo, Long> {
     /** Torneos organizados por un usuario (incluye privados), próximos primero. */
     List<Torneo> findByOrganizadorIdOrderByFechaInicioAsc(Long organizadorId);
 
-    @Query("""
-            select count(t) > 0 from Torneo t
-            where t.juego.id = :juegoId
-              and upper(t.estado) not in ('FINALIZADO', 'CANCELADO')
-            """)
-    boolean existsActivoByJuegoId(@Param("juegoId") Long juegoId);
+    /** Desde el modelo abierto (V22) todo torneo referencia su juego directo. */
+    boolean existsByJuegoIdAndEstadoNotIn(Long juegoId, Collection<EstadoTorneo> estadosCerrados);
+
+    boolean existsByTemporadaIdAndEstadoNotIn(
+            Long temporadaId, Collection<EstadoTorneo> estadosCerrados);
+
+    default boolean existsActivoByJuegoId(Long juegoId) {
+        return existsByJuegoIdAndEstadoNotIn(juegoId, ESTADOS_CERRADOS);
+    }
+
+    default boolean existsActivoByTemporadaId(Long temporadaId) {
+        return existsByTemporadaIdAndEstadoNotIn(temporadaId, ESTADOS_CERRADOS);
+    }
 }

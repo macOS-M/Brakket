@@ -42,4 +42,8 @@ public class Liga {
     /** Foto propia de la liga; si falta, el frontend usa el arte del juego. */
     @Column(name = "foto_url", length = 500)
     private String fotoUrl;
+
+    @Column(name = "activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }
