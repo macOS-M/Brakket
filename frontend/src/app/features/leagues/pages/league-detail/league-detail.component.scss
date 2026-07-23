@@ -137,7 +137,9 @@
     padding: 0.55rem 0.7rem;
     border: 1px solid var(--border, #334155);
     border-radius: var(--radius-sm, 8px);
-    background: var(--surface-2, #1f2937);
+    // background-color, no el shorthand: el shorthand borraba el chevron
+    // global de los <select> (que vive en background-image del tema).
+    background-color: var(--surface-2, #1f2937);
     color: var(--text, #e2e8f0);
     font-family: inherit;
     font-size: 0.875rem;

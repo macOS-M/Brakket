@@ -202,13 +202,12 @@
 
 // ----- Formatos con descripción (referencia "Select bracket template") -----
 
+// Sin caja de scroll interna: el modal ya scrollea entero y una barra
+// dentro de otra se veía inconclusa. Las opciones respiran completas.
 .formatos {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  max-height: 260px;
-  overflow-y: auto;
-  padding-right: 0.25rem;
 }
 
 .formato-opcion {

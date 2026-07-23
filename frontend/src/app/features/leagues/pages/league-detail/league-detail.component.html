@@ -22,7 +22,7 @@
             [class.status-finished]="temporada.estado === 'FINALIZADA'"
             [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado }}</span></div>
             <p>{{ temporada.fechaInicio | date:'dd/MM/yyyy' }} — {{ temporada.fechaFin | date:'dd/MM/yyyy' }}</p>
-            <div class="chips"><span>{{ temporada.formatoNombre }}</span><span>Cupo: {{ temporada.cupoEquipos }}</span><span>{{ temporada.juegoNombre }}</span></div>
+            <div class="chips"><span>{{ temporada.formatoNombre | formatoTorneo }}</span><span>Cupo: {{ temporada.cupoEquipos }}</span><span>{{ temporada.juegoNombre }}</span></div>
             <details><summary>Ver reglas</summary><p class="rules">{{ temporada.reglas }}</p></details></div>
           @if (esComisionado() && liga.activo) { <button type="button" class="btn btn-ghost" (click)="editar(temporada)">Editar</button> }
         </article> } </div> }
@@ -38,7 +38,7 @@
           <label class="field"><span>Fecha de fin</span><input type="date" formControlName="fechaFin"></label>
           <label class="field"><span>Estado</span><select formControlName="estado"><option value="PLANIFICADA">Planificada</option><option value="ACTIVA">Activa</option><option value="FINALIZADA">Finalizada</option><option value="CANCELADA">Cancelada</option></select></label>
           <label class="field"><span>Cupo de equipos</span><input type="number" min="2" max="1024" formControlName="cupoEquipos"></label>
-          <label class="field wide"><span>Formato competitivo activo</span><select formControlName="formatoId"><option [ngValue]="null">Seleccionar formato</option>@for (formato of formats(); track formato.id) { <option [ngValue]="formato.id">{{ formato.nombre }}</option> }</select></label>
+          <label class="field wide"><span>Formato competitivo activo</span><select formControlName="formatoId"><option [ngValue]="null">Seleccionar formato</option>@for (formato of formats(); track formato.id) { <option [ngValue]="formato.id">{{ formato.nombre | formatoTorneo }}</option> }</select></label>
           <label class="field full"><span>Reglas específicas</span><textarea rows="5" formControlName="reglas" placeholder="Criterios de participación, desempates, conducta y puntuación"></textarea></label>
         </div>
         @if (seasonForm.hasError('rangoFechas')) { <p class="field-error">La fecha de inicio no puede ser posterior a la fecha de fin.</p> }
