@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Subject, debounceTime, forkJoin, of, switchMap, takeUntil } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -28,7 +28,7 @@ const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 
 @Component({
   selector: 'app-team-roster',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, RolEquipoPipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, RolEquipoPipe],
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })
@@ -102,7 +102,8 @@ export class TeamRosterComponent implements OnInit, OnDestroy {
   readonly errorBusqueda = signal<string | null>(null);
   readonly resultados = signal<JugadorDisponible[] | null>(null);
 
-  private equipoId!: number;
+  /** Público: el template lo usa para el enlace de vuelta al perfil. */
+  equipoId!: number;
 
   /** Selección múltiple para invitar de una vez, cada uno con su rol. */
   readonly seleccionados = signal<SeleccionInvitacion[]>([]);

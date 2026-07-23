@@ -644,3 +644,16 @@
   .solicitud-mensaje { margin: 2px 0 0; font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
   .solicitud-acciones { display: flex; gap: 8px; }
 }
+
+// Camino de vuelta al perfil del equipo (los tabs viven allá).
+.volver {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent-text, #ff6a1f);
+  }
+}

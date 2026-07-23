@@ -1,4 +1,6 @@
 <section class="page">
+  <a class="volver" [routerLink]="['/team-profile', equipoId]">← Volver al equipo</a>
+
   <h1>Plantilla {{ equipo() ? 'de ' + equipo()!.nombre : 'del equipo' }}</h1>
 
   @if (equipoDisuelto(); as equipo) {
