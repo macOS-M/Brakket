@@ -27,6 +27,10 @@ services:
       db:
         condition: service_healthy
     environment:
+      # Sin TZ el contenedor corre en UTC (+6h respecto a Costa Rica) y las
+      # validaciones de fecha/hora rechazan torneos con horario local válido.
+      TZ: ${TZ:-America/Costa_Rica}
+      JAVA_TOOL_OPTIONS: -Duser.timezone=${TZ:-America/Costa_Rica}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-brakket}
       DB_USER: ${POSTGRES_USER:-brakket}

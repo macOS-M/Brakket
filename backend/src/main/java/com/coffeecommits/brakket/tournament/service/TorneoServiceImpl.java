@@ -71,8 +71,12 @@ public class TorneoServiceImpl implements TorneoService {
                     "El juego '%s' no está disponible para torneos".formatted(juego.getNombre()));
         }
 
-        if (!request.fechaInicio().isAfter(LocalDateTime.now())) {
-            throw new BusinessException("La fecha de inicio debe ser futura");
+        // Margen de 5 minutos: tolera desfases de reloj entre el navegador
+        // y el servidor sin rechazar torneos que arrancan "ya mismo".
+        if (request.fechaInicio().isBefore(LocalDateTime.now().minusMinutes(5))) {
+            throw new BusinessException(
+                    "La fecha de inicio ya pasó (hora del servidor: %s)"
+                            .formatted(LocalDateTime.now().withNano(0)));
         }
 
         // El perfil competitivo (RF-21) actúa como curaduría opcional: si
