@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -10,10 +11,13 @@ import { TeamsService } from '../../services/teams.service';
 import { GamesService } from '../../../games/services/games.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
+/** Orden de presentación de la plantilla (RF-08): capitán primero. */
+const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 2, COACH: 3 };
+
 @Component({
   selector: 'app-team-roster',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DatePipe],
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })
@@ -36,9 +40,36 @@ export class TeamRosterComponent implements OnInit {
     );
   });
 
+  // RF-08: datos del equipo para encabezado y vista histórica si está disuelto.
+  readonly equipo = signal<Equipo | null>(null);
+
+  /** Plantilla ordenada: activos primero (capitán, titulares, suplentes, coach), luego el resto. */
+  readonly miembrosOrdenados = computed(() =>
+    [...this.miembros()].sort((a, b) => {
+      const activoA = a.estado === 'ACTIVO' ? 0 : 1;
+      const activoB = b.estado === 'ACTIVO' ? 0 : 1;
+      if (activoA !== activoB) return activoA - activoB;
+      const rolA = ORDEN_ROLES[a.rol] ?? 9;
+      const rolB = ORDEN_ROLES[b.rol] ?? 9;
+      if (rolA !== rolB) return rolA - rolB;
+      return a.nombreUsuario.localeCompare(b.nombreUsuario);
+    })
+  );
+
+  /** El equipo está disuelto: la plantilla se muestra como vista histórica de solo lectura. */
+  readonly vistaHistorica = computed(
+    () => this.equipoDisuelto() !== null || this.equipo()?.estado === 'DISUELTO'
+  );
+
   readonly invitando = signal(false);
   readonly errorInvitar = signal<string | null>(null);
   readonly invitacionEnviada = signal(false);
+
+  // RF-10: expulsión de integrantes (solo el capitán; el backend lo valida).
+  readonly miembroAExpulsar = signal<MiembroEquipo | null>(null);
+  readonly causaExpulsion = signal('');
+  readonly expulsando = signal(false);
+  readonly errorExpulsion = signal<string | null>(null);
 
   // RF-03: disolución del equipo (solo el capitán; el backend lo valida).
   readonly confirmaDisolucion = signal(false);
@@ -66,9 +97,18 @@ export class TeamRosterComponent implements OnInit {
 
   ngOnInit(): void {
     this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
+    this.cargarEquipo();
     this.cargarMiembros();
     this.gamesService.listActivos().subscribe({
       next: (juegos) => this.juegos.set(juegos)
+    });
+  }
+
+  /** RF-08: carga nombre y estado del equipo; si falla, la plantilla sigue siendo usable. */
+  private cargarEquipo(): void {
+    this.teamsService.obtenerPorId(this.equipoId).subscribe({
+      next: (equipo) => this.equipo.set(equipo),
+      error: () => this.equipo.set(null)
     });
   }
 
@@ -80,11 +120,21 @@ export class TeamRosterComponent implements OnInit {
         this.miembros.set(miembros);
         this.cargando.set(false);
       },
-      error: () => {
-        this.error.set('No se pudo cargar la plantilla del equipo.');
+      error: (err) => {
+        this.error.set(err?.status === 404
+          ? 'El equipo consultado no existe.'
+          : 'No se pudo cargar la plantilla del equipo.');
         this.cargando.set(false);
       }
     });
+  }
+
+  /** Reintento del criterio "error de carga" de RF-08. */
+  reintentar(): void {
+    if (!this.equipo()) {
+      this.cargarEquipo();
+    }
+    this.cargarMiembros();
   }
 
   cambiarRol(miembro: MiembroEquipo, nuevoRol: string): void {
@@ -130,6 +180,45 @@ export class TeamRosterComponent implements OnInit {
       error: (err) => {
         this.invitando.set(false);
         this.errorInvitar.set(err?.error?.message ?? 'No se pudo enviar la invitacion.');
+      }
+    });
+  }
+
+  /** RF-10: abre la confirmación de expulsión para un integrante activo. */
+  iniciarExpulsion(miembro: MiembroEquipo): void {
+    this.miembroAExpulsar.set(miembro);
+    this.causaExpulsion.set('');
+    this.errorExpulsion.set(null);
+  }
+
+  /** RF-10: cancelar la confirmación no realiza la baja. */
+  cancelarExpulsion(): void {
+    this.miembroAExpulsar.set(null);
+    this.causaExpulsion.set('');
+    this.errorExpulsion.set(null);
+  }
+
+  confirmarExpulsion(): void {
+    const miembro = this.miembroAExpulsar();
+    if (!miembro || this.expulsando()) {
+      return;
+    }
+    const causa = this.causaExpulsion().trim();
+    if (!causa) {
+      this.errorExpulsion.set('La causa de la expulsión es obligatoria.');
+      return;
+    }
+    this.expulsando.set(true);
+    this.errorExpulsion.set(null);
+    this.teamsService.expulsar(this.equipoId, miembro.usuarioId, { causa }).subscribe({
+      next: () => {
+        this.expulsando.set(false);
+        this.cancelarExpulsion();
+        this.cargarMiembros();
+      },
+      error: (err) => {
+        this.expulsando.set(false);
+        this.errorExpulsion.set(err?.error?.message ?? 'No se pudo expulsar al integrante.');
       }
     });
   }

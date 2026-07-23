@@ -32,4 +32,8 @@ public class Liga {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comisionado_id", nullable = false)
     private Usuario comisionado;
+
+    @Column(name = "activo", nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }

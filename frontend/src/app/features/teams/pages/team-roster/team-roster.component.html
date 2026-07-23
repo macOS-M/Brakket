@@ -1,5 +1,5 @@
 <section class="page">
-  <h1>Plantilla del equipo</h1>
+  <h1>Plantilla {{ equipo() ? 'de ' + equipo()!.nombre : 'del equipo' }}</h1>
 
   @if (equipoDisuelto(); as equipo) {
   <div class="banner-disuelto">
@@ -12,12 +12,27 @@
     <p class="motivo">Motivo: {{ equipo.motivoDisolucion }}</p>
     }
   </div>
+  } @else if (vistaHistorica()) {
+  <!-- RF-08: equipo ya disuelto al entrar -> plantilla histórica de solo lectura -->
+  <div class="banner-disuelto">
+    <p class="titulo">Plantilla histórica</p>
+    <p>
+      Este equipo está disuelto. La plantilla se muestra únicamente para consulta
+      y no admite cambios.
+    </p>
+    @if (equipo()?.motivoDisolucion) {
+    <p class="motivo">Motivo: {{ equipo()!.motivoDisolucion }}</p>
+    }
+  </div>
   }
 
   @if (cargando()) {
   <p class="placeholder">Cargando plantilla...</p>
   } @else if (error()) {
-  <p class="placeholder error">{{ error() }}</p>
+  <div class="placeholder error">
+    <p>{{ error() }}</p>
+    <button type="button" class="btn-reintentar" (click)="reintentar()">Reintentar</button>
+  </div>
   } @else if (miembros().length === 0) {
   <p class="placeholder">Este equipo no tiene integrantes.</p>
   } @else {
@@ -26,35 +41,64 @@
     <tr>
       <th>Integrante</th>
       <th>Estado</th>
+      <th>Incorporación</th>
       <th>Rol</th>
+      @if (esCapitan() && !vistaHistorica()) {
+      <th></th>
+      }
     </tr>
     </thead>
     <tbody>
-    @for (miembro of miembros(); track miembro.id) {
-    <tr>
-      <td>{{ miembro.nombreUsuario }}</td>
+    @for (miembro of miembrosOrdenados(); track miembro.id) {
+    <tr [class.fila-inactiva]="miembro.estado !== 'ACTIVO'">
+      <td>
+        {{ miembro.nombreUsuario }}
+        @if (miembro.rol === 'CAPITAN' && miembro.estado === 'ACTIVO') {
+        <span class="badge badge-capitan">Capitán</span>
+        }
+      </td>
       <td>
               <span class="badge" [class.inactivo]="miembro.estado !== 'ACTIVO'">
                 {{ miembro.estado }}
               </span>
       </td>
+      <td>{{ miembro.fechaUnion ? (miembro.fechaUnion | date: 'dd/MM/yyyy') : '—' }}</td>
       <td>
+        @if (esCapitan() && !vistaHistorica()) {
         <select
-          [disabled]="miembro.estado !== 'ACTIVO' || guardandoId() === miembro.usuarioId || equipoDisuelto() !== null"
+          [disabled]="miembro.estado !== 'ACTIVO' || guardandoId() === miembro.usuarioId"
           (change)="cambiarRol(miembro, $any($event.target).value)"
         >
           @for (rol of roles; track rol) {
           <option [value]="rol" [selected]="rol === miembro.rol">{{ rol }}</option>
           }
         </select>
+        } @else {
+        <span class="badge badge-rol">{{ miembro.rol }}</span>
+        }
       </td>
+      @if (esCapitan() && !vistaHistorica()) {
+      <td class="celda-acciones">
+        <!-- RF-10: solo integrantes activos y nunca la propia fila del capitán -->
+        @if (miembro.estado === 'ACTIVO' && miembro.rol !== 'CAPITAN') {
+        <button
+          type="button"
+          class="btn-expulsar"
+          [disabled]="expulsando()"
+          (click)="iniciarExpulsion(miembro)"
+        >
+          Expulsar
+        </button>
+        }
+      </td>
+      }
     </tr>
     }
     </tbody>
   </table>
   }
 
-  @if (esCapitan() && !equipoDisuelto()) {
+  @if (esCapitan() && !vistaHistorica()) {
   <section class="buscar-jugadores">
     <h2>Buscar jugadores disponibles</h2>
 
@@ -121,7 +165,49 @@
     }
     }
   </section>
+  }
 
+  <!-- RF-10: confirmación de expulsión con causa obligatoria -->
+  @if (miembroAExpulsar(); as miembro) {
+  <div class="expulsion-box">
+    <h2>Expulsar a {{ miembro.nombreUsuario }}</h2>
+    <p class="advertencia">
+      El integrante quedará fuera de la plantilla y será notificado.
+      Esta acción queda registrada con fecha, causa y responsable.
+    </p>
+
+    <label class="campo-causa">
+      Causa de la expulsión *
+      <textarea
+        rows="2"
+        maxlength="500"
+        placeholder="Ej. Inasistencia reiterada a las prácticas"
+        [value]="causaExpulsion()"
+        (input)="causaExpulsion.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    @if (errorExpulsion()) {
+    <p class="mensaje-error">{{ errorExpulsion() }}</p>
+    }
+
+    <div class="acciones">
+      <button
+        type="button"
+        class="btn-confirmar-expulsion"
+        [disabled]="expulsando() || !causaExpulsion().trim()"
+        (click)="confirmarExpulsion()"
+      >
+        {{ expulsando() ? 'Expulsando...' : 'Confirmar expulsión' }}
+      </button>
+      <button type="button" class="btn-cancelar" [disabled]="expulsando()" (click)="cancelarExpulsion()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+  }
+
+  @if (esCapitan() && !vistaHistorica()) {
   <div class="invitar-box">
     <h2>Invitar jugador</h2>
 
@@ -159,7 +245,7 @@
   </div>
   }
 
-  @if (!cargando() && !error() && !equipoDisuelto()) {
+  @if (!cargando() && !error() && !vistaHistorica()) {
   <section class="zona-peligro">
     <h2>Disolver equipo</h2>
     <p class="advertencia">

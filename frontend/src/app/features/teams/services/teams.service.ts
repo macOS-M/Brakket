@@ -11,7 +11,7 @@ import {
   EquipoBusqueda,
   Pagina
 } from '../../../models/equipo.model';
-import { AsignarRolRequest, MiembroEquipo } from '../../../models/miembro-equipo.model';
+import { AsignarRolRequest, ExpulsarIntegranteRequest, MiembroEquipo } from '../../../models/miembro-equipo.model';
 import { Invitacion, InvitarJugadorRequest, ResponderInvitacionRequest } from '../../../models/invitacion.model';
 import { EquipoResumenPublico, PerfilEquipoPublico } from '../../../models/perfil-equipo-publico.model';
 import { JugadorDisponible } from '../../../models/jugador-disponible.model';
@@ -60,6 +60,11 @@ export class TeamsService {
 
   cambiarRol(equipoId: number, usuarioId: number, request: AsignarRolRequest): Observable<MiembroEquipo> {
     return this.api.patch<MiembroEquipo>(`/teams/${equipoId}/miembros/${usuarioId}/rol`, request);
+  }
+
+  /** RF-10: expulsa a un integrante de la plantilla (baja lógica con causa). */
+  expulsar(equipoId: number, usuarioId: number, request: ExpulsarIntegranteRequest): Observable<MiembroEquipo> {
+    return this.api.patch<MiembroEquipo>(`/teams/${equipoId}/miembros/${usuarioId}/expulsar`, request);
   }
 
   invitar(equipoId: number, request: InvitarJugadorRequest): Observable<Invitacion> {
