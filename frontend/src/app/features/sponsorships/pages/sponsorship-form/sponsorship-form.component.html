@@ -1,0 +1,62 @@
+<section class="page">
+  <h1>{{ editando() ? 'Editar patrocinador' : 'Nuevo patrocinador' }}</h1>
+
+  @if (error()) {
+  <p class="mensaje-error">{{ error() }}</p>
+  }
+
+  @if (avisoDuplicado()) {
+  <div class="mensaje-aviso">
+    <p>{{ avisoDuplicado() }}</p>
+    <button type="button" class="btn-secondary" (click)="confirmarYGuardar()">
+      Crear de todas formas
+    </button>
+  </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+    <div class="campo">
+      <label for="nombre">Nombre comercial *</label>
+      <input id="nombre" type="text" formControlName="nombre" />
+      @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+      <span class="error-campo">El nombre es obligatorio (máx. 150 caracteres).</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="logo">Logo (URL)</label>
+      <input id="logo" type="text" formControlName="logo" placeholder="https://..." />
+    </div>
+
+    <div class="campo">
+      <label for="contacto">Contacto *</label>
+      <input id="contacto" type="text" formControlName="contacto" placeholder="correo o teléfono" />
+      @if (form.controls.contacto.invalid && form.controls.contacto.touched) {
+      <span class="error-campo">El contacto es obligatorio.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" formControlName="descripcion" rows="3"></textarea>
+    </div>
+
+    <div class="campo">
+      <label>Enlaces</label>
+      @for (control of enlaces.controls; track $index) {
+      <div class="enlace-item">
+        <input type="text" [formControl]="$any(control)" placeholder="https://..." />
+        <button type="button" class="btn-quitar" (click)="quitarEnlace($index)">✕</button>
+      </div>
+      }
+      <button type="button" class="btn-agregar" (click)="agregarEnlace()">+ Agregar enlace</button>
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</section>
