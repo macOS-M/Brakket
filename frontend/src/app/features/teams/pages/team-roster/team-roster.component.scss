@@ -1,7 +1,7 @@
 // RF-08: visualización de la plantilla
 .placeholder {
   padding: 1.5rem 0;
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted);
 
   &.error {
     color: #f87171;
@@ -35,7 +35,7 @@
   th {
     text-align: left;
     padding: 0.6rem 0.75rem;
-    color: var(--text-muted, #94a3b8);
+    color: var(--text-muted);
     font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -64,8 +64,8 @@
   letter-spacing: 0.03em;
 
   &.inactivo {
-    border-color: var(--text-muted, #94a3b8);
-    color: var(--text-muted, #94a3b8);
+    border-color: var(--text-muted);
+    color: var(--text-muted);
   }
 
   &.badge-capitan {
@@ -293,7 +293,7 @@
 
   .motivo {
     margin-top: 0.35rem;
-    color: var(--text-muted, #94a3b8);
+    color: var(--text-muted);
     font-size: 0.9rem;
   }
 }
@@ -320,7 +320,7 @@
   .consecuencias {
     margin: 0 0 0.9rem;
     padding-left: 1.25rem;
-    color: var(--text-muted, #94a3b8);
+    color: var(--text-muted);
     font-size: 0.9rem;
     line-height: 1.6;
   }
@@ -436,7 +436,7 @@
     align-items: center;
     gap: 0.4rem;
     font-size: 0.8rem;
-    color: var(--text-muted, #94a3b8);
+    color: var(--text-muted);
   }
 }
 
