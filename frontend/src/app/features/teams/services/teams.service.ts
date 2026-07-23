@@ -14,6 +14,7 @@ import {
 import { AsignarRolRequest, ExpulsarIntegranteRequest, MiembroEquipo } from '../../../models/miembro-equipo.model';
 import { Invitacion, InvitarJugadorRequest, ResponderInvitacionRequest } from '../../../models/invitacion.model';
 import { EquipoResumenPublico, PerfilEquipoPublico } from '../../../models/perfil-equipo-publico.model';
+import { JugadorDisponible } from '../../../models/jugador-disponible.model';
 
 @Injectable({ providedIn: 'root' })
 export class TeamsService {
@@ -80,5 +81,28 @@ export class TeamsService {
 
   disolver(equipoId: number, request: DisolverEquipoRequest): Observable<Equipo> {
     return this.api.patch<Equipo>(`/teams/${equipoId}/disolver`, request);
+  }
+
+  buscarJugadores(
+    equipoId: number,
+    texto: string,
+    juegoId: number | null,
+    soloDisponibles: boolean,
+    page = 0,
+    size = 12
+  ): Observable<Pagina<JugadorDisponible>> {
+    const params = new URLSearchParams();
+    if (texto) {
+      params.set('texto', texto);
+    }
+    if (juegoId !== null) {
+      params.set('juegoId', String(juegoId));
+    }
+    params.set('soloDisponibles', String(soloDisponibles));
+    params.set('page', String(page));
+    params.set('size', String(size));
+    return this.api.get<Pagina<JugadorDisponible>>(
+      `/teams/${equipoId}/jugadores-disponibles?${params.toString()}`
+    );
   }
 }

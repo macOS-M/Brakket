@@ -5,7 +5,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
+import { JugadorDisponible } from '../../../../models/jugador-disponible.model';
+import { Juego } from '../../../../models/juego.model';
 import { TeamsService } from '../../services/teams.service';
+import { GamesService } from '../../../games/services/games.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
 /** Orden de presentación de la plantilla (RF-08): capitán primero. */
@@ -21,6 +24,7 @@ const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 
 export class TeamRosterComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly teamsService = inject(TeamsService);
+  private readonly gamesService = inject(GamesService);
   private readonly authService = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
@@ -29,6 +33,12 @@ export class TeamRosterComponent implements OnInit {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly guardandoId = signal<number | null>(null);
+  readonly esCapitan = computed(() => {
+    const miId = Number(this.authService.usuario()?.id);
+    return this.miembros().some(
+      (m) => m.usuarioId === miId && m.rol === 'CAPITAN' && m.estado === 'ACTIVO'
+    );
+  });
 
   // RF-08: datos del equipo para encabezado y vista histórica si está disuelto.
   readonly equipo = signal<Equipo | null>(null);
@@ -54,7 +64,6 @@ export class TeamRosterComponent implements OnInit {
   readonly invitando = signal(false);
   readonly errorInvitar = signal<string | null>(null);
   readonly invitacionEnviada = signal(false);
-  readonly esCapitan = signal(false);
 
   // RF-10: expulsión de integrantes (solo el capitán; el backend lo valida).
   readonly miembroAExpulsar = signal<MiembroEquipo | null>(null);
@@ -69,6 +78,15 @@ export class TeamRosterComponent implements OnInit {
   readonly errorDisolucion = signal<string | null>(null);
   readonly equipoDisuelto = signal<Equipo | null>(null);
 
+  // RF-11: buscar jugadores disponibles.
+  readonly juegos = signal<Juego[]>([]);
+  readonly textoBusqueda = signal('');
+  readonly juegoIdBusqueda = signal<number | null>(null);
+  readonly soloDisponibles = signal(false);
+  readonly buscando = signal(false);
+  readonly errorBusqueda = signal<string | null>(null);
+  readonly resultados = signal<JugadorDisponible[] | null>(null);
+
   private equipoId!: number;
 
   readonly invitarForm = this.fb.nonNullable.group({
@@ -81,6 +99,9 @@ export class TeamRosterComponent implements OnInit {
     this.equipoId = Number(this.route.snapshot.paramMap.get('equipoId'));
     this.cargarEquipo();
     this.cargarMiembros();
+    this.gamesService.listActivos().subscribe({
+      next: (juegos) => this.juegos.set(juegos)
+    });
   }
 
   /** RF-08: carga nombre y estado del equipo; si falla, la plantilla sigue siendo usable. */
@@ -98,7 +119,6 @@ export class TeamRosterComponent implements OnInit {
       next: (miembros) => {
         this.miembros.set(miembros);
         this.cargando.set(false);
-        this.actualizarEsCapitan();
       },
       error: (err) => {
         this.error.set(err?.status === 404
@@ -115,14 +135,6 @@ export class TeamRosterComponent implements OnInit {
       this.cargarEquipo();
     }
     this.cargarMiembros();
-  }
-
-  private actualizarEsCapitan(): void {
-    const miId = Number(this.authService.usuario()?.id);
-    const soyCapitan = this.miembros().some(
-      (m) => m.usuarioId === miId && m.rol === 'CAPITAN' && m.estado === 'ACTIVO'
-    );
-    this.esCapitan.set(soyCapitan);
   }
 
   cambiarRol(miembro: MiembroEquipo, nuevoRol: string): void {
@@ -230,5 +242,27 @@ export class TeamRosterComponent implements OnInit {
         this.errorDisolucion.set(err?.error?.message ?? 'No se pudo disolver el equipo.');
       }
     });
+  }
+
+  buscarJugadores(): void {
+    this.buscando.set(true);
+    this.errorBusqueda.set(null);
+    this.teamsService.buscarJugadores(
+      this.equipoId, this.textoBusqueda().trim(), this.juegoIdBusqueda(), this.soloDisponibles()
+    ).subscribe({
+      next: (pagina) => {
+        // El backend ahora pagina; el template itera la lista de la página.
+        this.resultados.set(pagina.items);
+        this.buscando.set(false);
+      },
+      error: (err) => {
+        this.buscando.set(false);
+        this.errorBusqueda.set(err?.error?.message ?? 'No se pudo completar la busqueda.');
+      }
+    });
+  }
+
+  usarEnFormulario(jugador: JugadorDisponible): void {
+    this.invitarForm.patchValue({ jugadorId: jugador.id });
   }
 }
