@@ -418,3 +418,67 @@
     transition: none;
   }
 }
+
+// ---------- Tus competencias (accionable primero, referencia CM) ----------
+
+.competencias {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.competencia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+
+  &:hover { border-color: var(--accent); }
+
+  .competencia-info { flex: 1; min-width: 180px; }
+  .competencia-nombre { display: block; font-weight: 700; color: var(--text); }
+  .competencia-meta { display: block; margin-top: 2px; font-size: 0.8rem; color: var(--text-muted); }
+  .competencia-cta { font-size: 0.85rem; font-weight: 600; color: var(--accent-text); }
+}
+
+.competencia-chip, .rail-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+
+  &.chip-verde { background: var(--success-bg); color: var(--success-text); }
+  &.chip-en-curso { background: var(--success-bg); color: var(--success-text); }
+  &.chip-ambar { background: var(--warning-bg); color: var(--warning-text); }
+  &.chip-neutro { background: var(--neutral-bg); color: var(--text-muted); }
+}
+
+.rail-chip { align-self: flex-start; margin-top: 4px; }
+.rail-fecha { color: var(--accent-text); font-weight: 600; }
+
+.banner-organizador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 20px 0 8px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(120deg, var(--surface), var(--surface-2));
+
+  h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  p { margin: 0; color: var(--text-muted); font-size: 0.9rem; max-width: 52ch; }
+}

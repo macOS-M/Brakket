@@ -29,6 +29,11 @@ export class TournamentsService {
     return this.api.get<TorneoDetalle>(`/tournaments/${id}`);
   }
 
+  /** "Tus competencias": los que organizo + donde compite mi equipo. */
+  misCompetencias(): Observable<Torneo[]> {
+    return this.api.get<Torneo[]>('/tournaments/mios');
+  }
+
   crear(request: CrearTorneoRequest): Observable<Torneo> {
     return this.api.post<Torneo>('/tournaments', request);
   }

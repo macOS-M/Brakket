@@ -241,6 +241,11 @@ export class TournamentDetailComponent {
 
   constructor() {
     this.torneoId = Number(this.route.snapshot.paramMap.get('id'));
+    // Deep-link desde el panel: /tournaments/7?tab=llaves abre esa pestaña.
+    const tabInicial = this.route.snapshot.queryParamMap.get('tab');
+    if (tabInicial && ['resumen', 'llaves', 'matches', 'jugadores', 'resultados'].includes(tabInicial)) {
+      this.tab.set(tabInicial as TabDetalle);
+    }
     this.cargar();
   }
 

@@ -23,6 +23,12 @@ public interface TorneoService {
      */
     List<TorneoResponse> listar(Long juegoId, String correoOpcional);
 
+    /**
+     * "Tus competencias": torneos que el usuario organiza más aquellos
+     * donde compite un equipo del que es miembro activo.
+     */
+    List<TorneoResponse> misCompetencias(String correo);
+
     /** Detalle con equipos inscritos. Privado: solo organizador o ADMIN. */
     TorneoDetalleResponse obtenerDetalle(Long torneoId, String correoOpcional, boolean esAdmin);
 

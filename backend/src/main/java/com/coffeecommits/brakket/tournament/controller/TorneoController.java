@@ -57,6 +57,13 @@ public class TorneoController {
         return torneoService.listar(juegoId, correoDe(authentication));
     }
 
+    /** "Tus competencias": los que organizo + donde compite mi equipo. */
+    @GetMapping("/mios")
+    @PreAuthorize("isAuthenticated()")
+    public List<TorneoResponse> misCompetencias(Authentication authentication) {
+        return torneoService.misCompetencias(authentication.getName());
+    }
+
     @GetMapping("/{id}")
     public TorneoDetalleResponse obtener(@PathVariable Long id, Authentication authentication) {
         return torneoService.obtenerDetalle(id, correoDe(authentication), esAdmin(authentication));

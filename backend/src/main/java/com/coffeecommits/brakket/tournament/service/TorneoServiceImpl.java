@@ -149,6 +149,21 @@ public class TorneoServiceImpl implements TorneoService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TorneoResponse> misCompetencias(String correo) {
+        Usuario usuario = buscarUsuario(correo);
+        Map<Long, Torneo> visibles = new LinkedHashMap<>();
+        torneoRepository.findByOrganizadorIdOrderByFechaInicioAsc(usuario.getId())
+                .forEach(t -> visibles.put(t.getId(), t));
+        inscripcionRepository.inscripcionesVigentesDeUsuario(usuario.getId())
+                .forEach(i -> visibles.put(i.getTorneo().getId(), i.getTorneo()));
+        return visibles.values().stream()
+                .sorted((a, b) -> a.getFechaInicio().compareTo(b.getFechaInicio()))
+                .map(t -> TorneoResponse.from(t, inscripcionRepository.countVigentesPorTorneo(t.getId())))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public TorneoDetalleResponse obtenerDetalle(Long torneoId, String correoOpcional, boolean esAdmin) {
         Torneo torneo = buscarVisible(torneoId, correoOpcional, esAdmin);
         return detalleDe(torneo);

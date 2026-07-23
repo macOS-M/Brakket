@@ -17,6 +17,7 @@ import { Juego } from '../../../../models/juego.model';
 import { Torneo } from '../../../../models/tournament.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
@@ -27,7 +28,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -45,6 +46,7 @@ export class DashboardComponent implements OnInit {
   readonly ligas = signal<League[]>([]);
   readonly juegos = signal<Juego[]>([]);
   readonly torneos = signal<Torneo[]>([]);
+  readonly misCompetencias = signal<Torneo[]>([]);
 
   /** Si todas las peticiones fallan mostramos un error, no un panel en ceros. */
   readonly errorGeneral = signal(false);
@@ -82,6 +84,43 @@ export class DashboardComponent implements OnInit {
   /** Rail de próximos torneos (referencia "Upcoming Tournaments"). */
   readonly proximosTorneos = computed(() => this.torneos().slice(0, 5));
 
+  /**
+   * "Tus competencias": lo accionable primero (referencia CM) — torneos en
+   * curso arriba (hay resultados que reportar), luego los que vienen.
+   */
+  readonly competencias = computed(() => {
+    const orden: Record<string, number> = { EN_CURSO: 0, INSCRIPCION_ABIERTA: 1 };
+    return this.misCompetencias()
+      .filter((t) => t.estado !== 'FINALIZADO' && t.estado !== 'CANCELADO')
+      .sort((a, b) =>
+        (orden[a.estado] ?? 2) - (orden[b.estado] ?? 2)
+        || a.fechaInicio.localeCompare(b.fechaInicio))
+      .slice(0, 4);
+  });
+
+  /** Sin nada organizado: se le ofrece convertirse en organizador (CM). */
+  readonly organizaAlgo = computed(() => {
+    const uid = Number(this.auth.usuario()?.id);
+    return !!uid && this.misCompetencias().some((t) => t.organizadorId === uid);
+  });
+
+  esOrganizadorDe(torneo: Torneo): boolean {
+    return Number(this.auth.usuario()?.id) === torneo.organizadorId;
+  }
+
+  badgeDe(torneo: Torneo): { texto: string; clase: string } {
+    switch (torneo.estado) {
+      case 'EN_CURSO':
+        return { texto: '● En curso', clase: 'en-curso' };
+      case 'FINALIZADO':
+        return { texto: 'Finalizado', clase: 'neutro' };
+      default:
+        return torneo.inscritos >= torneo.maxEquipos
+          ? { texto: 'Cupo lleno', clase: 'ambar' }
+          : { texto: 'Abierta', clase: 'verde' };
+    }
+  }
+
   ngOnInit(): void {
     this.cargar();
   }
@@ -103,13 +142,17 @@ export class DashboardComponent implements OnInit {
         : of([] as Transferencia[]),
       ligas: this.leaguesService.list().pipe(catchError(() => of(null))),
       juegos: this.gamesService.listActivos().pipe(catchError(() => of(null))),
-      torneos: this.tournamentsService.listar().pipe(catchError(() => of(null)))
+      torneos: this.tournamentsService.listar().pipe(catchError(() => of(null))),
+      misCompetencias: conSesion
+        ? this.tournamentsService.misCompetencias().pipe(catchError(() => of(null)))
+        : of([] as Torneo[])
     }).subscribe((res) => {
       this.invitaciones.set(res.invitaciones ?? []);
       this.transferencias.set(res.transferencias ?? []);
       this.ligas.set(res.ligas ?? []);
       this.juegos.set(res.juegos ?? []);
       this.torneos.set(res.torneos ?? []);
+      this.misCompetencias.set(res.misCompetencias ?? []);
 
       const todoFallo =
         res.invitaciones === null &&

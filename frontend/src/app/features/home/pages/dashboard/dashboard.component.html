@@ -38,6 +38,51 @@
       </a>
       }
 
+      <!-- Tus competencias: lo accionable primero (referencia CM). -->
+      @if (competencias().length > 0) {
+      <h2 class="seccion">Tus competencias</h2>
+      <ul class="competencias">
+        @for (torneo of competencias(); track torneo.id) {
+        <li>
+          <a
+            class="competencia"
+            [routerLink]="['/tournaments', torneo.id]"
+            [queryParams]="torneo.estado === 'EN_CURSO' ? { tab: 'llaves' } : null"
+          >
+            <span class="competencia-info">
+              <span class="competencia-nombre">{{ torneo.nombre }}</span>
+              <span class="competencia-meta">
+                {{ torneo.juegoNombre }} ·
+                {{ esOrganizadorDe(torneo) ? 'Lo organizás' : 'Competís' }} ·
+                {{ torneo.fechaInicio | fechaRelativa }}
+              </span>
+            </span>
+            <span class="competencia-chip" [class]="'chip-' + badgeDe(torneo).clase">
+              {{ badgeDe(torneo).texto }}
+            </span>
+            <span class="competencia-cta">
+              {{ torneo.estado === 'EN_CURSO' ? 'Ver llaves →' : 'Ver torneo →' }}
+            </span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+
+      <!-- CM le dedica un banner entero a "Hazte organizador". -->
+      @if (auth.isAuthenticated() && !organizaAlgo()) {
+      <div class="banner-organizador">
+        <div>
+          <h2>Convertite en organizador</h2>
+          <p>
+            Cualquier usuario puede crear su torneo: elegí un juego, definí las
+            reglas y la llave se arma sola.
+          </p>
+        </div>
+        <a class="btn-primary" routerLink="/games">Crear mi torneo</a>
+      </div>
+      }
+
       <!-- Fila de juegos top, como los pósters de la referencia. -->
       @if (topJuegos().length > 0) {
       <h2 class="seccion">Juegos top</h2>
@@ -168,7 +213,10 @@
               }
               <span class="rail-meta">
                 {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos ·
-                {{ torneo.fechaInicio | date: 'd/MM HH:mm' }}
+                <span class="rail-fecha">{{ torneo.fechaInicio | fechaRelativa }}</span>
+              </span>
+              <span class="rail-chip" [class]="'chip-' + badgeDe(torneo).clase">
+                {{ badgeDe(torneo).texto }}
               </span>
             </span>
           </a>

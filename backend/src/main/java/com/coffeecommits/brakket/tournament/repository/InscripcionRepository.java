@@ -41,6 +41,21 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
             """)
     boolean existsInscripcionActivaPorEquipo(@Param("equipoId") Long equipoId);
 
+    /**
+     * Torneos donde compite el usuario: inscripciones vigentes de equipos
+     * en los que es miembro activo (para el "Tus competencias" del panel).
+     */
+    @Query("""
+            select i from Inscripcion i
+            where i.estado not in ('RECHAZADA', 'CANCELADA')
+              and exists (
+                  select 1 from MiembroEquipo m
+                  where m.equipo.id = i.equipo.id
+                    and m.usuario.id = :usuarioId
+                    and m.estado = 'ACTIVO')
+            """)
+    List<Inscripcion> inscripcionesVigentesDeUsuario(@Param("usuarioId") Long usuarioId);
+
     /** Inscripciones vigentes en orden de llegada: la siembra del bracket. */
     @Query("""
             select i from Inscripcion i
