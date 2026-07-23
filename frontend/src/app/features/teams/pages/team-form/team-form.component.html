@@ -1,57 +1,84 @@
 <section class="page">
-  <h1>{{ esEdicion ? 'Editar equipo' : 'Nuevo equipo' }}</h1>
+  <app-page-header
+    [titulo]="esEdicion ? 'Editar equipo' : 'Nuevo equipo'"
+    [subtitulo]="esEdicion
+      ? 'Actualizá los datos y la visibilidad del equipo.'
+      : 'Definí el nombre, la disciplina y los enlaces del equipo.'"
+  />
 
   @if (cargando()) {
-  <p class="placeholder inline">Cargando información del equipo...</p>
+  <p class="placeholder-inline">Cargando información del equipo…</p>
   }
 
   @if (error()) {
-  <p class="mensaje-error">{{ error() }}</p>
+  <p class="aviso-error" role="alert">{{ error() }}</p>
   }
 
   @if (exito()) {
-  <p class="mensaje-exito">{{ exito() }}</p>
+  <p class="aviso-exito" role="status">{{ exito() }}</p>
   }
 
   @if (!cargando()) {
-  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
-    <div class="campo">
-      <label for="nombre">Nombre *</label>
-      <input id="nombre" type="text" formControlName="nombre" />
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form" novalidate>
+    <div class="field">
+      <label class="label" for="nombre">Nombre *</label>
+      <input
+        id="nombre"
+        type="text"
+        formControlName="nombre"
+        placeholder="Ej. Dragones de Cristal"
+        [class.invalido]="form.controls.nombre.invalid && form.controls.nombre.touched"
+        [attr.aria-invalid]="form.controls.nombre.invalid && form.controls.nombre.touched"
+        [attr.aria-describedby]="form.controls.nombre.invalid && form.controls.nombre.touched ? 'nombre-error' : null"
+      />
       @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
-      <span class="error-campo">El nombre es obligatorio (máx. 120 caracteres).</span>
+      <span id="nombre-error" class="field-error">El nombre es obligatorio (máx. 120 caracteres).</span>
       }
     </div>
 
-    <div class="campo">
-      <label for="juegoId">Disciplina / juego principal *</label>
-      <select id="juegoId" formControlName="juegoId">
-        <option [ngValue]="null">Selecciona un juego</option>
+    <div class="field">
+      <label class="label" for="juegoId">Disciplina / juego principal *</label>
+      <select
+        id="juegoId"
+        formControlName="juegoId"
+        [class.invalido]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
+        [attr.aria-invalid]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
+        [attr.aria-describedby]="form.controls.juegoId.invalid && form.controls.juegoId.touched ? 'juego-error' : null"
+      >
+        <option [ngValue]="null">Seleccioná un juego…</option>
         @for (juego of juegos(); track juego.id) {
         <option [ngValue]="juego.id">{{ juego.nombre }}</option>
         }
       </select>
       @if (form.controls.juegoId.invalid && form.controls.juegoId.touched) {
-      <span class="error-campo">Debes seleccionar un juego.</span>
+      <span id="juego-error" class="field-error">Debés seleccionar un juego.</span>
       }
     </div>
 
-    <div class="campo">
-      <label for="logo">Logo (URL)</label>
-      <input id="logo" type="text" formControlName="logo" placeholder="https://..." />
+    <div class="field">
+      <label class="label" for="logo">Logo (URL)</label>
+      <input id="logo" type="text" formControlName="logo" placeholder="https://…" />
     </div>
 
-    <div class="campo">
-      <label for="descripcion">Descripción</label>
-      <textarea id="descripcion" formControlName="descripcion" rows="3"></textarea>
+    <div class="field">
+      <label class="label" for="descripcion">Descripción</label>
+      <textarea
+        id="descripcion"
+        formControlName="descripcion"
+        rows="3"
+        placeholder="Contá brevemente la identidad del equipo."
+        [class.invalido]="form.controls.descripcion.invalid && form.controls.descripcion.touched"
+        [attr.aria-invalid]="form.controls.descripcion.invalid && form.controls.descripcion.touched"
+        [attr.aria-describedby]="form.controls.descripcion.invalid && form.controls.descripcion.touched ? 'descripcion-error' : null"
+      ></textarea>
       @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
-      <span class="error-campo">Máximo 500 caracteres.</span>
+      <span id="descripcion-error" class="field-error">Máximo 500 caracteres.</span>
       }
     </div>
 
     @if (esEdicion) {
-    <div class="campo">
-      <label for="estadoPrivacidad">Visibilidad del equipo</label>
+    <div class="field">
+      <label class="label" for="estadoPrivacidad">Visibilidad del equipo</label>
       <select id="estadoPrivacidad" formControlName="estadoPrivacidad">
         <option value="PUBLIC">Público</option>
         <option value="PRIVATE">Privado</option>
@@ -59,22 +86,27 @@
     </div>
     }
 
-    <div class="campo">
-      <label>Redes sociales</label>
+    <div class="field">
+      <label class="label">Redes sociales</label>
       @for (control of redesSociales.controls; track $index) {
       <div class="red-social-item">
-        <input type="text" [formControl]="$any(control)" placeholder="https://twitter.com/..." />
-        <button type="button" class="btn-quitar" (click)="quitarRedSocial($index)">✕</button>
+        <input type="text" [formControl]="$any(control)" placeholder="https://twitter.com/…" />
+        <button
+          type="button"
+          class="btn-quitar"
+          (click)="quitarRedSocial($index)"
+          aria-label="Quitar enlace"
+        >✕</button>
       </div>
       }
       <button type="button" class="btn-agregar" (click)="agregarRedSocial()">+ Agregar enlace</button>
     </div>
 
-    <div class="acciones">
-      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+    <div class="actions">
       <button type="submit" class="btn-primary" [disabled]="guardando()">
-        {{ guardando() ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Crear equipo') }}
+        {{ guardando() ? 'Guardando…' : (esEdicion ? 'Guardar cambios' : 'Crear equipo') }}
       </button>
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
     </div>
   </form>
   }

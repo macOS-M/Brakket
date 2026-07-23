@@ -1,16 +1,18 @@
 <section class="page">
-  <header>
+  <header class="page-header">
     <p class="eyebrow">RF-34 · Integración oficial</p>
     <h1>Canal oficial de Twitch</h1>
     <p>Configura el canal de Brakket y comprueba su conexión sin exponer credenciales.</p>
   </header>
 
   @if (canal; as c) {
-    <article class="status-card">
+    <article class="card status-card">
       <div>
         <span class="status" [class.active]="c.activo">{{ c.estado }}</span>
         <h2>{{ c.nombreMostrado || c.loginCanal || 'Sin configurar' }}</h2>
-        @if (c.urlCanal) { <a [href]="c.urlCanal" target="_blank" rel="noopener">{{ c.urlCanal }}</a> }
+        @if (c.urlCanal) {
+          <a [href]="c.urlCanal" target="_blank" rel="noopener">{{ c.urlCanal }}</a>
+        }
       </div>
       <dl>
         <div><dt>Credenciales</dt><dd>{{ c.credencialesConfiguradas ? 'Configuradas' : 'Pendientes' }}</dd></div>
@@ -20,7 +22,7 @@
     </article>
   }
 
-  <article class="panel">
+  <article class="card">
     <h2>Configurar canal</h2>
     <label for="canal">Usuario o URL de Twitch</label>
     <input id="canal" [(ngModel)]="canalEntrada" maxlength="300">
@@ -30,14 +32,16 @@
     </div>
   </article>
 
-  <article class="panel">
+  <article class="card">
     <h2>Asociar transmisión</h2>
     <p>Puede asociarse al torneo, a una partida o a ambos.</p>
     <div class="fields">
       <label>ID del torneo <input type="number" min="1" [(ngModel)]="torneoId"></label>
       <label>ID de la partida <input type="number" min="1" [(ngModel)]="partidaId"></label>
     </div>
-    <button (click)="asociar()" [disabled]="cargando || !canal?.activo">Asociar y consultar estado en vivo</button>
+    <button (click)="asociar()" [disabled]="cargando || !canal?.activo">
+      Asociar y consultar estado en vivo
+    </button>
     @if (transmision) { <p class="result">Estado: {{ transmision.estado }}</p> }
   </article>
 

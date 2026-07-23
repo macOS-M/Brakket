@@ -4,10 +4,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TwitchService } from '../../services/twitch.service';
 import { CanalTwitch, TransmisionTwitch } from '../../../../models/twitch.model';
 
-/**
- * Twitch. Placeholder de la feature "twitch".
- * Pendiente EPIC-09.
- */
 @Component({
   selector: 'app-twitch-panel',
   standalone: true,

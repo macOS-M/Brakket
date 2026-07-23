@@ -79,7 +79,7 @@ class LigaServiceImplTest {
             return l;
         });
 
-        LigaResponse resp = ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L));
+        LigaResponse resp = ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L, null, null, null));
 
         assertThat(resp.id()).isEqualTo(50L);
         assertThat(resp.nombre()).isEqualTo("Liga Pro");
@@ -93,7 +93,7 @@ class LigaServiceImplTest {
         when(juegoRepository.findById(3L)).thenReturn(Optional.of(juego()));
         when(ligaRepository.existsByComisionadoIdAndNombreIgnoreCase(1L, "Liga Pro")).thenReturn(true);
 
-        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L)))
+        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga Pro", 3L, null, null, null)))
                 .isInstanceOf(BusinessException.class);
         verify(ligaRepository, never()).save(any(Liga.class));
     }
@@ -103,7 +103,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
         when(juegoRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 99L)))
+        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 99L, null, null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -164,7 +164,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
         when(juegoRepository.findById(4L)).thenReturn(Optional.of(inactivo));
 
-        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 4L)))
+        assertThatThrownBy(() -> ligaService.crearLiga(CORREO, new CrearLigaRequest("Liga X", 4L, null, null, null)))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(ligaRepository, never()).save(any(Liga.class));
     }
@@ -196,7 +196,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo("beto@brakket.gg")).thenReturn(Optional.of(otro));
 
         assertThatThrownBy(() -> ligaService.actualizarLiga(
-                50L, "beto@brakket.gg", new ActualizarLigaRequest("Otro nombre", 3L)))
+                50L, "beto@brakket.gg", new ActualizarLigaRequest("Otro nombre", 3L, null, null, null)))
                 .isInstanceOf(ForbiddenException.class);
     }
 
@@ -209,7 +209,7 @@ class LigaServiceImplTest {
         when(ligaRepository.existsByComisionadoIdAndNombreIgnoreCase(1L, "Liga Elite")).thenReturn(true);
 
         assertThatThrownBy(() -> ligaService.actualizarLiga(
-                50L, CORREO, new ActualizarLigaRequest("Liga Elite", 3L)))
+                50L, CORREO, new ActualizarLigaRequest("Liga Elite", 3L, null, null, null)))
                 .isInstanceOf(BusinessException.class);
     }
 
@@ -222,7 +222,7 @@ class LigaServiceImplTest {
         when(juegoRepository.findById(3L)).thenReturn(Optional.of(juego()));
 
         LigaResponse resp = ligaService.actualizarLiga(
-                50L, CORREO, new ActualizarLigaRequest("LIGA PRO", 3L));
+                50L, CORREO, new ActualizarLigaRequest("LIGA PRO", 3L, null, null, null));
 
         assertThat(resp.nombre()).isEqualTo("LIGA PRO");
         verify(ligaRepository, never()).existsByComisionadoIdAndNombreIgnoreCase(any(), any());
@@ -238,4 +238,45 @@ class LigaServiceImplTest {
         assertThat(opciones).hasSize(1);
         assertThat(opciones.get(0).nombre()).isEqualTo("Valorant");
     }
+
+    @Test
+    void eliminarLiga_borra_temporadas_y_liga_si_es_el_comisionado() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
+
+        ligaService.eliminarLiga(50L, CORREO, false);
+
+        verify(temporadaRepository).deleteByLigaId(50L);
+        verify(ligaRepository).delete(liga);
+    }
+
+    @Test
+    void eliminarLiga_rechaza_a_quien_no_es_comisionado_ni_admin() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        Usuario otro = Usuario.builder().id(2L).nombre("Bruno").correo("bruno@brakket.gg").build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo("bruno@brakket.gg")).thenReturn(Optional.of(otro));
+
+        assertThatThrownBy(() -> ligaService.eliminarLiga(50L, "bruno@brakket.gg", false))
+                .isInstanceOf(ForbiddenException.class);
+        verify(ligaRepository, never()).delete(any(Liga.class));
+        verify(temporadaRepository, never()).deleteByLigaId(any());
+    }
+
+    @Test
+    void eliminarLiga_permite_a_un_admin_borrar_liga_ajena() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+
+        ligaService.eliminarLiga(50L, "admin@brakket.gg", true);
+
+        // Con esAdmin no hace falta resolver el usuario: borra directo.
+        verify(temporadaRepository).deleteByLigaId(50L);
+        verify(ligaRepository).delete(liga);
+    }
 }
+

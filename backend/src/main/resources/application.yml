@@ -50,6 +50,13 @@ brakket:
   ai:
     api-key: ${AI_API_KEY:}
     api-base-url: ${AI_API_BASE_URL:}
+  rawg:
+    api-key: ${RAWG_API_KEY:}
+    base-url: https://api.rawg.io/api
+  # Correos que reciben ADMIN al iniciar sesión (bootstrap de plataforma).
+  # El seed de V8 solo cubría cuentas ya existentes al migrar: en una base
+  # recién creada nadie quedaba admin. Esta lista lo garantiza en el login.
+  admin-emails: ${ADMIN_EMAILS:gvalverdem@ucenfotec.ac.cr,dchavarriam@ucenfotec.ac.cr,mmoralesc@ucenfotec.ac.cr,mcalvoe@ucenfotec.ac.cr,ccespedesc@ucenfotec.ac.cr,dcarmiola@ucenfotec.ac.cr}
 
 # ---------- Actuator (RNF-21) ----------
 management:

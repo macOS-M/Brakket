@@ -8,6 +8,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -45,7 +49,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   ClientRegistrationRepository clientRegistrationRepository)
+            throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 // API REST con JWT: sin CSRF y sin sesión de servidor.
@@ -57,10 +63,21 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
+                        // Registro y login locales (DD-04): públicos por diseño.
+                        .requestMatchers(HttpMethod.POST, "/api/auth/registro", "/api/auth/login").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // Lecturas públicas (catálogo de juegos):
+                        // Lecturas públicas: el catálogo, las ligas y la búsqueda de
+                        // equipos son navegables sin sesión; el login se exige recién
+                        // al actuar (crear, inscribir, invitar). El buscador externo
+                        // queda fuera del permitAll: consume la API key de RAWG y
+                        // exige sesión (primer match gana).
+                        .requestMatchers(HttpMethod.GET, "/api/games/buscar-externo").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/leagues/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/teams/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tournaments/*/equipos-elegibles").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // Todo lo demás requiere JWT válido.
                         .anyRequest().authenticated()
                 )
@@ -71,12 +88,27 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 // Login con Google -> emite JWT y redirige al frontend.
+                // prompt=select_account: Google muestra siempre el selector de
+                // cuentas en vez de reutilizar en silencio la última sesión.
                 .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authorizationRequestResolver(
+                                        conSelectorDeCuentas(clientRegistrationRepository)))
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler(oAuth2LoginFailureHandler))
                 // Valida el JWT en cada request antes de la autenticación por usuario/clave.
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private static OAuth2AuthorizationRequestResolver conSelectorDeCuentas(
+            ClientRegistrationRepository clientRegistrationRepository) {
+        DefaultOAuth2AuthorizationRequestResolver resolver = new DefaultOAuth2AuthorizationRequestResolver(
+                clientRegistrationRepository,
+                OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI);
+        resolver.setAuthorizationRequestCustomizer(builder ->
+                builder.additionalParameters(params -> params.put("prompt", "select_account")));
+        return resolver;
     }
 }

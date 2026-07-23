@@ -24,4 +24,11 @@ public interface GameService {
 
     /** Desactiva un juego (baja lógica, nunca se borra de la base). */
     void desactivar(Long id);
+
+    /**
+     * Trae un juego del catálogo externo al propio (o lo reactiva/devuelve si
+     * ya existía). Los datos salen de la API, no del usuario: cualquier
+     * usuario autenticado puede pedirlo sin riesgo de datos basura.
+     */
+    JuegoResponse importarDesdeExterno(String nombre);
 }

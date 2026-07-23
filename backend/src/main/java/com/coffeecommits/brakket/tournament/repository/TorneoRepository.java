@@ -15,14 +15,23 @@ public interface TorneoRepository extends JpaRepository<Torneo, Long> {
 
     List<Torneo> findByTemporadaId(Long temporadaId);
 
-    boolean existsByTemporadaLigaJuegoIdAndEstadoNotIn(
-            Long juegoId, Collection<EstadoTorneo> estadosCerrados);
+    /** Torneos públicos de un juego, próximos primero. */
+    List<Torneo> findByJuegoIdAndPublicoTrueOrderByFechaInicioAsc(Long juegoId);
+
+    /** Todos los torneos públicos (listado global), próximos primero. */
+    List<Torneo> findByPublicoTrueOrderByFechaInicioAsc();
+
+    /** Torneos organizados por un usuario (incluye privados), próximos primero. */
+    List<Torneo> findByOrganizadorIdOrderByFechaInicioAsc(Long organizadorId);
+
+    /** Desde el modelo abierto (V22) todo torneo referencia su juego directo. */
+    boolean existsByJuegoIdAndEstadoNotIn(Long juegoId, Collection<EstadoTorneo> estadosCerrados);
 
     boolean existsByTemporadaIdAndEstadoNotIn(
             Long temporadaId, Collection<EstadoTorneo> estadosCerrados);
 
     default boolean existsActivoByJuegoId(Long juegoId) {
-        return existsByTemporadaLigaJuegoIdAndEstadoNotIn(juegoId, ESTADOS_CERRADOS);
+        return existsByJuegoIdAndEstadoNotIn(juegoId, ESTADOS_CERRADOS);
     }
 
     default boolean existsActivoByTemporadaId(Long temporadaId) {

@@ -3,6 +3,10 @@ import { RouterLink } from '@angular/router';
 
 import { League } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
  * Listado de ligas (RF-22). Punto de entrada de la feature: muestra las ligas
@@ -11,12 +15,13 @@ import { LeaguesService } from '../../services/leagues.service';
 @Component({
   selector: 'app-league-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './league-list.component.html',
   styleUrl: './league-list.component.scss'
 })
 export class LeagueListComponent {
   private readonly leaguesService = inject(LeaguesService);
+  readonly auth = inject(AuthService);
 
   readonly leagues = signal<League[]>([]);
   readonly loading = signal(true);
@@ -24,6 +29,16 @@ export class LeagueListComponent {
 
   constructor() {
     this.cargar();
+  }
+
+  /** Portada: foto propia → arte del juego → foto de stock → gradiente. */
+  foto(liga: League): string | null {
+    return liga.fotoUrl || liga.juegoImagenUrl || (liga.juegoNombre ? portadaFoto(liga.juegoNombre) : null);
+  }
+
+  /** Portada determinística por nombre de liga (ver shared/utils/cover). */
+  portada(nombre: string): string {
+    return portadaGradiente(nombre);
   }
 
   private cargar(): void {

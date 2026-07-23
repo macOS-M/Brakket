@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 
-/**
- * Disputas. Placeholder de la feature "disputes".
- * Pendiente EPIC-08.
- */
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
+
 @Component({
   selector: 'app-dispute-list',
   standalone: true,
-  imports: [],
+  imports: [ComingSoonComponent],
   templateUrl: './dispute-list.component.html',
   styleUrl: './dispute-list.component.scss'
 })

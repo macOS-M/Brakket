@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
 
-/**
- * Estadisticas. Placeholder de la feature "statistics".
- * Pendiente EPIC-13.
- */
+import { ComingSoonComponent } from '../../../../shared/components/coming-soon/coming-soon.component';
+
 @Component({
   selector: 'app-statistics-view',
   standalone: true,
-  imports: [],
+  imports: [ComingSoonComponent],
   templateUrl: './statistics-view.component.html',
   styleUrl: './statistics-view.component.scss'
 })

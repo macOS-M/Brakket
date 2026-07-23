@@ -4,12 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { TeamsService } from '../../services/teams.service';
 
 @Component({
   selector: 'app-team-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PageHeaderComponent],
   templateUrl: './team-form.component.html',
   styleUrl: './team-form.component.scss'
 })

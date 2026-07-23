@@ -1,12 +1,16 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { Invitacion } from '../../../../models/invitacion.model';
 import { TeamsService } from '../../services/teams.service';
 
 @Component({
   selector: 'app-my-invitations',
   standalone: true,
-  imports: [],
+  imports: [DatePipe, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
   templateUrl: './my-invitations.component.html',
   styleUrl: './my-invitations.component.scss'
 })

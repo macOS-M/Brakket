@@ -1,18 +1,22 @@
 <section class="page">
-  <div class="header">
-    <h1>Equipos</h1>
+  <app-page-header titulo="Equipos" subtitulo="Buscá equipos y consultá sus plantillas">
     <a class="btn-primary" routerLink="/teams/nuevo">+ Nuevo equipo</a>
-  </div>
+  </app-page-header>
 
   <form class="filtros" [formGroup]="filtros">
-    <input
-      class="filtro texto"
-      type="search"
-      formControlName="q"
-      placeholder="Buscar por nombre..."
-      [attr.maxlength]="largoMaximoTexto"
-      aria-label="Texto de búsqueda"
-    />
+    <label class="buscador">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input
+        type="search"
+        formControlName="q"
+        placeholder="Buscar por nombre…"
+        [attr.maxlength]="largoMaximoTexto"
+        aria-label="Texto de búsqueda"
+      />
+    </label>
     <select class="filtro" formControlName="juegoId" aria-label="Filtrar por juego">
       <option value="">Todos los juegos</option>
       @for (juego of juegos(); track juego.id) {
@@ -34,42 +38,46 @@
   </form>
 
   @if (cargando()) {
-  <p class="placeholder">Buscando equipos...</p>
+  <app-empty-state modo="cargando" mensaje="Buscando equipos…" />
   } @else if (error()) {
-  <div class="estado-error">
-    <p class="placeholder error">{{ error() }}</p>
+  <app-empty-state modo="error" titulo="No se pudo buscar" [mensaje]="error()">
     <button class="btn-secondary" type="button" (click)="reintentar()">Reintentar</button>
-  </div>
+  </app-empty-state>
   } @else if (pagina() && pagina()!.items.length === 0) {
-  <p class="placeholder">No se encontraron equipos con los criterios indicados.</p>
+  <app-empty-state
+    titulo="Sin resultados"
+    mensaje="Ningún equipo coincide con los criterios indicados."
+  >
+    <button class="btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </app-empty-state>
   } @else if (pagina()) {
   <div class="grid">
     @for (equipo of pagina()!.items; track equipo.id) {
-    <div class="equipo-card">
-      <div class="portada">
+    <article class="equipo-card">
+      <div class="cabecera">
         @if (equipo.logo) {
-        <img class="logo" [src]="equipo.logo" [alt]="equipo.nombre" />
+        <img class="logo" [src]="equipo.logo" [alt]="" />
         } @else {
-        <div class="logo placeholder-logo">{{ equipo.nombre.charAt(0) }}</div>
+        <span class="logo sin-logo" aria-hidden="true">{{ equipo.nombre.charAt(0) }}</span>
         }
-        <span class="estado" [class.disuelto]="equipo.estado === 'DISUELTO'">
-          {{ equipo.estado === 'DISUELTO' ? 'Disuelto' : 'Activo' }}
-        </span>
+        <div class="identidad">
+          <h2 class="nombre">{{ equipo.nombre }}</h2>
+          @if (equipo.juegoNombre) {
+          <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+          }
+        </div>
+        <app-status-badge [estado]="equipo.estado" />
       </div>
-      <div class="info">
-        <p class="nombre">{{ equipo.nombre }}</p>
-        @if (equipo.juegoNombre) {
-        <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
-        }
-        @if (equipo.descripcion) {
-        <p class="descripcion">{{ equipo.descripcion }}</p>
-        }
-      </div>
+
+      @if (equipo.descripcion) {
+      <p class="descripcion">{{ equipo.descripcion }}</p>
+      }
+
       <div class="acciones">
         <a class="btn-secondary" [routerLink]="['/team-profile', equipo.id]">Ver perfil</a>
         <a class="btn-secondary" [routerLink]="['/teams', equipo.id, 'plantilla']">Plantilla</a>
       </div>
-    </div>
+    </article>
     }
   </div>
 
@@ -84,8 +92,8 @@
       ← Anterior
     </button>
     <span class="indicador">
-      Página {{ pagina()!.page + 1 }} de {{ pagina()!.totalPages }}
-      ({{ pagina()!.totalElements }} equipos)
+      Página {{ pagina()!.page + 1 }} de {{ pagina()!.totalPages }} ·
+      {{ pagina()!.totalElements }} equipos
     </span>
     <button
       class="btn-secondary"

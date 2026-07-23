@@ -1,5 +1,12 @@
 import { Routes } from '@angular/router';
 
+import { authGuard } from '../../core/guards/auth.guard';
+
+/**
+ * Modelo abierto de organizadores: la lista y el detalle son públicos;
+ * crear exige solo sesión (quien crea queda como comisionado de SU liga)
+ * y editar valida propiedad en el backend.
+ */
 export const routes: Routes = [
   {
     path: '',
@@ -8,6 +15,7 @@ export const routes: Routes = [
   },
   {
     path: 'nuevo',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/league-form/league-form.component').then((m) => m.LeagueFormComponent)
   },
@@ -18,6 +26,7 @@ export const routes: Routes = [
   },
   {
     path: ':id/editar',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/league-form/league-form.component').then((m) => m.LeagueFormComponent)
   }

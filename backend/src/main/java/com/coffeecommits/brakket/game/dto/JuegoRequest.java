@@ -14,6 +14,9 @@ public record JuegoRequest(
         String genero,
 
         @Size(max = 1000, message = "La descripcion no puede superar los 1000 caracteres")
-        String descripcion
+        String descripcion,
+
+        @Size(max = 500, message = "La URL de imagen no puede superar los 500 caracteres")
+        String imagenUrl
 ) {
 }

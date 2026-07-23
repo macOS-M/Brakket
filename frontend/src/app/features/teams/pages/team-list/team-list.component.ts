@@ -7,6 +7,9 @@ import { EquipoBusqueda, Pagina } from '../../../../models/equipo.model';
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
 import { TeamsService } from '../../services/teams.service';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 
 /** Largo máximo del texto de búsqueda (igual al nombre de equipo en la BD). */
 const LARGO_MAXIMO_TEXTO = 120;
@@ -18,7 +21,13 @@ const TAMANO_PAGINA = 12;
 @Component({
   selector: 'app-team-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    PageHeaderComponent,
+    EmptyStateComponent,
+    StatusBadgeComponent
+  ],
   templateUrl: './team-list.component.html',
   styleUrl: './team-list.component.scss'
 })
