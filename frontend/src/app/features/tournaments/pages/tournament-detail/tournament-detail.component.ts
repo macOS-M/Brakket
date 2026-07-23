@@ -1,4 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
@@ -51,7 +59,11 @@ export class TournamentDetailComponent {
   private readonly tournamentsService = inject(TournamentsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly auth = inject(AuthService);
+
+  /** Frecuencia del latido en vivo mientras el torneo está en curso. */
+  private static readonly LATIDO_MS = 12000;
 
   readonly detalle = signal<TorneoDetalle | null>(null);
   readonly cargando = signal(true);
@@ -78,6 +90,12 @@ export class TournamentDetailComponent {
 
   readonly filtroMatch = signal<FiltroMatch>('todos');
   readonly filtroJugador = signal('');
+
+  /** true mientras corre la ceremonia del campeón (confetti + brillo). */
+  readonly celebracion = signal(false);
+  private readonly confeti = viewChild<ElementRef<HTMLCanvasElement>>('confeti');
+  /** Último estado conocido: detecta el paso EN_CURSO → FINALIZADO en vivo. */
+  private estadoPrevio: string | null = null;
 
   private readonly torneoId: number;
 
@@ -249,6 +267,136 @@ export class TournamentDetailComponent {
       this.tab.set(tabInicial as TabDetalle);
     }
     this.cargar();
+
+    // Sala en vivo: mientras el torneo esté en curso y la pestaña visible,
+    // la llave se refresca sola; los cambios llegan con transición suave.
+    const latido = setInterval(() => this.latido(), TournamentDetailComponent.LATIDO_MS);
+    this.destroyRef.onDestroy(() => clearInterval(latido));
+  }
+
+  // ---------- sala en vivo ----------
+
+  private latido(): void {
+    if (
+      document.hidden
+      || this.cargando()
+      || this.iniciando()
+      || this.enviandoResultado()
+      || !this.enCurso()
+    ) {
+      return;
+    }
+    forkJoin({
+      detalle: this.tournamentsService.obtener(this.torneoId).pipe(catchError(() => of(null))),
+      partidas: this.tournamentsService.bracket(this.torneoId).pipe(catchError(() => of(null)))
+    }).subscribe(({ detalle, partidas }) => {
+      if (!detalle || partidas === null) {
+        return;
+      }
+      const cambio = this.hayCambios(detalle, partidas);
+      if (!cambio) {
+        return;
+      }
+      this.conTransicion(() => {
+        this.aplicarDetalle(detalle);
+        this.partidas.set(partidas);
+      });
+    });
+  }
+
+  private hayCambios(detalle: TorneoDetalle, partidas: Partida[]): boolean {
+    const firma = (lista: Partida[]) =>
+      lista.map((p) => `${p.id}:${p.estado}:${p.marcadorA}:${p.marcadorB}:${p.equipoAId}:${p.equipoBId}`).join('|');
+    return detalle.torneo.estado !== this.torneo()?.estado
+      || detalle.torneo.inscritos !== this.torneo()?.inscritos
+      || firma(partidas) !== firma(this.partidas());
+  }
+
+  /** Aplica un cambio de datos dentro de una View Transition si existe. */
+  private conTransicion(aplicar: () => void): void {
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => Promise<void>) => void;
+    };
+    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!doc.startViewTransition || reducido) {
+      aplicar();
+      return;
+    }
+    doc.startViewTransition(async () => {
+      aplicar();
+      // Deja que Angular pinte el nuevo estado antes de capturar el "después".
+      await new Promise((resolver) => setTimeout(resolver, 0));
+    });
+  }
+
+  /** Punto único de entrada del detalle: detecta la coronación en vivo. */
+  private aplicarDetalle(detalle: TorneoDetalle): void {
+    const nuevo = detalle.torneo.estado;
+    if (this.estadoPrevio === 'EN_CURSO' && nuevo === 'FINALIZADO') {
+      this.celebrar();
+    }
+    this.estadoPrevio = nuevo;
+    this.detalle.set(detalle);
+  }
+
+  // ---------- ceremonia ----------
+
+  /** Confetti en colores de marca al coronarse el campeón. Una sola vez. */
+  private celebrar(): void {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    this.celebracion.set(true);
+    setTimeout(() => {
+      const canvas = this.confeti()?.nativeElement;
+      if (canvas) {
+        this.animarConfeti(canvas);
+      }
+    });
+    setTimeout(() => this.celebracion.set(false), 2800);
+  }
+
+  private animarConfeti(canvas: HTMLCanvasElement): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const colores = ['#ff5500', '#eab308', '#22d3ee', '#e2e8f0'];
+    const piezas = Array.from({ length: 130 }, () => ({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height * 0.4,
+      vy: 2.2 + Math.random() * 3.2,
+      vx: -1.2 + Math.random() * 2.4,
+      ancho: 5 + Math.random() * 5,
+      alto: 8 + Math.random() * 6,
+      giro: Math.random() * Math.PI,
+      vGiro: -0.12 + Math.random() * 0.24,
+      color: colores[Math.floor(Math.random() * colores.length)]
+    }));
+    const inicio = performance.now();
+    const dibujar = (ahora: number) => {
+      const t = ahora - inicio;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Se desvanecen en el último medio segundo de la ceremonia.
+      ctx.globalAlpha = t > 2100 ? Math.max(0, 1 - (t - 2100) / 600) : 1;
+      for (const p of piezas) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.giro += p.vGiro;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.giro);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.ancho / 2, -p.alto / 2, p.ancho, p.alto);
+        ctx.restore();
+      }
+      if (t < 2700 && this.celebracion()) {
+        requestAnimationFrame(dibujar);
+      }
+    };
+    requestAnimationFrame(dibujar);
   }
 
   cargar(): void {
@@ -256,7 +404,7 @@ export class TournamentDetailComponent {
     this.error.set(null);
     this.tournamentsService.obtener(this.torneoId).subscribe({
       next: (detalle) => {
-        this.detalle.set(detalle);
+        this.aplicarDetalle(detalle);
         this.cargando.set(false);
         this.cargarElegibles();
         const estado = detalle.torneo.estado;
@@ -296,7 +444,7 @@ export class TournamentDetailComponent {
     this.errorInscripcion.set(null);
     this.tournamentsService.inscribir(this.torneoId, equipoId, gamertag).subscribe({
       next: (detalle) => {
-        this.detalle.set(detalle);
+        this.aplicarDetalle(detalle);
         this.inscribiendo.set(false);
         this.inscripcionExitosa.set(true);
         this.elegibles.update((lista) => lista.filter((e) => e.id !== equipoId));
@@ -357,7 +505,7 @@ export class TournamentDetailComponent {
       partidas: this.tournamentsService.bracket(this.torneoId).pipe(catchError(() => of([] as Partida[])))
     }).subscribe(({ detalle, partidas }) => {
       if (detalle) {
-        this.detalle.set(detalle);
+        this.aplicarDetalle(detalle);
       }
       this.partidas.set(partidas);
       this.enviandoResultado.set(false);
@@ -366,7 +514,7 @@ export class TournamentDetailComponent {
 
   private recargarDetalle(): void {
     this.tournamentsService.obtener(this.torneoId).subscribe({
-      next: (detalle) => this.detalle.set(detalle),
+      next: (detalle) => this.aplicarDetalle(detalle),
       error: () => undefined
     });
   }

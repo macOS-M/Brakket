@@ -357,6 +357,29 @@
 // Sobre la foto del banner el tinte al 12% desaparece: backdrop oscuro fijo
 // (como el resto de los stats) y color de estado fijo del tema oscuro.
 .stat.en-curso { background: rgba(4, 8, 18, 0.65); color: #4ade80; }
+
+// El punto del directo: respira mientras el torneo está en curso.
+.punto-vivo {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: respira 1.8s ease-in-out infinite;
+}
+
+@keyframes respira {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+// Overlay de la ceremonia del campeón: encima de todo, sin robar clics.
+.confeti {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
 .stat.finalizado { background: rgba(4, 8, 18, 0.65); color: #94a3b8; }
 
 .seccion-titulo { font-size: 1.0625rem; margin: 28px 0 12px; }
@@ -495,6 +518,32 @@
     color: var(--accent-gold-text);
   }
   .campeon-nombre { margin: 2px 0 0; font-size: 1.5rem; font-weight: 800; color: var(--text); }
+
+  // Solo cuando la coronación ocurre en vivo: un destello dorado que
+  // barre el banner una vez, junto con el confetti.
+  &.celebrando {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        transparent 35%,
+        rgba(250, 204, 21, 0.22) 50%,
+        transparent 65%
+      );
+      transform: translateX(-100%);
+      animation: destello 1.2s ease-out 0.3s forwards;
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes destello {
+  to { transform: translateX(100%); }
 }
 
 .ajustes-card {

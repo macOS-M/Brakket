@@ -1,9 +1,60 @@
-// La llave: columnas por ronda con scroll horizontal propio.
-.bracket {
-  display: flex;
-  gap: 24px;
+// El lienzo: contiene la llave y el SVG de rieles medido sobre ella.
+.lienzo {
+  position: relative;
   overflow-x: auto;
   padding-bottom: 12px;
+}
+
+// Los rieles viven detrás de las tarjetas y no interceptan el puntero.
+.rieles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.riel {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+  stroke-linecap: round;
+
+  &.tentativo {
+    stroke-dasharray: 4 6;
+    opacity: 0.7;
+  }
+
+  // El camino de tus equipos, mientras el torneo sigue abierto.
+  &.riel-mio {
+    stroke: var(--accent);
+  }
+
+  // El linaje del campeón, de la primera ronda a la copa.
+  &.riel-campeon {
+    stroke: var(--accent-gold-text, #facc15);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.45));
+  }
+
+  // Un ganador acaba de avanzar: energía que corre hacia el cruce siguiente.
+  &.riel-pulso {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    stroke-dasharray: 8 10;
+    animation: fluir 0.7s linear infinite;
+  }
+}
+
+@keyframes fluir {
+  to { stroke-dashoffset: -18; }
+}
+
+// La llave: columnas por ronda; el scroll lo lleva el lienzo.
+.bracket {
+  position: relative;
+  display: flex;
+  gap: 34px;
+  min-width: max-content;
 }
 
 .nota-llave {
@@ -53,6 +104,36 @@
 
     &:hover { border-color: var(--border); }
   }
+
+  // La final ganada: la única tarjeta que se viste de oro.
+  &.coronada {
+    opacity: 1;
+    border-color: var(--accent-gold, #eab308);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  // Acaba de cambiar de estado (reporte, confirmación, resolución).
+  &.actualizada {
+    animation: latido-borde 2.4s ease-out;
+  }
+
+  // Cascada de entrada cuando la llave se genera en vivo.
+  &.entrada {
+    animation: carta 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+}
+
+@keyframes latido-borde {
+  0% { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 85, 0, 0.25); }
+  100% { border-color: var(--border); box-shadow: 0 0 0 0 rgba(255, 85, 0, 0); }
+}
+
+@keyframes carta {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
 }
 
 .partida-equipos { display: flex; flex-direction: column; gap: 6px; }
@@ -96,32 +177,54 @@
   &.en-disputa { color: var(--warning-text); }
 }
 
-// Credenciales de la partida privada: bloque de "código" sobre superficie
-// elevada, con la cifra/clave en la fuente de datos.
+// Credenciales de la partida privada: cada dato es un botón que copia.
 .lobby {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: 6px;
   margin-top: 12px;
-  padding: 8px 12px;
+}
+
+.lobby-copiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   border: 1px dashed var(--border);
   background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.15s ease-out, background 0.15s ease-out;
 
-  .lobby-dato {
-    font-family: var(--font-data);
-    font-variant-numeric: tabular-nums;
-    font-size: 0.8125rem;
-    letter-spacing: 0.02em;
-    color: var(--text);
+  &:hover { border-color: var(--accent-text); }
+
+  &.copiado {
+    border-style: solid;
+    border-color: var(--success);
+    background: var(--success-bg);
+
+    .lobby-feedback { color: var(--success-text); }
   }
+
   .lobby-etiqueta {
     font-family: var(--font-ui);
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--text-muted);
-    margin-right: 4px;
+  }
+
+  .lobby-valor {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .lobby-feedback {
+    font-size: 0.8rem;
+    color: var(--text-subtle);
   }
 }
 
