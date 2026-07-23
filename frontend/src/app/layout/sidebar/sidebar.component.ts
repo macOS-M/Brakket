@@ -60,7 +60,8 @@ export class SidebarComponent {
   private readonly grupos: GrupoNav[] = [
     {
       titulo: null,
-      enlaces: [{ ruta: '/', etiqueta: 'Inicio', icono: 'home', exact: true }]
+      // El dashboard vive en /inicio: la raíz es el landing institucional.
+      enlaces: [{ ruta: '/inicio', etiqueta: 'Inicio', icono: 'home', exact: true }]
     },
     {
       titulo: 'Competencia',

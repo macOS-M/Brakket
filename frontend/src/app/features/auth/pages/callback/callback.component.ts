@@ -42,7 +42,7 @@ export class CallbackComponent implements OnInit {
           return;
         }
 
-        this.router.navigate(['/']);
+        this.router.navigate(['/inicio']);
       },
       error: () => this.router.navigate(['/login'])
     });

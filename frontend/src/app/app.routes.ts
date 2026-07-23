@@ -5,6 +5,16 @@ import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   {
+    path: '',
+    loadComponent: () => import('./features/landing/pages/landing-institucional/landing-institucional.component')
+      .then((m) => m.LandingInstitucionalComponent)
+  },
+  {
+    path: 'producto',
+    loadComponent: () => import('./features/landing/pages/landing-producto/landing-producto.component')
+      .then((m) => m.LandingProductoComponent)
+  },
+  {
     path: 'team-profile/:equipoId',
     loadComponent: () => import('./features/teams/pages/team-public-profile/team-public-profile.component')
       .then((m) => m.TeamPublicProfileComponent)
@@ -21,7 +31,7 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/layout.component').then((m) => m.LayoutComponent),
     children: [
       {
-        path: '',
+        path: 'inicio',
         loadChildren: () => import('./features/home/home.routes').then((m) => m.routes)
       },
       {

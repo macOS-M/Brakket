@@ -92,7 +92,8 @@ export class AuthService {
     if (!this.isProfileComplete(usuario)) {
       return '/profile';
     }
-    return '/';
+    // La raíz es el landing institucional; el dashboard vive en /inicio.
+    return '/inicio';
   }
 
   updateCurrentUser(payload: {

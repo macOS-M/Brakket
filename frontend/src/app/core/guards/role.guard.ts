@@ -22,14 +22,15 @@ export const roleGuard: CanActivateFn = (route) => {
     return true;
   }
 
+  // Rebota al dashboard (/inicio): la raíz ahora es el landing público.
   const evaluar = () =>
-    authService.hasRole(...requiredRoles) ? true : router.createUrlTree(['/']);
+    authService.hasRole(...requiredRoles) ? true : router.createUrlTree(['/inicio']);
 
   if (authService.usuario() !== null) {
     return evaluar();
   }
 
   return firstValueFrom(authService.loadCurrentUser()).then(evaluar, () =>
-    router.createUrlTree(['/'])
+    router.createUrlTree(['/inicio'])
   );
 };
