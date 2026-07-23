@@ -42,10 +42,17 @@
   border-radius: var(--radius-md);
   background: var(--surface);
   padding: 12px;
+  transition: border-color 0.2s ease-out;
 
+  &:hover { border-color: var(--accent-text); }
   &.finalizada { opacity: 0.92; }
   &.disputa { border-color: var(--warning-text); }
-  &.pendiente-definir { border-style: dashed; background: transparent; }
+  &.pendiente-definir {
+    border-style: dashed;
+    background: transparent;
+
+    &:hover { border-color: var(--border); }
+  }
 }
 
 .partida-equipos { display: flex; flex-direction: column; gap: 6px; }
@@ -65,7 +72,17 @@
 
   &.ganador {
     background: var(--success-bg);
-    .lado-nombre { font-weight: 700; }
+
+    .lado-nombre {
+      color: var(--success-text);
+      font-weight: 700;
+
+      // Marca textual: el ganador no se comunica solo por color.
+      &::after {
+        content: ' ✓';
+        font-size: 0.75rem;
+      }
+    }
     .lado-marcador { color: var(--success-text); font-weight: 700; }
   }
 }
@@ -79,16 +96,25 @@
   &.en-disputa { color: var(--warning-text); }
 }
 
+// Credenciales de la partida privada: bloque de "código" sobre superficie
+// elevada, con la cifra/clave en la fuente de datos.
 .lobby {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
-  margin-top: 10px;
-  padding: 8px 10px;
+  margin-top: 12px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   border: 1px dashed var(--border);
+  background: var(--surface-2);
 
-  .lobby-dato { font-family: var(--font-data); font-size: 0.82rem; color: var(--text); }
+  .lobby-dato {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
   .lobby-etiqueta {
     font-family: var(--font-ui);
     font-size: 0.7rem;

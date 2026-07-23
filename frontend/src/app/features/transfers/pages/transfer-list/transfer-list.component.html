@@ -28,15 +28,21 @@
     </div>
 
     @if (pendientes().length === 0) {
-    <app-empty-state
-      titulo="Sin solicitudes por responder"
-      mensaje="Cuando alguien proponga una transferencia que requiera tu visto bueno, aparecerá acá."
-    />
+    <div class="vacio" role="status">
+      <span class="vacio-emoji" aria-hidden="true">📨</span>
+      <p class="vacio-titulo">Estás al día: nada por responder</p>
+      <p class="vacio-detalle">
+        Cuando alguien proponga una transferencia que necesite tu visto bueno, va a caer acá.
+      </p>
+    </div>
     } @else {
     <ul class="lista">
       @for (t of pendientes(); track t.id) {
-      <li class="item">
+      <li class="item entra-tarjeta">
         <div class="item-cabecera">
+          <span class="avatar" aria-hidden="true" [style.background]="colorDe(t.jugadorNombre)">
+            {{ t.jugadorNombre.charAt(0) }}
+          </span>
           <div class="item-cuerpo">
             <p class="item-titulo">
               {{ t.jugadorNombre }}
@@ -95,17 +101,22 @@
     </div>
 
     @if (enviadas().length === 0) {
-    <app-empty-state
-      titulo="Todavía no enviaste solicitudes"
-      mensaje="Solicitá el traspaso de un jugador para empezar a seguir su estado acá."
-    >
+    <div class="vacio" role="status">
+      <span class="vacio-emoji" aria-hidden="true">🔁</span>
+      <p class="vacio-titulo">Todavía no enviaste solicitudes</p>
+      <p class="vacio-detalle">
+        Fichá a un jugador de otro equipo: solicitá el traspaso y seguí acá cada aprobación.
+      </p>
       <a class="btn-secondary" routerLink="/transfers/nueva">Solicitar transferencia</a>
-    </app-empty-state>
+    </div>
     } @else {
     <ul class="lista">
       @for (t of enviadas(); track t.id) {
-      <li class="item">
+      <li class="item entra-tarjeta">
         <div class="item-cabecera">
+          <span class="avatar" aria-hidden="true" [style.background]="colorDe(t.jugadorNombre)">
+            {{ t.jugadorNombre.charAt(0) }}
+          </span>
           <div class="item-cuerpo">
             <p class="item-titulo">
               {{ t.jugadorNombre }}

@@ -382,6 +382,9 @@
   border-radius: var(--radius-md);
   background: var(--surface);
   padding: 14px 16px;
+  transition: border-color 0.2s ease-out;
+
+  &:hover { border-color: var(--accent-text); }
 
   .formato-etiqueta {
     margin: 0;
@@ -569,9 +572,12 @@
   display: grid;
   grid-template-columns: 180px minmax(0, 1fr);
   gap: 8px 24px;
-  padding: 14px 4px;
+  padding: 14px 8px;
   border-bottom: 1px solid var(--border-soft);
   align-items: center;
+  transition: background 0.2s ease-out;
+
+  &:hover { background: var(--surface); }
 
   @media (max-width: 640px) { grid-template-columns: 1fr; }
 
@@ -671,7 +677,13 @@
   background: var(--surface);
   padding: 20px 24px;
 
-  &.oro { border-color: var(--accent-gold-text); background: var(--accent-gold-bg); }
+  &.oro {
+    border-color: var(--accent-gold-text);
+    background: var(--accent-gold-bg);
+
+    .podio-etiqueta { color: var(--accent-gold-text); }
+    .podio-medalla { font-size: 2rem; }
+  }
 
   .podio-medalla { font-size: 1.5rem; }
   .podio-etiqueta { margin: 6px 0 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }

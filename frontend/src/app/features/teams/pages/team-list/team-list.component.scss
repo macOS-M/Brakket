@@ -62,6 +62,39 @@
   }
 }
 
+// ----- Encabezados de sección -----
+
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 20px 0 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+}
+
+// Chip de conteo: píldora con la cifra en condensada y ancho tabular.
+.conteo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface-2, #1f2937);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  color: var(--text-muted, #94a3b8);
+  font-family: var(--font-data, 'Barlow Condensed', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 // ----- Grilla de equipos -----
 
 .grid {
@@ -73,50 +106,88 @@
 .equipo-card {
   display: flex;
   flex-direction: column;
-  padding: 1rem 1.1rem 1.1rem;
+  overflow: hidden;
   background: var(--surface, #111827);
   border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
   border-radius: var(--radius-md, 12px);
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.2s ease-out, transform 0.2s ease-out;
 
   &:hover {
-    border-color: var(--border, #334155);
+    border-color: var(--accent, #ff5500);
     transform: translateY(-2px);
   }
 }
 
+// Banda de portada: gradiente determinístico del juego con su nombre
+// como marca de agua. Le da identidad a la tarjeta sin inventar arte.
+.banda {
+  position: relative;
+  height: 72px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.banda-marca {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.1rem;
+  font-family: var(--font-data, 'Barlow Condensed', sans-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  // Susurro, no grito: la marca de agua no compite con el nombre del equipo.
+  color: rgba(255, 255, 255, 0.09);
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+.cuerpo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 0 1.1rem 1.1rem;
+}
+
+// El logo cabalga el borde inferior de la banda; el chip de estado
+// aterriza a su lado, ya sobre el cuerpo de la tarjeta.
 .cabecera {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 0.7rem;
-  margin-bottom: 0.75rem;
+  margin-top: -24px;
+  margin-bottom: 0.6rem;
 }
 
 .logo {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
+  border: 3px solid var(--surface, #111827);
   border-radius: var(--radius-sm, 8px);
+  background: var(--surface-2, #1f2937);
   object-fit: cover;
 
   &.sin-logo {
-    background: var(--info-bg, rgba(59, 130, 246, 0.12));
-    color: var(--info-text, #60a5fa);
+    color: #fff;
     font-size: 1.0625rem;
     font-weight: 700;
+    user-select: none;
   }
 }
 
 .identidad {
-  flex: 1;
   min-width: 0;
 
   .nombre {
     margin: 0;
     font-size: 1.0625rem;
-    font-weight: 600;
+    font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -124,7 +195,8 @@
 
   .juego {
     margin: 0.15rem 0 0;
-    color: var(--accent-text, #ff6a1f);
+    // Regla del Acento Escaso: el naranja en cada tarjeta no dirige nada.
+    color: var(--text-muted, #94a3b8);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -137,7 +209,7 @@
 
 .descripcion {
   flex: 1;
-  margin: 0 0 0.9rem;
+  margin: 0.55rem 0 0.9rem;
   color: var(--text-muted, #94a3b8);
   font-size: 0.8125rem;
   line-height: 1.45;
@@ -153,6 +225,7 @@
   display: flex;
   gap: 0.5rem;
   margin-top: auto;
+  padding-top: 0.35rem;
 }
 
 // ----- Paginación -----
@@ -167,6 +240,7 @@
   .indicador {
     color: var(--text-muted, #94a3b8);
     font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
   }
 
   button:disabled {
@@ -190,7 +264,7 @@
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.2s ease-out, border-color 0.2s ease-out;
 }
 
 .btn-primary {
@@ -211,22 +285,24 @@
 
   &:hover:not(:disabled) {
     background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
   }
 }
 
 // ---------- split mis equipos / demás + tarjeta clickeable ----------
 
-.seccion-titulo { font-size: 1.05rem; margin: 20px 0 12px; }
-
 .equipo-card.clickeable {
   cursor: pointer;
-  transition: border-color 0.15s ease, transform 0.15s ease;
 
-  &:hover, &:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent, #ff5500);
+    transform: translateY(-2px);
+  }
 }
 
 .chip-solicitado {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--success-text);
 }

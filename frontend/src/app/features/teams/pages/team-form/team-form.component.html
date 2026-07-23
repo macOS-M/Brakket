@@ -19,7 +19,16 @@
   }
 
   @if (!cargando()) {
-  <form [formGroup]="form" (ngSubmit)="guardar()" class="form" novalidate>
+  <div class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <h2 class="tarjeta-titulo">{{ esEdicion ? 'Datos del equipo' : 'Identidad del equipo' }}</h2>
+      <p class="tarjeta-detalle">
+        {{ esEdicion
+          ? 'Ajustá lo que necesités; los cambios se aplican al guardar.'
+          : 'Ponele nombre y juego; después vas a poder armar la plantilla.' }}
+      </p>
+    </header>
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="form" novalidate>
     <div class="field">
       <label class="label" for="nombre">Nombre *</label>
       <input
@@ -109,5 +118,6 @@
       <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
     </div>
   </form>
+  </div>
   }
 </section>

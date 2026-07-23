@@ -1,6 +1,6 @@
 .page {
   padding: 0 0 1.5rem;
-  max-width: 560px;
+  max-width: 620px;
 }
 
 // ----- Avisos -----
@@ -32,12 +32,40 @@
   color: var(--success-text, #4ade80);
 }
 
+// ----- Tarjeta contenedora del formulario -----
+
+.tarjeta {
+  margin-top: 1.25rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-lg, 16px);
+}
+
+.tarjeta-cabecera {
+  padding: 1.1rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
+
+.tarjeta-titulo {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.tarjeta-detalle {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 // ----- Formulario -----
 
 .form {
   display: grid;
   gap: 1.25rem;
-  margin-top: 1.25rem;
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .field {
@@ -57,12 +85,15 @@ select,
 textarea {
   width: 100%;
   padding: 0.55rem 0.75rem;
-  background: var(--surface, #111827);
+  // Sobre la tarjeta (surface) los campos suben un nivel de tono,
+  // como en el wizard de torneos: sin esto se funden con el fondo.
+  background: var(--surface-2, #1f2937);
   border: 1px solid var(--border, #334155);
   border-radius: var(--radius-sm, 8px);
   color: var(--text, #e2e8f0);
   font-family: inherit;
   font-size: 0.875rem;
+  transition: border-color 0.15s ease;
 
   &::placeholder {
     color: var(--text-subtle, #64748b);
@@ -133,6 +164,7 @@ textarea {
 
   &:hover {
     background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
   }
 }
 

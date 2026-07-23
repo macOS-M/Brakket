@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Subject, catchError, debounceTime, distinctUntilChanged, map, of, switchMap, takeUntil } from 'rxjs';
 
 import { EquipoBusqueda, Pagina } from '../../../../models/equipo.model';
+import { colorDeNombre, portadaGradiente } from '../../../../shared/utils/cover';
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
 import { TeamsService } from '../../services/teams.service';
@@ -144,6 +145,16 @@ export class TeamListComponent implements OnInit, OnDestroy {
       return;
     }
     this.buscar(page);
+  }
+
+  /** Banda de portada: gradiente determinístico del juego (o del nombre si no hay juego). */
+  portada(equipo: EquipoBusqueda): string {
+    return portadaGradiente(equipo.juegoNombre ?? equipo.nombre);
+  }
+
+  /** Color estable para el monograma de equipos sin logo. */
+  colorDe(nombre: string): string {
+    return colorDeNombre(nombre);
   }
 
   /** Toda la tarjeta navega: los míos a la plantilla, el resto al perfil. */
