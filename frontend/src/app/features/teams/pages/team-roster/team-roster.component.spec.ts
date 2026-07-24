@@ -55,7 +55,8 @@ describe('TeamRosterComponent', () => {
     };
 
     const authServiceMock = {
-      usuario: () => ({ id: 1 })
+      usuario: () => ({ id: 1 }),
+      hasRole: () => false
     };
 
     // El componente inyecta GamesService (filtro de juegos de RF-11) y lo llama
