@@ -208,7 +208,121 @@ Interfaces TypeScript que **espejan exactamente los DTOs del backend**. Si el ba
 
 ---
 
-## 5. Guion corto para la presentación (2-3 minutos)
+## 5. Los módulos más difíciles (deep dive para preguntas)
+
+Esta sección es para cuando pregunten *"¿qué fue lo más difícil?"* o pidan
+detalle de una parte concreta. Cada módulo está contado como **el problema →
+cómo lo resolvimos → si preguntan**.
+
+### 5.1 El motor de torneos (generación de brackets)
+
+Es la parte con más lógica del sistema. Soporta **cinco formatos** de
+competencia y todos comparten el mismo flujo de reporte de resultados.
+
+**El problema:** un torneo no es solo una lista de partidas. Hay que **generar
+la estructura** (la llave) según el formato, **encadenar** cada partida con la
+siguiente (el ganador de la partida 1 va a tal lugar de la partida 3),
+**propagar** los resultados hacia arriba, y **coronar** al campeón cuando se
+cierra la última. Y cinco formatos distintos hacen esto de cinco formas.
+
+**Cómo lo resolvimos — un generador por formato:**
+- **Eliminación directa:** se redondea la cantidad de equipos a la potencia de
+  2 más cercana (4, 8, 16…) y los que sobran reciben *bye* (pasan de ronda
+  gratis). La llave se construye **de la final hacia atrás** para poder enlazar
+  cada partida con la siguiente antes de que exista.
+- **Doble eliminación (la más difícil):** hay dos llaves, la **superior** y la
+  **inferior**, más una **gran final**. Cuando perdés en la superior no quedás
+  afuera: caés a la inferior. La dificultad está en calcular a qué partida
+  exacta de la llave inferior cae cada perdedor de la superior — es una fórmula
+  que depende de la ronda. El que sobrevive la inferior enfrenta al de la
+  superior en la gran final.
+- **Round robin (todos contra todos):** se genera con el *método del círculo* —
+  se fija un equipo y los demás rotan, garantizando que cada par se enfrente
+  exactamente una vez.
+- **Suizo:** solo se genera la primera ronda; las siguientes se arman **al
+  cerrarse la anterior**, emparejando por puntaje y evitando repetir rivales.
+- **Fase de grupos + eliminación:** round robin dentro de cada grupo, y los dos
+  mejores de cada uno avanzan a una llave cruzada (1° de un grupo vs 2° del
+  grupo hermano).
+
+**El flujo de resultados (y por qué es confiable):** una partida no la cierra
+una sola persona. El **capitán** de un equipo *reporta* el marcador; el
+**capitán rival** lo *confirma* (o lo rechaza, y entonces queda en disputa para
+que la resuelva el organizador). Recién ahí el ganador avanza en la llave. Esto
+evita que un solo equipo se ponga un resultado a su favor.
+
+**La parte de concurrencia (lo que impresiona):** ¿qué pasa si dos capitanes
+tocan la misma partida al mismo tiempo? Usamos **bloqueos pesimistas** en la
+base de datos: cuando alguien va a modificar una partida, la fila queda
+*bloqueada* hasta que termina, así dos operaciones simultáneas se serializan en
+vez de corromperse. Lo mismo al cerrar una etapa: se bloquea el torneo para que
+las dos últimas partidas de una jornada no disparen dos veces la generación de
+la siguiente ronda.
+
+> **Si preguntan "¿qué fue lo más complejo de programar?"** → "El motor de
+> brackets, sobre todo la doble eliminación: calcular a qué partida de la llave
+> inferior cae cada perdedor. Y la concurrencia — que dos capitanes reportando a
+> la vez no corrompan la llave — la resolvimos con bloqueos pesimistas en la
+> base de datos."
+
+### 5.2 Transmisiones e integración con Twitch (RF-35/36)
+
+El reto no fue "mostrar un video", fue **integrarse con Twitch de forma segura
+y confiable**, y capturar métricas que solo existen mientras el directo pasa.
+
+**1. El secret nunca llega al navegador.** Twitch da un Client ID y un Client
+Secret. Si el frontend pidiera el token directamente, el secret quedaría
+expuesto en el navegador de cualquiera. Por eso **el frontend nunca habla con
+Twitch**: solo consume nuestro endpoint `GET /api/transmisiones`. Es el backend
+el que tiene el secret (en variables de entorno), pide el token y consulta la
+API. Además, al pedir el token, el secret viaja en el *cuerpo* del formulario,
+no en la URL (las URLs quedan en logs y ahí se filtraría).
+
+**2. El token se cachea y se renueva solo.** En vez de pedir un token nuevo en
+cada llamada, el backend lo guarda en memoria y lo reutiliza hasta poco antes de
+que expire; si Twitch responde "401 - vencido", lo renueva y reintenta una vez,
+sin que el usuario note nada.
+
+**3. Datos frescos sin gastar la cuota (el cálculo de RNF-02).** El requisito
+pide que lo mostrado no tenga más de 1 minuto de atraso. Solución con números:
+el backend **cachea la respuesta 25 segundos** y el frontend **refresca cada
+30** → peor caso 55 segundos, justo por debajo del minuto. Consultar un canal
+cada 25s está lejísimos del límite de cuota de Twitch.
+
+**4. Cuando Twitch se cae, la página no se rompe (degradación).** Guardamos
+aparte la **última respuesta buena**. Si Twitch no responde, en vez de mostrar
+un error, la página muestra esa última información marcada como *"estado
+desconocido — última info de hace X min"*. Nunca muestra un dato viejo como si
+fuera actual. Cumple el RNF-15 de tolerancia a fallos.
+
+**5. La abstracción para el futuro.** Toda la integración está detrás de una
+interfaz `StreamProvider`. La página no sabe que es Twitch. Sumar YouTube o Kick
+después es escribir otra implementación de esa interfaz, sin tocar la UI (un
+*feature flag* mantiene hoy la lista con un solo canal).
+
+**6. El reproductor embebido.** Twitch exige un parámetro `parent` con el
+dominio donde se embebe (medida antifraude). Lo armamos dinámicamente con el
+dominio actual, así funciona igual en `localhost` durante el desarrollo y en el
+dominio real en producción.
+
+**7. RF-36 — capturar métricas mientras nadie mira.** La audiencia (cuántos
+espectadores) solo existe en el presente: Twitch no da histórico. Si no la
+guardás en el momento, se pierde. La solución es una **tarea programada** que
+corre **cada 60 segundos automáticamente**, guarda una muestra de espectadores
+y cierra el período cuando el directo termina. Dos detalles de madurez: si
+Twitch falla en un ciclo **no inventa datos** (deja el hueco), y un solo ciclo
+sin señal no cierra la transmisión (un streamer que reconecta desaparece un
+instante) — se cierra recién al segundo ciclo seguido sin señal.
+
+> **Si preguntan "¿cómo aseguran calidad?"** → contá la historia real: en el
+> code review previo al merge encontramos un bug de zona horaria — Twitch
+> entrega fechas en UTC y el servidor corre en hora de Costa Rica (UTC-6); sin
+> convertir, el panel mostraba "duración: -355 minutos" con el canal en vivo. Lo
+> corregimos y agregamos tests antes de que llegara a la demo.
+
+---
+
+## 6. Guion corto para la presentación (2-3 minutos)
 
 1. **Abrí con el panorama** (sección 0): monorepo, backend Spring Boot + frontend Angular, hablan por REST con JWT, Postgres, Docker.
 2. **Mostrá el árbol del backend** (2.0) y explicá la decisión: *organizado por dominio, no por capa técnica*.
@@ -222,7 +336,7 @@ Interfaces TypeScript que **espejan exactamente los DTOs del backend**. Si el ba
 
 ---
 
-## 6. Preguntas técnicas probables y respuestas cortas
+## 7. Preguntas técnicas probables y respuestas cortas
 
 - **"¿Por qué DTOs en vez de devolver las entidades directamente?"** → Para no acoplar la API a la base de datos, no exponer campos sensibles, y poder cambiar el esquema sin romper el cliente.
 - **"¿Dónde está la lógica de negocio?"** → Siempre en la capa **service**. El controller solo recibe y delega; el repository solo lee/escribe.
