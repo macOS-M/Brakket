@@ -10,7 +10,7 @@
     <h3 class="nombre">{{ torneo().nombre }}</h3>
     <p class="meta">
       Organizado por <strong>{{ torneo().organizadorNombre }}</strong>
-      · {{ torneo().formato }}
+      · {{ torneo().formato | formatoTorneo }}
       · {{ torneo().tamanoEquipo }}v{{ torneo().tamanoEquipo }}
       · {{ torneo().inscritos }}/{{ torneo().maxEquipos }} equipos
     </p>

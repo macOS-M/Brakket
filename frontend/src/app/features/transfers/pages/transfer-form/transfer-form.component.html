@@ -6,87 +6,92 @@
     <a class="btn-secondary" routerLink="/transfers">Volver</a>
   </app-page-header>
 
-  <p class="ayuda">
-    Como capitán del equipo destino puedes solicitar la incorporación de un jugador
-    de otro equipo. El jugador y el capitán del equipo de origen recibirán una
-    notificación y deberán aceptar para completar la transferencia.
-  </p>
-
   @if (error()) {
   <p class="banner-error" role="alert">{{ error() }}</p>
   }
 
-  <form class="formulario" [formGroup]="form" (ngSubmit)="guardar()">
-    <label class="campo">
-      <span class="etiqueta">Equipo de origen</span>
-      <select formControlName="equipoOrigenId">
-        <option value="">Seleccionar equipo...</option>
-        @for (equipo of equipos(); track equipo.id) {
-        <option [value]="equipo.id">{{ equipo.nombre }}</option>
+  <div class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <h2 class="tarjeta-titulo">Detalles del traspaso</h2>
+      <p class="tarjeta-detalle">
+        Como capitán del equipo destino podés solicitar la incorporación de un jugador
+        de otro equipo. El jugador y el capitán del equipo de origen van a recibir una
+        notificación y deben aceptar para completar la transferencia.
+      </p>
+    </header>
+
+    <form class="formulario" [formGroup]="form" (ngSubmit)="guardar()">
+      <label class="campo">
+        <span class="etiqueta">Equipo de origen</span>
+        <select formControlName="equipoOrigenId">
+          <option value="">Seleccionar equipo...</option>
+          @for (equipo of equipos(); track equipo.id) {
+          <option [value]="equipo.id">{{ equipo.nombre }}</option>
+          }
+        </select>
+        @if (form.controls.equipoOrigenId.touched && form.controls.equipoOrigenId.invalid) {
+        <small class="error-campo">Seleccioná el equipo de origen.</small>
         }
-      </select>
-      @if (form.controls.equipoOrigenId.touched && form.controls.equipoOrigenId.invalid) {
-      <small class="error-campo">Seleccioná el equipo de origen.</small>
-      }
-    </label>
+      </label>
 
-    <label class="campo">
-      <span class="etiqueta">Jugador a transferir</span>
-      <select formControlName="jugadorId">
-        <option value="">
-          {{ cargandoMiembros() ? 'Cargando integrantes...' : 'Seleccionar jugador...' }}
-        </option>
-        @for (miembro of miembrosOrigen(); track miembro.id) {
-        <option [value]="miembro.usuarioId">{{ miembro.nombreUsuario }} ({{ miembro.rol }})</option>
+      <label class="campo">
+        <span class="etiqueta">Jugador a transferir</span>
+        <select formControlName="jugadorId">
+          <option value="">
+            {{ cargandoMiembros() ? 'Cargando integrantes...' : 'Seleccionar jugador...' }}
+          </option>
+          @for (miembro of miembrosOrigen(); track miembro.id) {
+          <option [value]="miembro.usuarioId">{{ miembro.nombreUsuario }} ({{ miembro.rol }})</option>
+          }
+        </select>
+        @if (form.controls.equipoOrigenId.value && !cargandoMiembros() && miembrosOrigen().length === 0) {
+        <small class="nota">Este equipo no tiene jugadores transferibles.</small>
+        } @else if (form.controls.jugadorId.touched && form.controls.jugadorId.invalid) {
+        <small class="error-campo">Seleccioná el jugador a transferir.</small>
         }
-      </select>
-      @if (form.controls.equipoOrigenId.value && !cargandoMiembros() && miembrosOrigen().length === 0) {
-      <small class="nota">Este equipo no tiene jugadores transferibles.</small>
-      } @else if (form.controls.jugadorId.touched && form.controls.jugadorId.invalid) {
-      <small class="error-campo">Seleccioná el jugador a transferir.</small>
-      }
-    </label>
+      </label>
 
-    <label class="campo">
-      <span class="etiqueta">Equipo destino <em class="apunte">(debes ser su capitán)</em></span>
-      <select formControlName="equipoDestinoId">
-        <option value="">Seleccionar equipo...</option>
-        @for (equipo of equipos(); track equipo.id) {
-        <option [value]="equipo.id">{{ equipo.nombre }}</option>
+      <label class="campo">
+        <span class="etiqueta">Equipo destino <em class="apunte">(debés ser su capitán)</em></span>
+        <select formControlName="equipoDestinoId">
+          <option value="">Seleccionar equipo...</option>
+          @for (equipo of equipos(); track equipo.id) {
+          <option [value]="equipo.id">{{ equipo.nombre }}</option>
+          }
+        </select>
+        @if (form.controls.equipoDestinoId.touched && form.controls.equipoDestinoId.invalid) {
+        <small class="error-campo">Seleccioná el equipo destino.</small>
         }
-      </select>
-      @if (form.controls.equipoDestinoId.touched && form.controls.equipoDestinoId.invalid) {
-      <small class="error-campo">Seleccioná el equipo destino.</small>
-      }
-    </label>
+      </label>
 
-    <label class="campo">
-      <span class="etiqueta">Rol propuesto</span>
-      <select formControlName="rolPropuesto">
-        @for (rol of rolesPropuestos; track rol) {
-        <option [value]="rol">{{ rol }}</option>
+      <label class="campo">
+        <span class="etiqueta">Rol propuesto</span>
+        <select formControlName="rolPropuesto">
+          @for (rol of rolesPropuestos; track rol) {
+          <option [value]="rol">{{ rol }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Justificación <em class="apunte">(opcional)</em></span>
+        <textarea
+          formControlName="justificacion"
+          rows="3"
+          maxlength="500"
+          placeholder="Motivo de la solicitud..."
+        ></textarea>
+        @if (form.controls.justificacion.touched && form.controls.justificacion.invalid) {
+        <small class="error-campo">La justificación no puede superar los 500 caracteres.</small>
         }
-      </select>
-    </label>
+      </label>
 
-    <label class="campo">
-      <span class="etiqueta">Justificación <em class="apunte">(opcional)</em></span>
-      <textarea
-        formControlName="justificacion"
-        rows="3"
-        maxlength="500"
-        placeholder="Motivo de la solicitud..."
-      ></textarea>
-      @if (form.controls.justificacion.touched && form.controls.justificacion.invalid) {
-      <small class="error-campo">La justificación no puede superar los 500 caracteres.</small>
-      }
-    </label>
-
-    <div class="acciones">
-      <button class="btn-primary" type="submit" [disabled]="form.invalid || enviando()">
-        {{ enviando() ? 'Enviando...' : 'Enviar solicitud' }}
-      </button>
-      <a class="btn-secondary" routerLink="/transfers">Cancelar</a>
-    </div>
-  </form>
+      <div class="acciones">
+        <button class="btn-primary" type="submit" [disabled]="form.invalid || enviando()">
+          {{ enviando() ? 'Enviando...' : 'Enviar solicitud' }}
+        </button>
+        <a class="btn-secondary" routerLink="/transfers">Cancelar</a>
+      </div>
+    </form>
+  </div>
 </section>
