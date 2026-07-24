@@ -88,6 +88,22 @@ button {
   &:disabled { opacity: .45; cursor: not-allowed; }
 }
 
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .75rem;
+  margin-bottom: 1rem;
+
+  dd { font-weight: 700; font-size: 1.0625rem; }
+}
+
+.notice-info {
+  padding: .75rem;
+  border-radius: 8px;
+  color: var(--text-muted, #94a3b8);
+  background: var(--surface-raised, rgba(148, 163, 184, .08));
+}
+
 .notice, .feedback, .result { padding: .75rem; border-radius: 8px; }
 .notice, .error { color: #fca5a5; background: rgba(239, 68, 68, .1); }
 .success, .result { color: #34d399; background: rgba(52, 211, 153, .1); }

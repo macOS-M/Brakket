@@ -32,5 +32,12 @@ public class CanalTwitchController {
     public ResponseEntity<TransmisionTwitchResponse> asociar(@RequestBody AsociarTransmisionRequest request) {
         return ResponseEntity.ok(service.asociar(request));
     }
+
+    /** RF-36: indicadores de audiencia capturados para una transmisión. */
+    @GetMapping("/transmisiones/{id}/metricas")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MetricasTransmisionResponse> metricas(@PathVariable Long id) {
+        return ResponseEntity.ok(service.metricas(id));
+    }
 }
 

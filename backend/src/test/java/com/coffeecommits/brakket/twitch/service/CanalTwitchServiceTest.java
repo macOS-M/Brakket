@@ -21,6 +21,7 @@ class CanalTwitchServiceTest {
     @Mock CanalOficialTwitchRepository canalRepository;
     @Mock TransmisionTwitchRepository transmisionRepository;
     @Mock IncidenteIntegracionTwitchRepository incidenteRepository;
+    @Mock MetricaAudienciaRepository metricaRepository;
     @Mock TorneoRepository torneoRepository;
     @Mock PartidaRepository partidaRepository;
     @Mock TwitchGateway gateway;
@@ -31,7 +32,7 @@ class CanalTwitchServiceTest {
     void setup() {
         properties = new TwitchProperties();
         service = new CanalTwitchService(canalRepository, transmisionRepository, incidenteRepository,
-                torneoRepository, partidaRepository, gateway, properties);
+                metricaRepository, torneoRepository, partidaRepository, gateway, properties);
         when(canalRepository.findFirstByActivoTrue()).thenReturn(Optional.empty());
         when(canalRepository.save(any())).thenAnswer(invocation -> {
             CanalOficialTwitch c = invocation.getArgument(0);
