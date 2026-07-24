@@ -83,6 +83,13 @@ export const routes: Routes = [
         loadChildren: () => import('./features/disputes/disputes.routes').then((m) => m.routes)
       },
       {
+        // RF-35: ver los directos es público, como el catálogo de torneos.
+        path: 'transmisiones',
+        loadChildren: () =>
+          import('./features/transmisiones/transmisiones.routes').then((m) => m.routes)
+      },
+      {
+        // Panel admin de configuración del canal oficial (RF-34).
         path: 'twitch',
         canActivate: [authGuard, roleGuard],
         data: { roles: ['ADMIN'] },

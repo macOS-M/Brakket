@@ -1,0 +1,117 @@
+@if (actual(); as t) {
+<section
+  class="hero"
+  role="region"
+  aria-roledescription="carrusel"
+  aria-label="Transmisiones destacadas"
+  tabindex="0"
+  (keydown)="manejarTeclado($event)"
+>
+  <div class="pantalla">
+    @switch (t.estado) {
+      @case ('EN_VIVO') {
+        <app-twitch-player [canal]="t.loginCanal" [titulo]="'Directo de ' + t.nombreCanal" />
+      }
+      @case ('OFFLINE') {
+        @if (t.vod) {
+        <app-twitch-player [videoId]="t.vod.id" [titulo]="'Último VOD de ' + t.nombreCanal" />
+        } @else {
+        <div class="pantalla-offline">
+          @if (t.thumbnailUrl) {
+          <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
+          }
+          <p>El canal está offline. Seguilo en Twitch para no perderte la próxima transmisión.</p>
+        </div>
+        }
+      }
+      @case ('DESCONOCIDO') {
+        <div class="pantalla-offline">
+          @if (t.thumbnailUrl) {
+          <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
+          }
+          <p>No pudimos consultar el estado del canal. Probá abrirlo directamente en Twitch.</p>
+        </div>
+      }
+    }
+  </div>
+
+  <aside class="panel-info">
+    <header class="canal">
+      @if (t.avatarUrl) {
+      <img class="avatar" [src]="t.avatarUrl" [alt]="'Avatar de ' + t.nombreCanal" />
+      } @else {
+      <div class="avatar avatar-vacio" aria-hidden="true">{{ t.nombreCanal.charAt(0).toUpperCase() }}</div>
+      }
+      <div>
+        <h2>{{ t.nombreCanal }}</h2>
+        @switch (t.estado) {
+          @case ('EN_VIVO') { <span class="chip chip-vivo">EN VIVO</span> }
+          @case ('OFFLINE') { <span class="chip chip-offline">Offline</span> }
+          @case ('DESCONOCIDO') { <span class="chip chip-desconocido">Estado desconocido</span> }
+        }
+      </div>
+    </header>
+
+    @switch (t.estado) {
+      @case ('EN_VIVO') {
+        <p class="titulo">{{ t.titulo }}</p>
+        @if (t.categoria) {
+        <p class="dato">{{ t.categoria }}</p>
+        }
+        <p class="dato espectadores" aria-live="polite" aria-atomic="true">
+          <span class="punto" aria-hidden="true"></span>
+          {{ t.espectadores | number }} espectadores
+        </p>
+        @if (t.iniciadaEn) {
+        <p class="dato">{{ t.iniciadaEn | fechaRelativa }}</p>
+        }
+      }
+      @case ('OFFLINE') {
+        @if (t.vod) {
+        <p class="titulo">Reproduciendo el último VOD: {{ t.vod.titulo }}</p>
+        @if (t.vod.duracion) {
+        <p class="dato">Duración: {{ t.vod.duracion }}</p>
+        }
+        } @else {
+        <p class="titulo">Sin transmisión activa</p>
+        }
+        <p class="dato">La próxima transmisión se anunciará en el canal.</p>
+      }
+      @case ('DESCONOCIDO') {
+        <p class="titulo">No hay información en vivo disponible</p>
+      }
+    }
+
+    @if (t.nombreTorneo) {
+    <p class="dato">Torneo: {{ t.nombreTorneo }}</p>
+    }
+
+    <a class="accion" [href]="t.urlCanal" target="_blank" rel="noopener noreferrer">
+      Ver en Twitch
+    </a>
+
+    @if (hayVarias()) {
+    <nav class="controles" aria-label="Cambiar transmisión destacada">
+      <button type="button" (click)="anterior()" aria-label="Transmisión anterior">‹</button>
+      <div class="puntos">
+        @for (item of lista(); track item.loginCanal; let i = $index) {
+        <button
+          type="button"
+          class="paso"
+          [class.activo]="i === indice()"
+          (click)="ir(i)"
+          [attr.aria-label]="'Ir a la transmisión de ' + item.nombreCanal"
+          [attr.aria-current]="i === indice() ? 'true' : null"
+        ></button>
+        }
+      </div>
+      <button type="button" (click)="siguiente()" aria-label="Transmisión siguiente">›</button>
+    </nav>
+    }
+  </aside>
+
+  <!-- Hueco reservado para el chat embebido (fuera de alcance): quitar
+       [hidden] y añadir la clase `con-chat` al .hero cuando llegue. -->
+  <aside class="panel-chat" [hidden]="true" aria-label="Chat de la transmisión"></aside>
+</section>
+}

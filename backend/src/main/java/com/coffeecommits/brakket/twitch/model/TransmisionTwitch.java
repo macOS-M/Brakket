@@ -28,5 +28,24 @@ public class TransmisionTwitch {
     private LocalDateTime finalizadaEn;
     @Column(name = "creada_en", nullable = false)
     private LocalDateTime creadaEn;
+    // RF-35 (V35): registro multiplataforma. Los @Builder.Default cubren los
+    // NOT NULL de la migración cuando el builder no los establece.
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private PlataformaTransmision plataforma = PlataformaTransmision.TWITCH;
+    /** Handle del canal; si es null se resuelve desde el canal oficial asociado. */
+    @Column(name = "login_canal", length = 120)
+    private String loginCanal;
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean destacada = false;
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean activa = true;
+    @Column(name = "creada_por")
+    private Long creadaPorId;
+    @Column(name = "verificada_en")
+    private LocalDateTime verificadaEn;
 }
 

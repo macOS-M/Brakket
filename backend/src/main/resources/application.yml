@@ -57,6 +57,13 @@ brakket:
     client-id: ${TWITCH_CLIENT_ID:}
     client-secret: ${TWITCH_CLIENT_SECRET:}
     channel: ${TWITCH_CHANNEL:}
+    # Fail-fast: sin credenciales la app no arranca. Solo test/CI lo apagan.
+    required: ${TWITCH_REQUIRED:true}
+  streams:
+    # false = /transmisiones muestra solo el canal oficial; true incorpora
+    # además las transmisiones registradas (RF-35). El código siempre
+    # recorre una lista: encender el flag no requiere tocar nada más.
+    multi-source-enabled: ${STREAMS_MULTI_SOURCE_ENABLED:false}
   ai:
     api-key: ${AI_API_KEY:}
     api-base-url: ${AI_API_BASE_URL:}

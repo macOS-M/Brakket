@@ -86,6 +86,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/*/equipos-elegibles").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/mios").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
+                        // RF-35: ver los directos no exige sesión, como el catálogo.
+                        .requestMatchers(HttpMethod.GET, "/api/transmisiones").permitAll()
                         // Todo lo demás requiere JWT válido.
                         .anyRequest().authenticated()
                 )

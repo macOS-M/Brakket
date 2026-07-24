@@ -131,11 +131,10 @@ export class SidebarComponent {
           proximamente: true
         },
         {
-          ruta: '/twitch',
+          ruta: '/transmisiones',
           etiqueta: 'Transmisiones',
           icono: 'video',
-          exact: false,
-          proximamente: true
+          exact: false
         }
       ]
     },
@@ -175,6 +174,15 @@ export class SidebarComponent {
           exact: false,
           proximamente: true,
           roles: ['ADMIN', 'COMISIONADO']
+        },
+        {
+          // Configuración del canal oficial (RF-34); la vitrina pública
+          // de directos vive en /transmisiones.
+          ruta: '/twitch',
+          etiqueta: 'Canal de Twitch',
+          icono: 'video',
+          exact: false,
+          roles: ['ADMIN']
         },
         {
           ruta: '/admin',
