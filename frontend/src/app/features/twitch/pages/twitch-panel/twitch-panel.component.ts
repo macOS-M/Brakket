@@ -14,7 +14,9 @@ import { CanalTwitch, TransmisionTwitch } from '../../../../models/twitch.model'
 export class TwitchPanelComponent implements OnInit {
   private readonly twitch = inject(TwitchService);
   canal: CanalTwitch | null = null;
-  canalEntrada = 'https://www.twitch.tv/brakketcenfotec';
+  // Sin valor hardcodeado: se precarga con lo que responda el backend (que a
+  // su vez cae a la env var TWITCH_CHANNEL si no hay canal en BD).
+  canalEntrada = '';
   torneoId: number | null = null;
   partidaId: number | null = null;
   transmision: TransmisionTwitch | null = null;
@@ -26,7 +28,12 @@ export class TwitchPanelComponent implements OnInit {
 
   cargar(): void {
     this.twitch.obtener().subscribe({
-      next: data => this.canal = data,
+      next: data => {
+        this.canal = data;
+        if (!this.canalEntrada) {
+          this.canalEntrada = data.urlCanal ?? '';
+        }
+      },
       error: err => this.error = this.mensajeError(err)
     });
   }
