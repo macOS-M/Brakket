@@ -1,4 +1,49 @@
-<app-coming-soon
-  titulo="Transmisiones"
-  descripcion="Vinculá el canal oficial de Twitch y seguí la audiencia y el sentimiento del chat en tiempo real."
-/>
+<section class="page">
+  <header class="page-header">
+    <h1>Canal oficial de Twitch</h1>
+    <p>Configura el canal de Brakket.</p>
+  </header>
+
+  @if (canal; as c) {
+    <article class="card status-card">
+      <div>
+        <span class="status" [class.active]="c.activo">{{ c.estado }}</span>
+        <h2>{{ c.nombreMostrado || c.loginCanal || 'Sin configurar' }}</h2>
+        @if (c.urlCanal) {
+          <a [href]="c.urlCanal" target="_blank" rel="noopener">{{ c.urlCanal }}</a>
+        }
+      </div>
+      <dl>
+        <div><dt>Credenciales</dt><dd>{{ c.credencialesConfiguradas ? 'Configuradas' : 'Pendientes' }}</dd></div>
+        <div><dt>Última validación</dt><dd>{{ c.ultimaValidacion || 'Sin validar' }}</dd></div>
+      </dl>
+      @if (c.ultimoError) { <p class="notice">{{ c.ultimoError }}</p> }
+    </article>
+  }
+
+  <article class="card">
+    <h2>Configurar canal</h2>
+    <label for="canal">Usuario o URL de Twitch</label>
+    <input id="canal" [(ngModel)]="canalEntrada" maxlength="300">
+    <div class="actions">
+      <button (click)="guardar()" [disabled]="cargando || !canalEntrada.trim()">Guardar</button>
+      <button class="secondary" (click)="validar()" [disabled]="cargando || !canal?.id">Validar conexión</button>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2>Asociar transmisión</h2>
+    <p>Puede asociarse al torneo, a una partida o a ambos.</p>
+    <div class="fields">
+      <label>ID del torneo <input type="number" min="1" [(ngModel)]="torneoId"></label>
+      <label>ID de la partida <input type="number" min="1" [(ngModel)]="partidaId"></label>
+    </div>
+    <button (click)="asociar()" [disabled]="cargando || !canal?.activo">
+      Asociar y consultar estado en vivo
+    </button>
+    @if (transmision) { <p class="result">Estado: {{ transmision.estado }}</p> }
+  </article>
+
+  @if (mensaje) { <p class="feedback success">{{ mensaje }}</p> }
+  @if (error) { <p class="feedback error">{{ error }}</p> }
+</section>

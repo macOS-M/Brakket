@@ -49,11 +49,14 @@ describe('TeamRosterComponent', () => {
       cambiarRol: () => of({}),
       disolver: () => of(equipoDisuelto),
       invitar: () => of({}),
-      expulsar: () => of({})
+      expulsar: () => of({}),
+      solicitudesPendientes: () => of([]),
+      responderSolicitud: () => of({})
     };
 
     const authServiceMock = {
-      usuario: () => ({ id: 1 })
+      usuario: () => ({ id: 1 }),
+      hasRole: () => false
     };
 
     // El componente inyecta GamesService (filtro de juegos de RF-11) y lo llama
@@ -173,25 +176,30 @@ describe('TeamRosterComponent', () => {
     expect(spy).toHaveBeenCalledWith(1, { confirmacion: true, motivo: null });
   });
 
-  it('should not send an invitation when the form is invalid', () => {
+  it('should not send invitations when nobody is selected', () => {
     init();
     const spy = spyOn(teamsService, 'invitar').and.callThrough();
 
-    component.invitar();
+    component.invitarSeleccionados();
 
     expect(spy).not.toHaveBeenCalled();
-    expect(component.invitarForm.touched).toBeTrue();
   });
 
-  it('should send an invitation with the proposed role and null message when empty', () => {
+  // Selección múltiple: una invitación por jugador, cada uno con su rol.
+  it('should send one invitation per selected player with its own role', () => {
     init();
     const spy = spyOn(teamsService, 'invitar').and.callThrough();
-    component.invitarForm.setValue({ jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: '' });
+    component.seleccionados.set([
+      { id: 7, nombre: 'Ana', rol: 'TITULAR' },
+      { id: 8, nombre: 'Beto', rol: 'SUPLENTE' }
+    ]);
 
-    component.invitar();
+    component.invitarSeleccionados();
 
     expect(spy).toHaveBeenCalledWith(1, { jugadorId: 7, rolPropuesto: 'TITULAR', mensaje: null });
-    expect(component.invitacionEnviada()).toBeTrue();
+    expect(spy).toHaveBeenCalledWith(1, { jugadorId: 8, rolPropuesto: 'SUPLENTE', mensaje: null });
+    expect(component.seleccionados().length).toBe(0);
+    expect(component.resumenInvitaciones()).toBe('2 invitaciones enviadas.');
   });
 
   // RF-10: la causa de la expulsión es obligatoria.

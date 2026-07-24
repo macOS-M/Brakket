@@ -20,6 +20,11 @@ export const routes: Routes = [
       .then((m) => m.TeamPublicProfileComponent)
   },
   {
+    path: 'team-profile/:equipoId/historial',
+    loadComponent: () => import('./features/teams/pages/team-history/team-history.component')
+      .then((m) => m.TeamHistoryComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.routes)
   },
@@ -64,6 +69,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/teams/teams.routes').then((m) => m.routes)
       },
       {
+        path: 'players',
+        loadChildren: () => import('./features/players/players.routes').then((m) => m.routes)
+      },
+      {
         path: 'transfers',
         canActivate: [authGuard],
         loadChildren: () => import('./features/transfers/transfers.routes').then((m) => m.routes)
@@ -75,7 +84,8 @@ export const routes: Routes = [
       },
       {
         path: 'twitch',
-        canActivate: [authGuard],
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN'] },
         loadChildren: () => import('./features/twitch/twitch.routes').then((m) => m.routes)
       },
       {

@@ -48,12 +48,12 @@ textarea {
   font-size: 0.875rem;
 
   &::placeholder {
-    color: var(--text-subtle, #64748b);
+    color: var(--text-subtle, #8496ad);
   }
 
   &:focus {
     outline: none;
-    border-color: var(--accent-text, #ff6a1f);
+    border-color: var(--accent, #ff5500);
   }
 
   &.invalido {

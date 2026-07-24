@@ -18,6 +18,10 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(com.coffeecommits.brakket.twitch.service.TwitchUnavailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTwitchUnavailable(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.error(ex.getMessage()));
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {

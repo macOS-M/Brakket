@@ -43,9 +43,10 @@ Desarrollar una plataforma web completa para la gestión de ligas y torneos espo
 
 ### Formatos soportados
 - Eliminación simple
-- Eliminación doble
-- Round Robin
-- Sistema Suizo
+- Eliminación doble (llave inferior y gran final)
+- Round Robin (tabla de posiciones)
+- Sistema Suizo (emparejamiento por marcas)
+- Fase de grupos + llave eliminatoria
 
 ## 📊 Fixtures y Brackets
 - Generación automática de enfrentamientos
@@ -171,6 +172,24 @@ npm start
 
 Detalles en [`backend/README.md`](backend/README.md) y
 [`frontend/README.md`](frontend/README.md).
+
+## Configuración de Twitch (RF-34)
+
+El canal oficial configurado para desarrollo es
+`https://www.twitch.tv/brakketcenfotec`. Sin credenciales, el panel permite
+guardarlo con estado `PENDIENTE`; la validación real se habilita al definir:
+
+```env
+TWITCH_CLIENT_ID=...
+TWITCH_CLIENT_SECRET=...
+TWITCH_CHANNEL=brakketcenfotec
+```
+
+Las credenciales se obtienen registrando una aplicación en
+https://dev.twitch.tv/console/apps. Para desarrollo local se puede registrar
+`http://localhost:8080/api/twitch/oauth/callback` como URL de redirección.
+El secreto debe permanecer únicamente en `.env` o en el gestor de secretos del
+ambiente de despliegue; nunca se devuelve mediante la API ni se muestra en Angular.
 
 ## Cómo trabajamos
 

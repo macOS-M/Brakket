@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { League } from '../../../../models/league.model';
@@ -26,6 +26,38 @@ export class LeagueListComponent {
   readonly leagues = signal<League[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+
+  /** Filtro por juego (chips con los juegos presentes en las ligas). */
+  readonly juegoFiltro = signal<number | null>(null);
+
+  readonly juegosDisponibles = computed(() => {
+    const vistos = new Map<number, string>();
+    for (const liga of this.leagues()) {
+      if (liga.juegoId && liga.juegoNombre) {
+        vistos.set(liga.juegoId, liga.juegoNombre);
+      }
+    }
+    return [...vistos.entries()].map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
+
+  private readonly filtradas = computed(() => {
+    const juegoId = this.juegoFiltro();
+    return juegoId === null
+      ? this.leagues()
+      : this.leagues().filter((l) => l.juegoId === juegoId);
+  });
+
+  /** Mis ligas (soy su comisionado) primero; el resto aparte. */
+  readonly mias = computed(() => {
+    const uid = Number(this.auth.usuario()?.id);
+    return uid ? this.filtradas().filter((l) => l.comisionadoId === uid) : [];
+  });
+
+  readonly otras = computed(() => {
+    const idsMias = new Set(this.mias().map((l) => l.id));
+    return this.filtradas().filter((l) => !idsMias.has(l.id));
+  });
 
   constructor() {
     this.cargar();

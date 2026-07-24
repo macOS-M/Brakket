@@ -36,6 +36,17 @@ export class TournamentListComponent implements OnInit {
     return this.torneos().filter((t) => tamano === null || t.tamanoEquipo === tamano);
   });
 
+  /** Mis torneos (los organizo yo) primero; el resto aparte. */
+  readonly mios = computed(() => {
+    const uid = Number(this.auth.usuario()?.id);
+    return uid ? this.filtrados().filter((t) => t.organizadorId === uid) : [];
+  });
+
+  readonly otros = computed(() => {
+    const idsMios = new Set(this.mios().map((t) => t.id));
+    return this.filtrados().filter((t) => !idsMios.has(t.id));
+  });
+
   readonly tamanos = [1, 2, 3, 4, 5];
 
   ngOnInit(): void {

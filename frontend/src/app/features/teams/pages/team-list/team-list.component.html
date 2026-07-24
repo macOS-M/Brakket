@@ -37,45 +37,176 @@
     <button class="btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar</button>
   </form>
 
+  @if (avisoSolicitud()) {
+  <p class="mensaje-ok" role="status">{{ avisoSolicitud() }}</p>
+  }
+  @if (errorSolicitud()) {
+  <p class="mensaje-error" role="alert">{{ errorSolicitud() }}</p>
+  }
+
+  @if (misEquipos().length > 0) {
+  <div class="seccion-titulo">
+    <h2>Mis equipos</h2>
+    <span class="conteo">{{ misEquipos().length }}</span>
+  </div>
+  <div class="grid">
+    @for (equipo of misEquipos(); track equipo.id) {
+    <article
+      class="equipo-card clickeable entra-tarjeta"
+      role="link"
+      tabindex="0"
+      appTilt
+      (click)="abrir(equipo, true)"
+      (keydown.enter)="abrir(equipo, true)"
+    >
+      <div class="banda">
+        <!-- Con banner propio, el banner manda; sin banner, el gradiente
+             del juego con su marca de agua como fallback. -->
+        <div
+          class="banda-fondo"
+          aria-hidden="true"
+          [style.background]="equipo.bannerUrl ? undefined : portada(equipo)"
+        >
+          @if (equipo.bannerUrl) {
+          <img [src]="equipo.bannerUrl" alt="" loading="lazy" (error)="equipo.bannerUrl = null" />
+          }
+        </div>
+        @if (!equipo.bannerUrl && equipo.juegoNombre) {
+        <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
+        }
+        <app-status-badge class="estado-flotante" [estado]="equipo.estado" />
+      </div>
+      <div class="cuerpo">
+        <div class="cabecera">
+          @if (equipo.logo) {
+          <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
+          } @else {
+          <span
+            class="logo sin-logo"
+            aria-hidden="true"
+            [style.background]="colorDe(equipo.nombre)"
+          >{{ equipo.nombre.charAt(0) }}</span>
+          }
+          <div class="identidad">
+            <h2 class="nombre">{{ equipo.nombre }}</h2>
+            @if (equipo.juegoNombre) {
+            <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+            }
+          </div>
+        </div>
+        @if (equipo.descripcion) {
+        <p class="descripcion">{{ equipo.descripcion }}</p>
+        }
+      </div>
+    </article>
+    }
+  </div>
+  }
+
+  <!-- Disclosure: lo de la plataforma entera se despliega a demanda. -->
+  <div class="seccion-titulo">
+    <h2 class="titulo-desplegable">
+      <button
+        type="button"
+        class="btn-desplegable"
+        [attr.aria-expanded]="mostrarTodos()"
+        (click)="alternarTodos()"
+      >
+        <span class="chevron" [class.abierto]="mostrarTodos()" aria-hidden="true">▸</span>
+        Todos los equipos
+        @if (pagina()) {
+        <span class="conteo">{{ pagina()!.totalElements }}</span>
+        }
+      </button>
+    </h2>
+  </div>
+
+  @if (!mostrarTodos()) {
+  <p class="pista-desplegable">
+    Desplegá para explorar todos los equipos de la plataforma, o usá los filtros de arriba.
+  </p>
+  } @else {
+
   @if (cargando()) {
   <app-empty-state modo="cargando" mensaje="Buscando equipos…" />
   } @else if (error()) {
   <app-empty-state modo="error" titulo="No se pudo buscar" [mensaje]="error()">
     <button class="btn-secondary" type="button" (click)="reintentar()">Reintentar</button>
   </app-empty-state>
-  } @else if (pagina() && pagina()!.items.length === 0) {
+  } @else if (pagina() && otros().length === 0) {
   <app-empty-state
     titulo="Sin resultados"
-    mensaje="Ningún equipo coincide con los criterios indicados."
+    mensaje="Ningún otro equipo coincide con los criterios indicados."
   >
     <button class="btn-secondary" type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
   </app-empty-state>
   } @else if (pagina()) {
   <div class="grid">
-    @for (equipo of pagina()!.items; track equipo.id) {
-    <article class="equipo-card">
-      <div class="cabecera">
-        @if (equipo.logo) {
-        <img class="logo" [src]="equipo.logo" [alt]="" />
-        } @else {
-        <span class="logo sin-logo" aria-hidden="true">{{ equipo.nombre.charAt(0) }}</span>
-        }
-        <div class="identidad">
-          <h2 class="nombre">{{ equipo.nombre }}</h2>
-          @if (equipo.juegoNombre) {
-          <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+    @for (equipo of otros(); track equipo.id) {
+    <article
+      class="equipo-card clickeable entra-tarjeta"
+      role="link"
+      tabindex="0"
+      appTilt
+      (click)="abrir(equipo, false)"
+      (keydown.enter)="abrir(equipo, false)"
+    >
+      <div class="banda">
+        <!-- Con banner propio, el banner manda; sin banner, el gradiente
+             del juego con su marca de agua como fallback. -->
+        <div
+          class="banda-fondo"
+          aria-hidden="true"
+          [style.background]="equipo.bannerUrl ? undefined : portada(equipo)"
+        >
+          @if (equipo.bannerUrl) {
+          <img [src]="equipo.bannerUrl" alt="" loading="lazy" (error)="equipo.bannerUrl = null" />
           }
         </div>
-        <app-status-badge [estado]="equipo.estado" />
+        @if (!equipo.bannerUrl && equipo.juegoNombre) {
+        <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
+        }
+        <app-status-badge class="estado-flotante" [estado]="equipo.estado" />
       </div>
+      <div class="cuerpo">
+        <div class="cabecera">
+          @if (equipo.logo) {
+          <img class="logo" [src]="equipo.logo" alt="" loading="lazy" (error)="equipo.logo = null" />
+          } @else {
+          <span
+            class="logo sin-logo"
+            aria-hidden="true"
+            [style.background]="colorDe(equipo.nombre)"
+          >{{ equipo.nombre.charAt(0) }}</span>
+          }
+          <div class="identidad">
+            <h2 class="nombre">{{ equipo.nombre }}</h2>
+            @if (equipo.juegoNombre) {
+            <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+            }
+          </div>
+        </div>
 
-      @if (equipo.descripcion) {
-      <p class="descripcion">{{ equipo.descripcion }}</p>
-      }
+        @if (equipo.descripcion) {
+        <p class="descripcion">{{ equipo.descripcion }}</p>
+        }
 
-      <div class="acciones">
-        <a class="btn-secondary" [routerLink]="['/team-profile', equipo.id]">Ver perfil</a>
-        <a class="btn-secondary" [routerLink]="['/teams', equipo.id, 'plantilla']">Plantilla</a>
+        @if (puedeSolicitar(equipo)) {
+        <div class="acciones">
+          <button
+            class="btn-secondary"
+            type="button"
+            [disabled]="solicitandoId() === equipo.id"
+            (click)="solicitarUnion(equipo, $event)"
+          >
+            {{ solicitandoId() === equipo.id ? 'Enviando…' : 'Solicitar unirme' }}
+          </button>
+        </div>
+        } @else if (solicitados().has(equipo.id)) {
+        <div class="acciones">
+          <span class="chip-solicitado">Solicitud enviada ✓</span>
+        </div>
+        }
       </div>
     </article>
     }
@@ -104,5 +235,5 @@
       Siguiente →
     </button>
   </nav>
-  } }
+  } } }
 </section>

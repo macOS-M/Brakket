@@ -4,6 +4,7 @@ description: Plataforma de administración de ligas y torneos de esports
 colors:
   accent: "#ff5500"
   accent-hover: "#ff6a1f"
+  accent-ink: "#0b1120"
   accent-text: "#ff6a1f"
   accent-text-light: "#c2410c"
   brand-blue: "#2563eb"
@@ -97,13 +98,13 @@ spacing:
   xxl: "32px"
 components:
   button-primary:
-    backgroundColor: "{colors.brand-blue}"
-    textColor: "#ffffff"
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.accent-ink}"
     typography: "{typography.label}"
     rounded: "{rounded.sm}"
     padding: "7px 14px"
   button-primary-hover:
-    backgroundColor: "{colors.brand-blue-hover}"
+    backgroundColor: "{colors.accent-hover}"
   button-secondary:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
@@ -139,8 +140,9 @@ components:
     rounded: "{rounded.sm}"
     padding: "8px 11px"
   nav-item-active:
-    backgroundColor: "{colors.surface-raised}"
-    textColor: "{colors.brand-cyan}"
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.accent-ink}"
+    rounded: "{rounded.pill}"
 ---
 
 # Design System: Brakket
@@ -153,7 +155,7 @@ Brakket es el puesto desde donde se dirige un torneo. Quien lo usa no vino a mir
 
 De ahí sale la densidad. Este no es un sistema de aire generoso y tarjetas espaciadas; es un sistema que muestra mucho y lo hace legible por jerarquía — peso tipográfico, contraste de tono, alineación de cifras — en vez de por separación. Cuando una pantalla se siente saturada, la respuesta es afilar la jerarquía, no agregar espacio.
 
-La energía competitiva que el producto necesita no viene del color de fondo ni de efectos. Viene de la precisión: números que alinean, estados que se distinguen sin leerse, tipografía con carácter propio. **Brakket usa azul y cyan, la paleta más común del rubro. Eso obliga a que la identidad la carguen la tipografía y la densidad** — si el sistema se apoyara en el color para diferenciarse, sería indistinguible de cualquier dashboard.
+La energía competitiva que el producto necesita no viene del color de fondo ni de efectos. Viene de la precisión: números que alinean, estados que se distinguen sin leerse, tipografía con carácter propio. **Brakket usa fondo azul-oscuro con un naranja de salida como acento (referencia Aquament). El acento dirige la mirada, pero la identidad la siguen cargando la tipografía y la densidad** — si el sistema se apoyara solo en el color para diferenciarse, sería indistinguible de cualquier dashboard.
 
 Este sistema rechaza explícitamente: la estética de proyecto de curso (cards idénticas repetidas, todo del mismo peso), el gamer llamativo de los 2000 (neones, degradados violeta-azul, texturas), el landing de SaaS (número gigante con etiqueta chiquita, aire donde debería haber información) y el panel de admin sin diseñar (tablas crudas, formularios planos).
 
@@ -171,7 +173,8 @@ Este sistema rechaza explícitamente: la estética de proyecto de curso (cards i
 Paleta fría de trabajo prolongado: azules profundos como base, un cyan que marca lo activo, y una familia de estados que hace todo el trabajo semántico. El acento se reserva para acción y selección; jamás decora.
 
 ### Primary
-- **Naranja de salida** (`#ff5500`): el color de acción y de identidad — botones primarios, ítem de navegación activo, foco del teclado, selección, banners. Es el naranja de la línea de largada. **La tinta sobre él es blanca y en negrita** (referencia Aquament): 3.1:1, que cumple AA para texto grande/bold; el texto chico sobre acento se evita, no se oscurece.
+- **Naranja de salida** (`#ff5500`): el color de acción y de identidad — botones primarios, ítem de navegación activo, foco del teclado, selección, banners. Es el naranja de la línea de largada. **La tinta sobre él es navy** (`#0b1120`, la tinta de acento): 5.6:1, AA a cualquier tamaño, y es el look de la referencia Aquament. El blanco sobre este naranja da 3.2:1 y solo pasaría en texto grande/bold; se abandonó para no vivir en el borde.
+- **Tinta de acento** (`#0b1120`): el texto que va encima de cualquier superficie naranja — botones primarios, píldora activa de navegación, chips de filtro activos, selección de texto. Coincide con el fondo de sala: sobre naranja, el navy del lienzo es la tinta.
 - **Naranja hover** (`#ff6a1f`): estado hover del anterior, y también la variante de texto sobre fondo oscuro (5.9:1). En tema claro el texto naranja baja a `#c2410c` (4.9:1).
 
 ### Secondary
@@ -289,14 +292,14 @@ La sombra existe, pero es **respuesta a una acción**, no propiedad de un objeto
 
 ### Buttons
 - **Shape:** esquinas suavemente redondeadas (`8px`).
-- **Primary:** relleno azul de mando (`#2563eb`) con texto blanco, `7px 14px`, peso 600, `0.8rem`. Hover a azul claro (`#3b82f6`). Una sola por pantalla.
+- **Primary:** relleno naranja de salida (`#ff5500`) con tinta de acento navy (`#0b1120`) en negrita, `7px 14px`, `0.8rem`. Hover a naranja hover (`#ff6a1f`). Una sola por pantalla.
 - **Secondary:** fondo transparente con borde de `1px` en borde (`#334155`) y texto tinta. Hover rellena con superficie elevada. Es el botón por defecto: la mayoría de las acciones son secundarias.
 - **Danger:** transparente con borde y texto en tinta de peligro (`#f87171`); hover rellena con el tinte al 12%. El relleno sólido rojo se reserva para la confirmación final de un destructivo, nunca para el disparador.
-- **Estados obligatorios:** default, hover, focus-visible (anillo cyan de `2px` con `2px` de separación), disabled (`opacity: 0.4`, cursor por defecto) y, en acciones asíncronas, un texto de progreso que reemplaza la etiqueta ("Guardando…").
+- **Estados obligatorios:** default, hover, focus-visible (anillo del acento de `2px` con `2px` de separación — es el anillo global del sistema), disabled (`opacity: 0.4`, cursor por defecto) y, en acciones asíncronas, un texto de progreso que reemplaza la etiqueta ("Guardando…").
 
 ### Chips
 - **Style:** píldora (`999px`), `4px 10px`, etiqueta de `0.72rem` peso 700, relleno del color de estado al 12% con borde del mismo tono al 28% y texto en la variante `-ink`.
-- **State:** los chips de filtro invierten a relleno azul sólido con texto blanco cuando están activos; los chips de estado no son interactivos y siempre llevan texto legible, nunca solo color.
+- **State:** los chips de filtro invierten a relleno naranja sólido con tinta de acento navy cuando están activos; los chips de estado no son interactivos y siempre llevan texto legible, nunca solo color.
 
 ### Cards / Containers
 - **Corner Style:** `12px`.
@@ -308,7 +311,7 @@ La sombra existe, pero es **respuesta a una acción**, no propiedad de un objeto
 
 ### Inputs / Fields
 - **Style:** fondo de superficie, borde de `1px`, radio `8px`, `9px 12px`, texto de cuerpo. Los campos de búsqueda llevan una lupa de `16px` en tinta tenue a la izquierda, con el relleno izquierdo aumentado a `34px`.
-- **Focus:** el borde pasa a cyan de señal; el anillo global de foco cubre la accesibilidad.
+- **Focus:** el borde pasa al acento (naranja de salida, o su variante de texto); el anillo global de foco cubre la accesibilidad.
 - **Placeholder:** tinta tenue. No es una elección estética: la tinta tenue está calibrada para superar 4.5:1 sobre las superficies del sistema, y por eso puede usarse en texto. Bajarla "por elegancia" rompe AA.
 - **Error:** borde y mensaje en tinta de peligro, con el mensaje debajo del campo y asociado por `aria-describedby`.
 
@@ -335,7 +338,7 @@ Un solo componente cubre carga, vacío y error. Carga muestra un anillo giratori
 ### Do:
 - **Do** usar `font-variant-numeric: tabular-nums` en toda cifra que pueda aparecer en columna.
 - **Do** acompañar todo estado de color con texto o icono; el color nunca comunica solo.
-- **Do** limitar el azul de mando a una acción primaria por pantalla.
+- **Do** limitar el naranja de salida a una acción primaria por pantalla.
 - **Do** resolver la densidad con jerarquía tipográfica antes que con espaciado.
 - **Do** verificar 4.5:1 en texto de cuerpo y 3:1 en texto grande, **en los dos temas**.
 - **Do** dar a cada componente interactivo sus siete estados: default, hover, focus, active, disabled, loading, error.

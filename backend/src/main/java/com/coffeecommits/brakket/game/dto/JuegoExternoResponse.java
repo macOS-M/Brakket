@@ -5,6 +5,8 @@ package com.coffeecommits.brakket.game.dto;
  * precargar el formulario del catálogo: nombre, género y arte oficial.
  */
 public record JuegoExternoResponse(
+        /** Slug de RAWG: la llave para pedir la ficha completa al importar. */
+        String slug,
         String nombre,
         String genero,
         String imagenUrl
