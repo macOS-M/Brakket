@@ -271,6 +271,21 @@
   letter-spacing: 0.04em;
 }
 
+// RF-15: entrada discreta al historial del jugador desde la plantilla.
+.enlace-historial {
+  flex-shrink: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border, #334155);
+
+  &:hover {
+    color: var(--accent-text, #ff6a1f);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}
+
 // ----- Torneos -----
 
 .torneo {

@@ -191,6 +191,12 @@
           <p class="nombre">{{ miembro.nombre }}</p>
           <p class="desde">Desde {{ miembro.fechaUnion | date: 'MMM y' }}</p>
         </div>
+        <!-- RF-15: puerta de entrada al historial del jugador. -->
+        <a
+          class="enlace-historial"
+          [routerLink]="['/players', miembro.usuarioId, 'historial']"
+          [attr.aria-label]="'Historial de ' + miembro.nombre"
+        >Historial</a>
         <span class="rol">{{ miembro.rol | rolEquipo }}</span>
       </li>
       }
