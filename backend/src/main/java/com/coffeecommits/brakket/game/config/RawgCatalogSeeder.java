@@ -26,6 +26,20 @@ public class RawgCatalogSeeder implements ApplicationRunner {
     /** Por debajo de este número de juegos activos se completa el catálogo. */
     private static final int MINIMO_CATALOGO = 8;
 
+    /**
+     * Catálogo curado: los títulos competitivos reales (guía: el catálogo
+     * de Challenger Mode). El "-added" de RAWG traía juegos populares pero
+     * no competitivos (Skyrim, Portal, The Witcher…).
+     */
+    private static final java.util.List<String> CURADOS = java.util.List.of(
+            "League of Legends", "Valorant", "Counter-Strike 2", "Dota 2",
+            "Fortnite", "Rocket League", "Overwatch 2", "Apex Legends",
+            "Tom Clancy's Rainbow Six Siege", "PUBG: Battlegrounds",
+            "Call of Duty: Warzone", "Street Fighter 6", "Tekken 8",
+            "Mortal Kombat 1", "EA Sports FC 25", "Brawlhalla",
+            "Hearthstone", "Halo Infinite", "Fall Guys: Ultimate Knockout",
+            "Clash Royale");
+
     private final JuegoRepository juegoRepository;
     private final ExternalGameSearchService externalGameSearchService;
 
@@ -41,30 +55,127 @@ public class RawgCatalogSeeder implements ApplicationRunner {
             return;
         }
         if (juegoRepository.findByActivoTrue().size() >= MINIMO_CATALOGO) {
+            completarFichasFaltantes();
             return;
         }
 
-        try {
-            int importados = 0;
-            for (var externo : externalGameSearchService.populares()) {
-                if (juegoRepository.findByNombreIgnoreCase(externo.nombre()).isPresent()) {
+        // Try por título: un fallo de RAWG (rate limit, timeout) no debe
+        // abortar el resto del catálogo.
+        int importados = 0;
+        for (String nombre : CURADOS) {
+            try {
+                var existente = juegoRepository.findByNombreIgnoreCase(nombre).orElse(null);
+                if (existente != null) {
+                    // Curado ya presente: se reactiva y, si su arte era el
+                    // stock de las migraciones viejas, se refresca con RAWG.
+                    // Tradeoff asumido: con el catálogo bajo el mínimo, la
+                    // garantía de demo pesa más que una desactivación ADMIN
+                    // previa (DD-01); con >= MINIMO_CATALOGO activos este
+                    // bloque no corre y la decisión del ADMIN se respeta.
+                    existente.setActivo(true);
+                    if (existente.getRating() == null || esArteStock(existente.getImagenUrl())) {
+                        var refresco = externalGameSearchService.buscar(nombre).stream()
+                                .findFirst().orElse(null);
+                        if (refresco != null) {
+                            existente.setImagenUrl(refresco.imagenUrl());
+                            existente.setRawgSlug(refresco.slug());
+                        }
+                    }
+                    juegoRepository.save(existente);
                     continue;
                 }
-                juegoRepository.save(Juego.builder()
+                var externo = externalGameSearchService.buscar(nombre).stream()
+                        .findFirst().orElse(null);
+                if (externo == null) {
+                    continue;
+                }
+                Juego juego = Juego.builder()
                         .nombre(externo.nombre())
                         .genero(externo.genero() == null || externo.genero().isBlank()
                                 ? "Sin clasificar"
                                 : externo.genero())
                         .imagenUrl(externo.imagenUrl())
+                        .rawgSlug(externo.slug())
                         .activo(true)
-                        .build());
+                        .build();
+                // Ficha completa (descripción, rating, capturas…) al sembrar;
+                // si falla para un título, ese entra con los datos básicos.
+                try {
+                    var detalle = externalGameSearchService.detalle(externo.slug());
+                    if (detalle != null) {
+                        juego.setDescripcion(detalle.descripcion());
+                        juego.setFechaLanzamiento(detalle.fechaLanzamiento());
+                        juego.setRating(detalle.rating());
+                        juego.setMetacritic(detalle.metacritic());
+                        juego.setSitioWeb(detalle.sitioWeb());
+                        juego.setPlataformas(detalle.plataformas().isEmpty()
+                                ? null : String.join(" · ", detalle.plataformas()));
+                        juego.setEtiquetas(detalle.etiquetas().isEmpty()
+                                ? null : String.join(", ", detalle.etiquetas()));
+                        juego.setCapturas(detalle.capturas());
+                    }
+                } catch (Exception e) {
+                    log.debug("Sin ficha RAWG para {}: {}", externo.nombre(), e.getMessage());
+                }
+                juegoRepository.save(juego);
                 importados++;
+            } catch (Exception e) {
+                log.warn("No se pudo sembrar '{}' desde RAWG: {}", nombre, e.getMessage());
             }
-            if (importados > 0) {
-                log.info("Catálogo sembrado con {} juegos populares de RAWG", importados);
+        }
+        if (importados > 0) {
+            log.info("Catálogo sembrado con {} juegos competitivos de RAWG", importados);
+        }
+        completarFichasFaltantes();
+    }
+
+    /** Arte de las migraciones semilla o del fallback viejo del frontend. */
+    private static boolean esArteStock(String url) {
+        return url == null || url.contains("pexels.com");
+    }
+
+    /**
+     * Backfill: juegos sembrados antes de V28 quedaron sin ficha (rating,
+     * capturas…). Se completan al arrancar, una sola vez cada uno.
+     */
+    private void completarFichasFaltantes() {
+        try {
+            int completados = 0;
+            for (Juego juego : juegoRepository.findByActivoTrue()) {
+                if (juego.getRating() != null || completados >= 30) {
+                    continue;
+                }
+                String slug = juego.getRawgSlug();
+                if (slug == null) {
+                    slug = externalGameSearchService.buscar(juego.getNombre()).stream()
+                            .filter(r -> r.nombre().equalsIgnoreCase(juego.getNombre()))
+                            .map(r -> r.slug())
+                            .findFirst().orElse(null);
+                }
+                var detalle = externalGameSearchService.detalle(slug);
+                if (detalle == null) {
+                    continue;
+                }
+                juego.setRawgSlug(slug);
+                juego.setDescripcion(juego.getDescripcion() == null
+                        ? detalle.descripcion() : juego.getDescripcion());
+                juego.setFechaLanzamiento(detalle.fechaLanzamiento());
+                juego.setRating(detalle.rating());
+                juego.setMetacritic(detalle.metacritic());
+                juego.setSitioWeb(detalle.sitioWeb());
+                juego.setPlataformas(detalle.plataformas().isEmpty()
+                        ? null : String.join(" · ", detalle.plataformas()));
+                juego.setEtiquetas(detalle.etiquetas().isEmpty()
+                        ? null : String.join(", ", detalle.etiquetas()));
+                juego.setCapturas(detalle.capturas());
+                juegoRepository.save(juego);
+                completados++;
+            }
+            if (completados > 0) {
+                log.info("Ficha RAWG completada para {} juegos del catálogo", completados);
             }
         } catch (Exception e) {
-            log.warn("No se pudo sembrar el catálogo desde RAWG: {}", e.getMessage());
+            log.warn("No se pudieron completar fichas desde RAWG: {}", e.getMessage());
         }
     }
 }

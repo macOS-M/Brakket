@@ -18,23 +18,11 @@ function hash(texto: string): number {
 }
 
 /**
- * Fotografías de stock libre (licencia Pexels, uso libre) para los juegos
- * del catálogo semilla. La referencia visual usa key-art oficial de cada
- * juego, que no podemos embeber por copyright; estas fotos temáticas dan
- * el mismo efecto de tarjeta fotográfica. Verificadas en el navegador.
+ * Vacío a propósito: el arte real de cada juego viene de RAWG al importar
+ * (V28). Sin arte, la portada es el gradiente determinístico — nunca una
+ * foto stock que no corresponde al juego.
  */
-const FOTOS_STOCK: Record<string, string> = {
-  'league of legends':
-    'https://images.pexels.com/photos/7848987/pexels-photo-7848987.jpeg?auto=compress&cs=tinysrgb&w=800',
-  valorant:
-    'https://images.pexels.com/photos/9072394/pexels-photo-9072394.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'counter-strike 2':
-    'https://images.pexels.com/photos/6125330/pexels-photo-6125330.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'rocket league':
-    'https://images.pexels.com/photos/13930769/pexels-photo-13930769.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'ea sports fc 25':
-    'https://images.pexels.com/photos/1657324/pexels-photo-1657324.jpeg?auto=compress&cs=tinysrgb&w=800'
-};
+const FOTOS_STOCK: Record<string, string> = {};
 
 /**
  * Fotografía de portada para un nombre conocido, o null si no hay.

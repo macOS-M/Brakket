@@ -1,0 +1,82 @@
+<section class="page">
+  <a class="volver" [routerLink]="['/team-profile', equipoId]">← Volver al perfil</a>
+
+  <header class="encabezado">
+    <h1>Movimientos de plantilla</h1>
+    @if (historial(); as h) {
+    <p class="subtitulo">{{ h.equipoNombre }}</p>
+    @if (h.equipoEstado === 'DISUELTO') {
+    <p class="aviso aviso-peligro" role="status">
+      Este equipo está disuelto. Su historial se conserva.
+    </p>
+    }
+    }
+  </header>
+
+  <div class="filtros">
+    <label>
+      Desde
+      <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+    </label>
+    <label>
+      Hasta
+      <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+    </label>
+    <button type="button" class="btn-primario" (click)="cargar()">Filtrar</button>
+    <button type="button" class="btn-secundario" (click)="limpiarFiltro()">Limpiar</button>
+  </div>
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando historial…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo cargar el historial" [mensaje]="error()" />
+  } @else {
+  @if (historial(); as h) {
+  @if (h.movimientos.length) {
+  <ul class="linea-tiempo">
+    @for (mov of h.movimientos; track mov.fecha + mov.tipo + mov.jugadorId) {
+    <li class="movimiento" [class]="'tipo-' + mov.tipo.toLowerCase()">
+      <div class="movimiento-cabecera">
+        <span class="etiqueta-tipo">{{ etiquetaTipo(mov) }}</span>
+        <span class="fecha">{{ mov.fecha | date: 'd MMM y, HH:mm' }}</span>
+      </div>
+
+      <div class="movimiento-cuerpo">
+                <span class="jugador">
+                  {{ mov.jugadorNombre }}
+                  @if (!mov.jugadorPerfilPublico) {
+                    <span class="privado" title="Perfil privado">🔒</span>
+                  }
+                </span>
+
+        @if (mov.tipo === 'ALTA') {
+        <span class="detalle">se une como {{ mov.rol }}</span>
+        } @else if (mov.tipo === 'BAJA') {
+        <span class="detalle">
+                    fue dado de baja{{ mov.causaBaja ? ' — ' + mov.causaBaja : '' }}
+                    @if (mov.responsableNombre) {
+                      <span class="responsable"> · por {{ mov.responsableNombre }}</span>
+                    }
+                  </span>
+        } @else {
+        <span class="detalle">
+                    transferido de <strong>{{ mov.equipoOrigenNombre }}</strong> a
+                    <strong>{{ mov.equipoDestinoNombre }}</strong> como {{ mov.rol }}
+                    @if (mov.responsableNombre) {
+                      <span class="responsable"> · aprobado por {{ mov.responsableNombre }}</span>
+                    }
+                  </span>
+        }
+      </div>
+    </li>
+    }
+  </ul>
+  } @else {
+  <app-empty-state
+    titulo="Sin movimientos"
+    mensaje="No hay movimientos de plantilla en el rango seleccionado."
+  />
+  }
+  }
+  }
+</section>

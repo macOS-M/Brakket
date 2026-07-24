@@ -8,6 +8,7 @@ import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from '
 import { JuegoExterno } from '../../../../models/juego.model';
 import { GamesService } from '../../services/games.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
 
 /**
  * Formulario de creacion/edicion de juego (RF-20).
@@ -20,7 +21,7 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 @Component({
   selector: 'app-game-form',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeaderComponent],
+  imports: [ReactiveFormsModule, PageHeaderComponent, FotoInputComponent],
   templateUrl: './game-form.component.html',
   styleUrl: './game-form.component.scss'
 })
@@ -117,9 +118,6 @@ export class GameFormComponent implements OnInit {
     this.consulta.set('');
   }
 
-  quitarImagen(): void {
-    this.form.patchValue({ imagenUrl: '' });
-  }
 
   guardar(): void {
     if (this.form.invalid) {

@@ -3,6 +3,7 @@ package com.coffeecommits.brakket.tournament.model;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.league.model.Temporada;
+import com.coffeecommits.brakket.team.model.Equipo;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Torneo con modelo abierto de organizadores (RF-24, decisión de diseño
@@ -78,4 +80,17 @@ public class Torneo {
     /** Premio personalizado (texto libre del organizador). */
     @Column(name = "premio", length = 200)
     private String premio;
+
+    /**
+     * Reglas de partida (referencia "Game settings" de Challenger Mode):
+     * contrato que ambos capitanes deben aplicar al crear la lobby privada.
+     */
+    @Convert(converter = AjustesPartidaConverter.class)
+    @Column(name = "ajustes_partida")
+    private List<AjustePartida> ajustesPartida;
+
+    /** Ganador del torneo; se fija al confirmarse la final. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campeon_equipo_id")
+    private Equipo campeon;
 }

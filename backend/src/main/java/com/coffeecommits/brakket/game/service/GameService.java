@@ -30,5 +30,5 @@ public interface GameService {
      * ya existía). Los datos salen de la API, no del usuario: cualquier
      * usuario autenticado puede pedirlo sin riesgo de datos basura.
      */
-    JuegoResponse importarDesdeExterno(String nombre);
+    JuegoResponse importarDesdeExterno(String nombre, boolean esAdmin);
 }

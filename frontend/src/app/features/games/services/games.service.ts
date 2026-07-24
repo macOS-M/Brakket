@@ -23,6 +23,11 @@ export class GamesService {
   }
 
   /** Trae un juego del catálogo externo al propio (idempotente). */
+  /** Los juegos top reales de RAWG (fila del panel), cacheados en backend. */
+  topRawg(): Observable<JuegoExterno[]> {
+    return this.api.get<JuegoExterno[]>('/games/top');
+  }
+
   importarExterno(nombre: string): Observable<Juego> {
     return this.api.post<Juego>('/games/importar-externo', { nombre });
   }
