@@ -42,6 +42,9 @@ services:
       TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
       TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
       TWITCH_CHANNEL: ${TWITCH_CHANNEL:-}
+      # Fail-fast: sin credenciales de Twitch el backend no arranca (RF-35).
+      TWITCH_REQUIRED: ${TWITCH_REQUIRED:-true}
+      STREAMS_MULTI_SOURCE_ENABLED: ${STREAMS_MULTI_SOURCE_ENABLED:-false}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_API_BASE_URL: ${AI_API_BASE_URL:-}
       RAWG_API_KEY: ${RAWG_API_KEY:-}
