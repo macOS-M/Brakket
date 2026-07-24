@@ -1,0 +1,218 @@
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(260px, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #334155);
+  border-radius: 16px;
+  background: var(--surface, #111827);
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, #ff5500);
+    outline-offset: 2px;
+  }
+
+  // Cuando llegue el chat embebido: quitar [hidden] al .panel-chat y añadir
+  // esta clase; la grilla ya sabe acomodarlo sin tocar nada más.
+  &.con-chat {
+    grid-template-columns: minmax(0, 2.2fr) minmax(240px, 0.9fr) minmax(280px, 1fr);
+  }
+}
+
+.pantalla {
+  min-width: 0;
+}
+
+.pantalla-offline {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2, #1f2937);
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.35;
+  }
+
+  p {
+    position: relative;
+    margin: 0;
+    padding: 1rem;
+    max-width: 34ch;
+    text-align: center;
+    color: var(--text, #e2e8f0);
+    font-weight: 600;
+  }
+}
+
+.panel-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.canal {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.0625rem;
+  }
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-vacio {
+  display: grid;
+  place-items: center;
+  background: var(--surface-2, #1f2937);
+  color: var(--text-muted, #94a3b8);
+  font-weight: 700;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.chip-vivo {
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  color: var(--danger-text, #f87171);
+}
+
+.chip-offline {
+  background: var(--neutral-bg, rgba(148, 163, 184, 0.1));
+  color: var(--text-muted, #94a3b8);
+}
+
+.chip-desconocido {
+  background: var(--warning-bg, rgba(245, 158, 11, 0.12));
+  color: var(--warning-text, #fbbf24);
+}
+
+.titulo {
+  margin: 0.25rem 0 0;
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+}
+
+.dato {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+}
+
+.espectadores {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--danger-text, #f87171);
+  font-weight: 600;
+
+  .punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger, #ef4444);
+  }
+}
+
+.accion {
+  margin-top: auto;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  background: var(--accent, #ff5500);
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text, #e2e8f0);
+    outline-offset: 2px;
+  }
+}
+
+.controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+
+  > button {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border, #334155);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text, #e2e8f0);
+    font-size: 1.0625rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface-2, #1f2937);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent, #ff5500);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.puntos {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.paso {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--border, #334155);
+  cursor: pointer;
+
+  &.activo {
+    background: var(--accent, #ff5500);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, #ff5500);
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .hero.con-chat {
+    grid-template-columns: 1fr;
+  }
+}

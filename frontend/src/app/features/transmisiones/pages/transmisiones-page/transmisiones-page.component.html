@@ -1,0 +1,87 @@
+<div class="page">
+  <app-page-header
+    eyebrow="En directo"
+    titulo="Transmisiones"
+    subtitulo="Los directos oficiales de Brakket y de la comunidad"
+  />
+
+  @if (cargando()) {
+  <!-- Skeletons con la silueta real de la página -->
+  <div class="skeleton-hero skeleton" aria-hidden="true">
+    <div class="skeleton-pantalla"></div>
+    <div class="skeleton-panel">
+      <div class="skeleton-linea ancha"></div>
+      <div class="skeleton-linea"></div>
+      <div class="skeleton-linea corta"></div>
+    </div>
+  </div>
+  <div class="grid" aria-hidden="true">
+    @for (i of [1, 2, 3, 4]; track i) {
+    <div class="skeleton-tarjeta skeleton">
+      <div class="skeleton-pantalla"></div>
+      <div class="skeleton-linea"></div>
+      <div class="skeleton-linea corta"></div>
+    </div>
+    }
+  </div>
+  <p class="visualmente-oculto" role="status">Cargando transmisiones…</p>
+
+  } @else if (error()) {
+  <app-empty-state
+    modo="error"
+    titulo="No pudimos cargar las transmisiones"
+    mensaje="Revisá tu conexión e intentá de nuevo."
+  >
+    <button type="button" class="boton" (click)="reintentar()">Reintentar</button>
+  </app-empty-state>
+
+  } @else if (transmisiones().length === 0) {
+  <app-empty-state
+    titulo="Sin transmisiones por ahora"
+    mensaje="Cuando un canal de Brakket salga al aire, lo vas a ver aquí."
+  />
+
+  } @else {
+    @if (degradado()) {
+    <p class="aviso" role="status">
+      Twitch no está respondiendo: el estado de los canales es desconocido.
+      @if (actualizadoEn()) {
+      Última información de las {{ actualizadoEn() | date : 'HH:mm' }}.
+      }
+    </p>
+    }
+
+    <app-destacado-hero [transmisiones]="destacadas()" />
+
+    <section class="seccion" [attr.aria-label]="seccionCanales().titulo">
+      <h2>{{ seccionCanales().titulo }}</h2>
+      <div class="grid">
+        @for (tarjeta of seccionCanales().tarjetas; track $index) {
+        <app-stream-card [tarjeta]="tarjeta" (seleccionada)="seleccionarEnHero($event)" />
+        }
+      </div>
+    </section>
+
+    @for (seccion of seccionesPorJuego(); track seccion.titulo) {
+    <section class="seccion" [attr.aria-label]="seccion.titulo">
+      <h2>{{ seccion.titulo }}</h2>
+      <div class="grid">
+        @for (tarjeta of seccion.tarjetas; track $index) {
+        <app-stream-card [tarjeta]="tarjeta" (seleccionada)="seleccionarEnHero($event)" />
+        }
+      </div>
+    </section>
+    }
+
+    @for (seccion of seccionesPorTorneo(); track seccion.titulo) {
+    <section class="seccion" [attr.aria-label]="seccion.titulo">
+      <h2>{{ seccion.titulo }}</h2>
+      <div class="grid">
+        @for (tarjeta of seccion.tarjetas; track $index) {
+        <app-stream-card [tarjeta]="tarjeta" (seleccionada)="seleccionarEnHero($event)" />
+        }
+      </div>
+    </section>
+    }
+  }
+</div>

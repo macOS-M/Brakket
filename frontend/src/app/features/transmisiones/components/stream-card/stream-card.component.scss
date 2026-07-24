@@ -1,0 +1,200 @@
+.tarjeta {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.miniatura {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-2, #1f2937);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-3px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, #ff5500);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .miniatura {
+    transition: none;
+
+    &:hover,
+    &:focus-visible {
+      transform: none;
+    }
+  }
+}
+
+.miniatura-vacia {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--surface-2, #1f2937), var(--surface, #111827));
+}
+
+.badge {
+  position: absolute;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-vivo {
+  top: 0.6rem;
+  left: 0.6rem;
+  background: var(--danger, #ef4444); // el rojo del sistema lee como "en vivo"
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.badge-offline {
+  top: 0.6rem;
+  left: 0.6rem;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+}
+
+.badge-desconocido {
+  top: 0.6rem;
+  left: 0.6rem;
+  background: var(--warning-bg, rgba(245, 158, 11, 0.2));
+  color: var(--warning-text, #fbbf24);
+}
+
+.badge-espectadores {
+  bottom: 0.6rem;
+  left: 0.6rem;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text, #e2e8f0);
+  font-weight: 600;
+}
+
+.info {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-vacio {
+  display: grid;
+  place-items: center;
+  background: var(--surface-2, #1f2937);
+  color: var(--text-muted, #94a3b8);
+  font-weight: 700;
+}
+
+.detalle {
+  min-width: 0;
+}
+
+.titulo {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canal {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.85rem;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-text, #ff6a1f);
+    text-decoration: underline;
+  }
+}
+
+.categoria {
+  margin: 0.1rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.85rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.tag {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--neutral-bg, rgba(148, 163, 184, 0.1));
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.tag-plataforma {
+  // El morado del sistema evoca la marca de Twitch sin salirse de la paleta.
+  color: var(--accent-purple-text, #c4b5fd);
+  background: var(--accent-purple-bg, rgba(139, 92, 246, 0.14));
+}
+
+// ----- Relleno "próximamente": mismo esqueleto, tono apagado -----
+.tarjeta-proximamente {
+  .titulo,
+  .categoria {
+    color: var(--text-subtle, #8496ad);
+  }
+}
+
+.miniatura-proximamente {
+  display: grid;
+  place-items: center;
+  cursor: default;
+  border: 1px dashed var(--border, #334155);
+  background: transparent;
+
+  .icono {
+    font-size: 2rem;
+    opacity: 0.5;
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: none;
+  }
+}
+
+.badge-proximamente {
+  position: static;
+  margin-top: 0.5rem;
+  background: var(--neutral-bg, rgba(148, 163, 184, 0.1));
+  color: var(--text-subtle, #8496ad);
+}
