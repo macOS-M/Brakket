@@ -29,7 +29,10 @@ public class CanalTwitchService {
 
     @Transactional(readOnly = true)
     public CanalTwitchResponse obtener() {
-        return canalRepository.findFirstByActivoTrue().map(this::response)
+        // El último canal registrado, esté ACTIVO o PENDIENTE: si solo se
+        // devolviera el activo, un canal guardado sin credenciales
+        // "desaparecía" al recargar y el botón Validar quedaba inservible.
+        return canalRepository.findFirstByOrderByIdDesc().map(this::response)
                 .orElse(new CanalTwitchResponse(null, null, normalizar(properties.getChannel()),
                         null, url(normalizar(properties.getChannel())), "SIN_CONFIGURAR", false,
                         null, null, properties.isConfigured()));

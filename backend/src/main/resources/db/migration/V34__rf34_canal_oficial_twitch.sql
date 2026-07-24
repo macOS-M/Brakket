@@ -15,12 +15,15 @@ CREATE TABLE canal_oficial_twitch (
 CREATE UNIQUE INDEX uq_canal_oficial_twitch_activo
     ON canal_oficial_twitch (activo) WHERE activo = TRUE;
 
+-- Los enlaces de la transmisión siguen la convención del esquema (V1):
+-- si el torneo/partida/canal se elimina, su transmisión asociada pierde
+-- sentido y cae con él; sin el CASCADE el borrado de torneos revienta.
 CREATE TABLE transmision_twitch (
     id                  BIGSERIAL PRIMARY KEY,
-    canal_id            BIGINT NOT NULL REFERENCES canal_oficial_twitch(id),
+    canal_id            BIGINT NOT NULL REFERENCES canal_oficial_twitch(id) ON DELETE CASCADE,
     twitch_stream_id    VARCHAR(120),
-    torneo_id           BIGINT REFERENCES torneo(id),
-    partida_id          BIGINT REFERENCES partida(id),
+    torneo_id           BIGINT REFERENCES torneo(id) ON DELETE CASCADE,
+    partida_id          BIGINT REFERENCES partida(id) ON DELETE CASCADE,
     estado              VARCHAR(30) NOT NULL,
     iniciada_en         TIMESTAMP,
     finalizada_en       TIMESTAMP,
@@ -31,10 +34,11 @@ CREATE TABLE transmision_twitch (
 CREATE UNIQUE INDEX uq_transmision_twitch_stream
     ON transmision_twitch (twitch_stream_id) WHERE twitch_stream_id IS NOT NULL;
 
+-- Las métricas históricas sobreviven a la transmisión: solo pierden el enlace.
 ALTER TABLE metrica_audiencia
-    ADD COLUMN transmision_twitch_id BIGINT REFERENCES transmision_twitch(id);
+    ADD COLUMN transmision_twitch_id BIGINT REFERENCES transmision_twitch(id) ON DELETE SET NULL;
 ALTER TABLE metrica_chat
-    ADD COLUMN transmision_twitch_id BIGINT REFERENCES transmision_twitch(id);
+    ADD COLUMN transmision_twitch_id BIGINT REFERENCES transmision_twitch(id) ON DELETE SET NULL;
 
 CREATE INDEX idx_metrica_aud_transmision
     ON metrica_audiencia (transmision_twitch_id, fecha_hora);
@@ -43,7 +47,7 @@ CREATE INDEX idx_metrica_chat_transmision
 
 CREATE TABLE incidente_integracion_twitch (
     id          BIGSERIAL PRIMARY KEY,
-    canal_id    BIGINT REFERENCES canal_oficial_twitch(id),
+    canal_id    BIGINT REFERENCES canal_oficial_twitch(id) ON DELETE CASCADE,
     tipo        VARCHAR(60) NOT NULL,
     detalle     VARCHAR(500) NOT NULL,
     ocurrido_en TIMESTAMP NOT NULL

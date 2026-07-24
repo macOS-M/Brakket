@@ -5,9 +5,13 @@ import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 
 @Component
@@ -15,6 +19,18 @@ import java.time.OffsetDateTime;
 public class HelixTwitchGateway implements TwitchGateway {
     private final TwitchProperties properties;
     private final RestClient.Builder restClientBuilder;
+
+    /**
+     * Timeouts cortos: la llamada corre dentro del request (y de su
+     * transacción); sin límite, un Twitch colgado retiene el hilo de
+     * Tomcat y la conexión de Postgres indefinidamente.
+     */
+    private SimpleClientHttpRequestFactory fabricaConTimeouts() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(3));
+        factory.setReadTimeout(Duration.ofSeconds(5));
+        return factory;
+    }
 
     @Override
     public ChannelInfo findChannel(String login) {
@@ -39,16 +55,24 @@ public class HelixTwitchGateway implements TwitchGateway {
             throw new BusinessException("Configure TWITCH_CLIENT_ID y TWITCH_CLIENT_SECRET antes de validar el canal.");
         }
         try {
-            RestClient auth = restClientBuilder.baseUrl(properties.getAuthBaseUrl()).build();
+            // Credenciales en el BODY del form, nunca en la query string: la
+            // URL viaja en excepciones, logs y proxies, y ahí el secret se
+            // filtraría con cualquier stacktrace de un token request fallido.
+            MultiValueMap<String, String> credenciales = new LinkedMultiValueMap<>();
+            credenciales.add("client_id", properties.getClientId());
+            credenciales.add("client_secret", properties.getClientSecret());
+            credenciales.add("grant_type", "client_credentials");
+
+            RestClient auth = restClientBuilder.baseUrl(properties.getAuthBaseUrl())
+                    .requestFactory(fabricaConTimeouts()).build();
             JsonNode tokenResponse = auth.post()
-                    .uri(uri -> uri.path("/token")
-                            .queryParam("client_id", properties.getClientId())
-                            .queryParam("client_secret", properties.getClientSecret())
-                            .queryParam("grant_type", "client_credentials").build())
+                    .uri("/token")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(credenciales)
                     .retrieve().body(JsonNode.class);
             String token = tokenResponse == null ? "" : tokenResponse.path("access_token").asText();
-            return restClientBuilder.baseUrl(properties.getApiBaseUrl()).build().get().uri(path)
+            return restClientBuilder.baseUrl(properties.getApiBaseUrl())
+                    .requestFactory(fabricaConTimeouts()).build().get().uri(path)
                     .header("Client-Id", properties.getClientId())
                     .header("Authorization", "Bearer " + token)
                     .retrieve().body(JsonNode.class);
