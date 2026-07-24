@@ -53,12 +53,10 @@
   </div>
 
   <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
-    @if (form.controls.imagenUrl.value) {
-    <div class="portada-preview">
-      <img [src]="form.controls.imagenUrl.value" alt="Portada seleccionada" />
-      <button type="button" class="btn-secondary" (click)="quitarImagen()">Quitar imagen</button>
+    <div class="campo">
+      <span class="label-portada" id="etiqueta-portada">Portada</span>
+      <app-foto-input etiqueta="Portada" forma="banner" formControlName="imagenUrl" aria-labelledby="etiqueta-portada" />
     </div>
-    }
 
     <div class="campo">
       <label for="nombre">Nombre *</label>

@@ -23,6 +23,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      *   <li>coincidencia por nombre (o todos si el texto viene vacio);</li>
      *   <li>coincidencia por juego preferido (o cualquiera si juegoId es null);</li>
      *   <li>excluye a quien ya es miembro activo del propio equipo;</li>
+     *   <li>excluye a los administradores: moderan la plataforma, no
+     *       forman parte de equipos;</li>
      *   <li>si soloDisponibles, excluye a quien esta activo en otro equipo
      *       (esos requeririan transferencia).</li>
      * </ul>
@@ -39,6 +41,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
               and not exists (
                     select 1 from MiembroEquipo ya
                     where ya.usuario = u and ya.estado = 'ACTIVO' and ya.equipo.id = :equipoId)
+              and not exists (
+                    select 1 from UsuarioRol adm
+                    where adm.usuario = u and adm.rol.nombreRol = 'ADMIN')
               and (:soloDisponibles = false or not exists (
                     select 1 from MiembroEquipo otro
                     where otro.usuario = u and otro.estado = 'ACTIVO' and otro.equipo.id <> :equipoId))

@@ -1,15 +1,26 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Subject, debounceTime, forkJoin, of, switchMap, takeUntil } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 import { Equipo } from '../../../../models/equipo.model';
 import { MiembroEquipo, ROLES_EQUIPO } from '../../../../models/miembro-equipo.model';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 import { JugadorDisponible } from '../../../../models/jugador-disponible.model';
 import { Juego } from '../../../../models/juego.model';
+import { SolicitudUnion } from '../../../../models/solicitud-union.model';
 import { TeamsService } from '../../services/teams.service';
 import { GamesService } from '../../../games/services/games.service';
 import { AuthService } from '../../../../core/services/auth.service';
+
+/** Jugador elegido para invitar, con el rol que le propone el capitán. */
+interface SeleccionInvitacion {
+  id: number;
+  nombre: string;
+  rol: string;
+}
 
 /** Orden de presentación de la plantilla (RF-08): capitán primero. */
 const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 2, COACH: 3 };
@@ -17,16 +28,21 @@ const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 
 @Component({
   selector: 'app-team-roster',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, RolEquipoPipe],
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })
-export class TeamRosterComponent implements OnInit {
+export class TeamRosterComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly teamsService = inject(TeamsService);
   private readonly gamesService = inject(GamesService);
   private readonly authService = inject(AuthService);
-  private readonly fb = inject(FormBuilder);
+  private readonly destroy$ = new Subject<void>();
+  /** La búsqueda corre sola mientras se escribe (con debounce). */
+  private readonly busquedaEnVivo$ = new Subject<void>();
+  /** Disparador único de la búsqueda (tecleo con debounce o botón directo). */
+  private readonly buscar$ = new Subject<void>();
 
   readonly roles = ROLES_EQUIPO;
   readonly miembros = signal<MiembroEquipo[]>([]);
@@ -39,6 +55,8 @@ export class TeamRosterComponent implements OnInit {
       (m) => m.usuarioId === miId && m.rol === 'CAPITAN' && m.estado === 'ACTIVO'
     );
   });
+  /** El ADMIN modera cualquier equipo (reactivar/eliminar) sin ser miembro. */
+  readonly esAdmin = computed(() => this.authService.hasRole('ADMIN'));
 
   // RF-08: datos del equipo para encabezado y vista histórica si está disuelto.
   readonly equipo = signal<Equipo | null>(null);
@@ -78,6 +96,12 @@ export class TeamRosterComponent implements OnInit {
   readonly errorDisolucion = signal<string | null>(null);
   readonly equipoDisuelto = signal<Equipo | null>(null);
 
+  // Ciclo de vida del equipo disuelto: reactivarlo o eliminarlo de verdad.
+  readonly reactivando = signal(false);
+  readonly eliminando = signal(false);
+  readonly confirmaEliminacion = signal(false);
+  readonly errorCicloVida = signal<string | null>(null);
+
   // RF-11: buscar jugadores disponibles.
   readonly juegos = signal<Juego[]>([]);
   readonly textoBusqueda = signal('');
@@ -87,12 +111,30 @@ export class TeamRosterComponent implements OnInit {
   readonly errorBusqueda = signal<string | null>(null);
   readonly resultados = signal<JugadorDisponible[] | null>(null);
 
-  private equipoId!: number;
+  /** Público: el template lo usa para el enlace de vuelta al perfil. */
+  equipoId!: number;
 
-  readonly invitarForm = this.fb.nonNullable.group({
-    jugadorId: [null as number | null, [Validators.required]],
-    rolPropuesto: ['TITULAR', [Validators.required]],
-    mensaje: ['']
+  /** Selección múltiple para invitar de una vez, cada uno con su rol. */
+  readonly seleccionados = signal<SeleccionInvitacion[]>([]);
+  readonly mensajeInvitacion = signal('');
+  readonly resumenInvitaciones = signal<string | null>(null);
+
+  // Solicitudes de unión pendientes (las ve y responde el capitán).
+  readonly solicitudes = signal<SolicitudUnion[]>([]);
+  readonly respondiendoSolicitud = signal<number | null>(null);
+  readonly errorSolicitudes = signal<string | null>(null);
+
+  /**
+   * El usuario (GET /me) y la plantilla llegan en cualquier orden; un chequeo
+   * imperativo tras cargar miembros se pierde si /me aún no respondió. El
+   * effect reacciona cuando ambos estén y pide las solicitudes una sola vez.
+   */
+  private solicitudesPedidas = false;
+  private readonly solicitudesAlSerCapitan = effect(() => {
+    if (this.esCapitan() && !this.vistaHistorica() && !this.solicitudesPedidas) {
+      this.solicitudesPedidas = true;
+      this.cargarSolicitudes();
+    }
   });
 
   ngOnInit(): void {
@@ -102,6 +144,40 @@ export class TeamRosterComponent implements OnInit {
     this.gamesService.listActivos().subscribe({
       next: (juegos) => this.juegos.set(juegos)
     });
+    this.busquedaEnVivo$
+      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .subscribe(() => this.buscar$.next());
+    // Un único stream con switchMap: si el usuario sigue escribiendo, la
+    // respuesta vieja se cancela y no pisa a la nueva (out-of-order).
+    this.buscar$
+      .pipe(
+        switchMap(() => {
+          this.buscando.set(true);
+          this.errorBusqueda.set(null);
+          return this.teamsService.buscarJugadores(
+            this.equipoId, this.textoBusqueda().trim(),
+            this.juegoIdBusqueda(), this.soloDisponibles()
+          ).pipe(
+            catchError((err) => {
+              this.errorBusqueda.set(err?.error?.message ?? 'No se pudo completar la busqueda.');
+              return of(null);
+            })
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((pagina) => {
+        this.buscando.set(false);
+        if (pagina) {
+          // El backend pagina; el template itera la lista de la página.
+          this.resultados.set(pagina.items);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /** RF-08: carga nombre y estado del equipo; si falla, la plantilla sigue siendo usable. */
@@ -119,6 +195,7 @@ export class TeamRosterComponent implements OnInit {
       next: (miembros) => {
         this.miembros.set(miembros);
         this.cargando.set(false);
+        this.irAlFragmento();
       },
       error: (err) => {
         this.error.set(err?.status === 404
@@ -127,6 +204,20 @@ export class TeamRosterComponent implements OnInit {
         this.cargando.set(false);
       }
     });
+  }
+
+  /**
+   * El enlace "Disolver equipo" de Ajustes llega con #disolver; la zona
+   * existe recién cuando la plantilla cargó, así que el scroll va a mano
+   * (el anchorScrolling del router dispararía antes del render).
+   */
+  private irAlFragmento(): void {
+    const fragmento = this.route.snapshot.fragment;
+    if (!fragmento) {
+      return;
+    }
+    setTimeout(() =>
+      document.getElementById(fragmento)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
   /** Reintento del criterio "error de carga" de RF-08. */
@@ -156,30 +247,98 @@ export class TeamRosterComponent implements OnInit {
     });
   }
 
-  invitar(): void {
-    if (this.invitarForm.invalid) {
-      this.invitarForm.markAllAsTouched();
+  // ---------- invitaciones múltiples ----------
+
+  estaSeleccionado(jugadorId: number): boolean {
+    return this.seleccionados().some((s) => s.id === jugadorId);
+  }
+
+  toggleSeleccion(jugador: JugadorDisponible): void {
+    if (this.estaSeleccionado(jugador.id)) {
+      this.quitarSeleccion(jugador.id);
       return;
     }
+    this.seleccionados.update((lista) => [
+      ...lista,
+      { id: jugador.id, nombre: jugador.nombre, rol: 'TITULAR' }
+    ]);
+    this.resumenInvitaciones.set(null);
+  }
 
+  quitarSeleccion(jugadorId: number): void {
+    this.seleccionados.update((lista) => lista.filter((s) => s.id !== jugadorId));
+  }
+
+  cambiarRolSeleccion(jugadorId: number, rol: string): void {
+    this.seleccionados.update((lista) =>
+      lista.map((s) => (s.id === jugadorId ? { ...s, rol } : s)));
+  }
+
+  /** Envía una invitación por cada seleccionado, cada uno con su rol. */
+  invitarSeleccionados(): void {
+    const lista = this.seleccionados();
+    if (lista.length === 0 || this.invitando()) {
+      return;
+    }
     this.invitando.set(true);
     this.errorInvitar.set(null);
-    this.invitacionEnviada.set(false);
-    const valores = this.invitarForm.getRawValue();
+    this.resumenInvitaciones.set(null);
+    const mensaje = this.mensajeInvitacion().trim() || null;
 
-    this.teamsService.invitar(this.equipoId, {
-      jugadorId: valores.jugadorId!,
-      rolPropuesto: valores.rolPropuesto,
-      mensaje: valores.mensaje || null
-    }).subscribe({
+    forkJoin(lista.map((s) =>
+      this.teamsService.invitar(this.equipoId, {
+        jugadorId: s.id,
+        rolPropuesto: s.rol,
+        mensaje
+      }).pipe(
+        map(() => ({ seleccion: s, error: null as string | null })),
+        catchError((err) => of({
+          seleccion: s,
+          error: (err?.error?.message ?? 'no se pudo invitar') as string | null
+        }))
+      )
+    )).subscribe((resultados) => {
+      this.invitando.set(false);
+      const fallidos = resultados.filter((r) => r.error !== null);
+      const enviados = resultados.length - fallidos.length;
+      // Los fallidos quedan seleccionados para reintentar o quitar.
+      this.seleccionados.set(fallidos.map((f) => f.seleccion));
+      if (enviados > 0) {
+        this.mensajeInvitacion.set('');
+        this.resumenInvitaciones.set(
+          enviados === 1 ? 'Invitación enviada.' : `${enviados} invitaciones enviadas.`);
+      }
+      if (fallidos.length > 0) {
+        this.errorInvitar.set(fallidos
+          .map((f) => `${f.seleccion.nombre}: ${f.error}`)
+          .join(' · '));
+      }
+    });
+  }
+
+  // ---------- solicitudes de unión ----------
+
+  private cargarSolicitudes(): void {
+    this.teamsService.solicitudesPendientes(this.equipoId).subscribe({
+      next: (solicitudes) => this.solicitudes.set(solicitudes),
+      error: () => this.solicitudes.set([])
+    });
+  }
+
+  responderSolicitud(solicitud: SolicitudUnion, aceptar: boolean): void {
+    this.respondiendoSolicitud.set(solicitud.id);
+    this.errorSolicitudes.set(null);
+    this.teamsService.responderSolicitud(solicitud.id, aceptar).subscribe({
       next: () => {
-        this.invitando.set(false);
-        this.invitacionEnviada.set(true);
-        this.invitarForm.reset({ jugadorId: null, rolPropuesto: 'TITULAR', mensaje: '' });
+        this.respondiendoSolicitud.set(null);
+        this.solicitudes.update((lista) => lista.filter((s) => s.id !== solicitud.id));
+        if (aceptar) {
+          this.cargarMiembros();
+        }
       },
       error: (err) => {
-        this.invitando.set(false);
-        this.errorInvitar.set(err?.error?.message ?? 'No se pudo enviar la invitacion.');
+        this.respondiendoSolicitud.set(null);
+        this.errorSolicitudes.set(err?.error?.message ?? 'No se pudo responder la solicitud.');
       }
     });
   }
@@ -244,25 +403,52 @@ export class TeamRosterComponent implements OnInit {
     });
   }
 
-  buscarJugadores(): void {
-    this.buscando.set(true);
-    this.errorBusqueda.set(null);
-    this.teamsService.buscarJugadores(
-      this.equipoId, this.textoBusqueda().trim(), this.juegoIdBusqueda(), this.soloDisponibles()
-    ).subscribe({
-      next: (pagina) => {
-        // El backend ahora pagina; el template itera la lista de la página.
-        this.resultados.set(pagina.items);
-        this.buscando.set(false);
+  /** Revierte la disolución: el equipo vuelve a ACTIVO y la vista a gestión. */
+  reactivarEquipo(): void {
+    if (this.reactivando() || this.eliminando()) {
+      return;
+    }
+    this.reactivando.set(true);
+    this.errorCicloVida.set(null);
+    this.teamsService.reactivar(this.equipoId).subscribe({
+      next: (equipo) => {
+        this.reactivando.set(false);
+        this.equipo.set(equipo);
+        this.equipoDisuelto.set(null);
+        this.confirmaDisolucion.set(false);
+        this.motivoDisolucion.set('');
       },
       error: (err) => {
-        this.buscando.set(false);
-        this.errorBusqueda.set(err?.error?.message ?? 'No se pudo completar la busqueda.');
+        this.reactivando.set(false);
+        this.errorCicloVida.set(err?.error?.message ?? 'No se pudo reactivar el equipo.');
       }
     });
   }
 
-  usarEnFormulario(jugador: JugadorDisponible): void {
-    this.invitarForm.patchValue({ jugadorId: jugador.id });
+  /** Borrado definitivo del equipo disuelto (capitán o ADMIN). */
+  eliminarEquipo(): void {
+    if (!this.confirmaEliminacion() || this.eliminando() || this.reactivando()) {
+      return;
+    }
+    this.eliminando.set(true);
+    this.errorCicloVida.set(null);
+    this.teamsService.eliminar(this.equipoId).subscribe({
+      next: () => this.router.navigate(['/teams']),
+      error: (err) => {
+        this.eliminando.set(false);
+        this.errorCicloVida.set(err?.error?.message ?? 'No se pudo eliminar el equipo.');
+      }
+    });
   }
+
+  /** Cada tecla dispara la búsqueda con debounce (sin botón obligatorio). */
+  onTextoBusqueda(valor: string): void {
+    this.textoBusqueda.set(valor);
+    this.busquedaEnVivo$.next();
+  }
+
+  buscarJugadores(): void {
+    this.buscar$.next();
+  }
+
 }

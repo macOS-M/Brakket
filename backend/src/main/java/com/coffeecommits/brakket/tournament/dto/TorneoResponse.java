@@ -1,8 +1,10 @@
 package com.coffeecommits.brakket.tournament.dto;
 
+import com.coffeecommits.brakket.tournament.model.AjustePartida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Torneo aplanado para el frontend, con la anatomía de la tarjeta de la
@@ -28,7 +30,10 @@ public record TorneoResponse(
         LocalDateTime fechaInicio,
         String estado,
         Boolean publico,
-        String premio
+        String premio,
+        List<AjustePartida> ajustesPartida,
+        Long campeonEquipoId,
+        String campeonNombre
 ) {
     public static TorneoResponse from(Torneo torneo, long inscritos) {
         boolean deLiga = torneo.getTemporada() != null;
@@ -52,7 +57,10 @@ public record TorneoResponse(
                 torneo.getFechaInicio(),
                 torneo.getEstado() == null ? null : torneo.getEstado().name(),
                 torneo.getPublico(),
-                torneo.getPremio()
+                torneo.getPremio(),
+                torneo.getAjustesPartida() == null ? List.of() : torneo.getAjustesPartida(),
+                torneo.getCampeon() == null ? null : torneo.getCampeon().getId(),
+                torneo.getCampeon() == null ? null : torneo.getCampeon().getNombre()
         );
     }
 }
