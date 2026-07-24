@@ -19,7 +19,7 @@
     <div class="banner-contenido">
       <div class="cartel" [style.background]="foto() ? undefined : gradiente()">
         @if (foto()) {
-        <img [src]="foto()" alt="" />
+        <img [src]="foto()" alt="" loading="lazy" />
         } @else {
         <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
         }
@@ -34,17 +34,20 @@
       <div class="acciones-banner">
         <!-- Modelo abierto: cualquier usuario con sesión crea liga o torneo. -->
         @if (auth.isAuthenticated()) {
-        <div class="crear">
+        <div class="crear" #zonaCrear>
           <button
+            #btnCrear
             type="button"
             class="btn-crear"
+            aria-haspopup="menu"
             [attr.aria-expanded]="menuCrearAbierto()"
-            (click)="menuCrearAbierto.set(!menuCrearAbierto())"
+            (click)="alternarMenuCrear()"
+            (keydown.arrowdown)="!menuCrearAbierto() && alternarMenuCrear()"
           >
             Crear
           </button>
           @if (menuCrearAbierto()) {
-          <div class="menu-crear" role="menu">
+          <div class="menu-crear" #menuCrear role="menu" aria-label="Crear competencia" (keydown)="tecladoMenuCrear($event)">
             <button type="button" role="menuitem" (click)="abrirWizard()">
               <span class="titulo-opcion">Torneo</span>
               <span class="detalle-opcion">Creá un torneo para tus amigos o tu comunidad.</span>
@@ -110,8 +113,55 @@
 
   @if (tab() === 'descripcion') {
   <div class="contenido">
+    <!-- Ficha del juego: datos reales de RAWG guardados al importar. -->
+    @if (juego.rating || juego.metacritic || juego.fechaLanzamiento || juego.plataformas) {
+    <div class="ficha-juego">
+      @if (juego.rating) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">★ {{ juego.rating }}</span>
+        <span class="ficha-etiqueta">Comunidad</span>
+      </div>
+      }
+      @if (juego.metacritic) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">{{ juego.metacritic }}</span>
+        <span class="ficha-etiqueta">Metacritic</span>
+      </div>
+      }
+      @if (juego.fechaLanzamiento) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">{{ juego.fechaLanzamiento | date: 'y' }}</span>
+        <span class="ficha-etiqueta">Lanzamiento</span>
+      </div>
+      }
+      @if (juego.plataformas) {
+      <div class="ficha-dato ficha-plataformas">
+        <span class="ficha-valor">{{ juego.plataformas }}</span>
+        <span class="ficha-etiqueta">Plataformas</span>
+      </div>
+      }
+    </div>
+    }
+
+    @if (juego.etiquetas) {
+    <div class="tags-juego">
+      @for (tag of juego.etiquetas.split(', '); track tag) {
+      <span class="tag-juego">{{ tag }}</span>
+      }
+    </div>
+    }
+
     @if (juego.descripcion) {
     <p class="descripcion">{{ juego.descripcion }}</p>
+    }
+
+    @if (juego.capturas && juego.capturas.length > 0) {
+    <!-- Galería de capturas reales (RAWG), con scroll horizontal propio. -->
+    <div class="galeria" role="list" aria-label="Capturas del juego">
+      @for (captura of juego.capturas; track captura) {
+      <img class="galeria-item" role="listitem" [src]="captura" [alt]="'Captura de ' + juego.nombre" loading="lazy" />
+      }
+    </div>
     }
 
     <!-- Torneo destacado (referencia CM "Recommended tournaments"):
@@ -121,7 +171,7 @@
     <a class="destacado" [routerLink]="['/tournaments', torneo.id]">
       <div class="destacado-arte" [style.background]="foto() ? undefined : gradiente()">
         @if (foto()) {
-        <img [src]="foto()" alt="" />
+        <img [src]="foto()" alt="" loading="lazy" />
         }
       </div>
       <div class="destacado-info">
@@ -145,7 +195,7 @@
       <a class="torneo-mini" [routerLink]="['/tournaments', torneo.id]">
         <div class="mini-arte" [style.background]="foto() ? undefined : gradiente()">
           @if (foto()) {
-          <img [src]="foto()" alt="" />
+          <img [src]="foto()" alt="" loading="lazy" />
           }
           <span class="mini-fecha">{{ torneo.fechaInicio | date: "EEE d, HH:mm" }}</span>
         </div>
@@ -188,7 +238,7 @@
         [style.background]="portadaLiga(liga) ? undefined : gradienteLiga(liga)"
       >
         @if (portadaLiga(liga)) {
-        <img [src]="portadaLiga(liga)" alt="" />
+        <img [src]="portadaLiga(liga)" alt="" loading="lazy" />
         }
         <div class="poster-velo" aria-hidden="true"></div>
         <div class="poster-texto">

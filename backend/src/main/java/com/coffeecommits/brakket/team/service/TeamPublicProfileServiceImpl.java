@@ -100,7 +100,8 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
                 !estadisticas.isEmpty());
 
         return new PerfilEquipoPublicoResponse(equipo.getId(), equipo.getNombre(), equipo.getLogo(),
-                equipo.getDescripcion(), equipo.getEstado(), equipo.getCapitan().getId(), juegoSeleccionado,
+                equipo.getBannerUrl(), equipo.getDescripcion(), equipo.getSitioWeb(),
+                equipo.getVideoUrl(), equipo.getEstado(), equipo.getCapitan().getId(), juegoSeleccionado,
                 equipo.getJuego() == null ? null : equipo.getJuego().getNombre(),
                 redSocialRepository.findByEquipoId(equipo.getId()).stream().map(r -> r.getUrl()).toList(),
                 plantilla, torneos, resumen);

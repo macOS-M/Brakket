@@ -1,0 +1,381 @@
+// El lienzo: contiene la llave y el SVG de rieles medido sobre ella.
+.lienzo {
+  position: relative;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+// Los rieles viven detrás de las tarjetas y no interceptan el puntero.
+.rieles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.riel {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+  stroke-linecap: round;
+
+  &.tentativo {
+    stroke-dasharray: 4 6;
+    opacity: 0.7;
+  }
+
+  // El camino de tus equipos, mientras el torneo sigue abierto.
+  &.riel-mio {
+    stroke: var(--accent);
+  }
+
+  // El linaje del campeón, de la primera ronda a la copa.
+  &.riel-campeon {
+    stroke: var(--accent-gold-text, #facc15);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.45));
+  }
+
+  // Un ganador acaba de avanzar: energía que corre hacia el cruce siguiente.
+  &.riel-pulso {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    stroke-dasharray: 8 10;
+    animation: fluir 0.7s linear infinite;
+  }
+}
+
+@keyframes fluir {
+  to { stroke-dashoffset: -18; }
+}
+
+// La llave: columnas por ronda; el scroll lo lleva el lienzo.
+.bracket {
+  position: relative;
+  display: flex;
+  gap: 34px;
+  min-width: max-content;
+}
+
+.nota-llave {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.mensaje-error {
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+
+.ronda {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  // Centra verticalmente las rondas tardías respecto a las tempranas.
+  justify-content: space-around;
+}
+
+.ronda-titulo {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.partida {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 12px;
+  transition: border-color 0.2s ease-out;
+
+  &:hover { border-color: var(--accent-text); }
+  &.finalizada { opacity: 0.92; }
+  &.disputa { border-color: var(--warning-text); }
+  &.pendiente-definir {
+    border-style: dashed;
+    background: transparent;
+
+    &:hover { border-color: var(--border); }
+  }
+
+  // La final ganada: la única tarjeta que se viste de oro.
+  &.coronada {
+    opacity: 1;
+    border-color: var(--accent-gold, #eab308);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  // Acaba de cambiar de estado (reporte, confirmación, resolución).
+  &.actualizada {
+    animation: latido-borde 2.4s ease-out;
+  }
+
+  // Cascada de entrada cuando la llave se genera en vivo.
+  &.entrada {
+    animation: carta 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+}
+
+@keyframes latido-borde {
+  0% { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 85, 0, 0.25); }
+  100% { border-color: var(--border); box-shadow: 0 0 0 0 rgba(255, 85, 0, 0); }
+}
+
+@keyframes carta {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+.partida-equipos { display: flex; flex-direction: column; gap: 6px; }
+
+.lado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+
+  .lado-nombre { font-size: 0.9rem; color: var(--text); }
+  .lado-nombre.por-decidir { color: var(--text-subtle); font-style: italic; }
+  .lado-marcador { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+
+  &.ganador {
+    background: var(--success-bg);
+
+    .lado-nombre {
+      color: var(--success-text);
+      font-weight: 700;
+
+      // Marca textual: el ganador no se comunica solo por color.
+      &::after {
+        content: ' ✓';
+        font-size: 0.75rem;
+      }
+    }
+    .lado-marcador { color: var(--success-text); font-weight: 700; }
+  }
+}
+
+.tentativa .lado { background: transparent; }
+
+.partida-estado {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  &.reportada { color: var(--info-text); }
+  &.en-disputa { color: var(--warning-text); }
+}
+
+// Credenciales de la partida privada: cada dato es un botón que copia.
+.lobby {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.lobby-copiar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.15s ease-out, background 0.15s ease-out;
+
+  &:hover { border-color: var(--accent-text); }
+
+  &.copiado {
+    border-style: solid;
+    border-color: var(--success);
+    background: var(--success-bg);
+
+    .lobby-feedback { color: var(--success-text); }
+  }
+
+  .lobby-etiqueta {
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+
+  .lobby-valor {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .lobby-feedback {
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+  }
+}
+
+.partida-acciones, .marcador-acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.marcador-form { margin-top: 10px; }
+
+.marcador-campo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: var(--text);
+
+  input {
+    width: 72px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: var(--font-data);
+  }
+}
+
+// Botones (mismo lenguaje que el resto de la app).
+.btn-primary, .btn-secondary {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  &:hover:not(:disabled) { background: var(--accent-hover); }
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+  &:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-text); }
+}
+
+// ---------- secciones por formato (doble llave, liga, grupos) ----------
+
+.seccion {
+  & + .seccion {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  }
+}
+
+.seccion-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.seccion-nota {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+// Liga (round robin / suizo) y cada grupo: tabla junto al calendario.
+// En pantallas anchas conviven lado a lado; si no, se apilan.
+.liga {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 28px;
+  align-items: flex-start;
+}
+
+.tabla-seccion {
+  flex: 0 0 auto;
+  min-width: 300px;
+}
+
+// Las jornadas no se centran verticalmente: son listas, no un árbol.
+.ronda.jornada {
+  justify-content: flex-start;
+}
+
+// ---------- tabla de posiciones ----------
+
+.tabla {
+  border-collapse: collapse;
+  min-width: 300px;
+  font-size: 0.85rem;
+
+  th, td {
+    padding: 7px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  }
+
+  thead th {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .col-num {
+    text-align: right;
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .col-equipo {
+    text-align: left;
+    min-width: 140px;
+  }
+
+  tbody tr:hover { background: var(--surface-2); }
+
+  // Tus equipos se distinguen mientras no haya campeón; el campeón, en oro.
+  tr.mio .col-equipo { color: var(--accent-text); font-weight: 600; }
+  tr.campeon {
+    .col-equipo { color: var(--accent-gold-text, #facc15); font-weight: 700; }
+    background: rgba(234, 179, 8, 0.07);
+  }
+}
+
+.corona {
+  margin-left: 4px;
+  font-size: 0.8rem;
+}
+
+.tabla-nota {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}

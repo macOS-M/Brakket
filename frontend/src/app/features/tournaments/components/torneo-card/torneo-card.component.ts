@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { Torneo } from '../../../../models/tournament.model';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
+import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
 
 /**
  * Tarjeta de torneo con la anatomía de la referencia Challenger Mode:
@@ -12,7 +13,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 @Component({
   selector: 'app-torneo-card',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, FormatoTorneoPipe],
   templateUrl: './torneo-card.component.html',
   styleUrl: './torneo-card.component.scss'
 })
@@ -32,15 +33,23 @@ export class TorneoCardComponent {
 
   readonly badge = computed(() => {
     const t = this.torneo();
-    if (t.estado !== 'INSCRIPCION_ABIERTA') {
-      return { texto: t.estado.toLowerCase(), tono: 'neutro' };
+    switch (t.estado) {
+      case 'EN_CURSO':
+        return { texto: '● En curso', tono: 'verde' };
+      case 'FINALIZADO':
+        return { texto: 'Finalizado', tono: 'neutro' };
+      case 'CANCELADO':
+        return { texto: 'Cancelado', tono: 'neutro' };
+      case 'INSCRIPCION_ABIERTA':
+        if (this.comenzo()) {
+          return { texto: 'Comenzó', tono: 'neutro' };
+        }
+        if (this.cupoLleno()) {
+          return { texto: 'Cupo lleno', tono: 'ambar' };
+        }
+        return { texto: 'Abierta', tono: 'verde' };
+      default:
+        return { texto: t.estado.toLowerCase(), tono: 'neutro' };
     }
-    if (this.comenzo()) {
-      return { texto: 'Comenzó', tono: 'neutro' };
-    }
-    if (this.cupoLleno()) {
-      return { texto: 'Cupo lleno', tono: 'ambar' };
-    }
-    return { texto: 'Abierta', tono: 'verde' };
   });
 }

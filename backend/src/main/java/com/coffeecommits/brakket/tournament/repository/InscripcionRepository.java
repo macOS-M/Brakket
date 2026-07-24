@@ -17,6 +17,9 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     boolean existsByTorneoIdAndEquipoId(Long torneoId, Long equipoId);
 
+    /** ¿El equipo tiene CUALQUIER inscripción (histórica o vigente)? */
+    boolean existsByEquipoId(Long equipoId);
+
     /** Inscripciones vigentes de un torneo (las que ocupan cupo). */
     @Query("""
             select count(i) from Inscripcion i
@@ -27,15 +30,44 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     /**
      * RF-03: inscripciones que impiden disolver un equipo. Se consideran
-     * cerradas las RECHAZADA/CANCELADA/FINALIZADA (convención pendiente de
-     * formalizar cuando exista la gestión de inscripciones, RF-25).
+     * cerradas las RECHAZADA/CANCELADA/FINALIZADA y, con el ciclo de vida
+     * del torneo, también cualquier inscripción de un torneo ya cerrado
+     * (FINALIZADO/CANCELADO): un campeonato terminado no ancla al equipo.
      */
     @Query("""
             select count(i) > 0 from Inscripcion i
             where i.equipo.id = :equipoId
               and i.estado not in ('RECHAZADA', 'CANCELADA', 'FINALIZADA')
+              and i.torneo.estado not in (
+                  com.coffeecommits.brakket.tournament.model.EstadoTorneo.FINALIZADO,
+                  com.coffeecommits.brakket.tournament.model.EstadoTorneo.CANCELADO)
             """)
     boolean existsInscripcionActivaPorEquipo(@Param("equipoId") Long equipoId);
+
+    /**
+     * Torneos donde compite el usuario: inscripciones vigentes de equipos
+     * en los que es miembro activo (para el "Tus competencias" del panel).
+     */
+    @Query("""
+            select i from Inscripcion i
+            where i.estado not in ('RECHAZADA', 'CANCELADA')
+              and exists (
+                  select 1 from MiembroEquipo m
+                  where m.equipo.id = i.equipo.id
+                    and m.usuario.id = :usuarioId
+                    and m.estado = 'ACTIVO')
+            """)
+    List<Inscripcion> inscripcionesVigentesDeUsuario(@Param("usuarioId") Long usuarioId);
+
+    /** Inscripciones vigentes en orden de llegada: la siembra del bracket. */
+    @Query("""
+            select i from Inscripcion i
+            join fetch i.equipo
+            where i.torneo.id = :torneoId
+              and i.estado not in ('RECHAZADA', 'CANCELADA')
+            order by i.id
+            """)
+    List<Inscripcion> vigentesPorTorneo(@Param("torneoId") Long torneoId);
 
     /**
      * Equipos activos donde el usuario es capitán activo (RF-25: solo el
@@ -59,6 +91,24 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
               and m.estado = 'ACTIVO'
             """)
     boolean esCapitanActivo(@Param("usuarioId") Long usuarioId, @Param("equipoId") Long equipoId);
+
+    /**
+     * Equipos inscritos en el torneo cuyo capitán activo es el usuario: los
+     * únicos cruces cuya clave de lobby puede ver (además del organizador).
+     */
+    @Query("""
+            select i.equipo.id from Inscripcion i
+            where i.torneo.id = :torneoId
+              and i.estado not in ('RECHAZADA', 'CANCELADA')
+              and exists (
+                  select 1 from MiembroEquipo m
+                  where m.equipo.id = i.equipo.id
+                    and m.usuario.id = :usuarioId
+                    and m.rol = 'CAPITAN'
+                    and m.estado = 'ACTIVO')
+            """)
+    List<Long> equiposCapitaneadosEnTorneo(@Param("usuarioId") Long usuarioId,
+                                           @Param("torneoId") Long torneoId);
 
     @Query("""
             select count(m) from MiembroEquipo m

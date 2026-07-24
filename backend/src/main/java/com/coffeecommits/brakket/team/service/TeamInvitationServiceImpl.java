@@ -2,6 +2,7 @@ package com.coffeecommits.brakket.team.service;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
+import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.notification.service.NotificationService;
@@ -33,17 +34,20 @@ public class TeamInvitationServiceImpl implements TeamInvitationService {
 
     private final EquipoRepository equipoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioRolRepository usuarioRolRepository;
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final InvitacionEquipoRepository invitacionRepository;
     private final NotificationService notificationService;
 
     public TeamInvitationServiceImpl(EquipoRepository equipoRepository,
                                      UsuarioRepository usuarioRepository,
+                                     UsuarioRolRepository usuarioRolRepository,
                                      MiembroEquipoRepository miembroEquipoRepository,
                                      InvitacionEquipoRepository invitacionRepository,
                                      NotificationService notificationService) {
         this.equipoRepository = equipoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.usuarioRolRepository = usuarioRolRepository;
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.invitacionRepository = invitacionRepository;
         this.notificationService = notificationService;
@@ -75,6 +79,11 @@ public class TeamInvitationServiceImpl implements TeamInvitationService {
 
         Usuario jugador = usuarioRepository.findById(request.jugadorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", request.jugadorId()));
+
+        if (usuarioRolRepository.existsByUsuarioIdAndRolNombreRol(jugador.getId(), "ADMIN")) {
+            throw new BusinessException(
+                    "Un administrador de la plataforma no puede formar parte de equipos");
+        }
 
         miembroEquipoRepository.findByEquipoIdAndUsuarioId(equipoId, jugador.getId())
                 .filter(m -> ESTADO_ACTIVO.equals(m.getEstado()))
