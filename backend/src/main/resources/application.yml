@@ -64,6 +64,9 @@ brakket:
     # además las transmisiones registradas (RF-35). El código siempre
     # recorre una lista: encender el flag no requiere tocar nada más.
     multi-source-enabled: ${STREAMS_MULTI_SOURCE_ENABLED:false}
+    # RF-36: cadencia del muestreo de audiencia (1 request batcheada por tick;
+    # 60s mantiene el desfase bajo el minuto de RNF-02 sin gastar cuota).
+    muestreo-intervalo-ms: ${STREAMS_MUESTREO_INTERVALO_MS:60000}
   ai:
     api-key: ${AI_API_KEY:}
     api-base-url: ${AI_API_BASE_URL:}

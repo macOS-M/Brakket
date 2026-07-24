@@ -12,4 +12,13 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
      */
     @Query("select t from TransmisionTwitch t left join fetch t.canal left join fetch t.torneo where t.activa = true")
     List<TransmisionTwitch> findActivasConCanalYTorneo();
+
+    /**
+     * Transmisiones con período de captura abierto (RF-36): registradas,
+     * activas y aún sin cerrar. El muestreador las consulta cada tick.
+     */
+    @Query("""
+            select t from TransmisionTwitch t left join fetch t.canal
+            where t.activa = true and t.finalizadaEn is null""")
+    List<TransmisionTwitch> findAbiertasParaMuestreo();
 }

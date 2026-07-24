@@ -1,13 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TwitchService } from '../../services/twitch.service';
-import { CanalTwitch, TransmisionTwitch } from '../../../../models/twitch.model';
+import { CanalTwitch, MetricasTransmision, TransmisionTwitch } from '../../../../models/twitch.model';
 
 @Component({
   selector: 'app-twitch-panel',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DatePipe, DecimalPipe],
   templateUrl: './twitch-panel.component.html',
   styleUrl: './twitch-panel.component.scss'
 })
@@ -20,6 +21,7 @@ export class TwitchPanelComponent implements OnInit {
   torneoId: number | null = null;
   partidaId: number | null = null;
   transmision: TransmisionTwitch | null = null;
+  metricas: MetricasTransmision | null = null;
   cargando = false;
   mensaje = '';
   error = '';
@@ -60,8 +62,20 @@ export class TwitchPanelComponent implements OnInit {
           ? 'Transmisión en vivo asociada.'
           : 'Asociación guardada; el canal no está transmitiendo en vivo.';
         this.cargando = false;
+        this.cargarMetricas();
       },
       error: err => { this.error = this.mensajeError(err); this.cargando = false; }
+    });
+  }
+
+  /** RF-36: indicadores capturados por el muestreo para la transmisión asociada. */
+  cargarMetricas(): void {
+    if (!this.transmision) {
+      return;
+    }
+    this.twitch.metricas(this.transmision.id).subscribe({
+      next: data => this.metricas = data,
+      error: err => this.error = this.mensajeError(err)
     });
   }
 

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api.service';
-import { CanalTwitch, TransmisionTwitch } from '../../../models/twitch.model';
+import { CanalTwitch, MetricasTransmision, TransmisionTwitch } from '../../../models/twitch.model';
 
 /**
  * Servicio de datos de la feature "twitch".
@@ -26,5 +26,9 @@ export class TwitchService {
 
   asociar(torneoId: number | null, partidaId: number | null): Observable<TransmisionTwitch> {
     return this.api.post<TransmisionTwitch>('/twitch/transmisiones', { torneoId, partidaId });
+  }
+
+  metricas(transmisionId: number): Observable<MetricasTransmision> {
+    return this.api.get<MetricasTransmision>(`/twitch/transmisiones/${transmisionId}/metricas`);
   }
 }

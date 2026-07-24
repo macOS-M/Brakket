@@ -20,3 +20,16 @@ export interface TransmisionTwitch {
   iniciadaEn: string | null;
 }
 
+/** Indicadores de audiencia capturados por el muestreo de RF-36. */
+export interface MetricasTransmision {
+  transmisionId: number;
+  estado: string;
+  muestras: number;
+  pico: number | null;
+  promedio: number | null;
+  duracionMinutos: number | null;
+  iniciadaEn: string | null;
+  finalizadaEn: string | null;
+  ultimaMuestra: string | null;
+}
+

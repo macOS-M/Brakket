@@ -22,6 +22,7 @@ public class CanalTwitchService {
     private final CanalOficialTwitchRepository canalRepository;
     private final TransmisionTwitchRepository transmisionRepository;
     private final IncidenteIntegracionTwitchRepository incidenteRepository;
+    private final MetricaAudienciaRepository metricaRepository;
     private final TorneoRepository torneoRepository;
     private final PartidaRepository partidaRepository;
     private final TwitchGateway twitchGateway;
@@ -118,6 +119,26 @@ public class CanalTwitchService {
                     .tipo("CONEXION").detalle(ex.getMessage()).ocurridoEn(LocalDateTime.now()).build());
             return response(canal);
         }
+    }
+
+    /**
+     * Indicadores básicos de RF-36 sobre las muestras capturadas. La duración
+     * corre desde el inicio del directo hasta su cierre (o hasta ahora si
+     * sigue en vivo).
+     */
+    @Transactional(readOnly = true)
+    public MetricasTransmisionResponse metricas(Long transmisionId) {
+        TransmisionTwitch transmision = transmisionRepository.findById(transmisionId)
+                .orElseThrow(() -> new ResourceNotFoundException("La transmisión no existe."));
+        var resumen = metricaRepository.resumenPorTransmision(transmisionId);
+        Long duracion = transmision.getIniciadaEn() == null ? null
+                : java.time.Duration.between(transmision.getIniciadaEn(),
+                        transmision.getFinalizadaEn() == null ? LocalDateTime.now()
+                                : transmision.getFinalizadaEn()).toMinutes();
+        return new MetricasTransmisionResponse(transmision.getId(), transmision.getEstado(),
+                resumen.getMuestras() == null ? 0 : resumen.getMuestras(), resumen.getPico(),
+                resumen.getPromedio(), duracion, transmision.getIniciadaEn(),
+                transmision.getFinalizadaEn(), resumen.getUltimaMuestra());
     }
 
     private CanalTwitchResponse response(CanalOficialTwitch c) {
