@@ -29,6 +29,20 @@ public class TwitchProperties {
     private String apiBaseUrl = "https://api.twitch.tv/helix";
     private String authBaseUrl = "https://id.twitch.tv/oauth2";
 
+    /**
+     * Con true (default) la app NO ARRANCA si faltan las credenciales: un
+     * despliegue al que se le olvidó una variable debe fallar al inicio con un
+     * mensaje claro, no en runtime frente al usuario. Solo test/CI lo apagan.
+     */
+    private boolean required = true;
+
+    /**
+     * Timeouts cortos: las llamadas a Twitch corren dentro del request; sin
+     * límite, un Twitch colgado retiene el hilo de Tomcat indefinidamente.
+     */
+    private int connectTimeoutMs = 3000;
+    private int readTimeoutMs = 5000;
+
     public String getClientId() { return clientId; }
     public void setClientId(String clientId) { this.clientId = clientId; }
 
@@ -42,6 +56,14 @@ public class TwitchProperties {
     public void setApiBaseUrl(String apiBaseUrl) { this.apiBaseUrl = apiBaseUrl; }
     public String getAuthBaseUrl() { return authBaseUrl; }
     public void setAuthBaseUrl(String authBaseUrl) { this.authBaseUrl = authBaseUrl; }
+
+    public boolean isRequired() { return required; }
+    public void setRequired(boolean required) { this.required = required; }
+
+    public int getConnectTimeoutMs() { return connectTimeoutMs; }
+    public void setConnectTimeoutMs(int connectTimeoutMs) { this.connectTimeoutMs = connectTimeoutMs; }
+    public int getReadTimeoutMs() { return readTimeoutMs; }
+    public void setReadTimeoutMs(int readTimeoutMs) { this.readTimeoutMs = readTimeoutMs; }
     public boolean isConfigured() {
         return clientId != null && !clientId.isBlank()
                 && clientSecret != null && !clientSecret.isBlank();
