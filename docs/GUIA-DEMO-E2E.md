@@ -21,6 +21,7 @@ Verificado contra el código en la rama de esta iteración (no contra el ERS).
 | Juegos (catálogo, hub, importar RAWG) | ✅ Funcional | Se muestra |
 | Ligas y temporadas | ✅ Funcional | Se muestra (precargadas) |
 | Torneos (5 formatos, bracket, resultados) | ✅ Funcional | Torneo A precargado + **gran final EN VIVO** |
+| Calendario de eventos (`/calendar`, RF-46) | ✅ Funcional | Se muestra **con sesión** (el endpoint aún exige login; el menú lo enseña a anónimos — hallazgo del review de #36) |
 | Equipos (crear, invitar, roles, perfil público, stats) | ✅ Funcional | Perfil + **aceptar invitación EN VIVO** |
 | Transferencias | ✅ Funcional | Opcional en vivo |
 | Historial de jugador (`/players/:id/historial`) | ✅ Funcional | Se muestra |
@@ -134,13 +135,14 @@ Leyenda: 🖥️ = ya está cargado, solo se muestra · 🔴 = se ejecuta EN VIV
 |---|---|---|---|
 | 2.1 🖥️ | Olivia | Recorrer `/inicio` | Carrusel de juegos, rail de **próximos torneos** (Copa Doble Orbita EN_CURSO), "Tus competencias" (organiza los 2 torneos) y **Pendientes: 1 invitación de Fenix Demo** |
 
-### Sección 3 — Juegos, liga y temporada (3 min) — Ventana 1 (Olivia)
+### Sección 3 — Juegos, liga, temporada y calendario (4 min) — Ventana 1 (Olivia)
 
 | # | Usuario | Acción | Qué se debe ver |
 |---|---|---|---|
 | 3.1 🖥️ | Olivia | `/games` → abrir Rocket League | Catálogo (5 juegos) y hub del juego. Mencionar: importar desde RAWG e (ADMIN) crear/editar |
 | 3.2 🖥️ | Olivia | `/leagues` → **Liga Demo Brakket** | Detalle de la liga; Olivia es la comisionada |
 | 3.3 🖥️ | Olivia | Tab/sección de temporadas | **Temporada Demo 2026** ACTIVA con cupo y formato; los 2 torneos cuelgan de ella. Narrar la jerarquía liga → temporada → torneo |
+| 3.4 🖥️ | Olivia | `/calendar` → filtrar por Rocket League y por la liga | Los 2 torneos demo como tarjetas de evento con fecha y estado (RF-46). ⚠️ Mostrarlo SIEMPRE con sesión iniciada: sin login el endpoint devuelve error |
 
 ### Sección 4 — Equipos + invitación EN VIVO (3 min) — Ventana 1 (Olivia)
 
@@ -209,14 +211,14 @@ mostrado hoy es funcional de punta a punta sobre datos reales.
 |---|---|---|
 | 1. Portada y acceso | 2 | 2 |
 | 2. Dashboard | 2 | 4 |
-| 3. Juegos, liga, temporada | 3 | 7 |
-| 4. Equipos + invitación | 3 | 10 |
-| 5. Torneo A finalizado | 3 | 13 |
-| 6. **Gran final en vivo** | 5 | 18 |
-| 7. Transferencias (opcional) | 2 | 20 |
-| 8. Transmisiones + Twitch | 4 | 24 |
-| 9. Patrocinios + admin | 3 | 27 |
-| 10. Cierre | 2 | **29** |
+| 3. Juegos, liga, temporada, calendario | 4 | 8 |
+| 4. Equipos + invitación | 3 | 11 |
+| 5. Torneo A finalizado | 3 | 14 |
+| 6. **Gran final en vivo** | 5 | 19 |
+| 7. Transferencias (opcional) | 2 | 21 |
+| 8. Transmisiones + Twitch | 4 | 25 |
+| 9. Patrocinios + admin | 3 | 28 |
+| 10. Cierre | 2 | **30** |
 
 Si hay que recortar: sacrificar 7 (transferencias) y 9.3 (perfil).
 
