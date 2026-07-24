@@ -62,10 +62,11 @@ public class TeamDissolutionServiceImpl implements TeamDissolutionService {
     @Transactional
     public EquipoResponse disolver(Long equipoId, DisolverEquipoRequest request,
                                    String solicitanteCorreo, boolean esAdmin) {
+        // Existencia antes que permisos: un id inexistente debe dar 404,
+        // no un mensaje engañoso de capitanía.
+        Equipo equipo = buscarEquipo(equipoId);
         Usuario solicitante = buscarUsuario(solicitanteCorreo);
         exigirCapitanOAdmin(equipoId, solicitante, esAdmin, "disolverlo");
-
-        Equipo equipo = buscarEquipo(equipoId);
 
         if (!ESTADO_ACTIVO.equals(equipo.getEstado())) {
             throw new BusinessException("El equipo '%s' ya está disuelto".formatted(equipo.getNombre()));
@@ -98,10 +99,9 @@ public class TeamDissolutionServiceImpl implements TeamDissolutionService {
     @Override
     @Transactional
     public EquipoResponse reactivar(Long equipoId, String solicitanteCorreo, boolean esAdmin) {
+        Equipo equipo = buscarEquipo(equipoId);
         Usuario solicitante = buscarUsuario(solicitanteCorreo);
         exigirCapitanOAdmin(equipoId, solicitante, esAdmin, "reactivarlo");
-
-        Equipo equipo = buscarEquipo(equipoId);
 
         if (ESTADO_BLOQUEADO.equals(equipo.getEstado())) {
             throw new BusinessException(
@@ -124,10 +124,9 @@ public class TeamDissolutionServiceImpl implements TeamDissolutionService {
     @Override
     @Transactional
     public void eliminar(Long equipoId, String solicitanteCorreo, boolean esAdmin) {
+        Equipo equipo = buscarEquipo(equipoId);
         Usuario solicitante = buscarUsuario(solicitanteCorreo);
         exigirCapitanOAdmin(equipoId, solicitante, esAdmin, "eliminarlo");
-
-        Equipo equipo = buscarEquipo(equipoId);
 
         // Dos pasos para el capitán (disolver → eliminar); el ADMIN modera
         // directo. El historial competitivo siempre frena el borrado físico:
@@ -157,7 +156,10 @@ public class TeamDissolutionServiceImpl implements TeamDissolutionService {
                 || partidaRepository.existsByGanadorId(equipoId)
                 || torneoRepository.existsByCampeonId(equipoId)
                 || historialTransferenciaRepository.existsByEquipoOrigenIdOrEquipoDestinoId(equipoId, equipoId)
-                || solicitudTransferenciaRepository.existsByEquipoOrigenIdOrEquipoDestinoId(equipoId, equipoId);
+                || solicitudTransferenciaRepository.existsByEquipoOrigenIdOrEquipoDestinoId(equipoId, equipoId)
+                // Los movimientos de plantilla (bajas/expulsiones con causa)
+                // también son historial consultable (RF-16): no se borran.
+                || miembroEquipoRepository.existsByEquipoIdAndFechaBajaIsNotNull(equipoId);
     }
 
     /** Capitán activo del equipo, o ADMIN de la plataforma (moderación). */

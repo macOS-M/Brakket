@@ -131,6 +131,7 @@ class TeamDissolutionServiceImplTest {
 
     @Test
     void disolver_falla_si_el_solicitante_no_es_capitan() {
+        when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipoActivo()));
         when(usuarioRepository.findByCorreo("jug@x.com")).thenReturn(Optional.of(jugador));
         when(miembroEquipoRepository.findByEquipoIdAndUsuarioId(10L, 2L))
                 .thenReturn(Optional.of(miembro(jugador, "TITULAR", "ACTIVO")));
@@ -144,6 +145,7 @@ class TeamDissolutionServiceImplTest {
 
     @Test
     void disolver_falla_si_el_solicitante_no_pertenece_al_equipo() {
+        when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipoActivo()));
         when(usuarioRepository.findByCorreo("jug@x.com")).thenReturn(Optional.of(jugador));
         when(miembroEquipoRepository.findByEquipoIdAndUsuarioId(10L, 2L)).thenReturn(Optional.empty());
 
@@ -209,7 +211,7 @@ class TeamDissolutionServiceImplTest {
 
     @Test
     void disolver_lanza_404_si_el_equipo_no_existe() {
-        solicitanteEsCapitanActivo();
+        // La existencia se valida antes que la capitanía: 404 directo.
         when(equipoRepository.findById(10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.disolver(10L,

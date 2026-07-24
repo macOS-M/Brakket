@@ -125,17 +125,21 @@ export class TournamentBracketComponent {
   private observador: ResizeObserver | null = null;
   private ultimaGeometria = '';
 
-  /** La vista que corresponde al formato (laxa, igual que el backend). */
+  /**
+   * La vista que corresponde al formato (laxa y en el MISMO orden de
+   * precedencia que FormatoTorneo.interpretar del backend: GRUPO y ROBIN
+   * antes que DOBLE, para que "round robin doble" caiga en liga).
+   */
   readonly tipo = computed<TipoVista>(() => {
     const plano = this.formato().normalize('NFD').replace(/\p{M}/gu, '').toUpperCase();
-    if (/DOBLE/.test(plano)) {
-      return 'DOBLE';
-    }
     if (/GRUPO/.test(plano)) {
       return 'GRUPOS';
     }
     if (/ROBIN|SUIZO|SWISS/.test(plano)) {
       return 'LIGA';
+    }
+    if (/DOBLE/.test(plano)) {
+      return 'DOBLE';
     }
     return 'ARBOL';
   });
@@ -250,10 +254,13 @@ export class TournamentBracketComponent {
         }
       }
     }
+    // Mismo desempate final que TablaPosiciones del backend (id de equipo):
+    // si difieren, la corona podría dibujarse en otra fila de la tabla.
     return [...filas.values()].sort((a, b) =>
       b.ganadas - a.ganadas
       || b.diferencia - a.diferencia
-      || (favor.get(b.equipoId) ?? 0) - (favor.get(a.equipoId) ?? 0));
+      || (favor.get(b.equipoId) ?? 0) - (favor.get(a.equipoId) ?? 0)
+      || a.equipoId - b.equipoId);
   }
 
   /** Llave tentativa según el cupo, cuando el bracket aún no existe. */

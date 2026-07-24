@@ -157,11 +157,13 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
    * Challenger Mode). Se resuelven por coincidencia laxa sobre el nombre
    * que venga del catálogo.
    */
+  // Mismo orden de precedencia que FormatoTorneo.interpretar (backend):
+  // grupo/robin/suizo antes que doble, por los nombres compuestos.
   private static readonly DESCRIPCIONES: [RegExp, string][] = [
-    [/doble/i, 'Los perdedores siguen en la llave inferior; se queda fuera quien pierde dos veces.'],
     [/grupo/i, 'Fase de grupos y los mejores avanzan a una llave eliminatoria.'],
     [/robin/i, 'Todos contra todos: cada equipo enfrenta al resto de su grupo.'],
     [/suizo/i, 'Sin eliminación: cada ronda empareja rivales con marcas similares.'],
+    [/doble/i, 'Los perdedores siguen en la llave inferior; se queda fuera quien pierde dos veces.'],
     [/elim/i, 'El formato clásico: quien pierde queda eliminado, hasta coronar al campeón.']
   ];
 

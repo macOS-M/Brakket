@@ -299,6 +299,13 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
             throw new BusinessException(
                     "El usuario designado como capitán está bloqueado en la plataforma.");
         }
+        // Un roster a la vez: sin este freno, el admin generaría doble
+        // membresía activa y rompería el supuesto de invitaciones y pases.
+        if (miembroEquipoRepository.existsByUsuarioIdAndEstado(capitan.getId(), "ACTIVO")) {
+            throw new BusinessException(
+                    "'%s' ya es miembro activo de otro equipo: correspondería una transferencia."
+                            .formatted(capitan.getNombre()));
+        }
         return capitan;
     }
 

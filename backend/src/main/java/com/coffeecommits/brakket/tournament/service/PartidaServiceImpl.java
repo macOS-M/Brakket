@@ -518,17 +518,26 @@ public class PartidaServiceImpl implements PartidaService {
     private void cerrarEtapa(Partida partida, Equipo ganador) {
         Torneo torneo = partida.getTorneo();
         switch (FormatoTorneo.de(torneo)) {
-            case ROUND_ROBIN -> intentarCerrarLiga(torneo);
-            case SUIZO -> intentarAvanzarSuizo(torneo);
+            // Los cierres que revisan "¿quedan partidas abiertas?" se
+            // serializan con lock sobre el torneo: si las dos últimas
+            // partidas de la jornada se confirman a la vez, cada una vería
+            // a la otra PENDIENTE y nadie cerraría la etapa. Con el lock,
+            // la segunda espera y ya ve todo lo que la primera escribió.
+            case ROUND_ROBIN -> intentarCerrarLiga(bloquearTorneo(torneo));
+            case SUIZO -> intentarAvanzarSuizo(bloquearTorneo(torneo));
             case FASE_GRUPOS_Y_ELIMINACION -> {
                 if (partida.getFase() == FaseTorneo.GRUPOS) {
-                    intentarSembrarEliminacion(torneo);
+                    intentarSembrarEliminacion(bloquearTorneo(torneo));
                 } else {
                     coronar(torneo, ganador);
                 }
             }
             default -> coronar(torneo, ganador);
         }
+    }
+
+    private Torneo bloquearTorneo(Torneo torneo) {
+        return torneoRepository.bloquearPorId(torneo.getId()).orElse(torneo);
     }
 
     private void coronar(Torneo torneo, Equipo campeon) {

@@ -28,10 +28,9 @@ public enum FormatoTorneo {
         String plano = Normalizer.normalize(texto, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
                 .toUpperCase(Locale.ROOT);
-        // El orden importa: DOBLE y GRUPO contienen "ELIMINACION".
-        if (plano.contains("DOBLE")) {
-            return Optional.of(DOBLE_ELIMINACION);
-        }
+        // El orden importa: las palabras más específicas mandan. GRUPO y
+        // DOBLE contienen "ELIMINACION", y un futuro "round robin doble"
+        // (liga a dos vueltas) debe caer en ROBIN, no en doble eliminación.
         if (plano.contains("GRUPO")) {
             return Optional.of(FASE_GRUPOS_Y_ELIMINACION);
         }
@@ -40,6 +39,9 @@ public enum FormatoTorneo {
         }
         if (plano.contains("SUIZO") || plano.contains("SWISS")) {
             return Optional.of(SUIZO);
+        }
+        if (plano.contains("DOBLE")) {
+            return Optional.of(DOBLE_ELIMINACION);
         }
         if (plano.contains("ELIMINACION") || plano.contains("DIRECTA")) {
             return Optional.of(ELIMINACION_DIRECTA);

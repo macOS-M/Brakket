@@ -14,7 +14,8 @@ import java.util.Map;
  * Clasificación por marcas para los formatos de liga (round robin, suizo y
  * fase de grupos). Solo cuentan partidas FINALIZADAS; un bye vale una
  * victoria sin marcador. Desempate: victorias, diferencia de puntos, puntos
- * a favor y, de persistir, el orden de inscripción (el orden de entrada).
+ * a favor y, de persistir, el id de equipo (el único criterio que el
+ * frontend puede reproducir desde el bracket público).
  *
  * <p>El frontend calcula la misma tabla a partir del bracket público; si se
  * cambia un criterio aquí hay que reflejarlo allá.</p>
@@ -52,7 +53,8 @@ final class TablaPosiciones {
         tabla.sort(Comparator
                 .comparingInt(Posicion::ganadas).reversed()
                 .thenComparing(Comparator.comparingInt(Posicion::diferencia).reversed())
-                .thenComparing(Comparator.comparingInt(Posicion::favor).reversed()));
+                .thenComparing(Comparator.comparingInt(Posicion::favor).reversed())
+                .thenComparing(p -> p.equipo().getId()));
         return tabla;
     }
 
