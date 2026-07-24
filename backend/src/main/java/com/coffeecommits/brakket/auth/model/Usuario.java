@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -43,6 +44,36 @@ public class Usuario {
 
     @Column(name = "biografia", columnDefinition = "TEXT")
     private String biografia;
+
+    // ----- Ajustes personales (RF-18). Datos privados: no salen al perfil
+    // público, solo los ve la persona dueña de la cuenta. -----
+
+    /** Nombre legal completo; el {@code nombre} de arriba es el visible/gamertag. */
+    @Column(name = "nombre_completo", length = 160)
+    private String nombreCompleto;
+
+    @Column(name = "fecha_nacimiento")
+    private LocalDate fechaNacimiento;
+
+    /** Normalizado a dígitos con prefijo internacional opcional (+50688887777). */
+    @Column(name = "telefono", length = 25)
+    private String telefono;
+
+    @Column(name = "pais", length = 80)
+    private String pais;
+
+    @Column(name = "ciudad", length = 120)
+    private String ciudad;
+
+    @Column(name = "direccion", length = 255)
+    private String direccion;
+
+    @Column(name = "codigo_postal", length = 20)
+    private String codigoPostal;
+
+    /** Zona horaria IANA (p. ej. {@code America/Costa_Rica}) para horarios de partidos. */
+    @Column(name = "zona_horaria", length = 64)
+    private String zonaHoraria;
 
     @Column(name = "redes_sociales", columnDefinition = "TEXT")
     private String redesSociales;
