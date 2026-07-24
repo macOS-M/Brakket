@@ -35,10 +35,17 @@ describe('ProfileComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  /** Fecha local YYYY-MM-DD (toISOString corre el día en husos negativos). */
+  const fechaLocal = (fecha: Date): string => {
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${fecha.getFullYear()}-${mes}-${dia}`;
+  };
+
   it('calcula la edad a partir de la fecha de nacimiento', () => {
     const hace20 = new Date();
     hace20.setFullYear(hace20.getFullYear() - 20);
-    component.profileForm.controls.fechaNacimiento.setValue(hace20.toISOString().slice(0, 10));
+    component.profileForm.controls.fechaNacimiento.setValue(fechaLocal(hace20));
 
     expect(component.edad).toBe(20);
   });
@@ -53,7 +60,7 @@ describe('ProfileComponent', () => {
     const hace13 = new Date();
     hace13.setFullYear(hace13.getFullYear() - 13);
 
-    expect(component.maxFechaNacimiento).toBe(hace13.toISOString().slice(0, 10));
+    expect(component.maxFechaNacimiento).toBe(fechaLocal(hace13));
   });
 
   it('cuenta los ajustes personales completos', () => {

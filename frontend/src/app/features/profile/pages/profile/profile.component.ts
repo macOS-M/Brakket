@@ -183,7 +183,11 @@ export class ProfileComponent implements OnInit {
   get maxFechaNacimiento(): string {
     const hoy = new Date();
     hoy.setFullYear(hoy.getFullYear() - EDAD_MINIMA);
-    return hoy.toISOString().slice(0, 10);
+    // Fecha LOCAL, no toISOString(): en GMT-6, después de las 18:00 el
+    // día UTC ya es mañana y el tope quedaba corrido un día.
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${hoy.getFullYear()}-${mes}-${dia}`;
   }
 
   /** Edad a partir de la fecha cargada; null si no hay fecha o es inválida. */

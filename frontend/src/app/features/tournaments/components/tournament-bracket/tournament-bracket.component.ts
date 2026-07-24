@@ -493,13 +493,25 @@ export class TournamentBracketComponent {
   }
 
   puedeReportar(p: Partida): boolean {
+    // Ambos rivales definidos: sin esto, la gran final (que espera al
+    // sobreviviente de la inferior) ofrecía reportar y el backend lo
+    // rechazaba con "aún espera rivales".
     return this.enCurso() && p.estado === 'PENDIENTE'
+      && p.equipoAId !== null && p.equipoBId !== null
       && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId));
   }
 
-  /** Confirmar/rechazar es del capitán del equipo que NO reportó. */
+  /**
+   * Confirmar/rechazar es del capitán del equipo que NO reportó. Quien
+   * también capitanea al equipo reportante no puede (el backend lo
+   * rechaza): sin este freno, un capitán de ambos equipos veía un botón
+   * Confirmar que siempre fallaba y tapaba el Resolver del organizador.
+   */
   puedeConfirmar(p: Partida): boolean {
     if (!this.enCurso() || p.estado !== 'REPORTADA' || p.reportadoPorEquipoId === null) {
+      return false;
+    }
+    if (this.soyCapitanDe(p.reportadoPorEquipoId)) {
       return false;
     }
     const rival = p.reportadoPorEquipoId === p.equipoAId ? p.equipoBId : p.equipoAId;
