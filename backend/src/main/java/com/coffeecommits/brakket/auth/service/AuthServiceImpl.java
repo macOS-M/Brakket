@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -127,16 +128,35 @@ public class AuthServiceImpl implements AuthService {
             usuario.setVisibilidadPerfil(request.visibilidadPerfil());
         }
 
-        // Ajustes personales (RF-18).
+        // Ajustes personales (RF-18). Contrato de edición parcial (igual que
+        // el equipo): null = no tocar, string vacío = borrar. Sin esto, un
+        // cliente viejo que mande solo los campos públicos borraría en
+        // silencio teléfono, dirección y nacimiento.
         validarEdadMinima(request.fechaNacimiento());
-        usuario.setNombreCompleto(normalizar(request.nombreCompleto()));
-        usuario.setFechaNacimiento(request.fechaNacimiento());
-        usuario.setTelefono(normalizarTelefono(request.telefono()));
-        usuario.setPais(normalizar(request.pais()));
-        usuario.setCiudad(normalizar(request.ciudad()));
-        usuario.setDireccion(normalizar(request.direccion()));
-        usuario.setCodigoPostal(normalizar(request.codigoPostal()));
-        usuario.setZonaHoraria(normalizar(request.zonaHoraria()));
+        if (request.nombreCompleto() != null) {
+            usuario.setNombreCompleto(normalizar(request.nombreCompleto()));
+        }
+        if (request.fechaNacimiento() != null) {
+            usuario.setFechaNacimiento(request.fechaNacimiento());
+        }
+        if (request.telefono() != null) {
+            usuario.setTelefono(normalizarTelefono(request.telefono()));
+        }
+        if (request.pais() != null) {
+            usuario.setPais(normalizar(request.pais()));
+        }
+        if (request.ciudad() != null) {
+            usuario.setCiudad(normalizar(request.ciudad()));
+        }
+        if (request.direccion() != null) {
+            usuario.setDireccion(normalizar(request.direccion()));
+        }
+        if (request.codigoPostal() != null) {
+            usuario.setCodigoPostal(normalizar(request.codigoPostal()));
+        }
+        if (request.zonaHoraria() != null) {
+            usuario.setZonaHoraria(zonaHorariaValida(request.zonaHoraria()));
+        }
 
         if (request.juegoIds() != null) {
             Set<Long> juegoIds = new LinkedHashSet<>(request.juegoIds());
@@ -202,6 +222,23 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("El teléfono debe tener entre 8 y 15 dígitos.");
         }
         return internacional ? "+" + digitos : digitos;
+    }
+
+    /**
+     * La zona horaria alimentará horarios de partidos: un identificador que
+     * no sea IANA reventaría el primer {@code ZoneId.of(...)} en runtime.
+     */
+    private String zonaHorariaValida(String zonaHoraria) {
+        String limpia = normalizar(zonaHoraria);
+        if (limpia == null) {
+            return null;
+        }
+        if (!ZoneId.getAvailableZoneIds().contains(limpia)) {
+            throw new BusinessException(
+                    "La zona horaria '%s' no es válida: usá un identificador IANA (p. ej. America/Costa_Rica)."
+                            .formatted(limpia));
+        }
+        return limpia;
     }
 
     /**

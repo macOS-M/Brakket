@@ -26,6 +26,12 @@ public interface UsuarioRolRepository extends JpaRepository<UsuarioRol, Long> {
     /** ¿Este usuario ya tiene este rol? (para no asignarlo dos veces) */
     boolean existsByUsuarioIdAndRolId(Long usuarioId, Long rolId);
 
+    /**
+     * ¿El usuario tiene el rol de plataforma indicado? Se usa para mantener
+     * a los ADMIN fuera de los rosters: moderan la plataforma, no juegan.
+     */
+    boolean existsByUsuarioIdAndRolNombreRol(Long usuarioId, String nombreRol);
+
     /** La fila exacta usuario–rol (para poder revocarla). */
     Optional<UsuarioRol> findByUsuarioIdAndRolId(Long usuarioId, Long rolId);
 

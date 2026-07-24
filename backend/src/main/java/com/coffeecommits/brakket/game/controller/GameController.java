@@ -50,6 +50,19 @@ public class GameController {
      * sesión puede buscar (la key queda protegida detrás del login; la ruta
      * se excluye del permitAll de GET /api/games/** en SecurityConfig).
      */
+    /**
+     * Los juegos top reales de RAWG (no dependen del catálogo local): la
+     * fila "Juegos top" del panel. Cacheado 1 h para cuidar la cuota.
+     */
+    @GetMapping("/top")
+    public List<JuegoExternoResponse> topExterno() {
+        try {
+            return externalGameSearchService.populares();
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
     @GetMapping("/buscar-externo")
     @PreAuthorize("isAuthenticated()")
     public List<JuegoExternoResponse> buscarExterno(@RequestParam("q") String consulta) {
@@ -64,8 +77,11 @@ public class GameController {
      */
     @PostMapping("/importar-externo")
     @PreAuthorize("isAuthenticated()")
-    public JuegoResponse importarExterno(@Valid @RequestBody ImportarJuegoRequest request) {
-        return gameService.importarDesdeExterno(request.nombre());
+    public JuegoResponse importarExterno(@Valid @RequestBody ImportarJuegoRequest request,
+                                         org.springframework.security.core.Authentication authentication) {
+        boolean esAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return gameService.importarDesdeExterno(request.nombre(), esAdmin);
     }
 
     @PostMapping

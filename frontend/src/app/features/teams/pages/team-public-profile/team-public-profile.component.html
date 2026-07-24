@@ -9,7 +9,13 @@
   <!-- `as` solo se admite en el @if primario, por eso este bloque va anidado. -->
   @if (perfil(); as equipo) {
 
-  <header class="hero">
+  <header class="hero" [class.con-banner]="equipo.bannerUrl">
+    @if (equipo.bannerUrl) {
+    <div class="hero-banner" aria-hidden="true">
+      <img [src]="equipo.bannerUrl" alt="" loading="lazy" />
+      <div class="hero-velo"></div>
+    </div>
+    }
     @if (equipo.logo) {
     <img class="logo" [src]="equipo.logo" [alt]="'Logo de ' + equipo.nombre" />
     } @else {
@@ -17,16 +23,29 @@
     }
 
     <div class="identidad">
+      <p class="eyebrow">Equipo</p>
       <h1>{{ equipo.nombre }}</h1>
-      <p class="juego">{{ equipo.juegoNombre || 'Sin juego principal definido' }}</p>
+      <p class="sub">
+        {{ equipo.plantilla.length }} {{ equipo.plantilla.length === 1 ? 'integrante' : 'integrantes' }}
+        @if (equipo.juegoNombre) { · {{ equipo.juegoNombre }} }
+      </p>
     </div>
 
-    <app-status-badge [estado]="equipo.estado" />
+    <div class="hero-acciones">
+      <app-status-badge [estado]="equipo.estado" />
+      @if (esCapitan() && equipo.estado === 'ACTIVO') {
+      <a class="btn-primary" [routerLink]="['/teams', equipo.id, 'plantilla']">Invitar</a>
+      }
+    </div>
   </header>
 
   @if (equipo.estado === 'DISUELTO') {
   <p class="aviso aviso-peligro" role="status">
     Este equipo está disuelto. Su información histórica se conserva.
+    @if (puedeGestionar()) {
+    Desde la <a class="enlace-aviso" [routerLink]="['/teams', equipo.id, 'plantilla']">plantilla</a>
+    podés reactivarlo o eliminarlo definitivamente.
+    }
   </p>
   } @else if (equipo.estado !== 'ACTIVO') {
   <p class="aviso aviso-atencion" role="status">
@@ -34,46 +53,29 @@
   </p>
   }
 
-  @if (equipo.estadisticas.disponibles) {
-  <div class="metricas">
-    <app-stat-card etiqueta="Partidas" [valor]="partidas()" tono="azul" />
-    <app-stat-card etiqueta="Victorias" [valor]="equipo.estadisticas.victorias" tono="verde" />
-    <app-stat-card etiqueta="Derrotas" [valor]="equipo.estadisticas.derrotas" tono="rojo" />
-    <app-stat-card etiqueta="Winrate" [valor]="winrate()" tono="cyan" />
-    <app-stat-card
-      etiqueta="Torneos"
-      [valor]="equipo.estadisticas.torneosJugados"
-      tono="morado"
-    />
+  <!-- Tabs del perfil (referencia Challenger Mode): Resumen / Miembros /
+       Estadísticas, con Ajustes a la derecha para el capitán. -->
+  <div class="tabs-fila">
+    <nav class="tabs" aria-label="Secciones del equipo">
+      <button type="button" class="tab" [class.activo]="tab() === 'resumen'" [attr.aria-current]="tab() === 'resumen' ? 'true' : null" (click)="tab.set('resumen')">
+        Resumen
+      </button>
+      <button type="button" class="tab" [class.activo]="tab() === 'miembros'" [attr.aria-current]="tab() === 'miembros' ? 'true' : null" (click)="tab.set('miembros')">
+        Miembros ({{ equipo.plantilla.length }})
+      </button>
+      <button type="button" class="tab" [class.activo]="tab() === 'estadisticas'" [attr.aria-current]="tab() === 'estadisticas' ? 'true' : null" (click)="tab.set('estadisticas')">
+        Estadísticas
+      </button>
+    </nav>
+    @if (puedeGestionar()) {
+    <a class="btn-ajustes" [routerLink]="['/teams', equipo.id, 'editar']">⚙ Ajustes</a>
+    }
   </div>
-  }
 
+  @switch (tab()) {
+  @case ('resumen') {
   <div class="columnas">
     <div class="principal">
-      <section class="bloque">
-        <div class="bloque-titulo">
-          <h2>Plantilla</h2>
-          <span class="conteo">{{ equipo.plantilla.length }} integrantes</span>
-        </div>
-
-        @if (equipo.plantilla.length) {
-        <ul class="miembros">
-          @for (miembro of equipo.plantilla; track miembro.usuarioId) {
-          <li class="miembro">
-            <span class="avatar" aria-hidden="true">{{ iniciales(miembro.nombre) }}</span>
-            <div class="miembro-datos">
-              <p class="nombre">{{ miembro.nombre }}</p>
-              <p class="desde">Desde {{ miembro.fechaUnion | date: 'MMM y' }}</p>
-            </div>
-            <span class="rol">{{ miembro.rol }}</span>
-          </li>
-          }
-        </ul>
-        } @else {
-        <app-empty-state mensaje="Este equipo no tiene integrantes activos visibles." />
-        }
-      </section>
-
       <section class="bloque">
         <div class="bloque-titulo">
           <h2>Historial competitivo</h2>
@@ -99,14 +101,30 @@
         </ul>
         } @else {
         <app-empty-state
-          titulo="Sin historial todavía"
-          mensaje="Cuando el equipo participe en un torneo, va a aparecer acá."
+          titulo="Este equipo todavía no compitió"
+          mensaje="Cuando participe en un torneo, su historial va a aparecer acá."
         />
         }
       </section>
     </div>
 
     <aside class="lateral">
+      <h2 class="lateral-titulo">Acerca de</h2>
+
+      @if (esCapitan() && perfilIncompleto()) {
+      <section class="bloque setup">
+        <h3>Configurá tu equipo</h3>
+        <p>
+          Completá la identidad del equipo:
+          @if (!equipo.logo) { logo, }
+          @if (!equipo.bannerUrl) { banner, }
+          @if (!equipo.descripcion) { descripción, }
+          y queda listo para competir.
+        </p>
+        <a class="btn-primary" [routerLink]="['/teams', equipo.id, 'editar']">Empezar</a>
+      </section>
+      }
+
       <section class="bloque">
         <div class="bloque-titulo">
           <h2>Sobre el equipo</h2>
@@ -116,16 +134,37 @@
         </p>
       </section>
 
-      @if (equipo.redesSociales.length) {
+      @if (equipo.videoUrl) {
+      <section class="bloque video">
+        <span class="video-icono" aria-hidden="true">🎬</span>
+        <p>Este equipo tiene un video de presentación.</p>
+        <a class="btn-secondary" [href]="equipo.videoUrl" target="_blank" rel="noopener noreferrer">Ver video ↗</a>
+      </section>
+      } @else if (esCapitan()) {
+      <section class="bloque video">
+        <span class="video-icono" aria-hidden="true">🎬</span>
+        <p>Presentá a tu equipo con un video.</p>
+        <a class="btn-secondary" [routerLink]="['/teams', equipo.id, 'editar']">Agregar video</a>
+      </section>
+      }
+
+      @if (equipo.sitioWeb || equipo.redesSociales.length) {
       <section class="bloque">
         <div class="bloque-titulo">
           <h2>Enlaces</h2>
         </div>
         <ul class="enlaces">
+          @if (equipo.sitioWeb) {
+          <li>
+            <a [href]="equipo.sitioWeb" target="_blank" rel="noopener noreferrer">
+              {{ etiquetaEnlace(equipo.sitioWeb) }} ↗
+            </a>
+          </li>
+          }
           @for (red of equipo.redesSociales; track red) {
           <li>
             <a [href]="red" target="_blank" rel="noopener noreferrer">
-              {{ etiquetaEnlace(red) }}
+              {{ etiquetaEnlace(red) }} ↗
             </a>
           </li>
           }
@@ -134,5 +173,69 @@
       }
     </aside>
   </div>
+  }
+
+  @case ('miembros') {
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Plantilla</h2>
+      <span class="conteo">{{ equipo.plantilla.length }} integrantes</span>
+    </div>
+
+    @if (equipo.plantilla.length) {
+    <ul class="miembros">
+      @for (miembro of equipo.plantilla; track miembro.usuarioId) {
+      <li class="miembro">
+        <span class="avatar" aria-hidden="true">{{ iniciales(miembro.nombre) }}</span>
+        <div class="miembro-datos">
+          <p class="nombre">{{ miembro.nombre }}</p>
+          <p class="desde">Desde {{ miembro.fechaUnion | date: 'MMM y' }}</p>
+        </div>
+        <!-- RF-15: puerta de entrada al historial del jugador. -->
+        <a
+          class="enlace-historial"
+          [routerLink]="['/players', miembro.usuarioId, 'historial']"
+          [attr.aria-label]="'Historial de ' + miembro.nombre"
+        >Historial</a>
+        <span class="rol">{{ miembro.rol | rolEquipo }}</span>
+      </li>
+      }
+    </ul>
+    } @else {
+    <app-empty-state mensaje="Este equipo no tiene integrantes activos visibles." />
+    }
+    <!-- RF-16: la línea de tiempo de altas, bajas y transferencias. -->
+    <a class="ver-historial" [routerLink]="['/team-profile', equipo.id, 'historial']">
+      Ver historial completo de altas, bajas y transferencias →
+    </a>
+    @if (puedeGestionar() && equipo.estado === 'ACTIVO') {
+    <a class="btn-secondary gestionar" [routerLink]="['/teams', equipo.id, 'plantilla']">
+      Gestionar plantilla e invitaciones
+    </a>
+    }
+  </section>
+  }
+
+  @case ('estadisticas') {
+  @if (equipo.estadisticas.disponibles) {
+  <div class="metricas">
+    <app-stat-card etiqueta="Partidas" [valor]="partidas()" tono="azul" />
+    <app-stat-card etiqueta="Victorias" [valor]="equipo.estadisticas.victorias" tono="verde" />
+    <app-stat-card etiqueta="Derrotas" [valor]="equipo.estadisticas.derrotas" tono="rojo" />
+    <app-stat-card etiqueta="Winrate" [valor]="winrate()" tono="cyan" />
+    <app-stat-card
+      etiqueta="Torneos"
+      [valor]="equipo.estadisticas.torneosJugados"
+      tono="morado"
+    />
+  </div>
+  } @else {
+  <app-empty-state
+    titulo="Sin estadísticas todavía"
+    mensaje="Cuando el equipo juegue sus primeras partidas, sus números van a aparecer acá."
+  />
+  }
+  }
+  }
   } }
 </section>

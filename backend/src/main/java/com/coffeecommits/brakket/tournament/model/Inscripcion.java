@@ -36,4 +36,12 @@ public class Inscripcion {
 
     @Column(name = "fecha_solicitud", nullable = false)
     private LocalDate fechaSolicitud;
+
+    /**
+     * Gamertag del capitán al inscribirse: identifica al equipo dentro del
+     * juego (no hay API que verifique identidades; es dato declarado).
+     * Nullable solo por inscripciones previas a V26.
+     */
+    @Column(name = "usuario_en_juego", length = 100)
+    private String usuarioEnJuego;
 }

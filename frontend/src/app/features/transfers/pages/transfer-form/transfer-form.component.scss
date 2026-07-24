@@ -1,13 +1,6 @@
 .page {
   padding: 0 0 1.5rem;
-  max-width: 560px;
-}
-
-.ayuda {
-  margin: 0 0 1.25rem;
-  color: var(--text-muted, #94a3b8);
-  font-size: 0.875rem;
-  line-height: 1.55;
+  max-width: 620px;
 }
 
 // Banner de error general de la operación. Sobre el lienzo, no dentro de una
@@ -23,12 +16,40 @@
   line-height: 1.5;
 }
 
+// ----- Tarjeta contenedora del formulario -----
+
+.tarjeta {
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-lg, 16px);
+}
+
+.tarjeta-cabecera {
+  padding: 1.1rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
+
+.tarjeta-titulo {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.tarjeta-detalle {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
 // ----- Formulario -----
 
 .formulario {
   display: flex;
   flex-direction: column;
   gap: 1.0625rem;
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .campo {
@@ -38,7 +59,7 @@
 }
 
 .etiqueta {
-  color: var(--text, #e2e8f0);
+  color: var(--text-muted, #94a3b8);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -54,7 +75,9 @@ select,
 textarea {
   width: 100%;
   padding: 0.5625rem 0.75rem;
-  background: var(--surface, #111827);
+  // Sobre la tarjeta (surface) los campos suben un nivel de tono,
+  // como en el wizard de torneos: sin esto se funden con el fondo.
+  background: var(--surface-2, #1f2937);
   border: 1px solid var(--border, #334155);
   border-radius: var(--radius-sm, 8px);
   color: var(--text, #e2e8f0);

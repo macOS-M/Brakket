@@ -33,6 +33,17 @@ public class Equipo {
     @Column(name = "descripcion", length = 500)
     private String descripcion;
 
+    /** Banner de portada del perfil (V30, referencia Challenger Mode). */
+    @Column(name = "banner_url", length = 500)
+    private String bannerUrl;
+
+    @Column(name = "sitio_web", length = 500)
+    private String sitioWeb;
+
+    /** Video de presentación del equipo (enlace a YouTube/Twitch/etc.). */
+    @Column(name = "video_url", length = 500)
+    private String videoUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "capitan_id", nullable = false)
     private Usuario capitan;

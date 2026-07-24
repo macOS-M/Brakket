@@ -30,9 +30,14 @@
         </p>
       </div>
       <div class="stats-torneo">
-        <span class="stat">{{ torneo.formato }}</span>
+        <span class="stat">{{ torneo.formato | formatoTorneo }}</span>
         <span class="stat">{{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
         <span class="stat resaltado">{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos</span>
+        @if (enCurso()) {
+        <span class="stat en-curso"><span class="punto-vivo" aria-hidden="true"></span> En curso</span>
+        } @else if (finalizado()) {
+        <span class="stat finalizado">Finalizado</span>
+        }
         @if (torneo.premio) {
         <span class="stat premio">🏆 {{ torneo.premio }}</span>
         }
@@ -47,146 +52,424 @@
   <p class="mensaje-error" role="alert">{{ errorEliminar() }}</p>
   }
 
+  <!-- Tabs estilo Challenger Mode: siempre las cinco secciones. -->
   <nav class="tabs" aria-label="Secciones del torneo">
-    <button
-      type="button"
-      class="tab"
-      [class.activo]="tab() === 'resumen'"
-      (click)="tab.set('resumen')"
-    >
+    <button type="button" class="tab" [class.activo]="tab() === 'resumen'" [attr.aria-current]="tab() === 'resumen' ? 'true' : null" (click)="tab.set('resumen')">
       Resumen
     </button>
-    <button
-      type="button"
-      class="tab"
-      [class.activo]="tab() === 'equipos'"
-      (click)="tab.set('equipos')"
-    >
-      Equipos ({{ torneo.inscritos }})
+    <button type="button" class="tab" [class.activo]="tab() === 'llaves'" [attr.aria-current]="tab() === 'llaves' ? 'true' : null" (click)="tab.set('llaves')">
+      Llaves
+    </button>
+    <button type="button" class="tab" [class.activo]="tab() === 'matches'" [attr.aria-current]="tab() === 'matches' ? 'true' : null" (click)="tab.set('matches')">
+      Matches
+    </button>
+    <button type="button" class="tab" [class.activo]="tab() === 'jugadores'" [attr.aria-current]="tab() === 'jugadores' ? 'true' : null" (click)="tab.set('jugadores')">
+      Jugadores ({{ jugadores().length }})
+    </button>
+    <button type="button" class="tab" [class.activo]="tab() === 'resultados'" [attr.aria-current]="tab() === 'resultados' ? 'true' : null" (click)="tab.set('resultados')">
+      Resultados
     </button>
   </nav>
 
-  @if (tab() === 'resumen') {
-  <div class="contenido">
-    @if (torneo.descripcion) {
-    <p class="descripcion">{{ torneo.descripcion }}</p>
-    }
+  @switch (tab()) {
+  @case ('resumen') {
+  <div class="contenido resumen-grid">
+    <div class="resumen-principal">
+      @if (finalizado() && torneo.campeonNombre) {
+      <div class="campeon-banner" role="status" [class.celebrando]="celebracion()">
+        <span class="campeon-copa" aria-hidden="true">🏆</span>
+        <div>
+          <p class="campeon-titulo">Campeón del torneo</p>
+          <p class="campeon-nombre">{{ torneo.campeonNombre }}</p>
+        </div>
+      </div>
+      }
 
-    <!-- Inscripción (RF-25): la ve cualquier usuario; actúa el capitán. -->
-    @if (inscripcionExitosa()) {
-    <p class="mensaje-ok" role="status">¡Equipo inscrito! Ya aparece en la pestaña Equipos.</p>
-    } @else if (!abierto()) {
-    <p class="aviso-cerrado">
-      {{ cupoLleno() ? 'El torneo alcanzó su cupo de equipos.' : comenzo() ? 'El torneo ya comenzó.' : 'El torneo no acepta inscripciones.' }}
-    </p>
-    } @else if (!auth.isAuthenticated()) {
-    <div class="inscripcion">
-      <p>¿Querés competir? Iniciá sesión e inscribí a tu equipo.</p>
-      <button type="button" class="btn-primary" (click)="auth.login()">Iniciar sesión</button>
-    </div>
-    } @else if (elegibles().length > 0) {
-    <div class="inscripcion">
-      <label class="label" for="equipo">Inscribí a tu equipo (sos su capitán)</label>
-      <div class="inscripcion-fila">
-        <select
-          id="equipo"
-          [value]="equipoElegido() ?? ''"
-          (change)="equipoElegido.set($any($event.target).value ? +$any($event.target).value : null)"
-        >
-          <option value="" disabled>Elegí un equipo…</option>
-          @for (equipo of elegibles(); track equipo.id) {
-          <option [value]="equipo.id">{{ equipo.nombre }}</option>
-          }
-        </select>
-        <button
-          type="button"
-          class="btn-primary"
-          [disabled]="!equipoElegido() || inscribiendo()"
-          (click)="inscribir()"
-        >
-          {{ inscribiendo() ? 'Inscribiendo…' : 'Inscribir equipo' }}
+      <h2 class="seccion-titulo">Formato</h2>
+      <div class="formato-grid">
+        <div class="formato-card">
+          <p class="formato-etiqueta">Juego</p>
+          <p class="formato-valor">{{ torneo.juegoNombre }}</p>
+        </div>
+        <div class="formato-card">
+          <p class="formato-etiqueta">Inicio</p>
+          <p class="formato-valor">{{ torneo.fechaInicio | date: "EEE d MMM, HH:mm" }}</p>
+        </div>
+        <div class="formato-card">
+          <p class="formato-etiqueta">Tamaño del equipo</p>
+          <p class="formato-valor">{{ torneo.tamanoEquipo }} vs. {{ torneo.tamanoEquipo }}</p>
+        </div>
+        <div class="formato-card">
+          <p class="formato-etiqueta">Formato</p>
+          <p class="formato-valor">{{ torneo.formato | formatoTorneo }}</p>
+        </div>
+        @if (torneo.premio) {
+        <div class="formato-card">
+          <p class="formato-etiqueta">Premio personalizado</p>
+          <p class="formato-valor">{{ torneo.premio }}</p>
+        </div>
+        }
+      </div>
+
+      @if (torneo.descripcion) {
+      <h2 class="seccion-titulo">Información</h2>
+      <p class="descripcion">{{ torneo.descripcion }}</p>
+      }
+
+      @if (puedeIniciar()) {
+      <div class="iniciar-card">
+        <div>
+          <h2>¿Listos para competir?</h2>
+          <p>
+            Hay {{ torneo.inscritos }} equipos inscritos. Al iniciar se cierran las
+            inscripciones, se genera la llave y cada partida recibe su lobby.
+          </p>
+        </div>
+        <button type="button" class="btn-primary" [disabled]="iniciando()" (click)="iniciarTorneo()">
+          {{ iniciando() ? 'Generando llave…' : 'Iniciar torneo' }}
         </button>
       </div>
-      @if (errorInscripcion()) {
-      <p class="mensaje-error" role="alert">{{ errorInscripcion() }}</p>
+      @if (errorLlaves() && !enCurso()) {
+      <p class="mensaje-error" role="alert">{{ errorLlaves() }}</p>
       }
-    </div>
-    } @else {
-    <!-- Sin equipos elegibles: explicar el porqué en vez de ocultar todo. -->
-    <div class="inscripcion">
-      <p>
-        Para inscribirte necesitás ser <strong>capitán</strong> de un equipo de
-        {{ torneo.juegoNombre }} (o sin disciplina definida) con al menos
-        {{ torneo.tamanoEquipo }} jugador(es) activo(s), que aún no esté inscrito.
-      </p>
-      <div class="inscripcion-fila">
-        <a class="btn-primary" routerLink="/teams/nuevo">Crear mi equipo</a>
-        <a class="btn-secondary" routerLink="/teams">Ver mis equipos</a>
-      </div>
-    </div>
-    }
+      }
 
-    @if (puedeEliminar()) {
-    <div class="danger-zone">
-      <h2>{{ esModeracion() ? 'Moderación (admin)' : 'Zona de peligro' }}</h2>
-      @if (esModeracion()) {
-      <p class="danger-nota">
-        Ves esto porque sos administrador: este torneo pertenece a
-        {{ torneo.organizadorNombre }}. Los usuarios comunes no ven esta sección.
+      <!-- Inscripción (RF-25): la ve cualquier usuario; actúa el capitán.
+           El organizador también puede inscribir a su propio equipo. -->
+      @if (inscripcionExitosa()) {
+      <p class="mensaje-ok" role="status">¡Equipo inscrito! Ya aparece en la pestaña Jugadores.</p>
+      }
+      <!-- Un capitán de varios equipos puede inscribir otro tras el primero:
+           el formulario vuelve mientras queden elegibles y cupo. -->
+      @if (inscripcionExitosa() && elegibles().length === 0) {
+      } @else if (!abierto()) {
+      @if (!enCurso() && !finalizado()) {
+      <p class="aviso-cerrado">
+        {{ cupoLleno() ? 'El torneo alcanzó su cupo de equipos.' : comenzo() ? 'El torneo ya comenzó.' : 'El torneo no acepta inscripciones.' }}
       </p>
       }
-      @if (confirmandoEliminar()) {
-      <p class="danger-aviso">
-        Se eliminará <strong>{{ torneo.nombre }}</strong> con sus inscripciones.
-      </p>
-      <div class="danger-acciones">
-        <button type="button" class="btn-danger" [disabled]="eliminando()" (click)="eliminar()">
-          {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar el torneo' }}
-        </button>
-        <button type="button" class="btn-secondary" (click)="confirmandoEliminar.set(false)">
-          Cancelar
-        </button>
+      } @else if (!auth.isAuthenticated()) {
+      <div class="inscripcion">
+        <p>¿Querés competir? Iniciá sesión e inscribí a tu equipo.</p>
+        <button type="button" class="btn-primary" (click)="auth.login()">Iniciar sesión</button>
+      </div>
+      } @else if (elegibles().length > 0) {
+      <div class="inscripcion">
+        <label class="label" for="equipo">Inscribí a tu equipo (sos su capitán)</label>
+        <div class="inscripcion-fila">
+          <select
+            id="equipo"
+            [value]="equipoElegido() ?? ''"
+            (change)="equipoElegido.set($any($event.target).value ? +$any($event.target).value : null)"
+          >
+            <option value="" disabled>Elegí un equipo…</option>
+            @for (equipo of elegibles(); track equipo.id) {
+            <option [value]="equipo.id">{{ equipo.nombre }}</option>
+            }
+          </select>
+          <input
+            id="gamertag"
+            type="text"
+            maxlength="100"
+            aria-label="Tu usuario dentro del juego"
+            aria-describedby="pista-gamertag"
+            placeholder="Tu usuario dentro del juego"
+            [value]="usuarioEnJuego()"
+            (input)="usuarioEnJuego.set($any($event.target).value)"
+          />
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="!equipoElegido() || !usuarioEnJuego().trim() || inscribiendo()"
+            (click)="inscribir()"
+          >
+            {{ inscribiendo() ? 'Inscribiendo…' : 'Inscribir equipo' }}
+          </button>
+        </div>
+        <span class="pista-gamertag" id="pista-gamertag">
+          Tu usuario en {{ torneo.juegoNombre }} le dice al rival a quién invitar
+          a la lobby y permite verificar quién jugó.
+        </span>
+        @if (errorInscripcion()) {
+        <p class="mensaje-error" role="alert">{{ errorInscripcion() }}</p>
+        }
       </div>
       } @else {
-      <button type="button" class="btn-danger" (click)="confirmandoEliminar.set(true)">
-        Eliminar torneo
+      <div class="inscripcion">
+        <p>
+          Para inscribirte necesitás ser <strong>capitán</strong> de un equipo con al
+          menos {{ torneo.tamanoEquipo }} jugador(es) activo(s) que aún no esté
+          inscrito. La disciplina del equipo no importa: cualquier equipo puede
+          competir en {{ torneo.juegoNombre }}.
+        </p>
+        <div class="inscripcion-fila">
+          <a class="btn-primary" routerLink="/teams/nuevo">Crear mi equipo</a>
+          <a class="btn-secondary" routerLink="/teams">Ver mis equipos</a>
+        </div>
+      </div>
+      }
+
+      <h2 class="seccion-titulo">Organizado por</h2>
+      <div class="organizador-card">
+        <span class="organizador-avatar" aria-hidden="true">{{ torneo.organizadorNombre.charAt(0) }}</span>
+        <div>
+          <p class="organizador-nombre">{{ torneo.organizadorNombre }}</p>
+          <p class="organizador-detalle">
+            @if (torneo.ligaNombre) { Liga {{ torneo.ligaNombre }} · {{ torneo.temporadaNombre }} }
+            @else { Torneo comunitario }
+          </p>
+        </div>
+      </div>
+
+      @if (puedeEliminar()) {
+      <div class="danger-zone">
+        <h2>{{ esModeracion() ? 'Moderación (admin)' : 'Zona de peligro' }}</h2>
+        @if (esModeracion()) {
+        <p class="danger-nota">
+          Ves esto porque sos administrador: este torneo pertenece a
+          {{ torneo.organizadorNombre }}. Los usuarios comunes no ven esta sección.
+        </p>
+        }
+        @if (confirmandoEliminar()) {
+        <p class="danger-aviso">
+          Se eliminará <strong>{{ torneo.nombre }}</strong> con sus inscripciones.
+        </p>
+        <div class="danger-acciones">
+          <button type="button" class="btn-danger" [disabled]="eliminando()" (click)="eliminar()">
+            {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar el torneo' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="confirmandoEliminar.set(false)">
+            Cancelar
+          </button>
+        </div>
+        } @else {
+        <button type="button" class="btn-danger" (click)="confirmandoEliminar.set(true)">
+          Eliminar torneo
+        </button>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Rail derecho estilo CM: números, línea temporal y ajustes. -->
+    <aside class="resumen-rail">
+      <div class="rail-stats">
+        <div class="rail-stat">
+          <p class="rail-numero">{{ torneo.inscritos }}</p>
+          <p class="rail-etiqueta">Registrado</p>
+        </div>
+        <div class="rail-stat">
+          <p class="rail-numero">{{ torneo.maxEquipos }}</p>
+          <p class="rail-etiqueta">Slots</p>
+        </div>
+      </div>
+
+      <h2 class="rail-titulo">Línea temporal</h2>
+      <ol class="timeline">
+        @for (evento of lineaTemporal(); track evento.titulo) {
+        <li class="timeline-item" [class.cumplido]="evento.cumplido">
+          <span class="timeline-punto" aria-hidden="true"></span>
+          <div>
+            @if (evento.fecha) {
+            <p class="timeline-fecha">{{ evento.fecha | date: "EEE d MMM, HH:mm" }}</p>
+            }
+            <p class="timeline-titulo">{{ evento.titulo }}</p>
+            <p class="timeline-detalle">{{ evento.detalle }}</p>
+          </div>
+        </li>
+        }
+      </ol>
+
+      @if (ajustes().length > 0) {
+      <h2 class="rail-titulo">Ajustes de partida</h2>
+      <div class="ajustes-card">
+        <p class="ajustes-nota">
+          Ambos capitanes configuran así la partida privada en
+          {{ torneo.juegoNombre }}. Ante una disputa, esta configuración manda.
+        </p>
+        <dl class="ajustes-grid">
+          @for (a of ajustes(); track a.clave) {
+          <div class="ajuste">
+            <dt>{{ a.clave }}</dt>
+            <dd>{{ a.valor }}</dd>
+          </div>
+          }
+        </dl>
+      </div>
+      }
+    </aside>
+  </div>
+  }
+
+  @case ('llaves') {
+  <div class="contenido">
+    @if (errorLlaves()) {
+    <p class="mensaje-error" role="alert">{{ errorLlaves() }}</p>
+    }
+    <app-tournament-bracket
+      [partidas]="partidas()"
+      [maxEquipos]="torneo.maxEquipos"
+      [formato]="torneo.formato"
+      [campeonEquipoId]="torneo.campeonEquipoId"
+      [misEquipos]="misEquipos()"
+      [esGestor]="esGestor()"
+      [enCurso]="enCurso()"
+      [ocupado]="enviandoResultado()"
+      (enviarMarcador)="onMarcador($event)"
+      (confirmar)="onConfirmar($event)"
+      (rechazar)="onRechazar($event)"
+    />
+  </div>
+  }
+
+  @case ('matches') {
+  <div class="contenido">
+    @if (matches().length === 0) {
+    <app-empty-state
+      titulo="Todavía no hay matches"
+      mensaje="Las partidas aparecen cuando el organizador inicia el torneo y se genera la llave."
+    />
+    } @else {
+    <div class="filtros-matches" role="group" aria-label="Filtrar matches">
+      <button type="button" class="filtro" [class.activo]="filtroMatch() === 'todos'" (click)="filtroMatch.set('todos')">
+        Todo
       </button>
+      <button type="button" class="filtro" [class.activo]="filtroMatch() === 'pendientes'" (click)="filtroMatch.set('pendientes')">
+        Próximo
+      </button>
+      <button type="button" class="filtro" [class.activo]="filtroMatch() === 'finalizadas'" (click)="filtroMatch.set('finalizadas')">
+        Anterior
+      </button>
+    </div>
+    <p class="matches-conteo">
+      {{ matchesFiltrados().length }} {{ matchesFiltrados().length === 1 ? 'partida' : 'partidas' }}
+    </p>
+    <div class="matches-lista">
+      @for (p of matchesFiltrados(); track p.id) {
+      <article class="match-fila" [class.finalizada]="p.estado === 'FINALIZADA'">
+        <div class="match-meta">
+          <span class="match-chip" [class.disputa]="p.estado === 'EN_DISPUTA'">
+            {{ estadoDePartida(p) }}
+          </span>
+          <p class="match-nombre">Partida {{ p.orden + 1 }}</p>
+          <p class="match-ronda">Ronda {{ p.ronda }}</p>
+        </div>
+        <div class="match-equipos">
+          <div class="match-lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoAId">
+            <span>{{ p.equipoANombre ?? 'Por decidir' }}</span>
+            <span class="match-marcador">{{ p.marcadorA ?? 0 }}</span>
+          </div>
+          <div class="match-lado" [class.ganador]="p.ganadorEquipoId !== null && p.ganadorEquipoId === p.equipoBId">
+            <span>{{ p.bye ? 'Bye' : (p.equipoBNombre ?? 'Por decidir') }}</span>
+            <span class="match-marcador">{{ p.marcadorB ?? 0 }}</span>
+          </div>
+        </div>
+        @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
+        <p class="match-lobby">
+          {{ p.lobbyNombre }}@if (p.lobbyClave) { · clave {{ p.lobbyClave }}}
+        </p>
+        }
+      </article>
       }
     </div>
     }
   </div>
-  } @else {
+  }
+
+  @case ('jugadores') {
   <div class="contenido">
-    @if (detalle()!.equipos.length === 0) {
+    @if (jugadores().length === 0) {
     <app-empty-state
-      titulo="Todavía no hay equipos inscritos"
-      mensaje="Cuando un capitán inscriba a su equipo va a aparecer acá con su plantilla."
+      titulo="Todavía no hay jugadores"
+      mensaje="Cuando un capitán inscriba a su equipo, su plantilla aparece acá."
     />
     } @else {
-    <div class="equipos-grid">
-      @for (equipo of detalle()!.equipos; track equipo.equipoId) {
-      <div class="equipo-card">
-        <div class="equipo-cabecera">
-          <a class="equipo-nombre" [routerLink]="['/team-profile', equipo.equipoId]">
-            {{ equipo.nombre }}
-          </a>
-          <span class="conteo">{{ equipo.jugadores.length }} jugador(es)</span>
-        </div>
-        <ul class="jugadores">
-          @for (jugador of equipo.jugadores; track jugador.usuarioId) {
-          <li>
-            <span class="jugador-nombre">{{ jugador.nombre }}</span>
-            @if (jugador.rol === 'CAPITAN') {
+    <input
+      class="buscador-jugadores"
+      type="search"
+      aria-label="Buscar jugador o equipo"
+      placeholder="Buscar jugador o equipo…"
+      [value]="filtroJugador()"
+      (input)="filtroJugador.set($any($event.target).value)"
+    />
+    <div class="jugadores-lista">
+      @for (j of jugadoresFiltrados(); track j.equipoId + '-' + j.usuarioId) {
+      <div class="jugador-fila">
+        <span class="jugador-avatar" aria-hidden="true">{{ j.nombre.charAt(0) }}</span>
+        <div class="jugador-datos">
+          <p class="jugador-nombre">
+            {{ j.nombre }}
+            @if (j.rol === 'CAPITAN') {
             <span class="chip-capitan">Capitán</span>
             }
-          </li>
-          }
-        </ul>
+          </p>
+          <p class="jugador-equipo">
+            <a [routerLink]="['/team-profile', j.equipoId]">{{ j.equipoNombre }}</a>
+            @if (j.usuarioEnJuego) {
+            · en el juego: <strong>{{ j.usuarioEnJuego }}</strong>
+            }
+          </p>
+        </div>
       </div>
       }
     </div>
     }
   </div>
+  }
+
+  @case ('resultados') {
+  <div class="contenido">
+    @if (finalizado() && torneo.campeonNombre) {
+    <div class="podio">
+      <div class="podio-card oro">
+        <span class="podio-medalla" aria-hidden="true">🥇</span>
+        <p class="podio-etiqueta">Campeón</p>
+        <p class="podio-nombre">{{ torneo.campeonNombre }}</p>
+      </div>
+      @if (subcampeon()) {
+      <div class="podio-card plata">
+        <span class="podio-medalla" aria-hidden="true">🥈</span>
+        <p class="podio-etiqueta">Subcampeón</p>
+        <p class="podio-nombre">{{ subcampeon() }}</p>
+      </div>
+      }
+    </div>
+    }
+
+    @if (partidasFinalizadas().length === 0) {
+    <app-empty-state
+      titulo="Sin resultados todavía"
+      mensaje="Acá quedan los marcadores confirmados de cada partida y el campeón del torneo."
+    />
+    } @else {
+    <h2 class="seccion-titulo">Partidas finalizadas</h2>
+    <div class="matches-lista">
+      @for (p of partidasFinalizadas(); track p.id) {
+      <article class="match-fila finalizada">
+        <div class="match-meta">
+          <p class="match-nombre">Ronda {{ p.ronda }} · Partida {{ p.orden + 1 }}</p>
+        </div>
+        <div class="match-equipos">
+          <div class="match-lado" [class.ganador]="p.ganadorEquipoId === p.equipoAId">
+            <span>{{ p.equipoANombre }}</span>
+            <span class="match-marcador">{{ p.marcadorA }}</span>
+          </div>
+          <div class="match-lado" [class.ganador]="p.ganadorEquipoId === p.equipoBId">
+            <span>{{ p.equipoBNombre }}</span>
+            <span class="match-marcador">{{ p.marcadorB }}</span>
+          </div>
+        </div>
+      </article>
+      }
+    </div>
+    }
+  </div>
+  }
+  }
+
+  @if (celebracion()) {
+  <!-- Ceremonia del campeón: overlay de confetti, 2.8s y desaparece. -->
+  <canvas class="confeti" #confeti aria-hidden="true"></canvas>
   }
   } }
 </section>

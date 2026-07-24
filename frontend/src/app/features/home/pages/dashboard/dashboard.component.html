@@ -13,13 +13,27 @@
   </app-empty-state>
   } @else {
 
-  <div class="tablero">
-    <div class="columna-principal">
-      <!-- Héroe: el juego destacado del catálogo (referencia dashboard). -->
-      @if (heroJuego(); as hero) {
+  <!-- Héroe a toda la anchura (referencia Challenger Mode): el arte del
+       juego llena el marco y se funde hacia abajo con el lienzo, así la
+       sección siguiente emerge del hero en vez de cortarlo. -->
+  @if (heroJuegos().length > 0) {
+  <div
+    class="hero-carrusel"
+    (mouseenter)="heroPausado.set(true)"
+    (mouseleave)="heroPausado.set(false)"
+    (focusin)="heroPausado.set(true)"
+    (focusout)="heroPausado.set(false)"
+  >
+    <div
+      class="hero-pista"
+      [style.transform]="'translateX(-' + heroVisible() * 100 + '%)'"
+    >
+      @for (hero of heroJuegos(); track hero.id) {
       <a
-        class="hero"
+        class="hero-slide"
         [routerLink]="['/games', hero.id]"
+        [attr.tabindex]="heroVisible() === $index ? null : -1"
+        [attr.aria-hidden]="heroVisible() === $index ? null : true"
         [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
       >
         @if (foto(hero)) {
@@ -28,34 +42,96 @@
         <div class="hero-velo" aria-hidden="true"></div>
         <div class="hero-texto">
           <h2>{{ hero.nombre }}</h2>
-          @if (hero.descripcion) {
-          <p>{{ hero.descripcion }}</p>
-          } @else {
-          <p>Mirá los torneos y ligas de este título, o creá el tuyo.</p>
-          }
           <span class="hero-cta">Ver juego →</span>
         </div>
       </a>
+      }
+    </div>
+    <div class="hero-fundido" aria-hidden="true"></div>
+    @if (heroJuegos().length > 1) {
+    <span class="hero-puntos">
+      @for (j of heroJuegos(); track j.id; let i = $index) {
+      <button
+        type="button"
+        class="hero-punto"
+        [class.activo]="heroVisible() === i"
+        [attr.aria-label]="'Ver ' + j.nombre"
+        (click)="heroIndex.set(i)"
+      ></button>
+      }
+    </span>
+    }
+  </div>
+  }
+
+  <div class="tablero">
+    <div class="columna-principal">
+      <!-- Tus competencias: lo accionable primero (referencia CM). -->
+      @if (competencias().length > 0) {
+      <h2 class="seccion">Tus competencias</h2>
+      <ul class="competencias">
+        @for (torneo of competencias(); track torneo.id) {
+        <li>
+          <a
+            class="competencia"
+            [routerLink]="['/tournaments', torneo.id]"
+            [queryParams]="torneo.estado === 'EN_CURSO' ? { tab: 'llaves' } : null"
+          >
+            <span class="competencia-info">
+              <span class="competencia-nombre">{{ torneo.nombre }}</span>
+              <span class="competencia-meta">
+                {{ torneo.juegoNombre }} ·
+                {{ esOrganizadorDe(torneo) ? 'Lo organizás' : 'Competís' }} ·
+                {{ torneo.fechaInicio | fechaRelativa }}
+              </span>
+            </span>
+            <span class="competencia-chip" [class]="'chip-' + badgeDe(torneo).clase">
+              {{ badgeDe(torneo).texto }}
+            </span>
+            <span class="competencia-cta">
+              {{ torneo.estado === 'EN_CURSO' ? 'Ver llaves →' : 'Ver torneo →' }}
+            </span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+
+      <!-- CM le dedica un banner entero a "Hazte organizador". -->
+      @if (auth.isAuthenticated() && !organizaAlgo()) {
+      <div class="banner-organizador">
+        <div>
+          <h2>Convertite en organizador</h2>
+          <p>
+            Cualquier usuario puede crear su torneo: elegí un juego, definí las
+            reglas y la llave se arma sola.
+          </p>
+        </div>
+        <a class="btn-primary" routerLink="/games">Crear mi torneo</a>
+      </div>
       }
 
       <!-- Fila de juegos top, como los pósters de la referencia. -->
       @if (topJuegos().length > 0) {
       <h2 class="seccion">Juegos top</h2>
       <div class="top-juegos">
-        @for (juego of topJuegos(); track juego.id) {
+        @for (juego of topJuegos(); track juego.nombre) {
         <a
           class="poster"
-          [routerLink]="['/games', juego.id]"
-          [style.background]="foto(juego) ? undefined : gradiente(juego.nombre)"
+          [routerLink]="juego.idCatalogo ? ['/games', juego.idCatalogo] : ['/games']"
+          [style.background]="juego.imagenUrl ? undefined : gradiente(juego.nombre)"
         >
-          @if (foto(juego)) {
-          <img [src]="foto(juego)" alt="" />
+          @if (juego.imagenUrl) {
+          <img [src]="juego.imagenUrl" alt="" loading="lazy" />
           }
           <div class="poster-velo" aria-hidden="true"></div>
           <span class="poster-nombre">{{ juego.nombre }}</span>
         </a>
         }
       </div>
+      <button type="button" class="ver-mas" (click)="mostrandoMas.set(!mostrandoMas())">
+        {{ mostrandoMas() ? 'Ver menos ↑' : 'Ver más juegos ↓' }}
+      </button>
       }
 
       <!-- Pendientes accionables / invitación a entrar -->
@@ -158,7 +234,7 @@
           <a class="rail-torneo" [routerLink]="['/tournaments', torneo.id]">
             <span class="rail-arte" [style.background]="fotoTorneo(torneo) ? undefined : gradiente(torneo.juegoNombre)">
               @if (fotoTorneo(torneo)) {
-              <img [src]="fotoTorneo(torneo)" alt="" />
+              <img [src]="fotoTorneo(torneo)" alt="" loading="lazy" />
               }
             </span>
             <span class="rail-info">
@@ -168,7 +244,10 @@
               }
               <span class="rail-meta">
                 {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos ·
-                {{ torneo.fechaInicio | date: 'd/MM HH:mm' }}
+                <span class="rail-fecha">{{ torneo.fechaInicio | fechaRelativa }}</span>
+              </span>
+              <span class="rail-chip" [class]="'chip-' + badgeDe(torneo).clase">
+                {{ badgeDe(torneo).texto }}
               </span>
             </span>
           </a>
