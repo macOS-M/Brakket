@@ -81,17 +81,40 @@ class MuestreoAudienciaServiceTest {
     }
 
     @Test
-    void cierraElPeriodoCuandoElDirectoTermina() {
+    void cierraElPeriodoTrasDosTicksSinDirecto() {
         TransmisionTwitch transmision = abierta();
         transmision.setEstado("EN_VIVO");
         when(transmisionRepository.findAbiertasParaMuestreo()).thenReturn(List.of(transmision));
         when(provider.getLiveStreams(anyList())).thenReturn(List.of());
 
+        // Primer tick sin directo: gracia (una reconexión de OBS no debe cerrar).
         service.muestrear();
+        assertThat(transmision.getEstado()).isEqualTo("EN_VIVO");
+        assertThat(transmision.getFinalizadaEn()).isNull();
 
+        // Segundo tick consecutivo: ahora sí terminó de verdad.
+        service.muestrear();
         assertThat(transmision.getEstado()).isEqualTo("FINALIZADA");
         assertThat(transmision.getFinalizadaEn()).isNotNull();
         verify(metricaRepository, never()).save(any());
+    }
+
+    @Test
+    void unParpadeoDelDirectoNoCierraElPeriodo() {
+        TransmisionTwitch transmision = abierta();
+        transmision.setEstado("EN_VIVO");
+        when(transmisionRepository.findAbiertasParaMuestreo()).thenReturn(List.of(transmision));
+        when(provider.getLiveStreams(anyList()))
+                .thenReturn(List.of())          // parpadeo
+                .thenReturn(List.of(DIRECTO));  // volvió
+
+        service.muestrear();
+        service.muestrear();
+
+        // El contador de gracia se reinició al volver el directo.
+        assertThat(transmision.getEstado()).isEqualTo("EN_VIVO");
+        assertThat(transmision.getFinalizadaEn()).isNull();
+        verify(metricaRepository).save(any());
     }
 
     @Test

@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,7 +71,7 @@ public class TwitchStreamProvider implements StreamProvider {
                 thumbnail(stream.path("thumbnail_url").asText(null), "{width}x{height}"),
                 stream.path("game_name").asText(null),
                 stream.path("language").asText(null),
-                OffsetDateTime.parse(stream.path("started_at").asText()).toLocalDateTime())));
+                aHoraLocal(stream.path("started_at").asText()))));
         return directos;
     }
 
@@ -86,7 +88,17 @@ public class TwitchStreamProvider implements StreamProvider {
                 // Los VOD usan %{width}x%{height}, distinto del placeholder de /streams.
                 thumbnail(vod.path("thumbnail_url").asText(null), "%{width}x%{height}"),
                 vod.path("duration").asText(null),
-                OffsetDateTime.parse(vod.path("published_at").asText()).toLocalDateTime());
+                aHoraLocal(vod.path("published_at").asText()));
+    }
+
+    /**
+     * Twitch entrega instantes en UTC ("...Z"); descartar el offset sin
+     * convertir guardaba la hora de pared UTC como si fuera local (CR, -6h)
+     * y el panel calculaba duraciones negativas con el canal en vivo.
+     */
+    private LocalDateTime aHoraLocal(String instanteIso) {
+        return OffsetDateTime.parse(instanteIso)
+                .atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     private String query(String parametro, List<String> valores) {

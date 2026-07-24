@@ -50,6 +50,14 @@ public class MuestreoAudienciaService {
     private volatile Instant ultimoIncidenteEn = Instant.EPOCH;
 
     /**
+     * Ticks consecutivos sin directo por transmisión: una reconexión de OBS
+     * hace desaparecer el stream de Helix por un instante y cerrar el período
+     * al primer fallo lo clausuraba definitivamente. Se cierra al segundo.
+     */
+    private final Map<Long, Integer> ticksSinDirecto = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final int TICKS_PARA_CERRAR = 2;
+
+    /**
      * Un tick por minuto mantiene el desfase de métricas bajo el minuto que
      * exige RNF-02 y consume una única request de la cuota por tick (RNF-22).
      */
@@ -88,12 +96,17 @@ public class MuestreoAudienciaService {
         for (TransmisionTwitch transmision : abiertas) {
             StreamProvider.StreamEnVivo directo = directos.get(login(transmision));
             if (directo != null) {
+                ticksSinDirecto.remove(transmision.getId());
                 registrarMuestra(transmision, directo, ahora);
             } else if ("EN_VIVO".equals(transmision.getEstado())) {
-                // El directo terminó: se cierra el período de captura.
-                transmision.setEstado("FINALIZADA");
-                transmision.setFinalizadaEn(ahora);
-                log.info("Transmisión {} finalizada; período de captura cerrado.", transmision.getId());
+                int fallos = ticksSinDirecto.merge(transmision.getId(), 1, Integer::sum);
+                if (fallos >= TICKS_PARA_CERRAR) {
+                    // El directo terminó de verdad: se cierra el período de captura.
+                    ticksSinDirecto.remove(transmision.getId());
+                    transmision.setEstado("FINALIZADA");
+                    transmision.setFinalizadaEn(ahora);
+                    log.info("Transmisión {} finalizada; período de captura cerrado.", transmision.getId());
+                }
             }
         }
     }
