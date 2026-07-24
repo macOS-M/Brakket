@@ -9,7 +9,9 @@ import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.repository.EquipoRedSocialRepository;
 import com.coffeecommits.brakket.team.repository.EquipoRepository;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
+import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
+import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +27,20 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
     private final EquipoRedSocialRepository redSocialRepository;
     private final InscripcionRepository inscripcionRepository;
     private final EstadisticaJugadorRepository estadisticaRepository;
+    private final PartidaRepository partidaRepository;
 
     public TeamPublicProfileServiceImpl(EquipoRepository equipoRepository,
                                         MiembroEquipoRepository miembroRepository,
                                         EquipoRedSocialRepository redSocialRepository,
                                         InscripcionRepository inscripcionRepository,
-                                        EstadisticaJugadorRepository estadisticaRepository) {
+                                        EstadisticaJugadorRepository estadisticaRepository,
+                                        PartidaRepository partidaRepository) {
         this.equipoRepository = equipoRepository;
         this.miembroRepository = miembroRepository;
         this.redSocialRepository = redSocialRepository;
         this.inscripcionRepository = inscripcionRepository;
         this.estadisticaRepository = estadisticaRepository;
+        this.partidaRepository = partidaRepository;
     }
 
     @Override
@@ -89,15 +94,33 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
                         i.getTorneo().getFechaFin(), i.getEstado()))
                 .toList();
 
-        List<EstadisticaJugador> estadisticas = juegoSeleccionado == null ? List.of()
-                : plantilla.stream()
-                    .flatMap(m -> estadisticaRepository.findByUsuarioIdAndJuegoId(m.usuarioId(), juegoSeleccionado).stream())
-                    .toList();
-        var resumen = new PerfilEquipoPublicoResponse.EstadisticasGenerales(
-                estadisticas.stream().mapToInt(EstadisticaJugador::getVictorias).sum(),
-                estadisticas.stream().mapToInt(EstadisticaJugador::getDerrotas).sum(),
-                estadisticas.stream().mapToInt(EstadisticaJugador::getTorneosJugados).sum(),
-                !estadisticas.isEmpty());
+        // Primero los números REALES del motor de torneos: victorias y
+        // derrotas contadas sobre las partidas jugadas (los byes no cuentan)
+        // y torneos donde el equipo efectivamente compitió. Las estadísticas
+        // manuales por jugador (RF-31) quedan como respaldo para equipos que
+        // aún no jugaron nada dentro de la plataforma.
+        long victorias = partidaRepository.victoriasDe(equipo.getId());
+        long derrotas = partidaRepository.derrotasDe(equipo.getId());
+        long torneosCompetidos = torneos.stream()
+                .filter(t -> EstadoTorneo.EN_CURSO.name().equals(t.estado())
+                        || EstadoTorneo.FINALIZADO.name().equals(t.estado()))
+                .count();
+
+        PerfilEquipoPublicoResponse.EstadisticasGenerales resumen;
+        if (victorias + derrotas > 0) {
+            resumen = new PerfilEquipoPublicoResponse.EstadisticasGenerales(
+                    (int) victorias, (int) derrotas, (int) torneosCompetidos, true);
+        } else {
+            List<EstadisticaJugador> estadisticas = juegoSeleccionado == null ? List.of()
+                    : plantilla.stream()
+                        .flatMap(m -> estadisticaRepository.findByUsuarioIdAndJuegoId(m.usuarioId(), juegoSeleccionado).stream())
+                        .toList();
+            resumen = new PerfilEquipoPublicoResponse.EstadisticasGenerales(
+                    estadisticas.stream().mapToInt(EstadisticaJugador::getVictorias).sum(),
+                    estadisticas.stream().mapToInt(EstadisticaJugador::getDerrotas).sum(),
+                    estadisticas.stream().mapToInt(EstadisticaJugador::getTorneosJugados).sum(),
+                    !estadisticas.isEmpty());
+        }
 
         return new PerfilEquipoPublicoResponse(equipo.getId(), equipo.getNombre(), equipo.getLogo(),
                 equipo.getBannerUrl(), equipo.getDescripcion(), equipo.getSitioWeb(),

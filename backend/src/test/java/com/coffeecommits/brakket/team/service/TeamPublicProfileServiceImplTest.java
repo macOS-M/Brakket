@@ -44,6 +44,8 @@ class TeamPublicProfileServiceImplTest {
     private InscripcionRepository inscripcionRepository;
     @Mock
     private EstadisticaJugadorRepository estadisticaRepository;
+    @Mock
+    private com.coffeecommits.brakket.tournament.repository.PartidaRepository partidaRepository;
     @InjectMocks
     private TeamPublicProfileServiceImpl service;
 
@@ -85,6 +87,26 @@ class TeamPublicProfileServiceImplTest {
         assertThat(perfil.estadisticas().derrotas()).isEqualTo(8);
         assertThat(perfil.estadisticas().torneosJugados()).isEqualTo(3);
         assertThat(perfil.estadisticas().disponibles()).isTrue();
+    }
+
+    @Test
+    void consultarPerfil_prefiere_las_estadisticas_reales_del_motor_de_torneos() {
+        when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipo()));
+        when(miembroRepository.findByEquipoIdAndEstado(10L, "ACTIVO"))
+                .thenReturn(List.of(miembro(1L, "Capi", "CAPITAN")));
+        when(inscripcionRepository.findByEquipoId(10L)).thenReturn(List.of());
+        when(redSocialRepository.findByEquipoId(10L)).thenReturn(List.of());
+        // El equipo ya jugó dentro de la plataforma: mandan las partidas
+        // reales y las estadísticas manuales por jugador ni se consultan.
+        when(partidaRepository.victoriasDe(10L)).thenReturn(5L);
+        when(partidaRepository.derrotasDe(10L)).thenReturn(2L);
+
+        PerfilEquipoPublicoResponse perfil = service.consultarPerfil(10L, null);
+
+        assertThat(perfil.estadisticas().victorias()).isEqualTo(5);
+        assertThat(perfil.estadisticas().derrotas()).isEqualTo(2);
+        assertThat(perfil.estadisticas().disponibles()).isTrue();
+        verify(estadisticaRepository, never()).findByUsuarioIdAndJuegoId(anyLong(), anyLong());
     }
 
     @Test

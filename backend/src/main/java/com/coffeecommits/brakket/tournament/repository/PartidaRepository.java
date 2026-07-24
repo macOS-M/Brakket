@@ -49,6 +49,29 @@ public interface PartidaRepository extends JpaRepository<Partida, Long> {
             """)
     boolean existsPartidaPendientePorEquipo(@Param("equipoId") Long equipoId);
 
+    /**
+     * Victorias reales del equipo: partidas FINALIZADAS con ambos rivales
+     * (un bye no es una partida jugada) donde el ganador es el equipo.
+     * Acceso solo por id de las asociaciones: usa la columna FK sin join.
+     */
+    @Query("""
+            select count(p) from Partida p
+            where p.estado = com.coffeecommits.brakket.tournament.model.EstadoPartida.FINALIZADA
+              and p.equipoA.id is not null and p.equipoB.id is not null
+              and p.ganador.id = :equipoId
+            """)
+    long victoriasDe(@Param("equipoId") Long equipoId);
+
+    /** Derrotas reales: jugó (ambos rivales), hubo ganador y no fue él. */
+    @Query("""
+            select count(p) from Partida p
+            where p.estado = com.coffeecommits.brakket.tournament.model.EstadoPartida.FINALIZADA
+              and p.equipoA.id is not null and p.equipoB.id is not null
+              and (p.equipoA.id = :equipoId or p.equipoB.id = :equipoId)
+              and p.ganador.id is not null and p.ganador.id <> :equipoId
+            """)
+    long derrotasDe(@Param("equipoId") Long equipoId);
+
     // Historial competitivo del equipo (bloquea el borrado físico). Van como
     // tres derivadas separadas: un OR de paths implícitos en JPQL generaría
     // inner joins que ignoran las filas con el otro equipo en null.
