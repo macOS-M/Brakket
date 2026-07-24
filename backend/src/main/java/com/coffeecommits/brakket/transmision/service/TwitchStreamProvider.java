@@ -44,12 +44,14 @@ public class TwitchStreamProvider implements StreamProvider {
         if (handles.isEmpty()) return List.of();
         JsonNode data = helixClient.get("/users?" + query("login", handles)).path("data");
         List<CanalStream> canales = new ArrayList<>();
+        // Twitch devuelve "" (no null) cuando el canal no tiene imagen: se
+        // normaliza para que el front pueda decidir con un simple if.
         data.forEach(user -> canales.add(new CanalStream(
                 user.path("id").asText(),
                 user.path("login").asText(),
                 user.path("display_name").asText(),
-                user.path("profile_image_url").asText(null),
-                user.path("offline_image_url").asText(null))));
+                textoONull(user.path("profile_image_url").asText(null)),
+                textoONull(user.path("offline_image_url").asText(null)))));
         return canales;
     }
 
@@ -97,5 +99,9 @@ public class TwitchStreamProvider implements StreamProvider {
         if (plantilla == null || plantilla.isBlank()) return null;
         long buster = Instant.now().getEpochSecond() / VENTANA_CACHE_BUSTER_SEGUNDOS;
         return plantilla.replace(placeholder, TAMANO_THUMBNAIL) + "?cb=" + buster;
+    }
+
+    private String textoONull(String valor) {
+        return valor == null || valor.isBlank() ? null : valor;
     }
 }
