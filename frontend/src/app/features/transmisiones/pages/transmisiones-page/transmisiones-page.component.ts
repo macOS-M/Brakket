@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, catchError, filter, switchMap, timer } from 'rxjs';
+import { EMPTY, catchError, filter, fromEvent, merge, switchMap, timer } from 'rxjs';
 
 import { TransmisionesService } from '../../services/transmisiones.service';
 import {
@@ -79,11 +79,15 @@ export class TransmisionesPageComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    // Polling pausado con la pestaña oculta: sin nadie mirando no hay razón
-    // para gastar la cuota de Helix.
-    timer(0, INTERVALO_REFRESCO_MS)
+    // La primera carga corre SIEMPRE (aunque la pestaña esté de fondo: si no,
+    // el usuario vuelve y encuentra skeletons); el polling posterior se pausa
+    // con la pestaña oculta para no gastar la cuota de Helix, y al volver a
+    // la pestaña se refresca de inmediato en vez de esperar al próximo tick.
+    merge(
+      timer(0, INTERVALO_REFRESCO_MS).pipe(filter((tick) => tick === 0 || !document.hidden)),
+      fromEvent(document, 'visibilitychange').pipe(filter(() => !document.hidden))
+    )
       .pipe(
-        filter(() => !document.hidden),
         switchMap(() =>
           this.servicio.listar().pipe(
             catchError(() => {
