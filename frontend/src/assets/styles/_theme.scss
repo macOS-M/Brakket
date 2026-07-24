@@ -45,6 +45,10 @@
 // (que usan var(--brand-blue, ...)) puedan consumirla.
 :root {
   color-scheme: dark;
+  // Controles nativos (checkboxes, radios y la selección de los pickers de
+  // fecha/hora del navegador) en el naranja de marca en vez del celeste
+  // por defecto de Chrome. Se hereda a todos los form controls.
+  accent-color: #{v.$accent};
   // Marca
   --accent: #{v.$accent};
   --accent-hover: #{v.$accent-hover};
@@ -174,6 +178,31 @@ h3 {
 table,
 .dato {
   font-variant-numeric: tabular-nums;
+}
+
+// Inputs nativos de fecha/hora. El POPUP del calendario lo pinta el
+// navegador y no acepta CSS: lo único que lo alinea al producto es el
+// color-scheme del tema (ya declarado arriba, popup oscuro/claro según
+// corresponda) y el accent-color de marca para el día/hora seleccionados.
+// Aquí solo queda pulir la parte del control que sí es nuestra.
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+input[type='month'],
+input[type='week'] {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.65;
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover::-webkit-calendar-picker-indicator,
+  &:focus-visible::-webkit-calendar-picker-indicator {
+    opacity: 1;
+  }
 }
 
 // Números que compiten por atención en poco ancho: marcadores, posiciones,
