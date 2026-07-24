@@ -25,6 +25,9 @@
 }
 
 .lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
   min-width: 0;
   position: sticky;
   top: 1.75rem;
@@ -80,6 +83,10 @@
   min-width: 0;
 
   .campo-etiqueta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
     color: var(--text-muted, #94a3b8);
     font-size: 0.75rem;
     font-weight: 600;
@@ -87,7 +94,8 @@
   }
 
   input,
-  textarea {
+  textarea,
+  select {
     width: 100%;
     padding: 0.5rem 0.75rem;
     color: var(--text, #e2e8f0);
@@ -110,6 +118,57 @@
     resize: vertical;
     line-height: 1.55;
   }
+}
+
+// El valor derivado (edad) y la ayuda del campo: contexto, no etiqueta.
+.campo-pista {
+  color: var(--accent-text, #ff6a1f);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.campo-ayuda {
+  color: var(--text-subtle, #64748b);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.campo-con-accion {
+  display: flex;
+  gap: 0.5rem;
+
+  select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+// La dirección necesita más ancho que el código postal.
+.campo-fila-direccion {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+// ----- Ajustes personales -----
+
+.nota-privacidad {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.8rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background: var(--surface-2, #1f2937);
+  border-radius: var(--radius-sm, 8px);
+  text-wrap: pretty;
+}
+
+.nota-icono {
+  flex: 0 0 auto;
+  font-size: 0.9375rem;
+  line-height: 1.35;
 }
 
 .redes-grid {
@@ -283,6 +342,33 @@
   }
 }
 
+// Acción secundaria: mismo peso visual que un input, no compite con Guardar.
+.btn-ghost {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.9rem;
+  color: var(--text, #e2e8f0);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: transparent;
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent-text, #ff6a1f);
+    color: var(--accent-text, #ff6a1f);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
 // ----- Preview lateral -----
 
 .preview {
@@ -352,6 +438,47 @@
   gap: 0.4rem;
 }
 
+// ----- Resumen de datos personales (solo lo ve su dueño) -----
+
+.preview-datos-titulo {
+  margin: 0 0 0.8rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted, #94a3b8);
+}
+
+.datos-lista {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.dato-fila {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+
+  dt {
+    color: var(--text-subtle, #64748b);
+    font-size: 0.75rem;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text, #e2e8f0);
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.preview-datos-nota {
+  margin: 0.9rem 0 0;
+  color: var(--text-subtle, #64748b);
+  font-size: 0.75rem;
+}
+
 // ----- Responsive -----
 
 @media (max-width: 900px) {
@@ -371,6 +498,7 @@
 
 @media (max-width: 560px) {
   .campo-fila,
+  .campo-fila-direccion,
   .redes-grid {
     grid-template-columns: 1fr;
   }

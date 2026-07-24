@@ -103,6 +103,14 @@ export class AuthService {
     redesSociales?: string | null;
     visibilidadPerfil: 'PUBLIC' | 'PRIVATE';
     juegoIds: number[];
+    nombreCompleto?: string | null;
+    fechaNacimiento?: string | null;
+    telefono?: string | null;
+    pais?: string | null;
+    ciudad?: string | null;
+    direccion?: string | null;
+    codigoPostal?: string | null;
+    zonaHoraria?: string | null;
   }): Observable<Usuario> {
     return this.api.put<Usuario>('/me', payload).pipe(tap((usuario) => this.usuarioSignal.set(usuario)));
   }
