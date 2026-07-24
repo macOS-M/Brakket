@@ -28,4 +28,10 @@ public class Patrocinador {
 
     @Column(name = "contacto", nullable = false, length = 180)
     private String contacto;
+
+    @Column(name = "descripcion", length = 500)
+    private String descripcion;
+
+    @Column(name = "estado", nullable = false, length = 20)
+    private String estado;
 }

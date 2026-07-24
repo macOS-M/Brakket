@@ -163,9 +163,10 @@ export class SidebarComponent {
           etiqueta: 'Patrocinios',
           icono: 'briefcase',
           exact: false,
-          proximamente: true,
+          proximamente: false,
           roles: ['ADMIN', 'COMISIONADO']
         },
+
         {
           ruta: '/analytics',
           etiqueta: 'Analítica',
