@@ -204,10 +204,14 @@
     } @else {
     <app-empty-state mensaje="Este equipo no tiene integrantes activos visibles." />
     }
-    <!-- RF-16: la línea de tiempo de altas, bajas y transferencias. -->
+    <!-- RF-16: la línea de tiempo de altas, bajas y transferencias. Solo
+         con sesión: el endpoint exige JWT (protege causas de expulsión) y
+         mostrárselo a un anónimo lo patearía al login sin explicación. -->
+    @if (auth.isAuthenticated()) {
     <a class="ver-historial" [routerLink]="['/team-profile', equipo.id, 'historial']">
       Ver historial completo de altas, bajas y transferencias →
     </a>
+    }
     @if (puedeGestionar() && equipo.estado === 'ACTIVO') {
     <a class="btn-secondary gestionar" [routerLink]="['/teams', equipo.id, 'plantilla']">
       Gestionar plantilla e invitaciones
