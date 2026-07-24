@@ -25,7 +25,10 @@ export interface PerfilEquipoPublico {
   id: number;
   nombre: string;
   logo: string | null;
+  bannerUrl: string | null;
   descripcion: string | null;
+  sitioWeb: string | null;
+  videoUrl: string | null;
   estado: string;
   capitanId: number;
   juegoId: number | null;

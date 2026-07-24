@@ -73,10 +73,14 @@ public class SecurityConfig {
                         // queda fuera del permitAll: consume la API key de RAWG y
                         // exige sesión (primer match gana).
                         .requestMatchers(HttpMethod.GET, "/api/games/buscar-externo").authenticated()
+                        // Las imágenes subidas se sirven como cualquier URL de logo
+                        // externa: públicas en lectura; subirlas exige sesión.
+                        .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/leagues/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/search").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/*/equipos-elegibles").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tournaments/mios").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // Todo lo demás requiere JWT válido.
                         .anyRequest().authenticated()

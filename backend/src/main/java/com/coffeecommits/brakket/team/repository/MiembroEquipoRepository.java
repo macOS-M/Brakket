@@ -13,6 +13,15 @@ public interface MiembroEquipoRepository extends JpaRepository<MiembroEquipo, Lo
 
     List<MiembroEquipo> findByEquipoId(Long equipoId);
 
+    /** ¿El usuario ya milita ACTIVO en algún equipo? (un roster a la vez) */
+    boolean existsByUsuarioIdAndEstado(Long usuarioId, String estado);
+
+    /**
+     * ¿La plantilla registró bajas/expulsiones? Cuenta como historial del
+     * equipo (RF-16): el borrado físico no debe destruir esa trazabilidad.
+     */
+    boolean existsByEquipoIdAndFechaBajaIsNotNull(Long equipoId);
+
     List<MiembroEquipo> findByEquipoIdAndEstado(Long equipoId, String estado);
 
     @Query("""

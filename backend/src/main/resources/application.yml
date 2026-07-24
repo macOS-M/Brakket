@@ -25,6 +25,13 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  servlet:
+    multipart:
+      # Subida directa de imágenes (logos/banners): límite razonable para
+      # fotos de perfil sin permitir que suban archivos gigantes.
+      max-file-size: 5MB
+      max-request-size: 6MB
+
   security:
     oauth2:
       client:
@@ -40,6 +47,9 @@ spring:
 # ---------- Configuración propia de Brakket ----------
 brakket:
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  uploads:
+    # Directorio de imágenes subidas; en Docker es un volumen persistente.
+    dir: ${UPLOADS_DIR:uploads}
   jwt:
     secret: ${JWT_SECRET:cambiar-esta-clave-secreta-de-al-menos-32-chars}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}

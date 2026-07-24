@@ -2,13 +2,23 @@ package com.coffeecommits.brakket.game.dto;
 
 import com.coffeecommits.brakket.game.model.Juego;
 
+import java.time.LocalDate;
+import java.util.List;
+
 public record JuegoResponse(
         Long id,
         String nombre,
         String genero,
         String descripcion,
         String imagenUrl,
-        Boolean activo
+        Boolean activo,
+        LocalDate fechaLanzamiento,
+        Double rating,
+        Integer metacritic,
+        String plataformas,
+        String etiquetas,
+        String sitioWeb,
+        List<String> capturas
 ) {
 
     public static JuegoResponse fromEntity(Juego juego) {
@@ -18,7 +28,14 @@ public record JuegoResponse(
                 juego.getGenero(),
                 juego.getDescripcion(),
                 juego.getImagenUrl(),
-                juego.getActivo()
+                juego.getActivo(),
+                juego.getFechaLanzamiento(),
+                juego.getRating(),
+                juego.getMetacritic(),
+                juego.getPlataformas(),
+                juego.getEtiquetas(),
+                juego.getSitioWeb(),
+                juego.getCapturas() == null ? List.of() : juego.getCapturas()
         );
     }
 }
