@@ -1,0 +1,132 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.7;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.encabezado {
+  margin-bottom: 1.5rem;
+
+  .subtitulo {
+    opacity: 0.7;
+  }
+}
+
+.aviso {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+
+  &-peligro {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+  }
+}
+
+.filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
+
+  input[type='date'] {
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: transparent;
+    color: inherit;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.4rem;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primario {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-secundario {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: inherit;
+  }
+}
+
+.linea-tiempo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.movimiento {
+  border-left: 3px solid rgba(255, 255, 255, 0.15);
+  padding: 0.6rem 1rem;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.03);
+
+  &.tipo-alta { border-left-color: #16a34a; }
+  &.tipo-baja { border-left-color: #dc2626; }
+  &.tipo-transferencia { border-left-color: #2563eb; }
+}
+
+.movimiento-cabecera {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-bottom: 0.25rem;
+}
+
+.etiqueta-tipo {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.movimiento-cuerpo {
+  .jugador {
+    font-weight: 600;
+  }
+
+  .privado {
+    margin-left: 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .detalle {
+    display: block;
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+
+  .responsable {
+    opacity: 0.6;
+  }
+}

@@ -204,6 +204,10 @@
     } @else {
     <app-empty-state mensaje="Este equipo no tiene integrantes activos visibles." />
     }
+    <!-- RF-16: la línea de tiempo de altas, bajas y transferencias. -->
+    <a class="ver-historial" [routerLink]="['/team-profile', equipo.id, 'historial']">
+      Ver historial completo de altas, bajas y transferencias →
+    </a>
     @if (puedeGestionar() && equipo.estado === 'ACTIVO') {
     <a class="btn-secondary gestionar" [routerLink]="['/teams', equipo.id, 'plantilla']">
       Gestionar plantilla e invitaciones

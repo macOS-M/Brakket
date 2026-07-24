@@ -15,6 +15,7 @@ import { AsignarRolRequest, ExpulsarIntegranteRequest, MiembroEquipo } from '../
 import { Invitacion, InvitarJugadorRequest, ResponderInvitacionRequest } from '../../../models/invitacion.model';
 import { EquipoResumenPublico, PerfilEquipoPublico } from '../../../models/perfil-equipo-publico.model';
 import { JugadorDisponible } from '../../../models/jugador-disponible.model';
+import { HistorialEquipo } from '../../../models/historial-equipo.model';
 import { SolicitudUnion } from '../../../models/solicitud-union.model';
 
 @Injectable({ providedIn: 'root' })
@@ -134,5 +135,14 @@ export class TeamsService {
     return this.api.get<Pagina<JugadorDisponible>>(
       `/teams/${equipoId}/jugadores-disponibles?${params.toString()}`
     );
+  }
+
+  /** RF-16: historial de movimientos de plantilla, con filtro opcional por fecha. */
+  obtenerHistorial(equipoId: number, desde?: string, hasta?: string): Observable<HistorialEquipo> {
+    const params = new URLSearchParams();
+    if (desde) params.set('desde', desde);
+    if (hasta) params.set('hasta', hasta);
+    const sufijo = params.toString() ? `?${params.toString()}` : '';
+    return this.api.get<HistorialEquipo>(`/teams/${equipoId}/historial${sufijo}`);
   }
 }
