@@ -33,16 +33,16 @@ public class PatrocinadorServiceImpl implements PatrocinadorService {
     @Override
     @Transactional
     public PatrocinadorResponse crear(CrearPatrocinadorRequest request) {
-        patrocinadorRepository.findByNombreIgnoreCase(request.nombre()).ifPresent(existente -> {
-            if (!request.confirmarDuplicado()) {
-                throw new BusinessException(
-                        "Ya existe un patrocinador con un nombre similar ('%s'). Confirma si deseas crearlo de todas formas."
-                                .formatted(existente.getNombre()));
-            }
-        });
+        String nombre = request.nombre().trim();
+        List<Patrocinador> homonimos = patrocinadorRepository.findByNombreIgnoreCase(nombre);
+        if (!homonimos.isEmpty() && !request.confirmarDuplicado()) {
+            throw new BusinessException(
+                    "Ya existe un patrocinador con un nombre similar ('%s'). Confirma si deseas crearlo de todas formas."
+                            .formatted(homonimos.get(0).getNombre()));
+        }
 
         Patrocinador patrocinador = Patrocinador.builder()
-                .nombre(request.nombre())
+                .nombre(nombre)
                 .logo(request.logo())
                 .contacto(request.contacto())
                 .descripcion(request.descripcion())
@@ -60,14 +60,15 @@ public class PatrocinadorServiceImpl implements PatrocinadorService {
         Patrocinador patrocinador = patrocinadorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patrocinador", id));
 
-        patrocinadorRepository.findByNombreIgnoreCase(request.nombre())
-                .filter(otro -> !otro.getId().equals(id))
-                .ifPresent(otro -> {
-                    throw new BusinessException(
-                            "Ya existe otro patrocinador con el nombre '%s'".formatted(request.nombre()));
-                });
+        String nombre = request.nombre().trim();
+        boolean nombreOcupado = patrocinadorRepository.findByNombreIgnoreCase(nombre).stream()
+                .anyMatch(otro -> !otro.getId().equals(id));
+        if (nombreOcupado) {
+            throw new BusinessException(
+                    "Ya existe otro patrocinador con el nombre '%s'".formatted(nombre));
+        }
 
-        patrocinador.setNombre(request.nombre());
+        patrocinador.setNombre(nombre);
         patrocinador.setLogo(request.logo());
         patrocinador.setContacto(request.contacto());
         patrocinador.setDescripcion(request.descripcion());

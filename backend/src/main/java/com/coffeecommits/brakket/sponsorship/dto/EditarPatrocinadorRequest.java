@@ -13,6 +13,7 @@ public record EditarPatrocinadorRequest(
         String nombre,
 
         @URL(message = "El logo debe ser una URL valida")
+        @Size(max = 500, message = "La URL del logo no puede superar los 500 caracteres")
         String logo,
 
         @NotBlank(message = "El contacto es obligatorio")
@@ -22,6 +23,7 @@ public record EditarPatrocinadorRequest(
         @Size(max = 500, message = "La descripcion no puede superar los 500 caracteres")
         String descripcion,
 
-        List<@URL(message = "El enlace debe tener formato de URL valido") String> enlaces
+        List<@URL(message = "El enlace debe tener formato de URL valido")
+             @Size(max = 300, message = "Cada enlace no puede superar los 300 caracteres") String> enlaces
 ) {
 }

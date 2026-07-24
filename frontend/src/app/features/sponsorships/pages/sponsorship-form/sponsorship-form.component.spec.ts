@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
 import { SponsorshipFormComponent } from './sponsorship-form.component';
@@ -19,6 +19,7 @@ describe('SponsorshipFormComponent', () => {
     await TestBed.configureTestingModule({
       imports: [SponsorshipFormComponent],
       providers: [
+        provideRouter([]),
         { provide: SponsorshipsService, useValue: sponsorshipsServiceMock },
         {
           provide: ActivatedRoute,
