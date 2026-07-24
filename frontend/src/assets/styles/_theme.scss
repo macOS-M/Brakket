@@ -224,3 +224,78 @@ table,
   white-space: nowrap;
   border: 0;
 }
+
+// ---------- Lenguaje "craft" (Aquament): selects, tarjetas y modals ----------
+
+// Los <select> nativos delatan la plataforma: flecha del sistema y padding
+// desparejo. Chevron propio y el mismo cuerpo que los inputs del sistema —
+// completo, para que un select sin estilos de componente también salga
+// vestido (los componentes con estilos propios ganan por especificidad).
+select {
+  appearance: none;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+
+  // El panel desplegado hereda el color-scheme del tema, pero algunos
+  // Chromium pintan las opciones con sus colores propios: fijarlas a los
+  // tokens garantiza panel oscuro en oscuro y claro en claro.
+  option {
+    background-color: var(--surface);
+    color: var(--text);
+  }
+  padding-right: 2rem !important;
+
+  &:hover {
+    border-color: var(--text-muted);
+  }
+}
+
+// Entrada de tarjetas: fade-up corto, solo transform/opacity (composita).
+// El bloque global de prefers-reduced-motion ya lo anula.
+@keyframes entrada-tarjeta {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// Aplicable a cualquier grilla: las primeras 8 entran en cascada.
+.entra-tarjeta {
+  animation: entrada-tarjeta 0.22s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+  @for $i from 1 through 8 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 0.04}s;
+    }
+  }
+}
+
+// Modal: aparece levantándose, no de golpe. Solo transform/opacity.
+@keyframes entrada-modal {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes entrada-telon {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { Transferencia } from '../../../../models/transferencia.model';
+import { colorDeNombre } from '../../../../shared/utils/cover';
 import { TransfersService } from '../../services/transfers.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -73,6 +74,11 @@ export class TransferListComponent implements OnInit {
         this.error.set(err?.error?.message ?? 'No se pudo registrar la respuesta.');
       }
     });
+  }
+
+  /** Color estable para el monograma del jugador (mismo nombre → mismo color). */
+  colorDe(nombre: string): string {
+    return colorDeNombre(nombre);
   }
 
   etiquetaEstado(estado: string): string {

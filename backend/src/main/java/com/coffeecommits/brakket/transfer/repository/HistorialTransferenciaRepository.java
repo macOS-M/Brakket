@@ -16,4 +16,7 @@ public interface HistorialTransferenciaRepository extends JpaRepository<Historia
      */
     List<HistorialTransferencia> findByEquipoOrigenIdOrEquipoDestinoIdOrderByFechaTransferenciaDesc(
             Long equipoOrigenId, Long equipoDestinoId);
+
+    /** ¿El equipo aparece en el mercado de pases? (historial protegido) */
+    boolean existsByEquipoOrigenIdOrEquipoDestinoId(Long equipoOrigenId, Long equipoDestinoId);
 }

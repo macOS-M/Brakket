@@ -16,6 +16,7 @@ import { Invitacion, InvitarJugadorRequest, ResponderInvitacionRequest } from '.
 import { EquipoResumenPublico, PerfilEquipoPublico } from '../../../models/perfil-equipo-publico.model';
 import { JugadorDisponible } from '../../../models/jugador-disponible.model';
 import { HistorialEquipo } from '../../../models/historial-equipo.model';
+import { SolicitudUnion } from '../../../models/solicitud-union.model';
 
 @Injectable({ providedIn: 'root' })
 export class TeamsService {
@@ -80,8 +81,37 @@ export class TeamsService {
     return this.api.patch<Invitacion>(`/invitaciones/${invitacionId}/responder`, request);
   }
 
+  /** Equipos donde el usuario autenticado es miembro activo. */
+  misEquipos(): Observable<EquipoBusqueda[]> {
+    return this.api.get<EquipoBusqueda[]>('/teams/mios');
+  }
+
+  /** Un jugador pide unirse a un equipo ajeno; responde el capitán. */
+  solicitarUnion(equipoId: number, mensaje: string | null): Observable<SolicitudUnion> {
+    return this.api.post<SolicitudUnion>(`/teams/${equipoId}/solicitudes`, { mensaje });
+  }
+
+  /** Solicitudes pendientes del equipo (solo su capitán). */
+  solicitudesPendientes(equipoId: number): Observable<SolicitudUnion[]> {
+    return this.api.get<SolicitudUnion[]>(`/teams/${equipoId}/solicitudes`);
+  }
+
+  responderSolicitud(solicitudId: number, aceptar: boolean): Observable<SolicitudUnion> {
+    return this.api.patch<SolicitudUnion>(`/solicitudes/${solicitudId}/responder`, { aceptar });
+  }
+
   disolver(equipoId: number, request: DisolverEquipoRequest): Observable<Equipo> {
     return this.api.patch<Equipo>(`/teams/${equipoId}/disolver`, request);
+  }
+
+  /** Revierte la disolución: el equipo vuelve a ACTIVO. */
+  reactivar(equipoId: number): Observable<Equipo> {
+    return this.api.patch<Equipo>(`/teams/${equipoId}/reactivar`, {});
+  }
+
+  /** Borrado definitivo (capitán con el equipo disuelto, o ADMIN). */
+  eliminar(equipoId: number): Observable<void> {
+    return this.api.delete<void>(`/teams/${equipoId}`);
   }
 
   buscarJugadores(

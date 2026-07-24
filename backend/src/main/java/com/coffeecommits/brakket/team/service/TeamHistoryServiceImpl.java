@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class TeamHistoryServiceImpl implements TeamHistoryService {
@@ -54,23 +56,43 @@ public class TeamHistoryServiceImpl implements TeamHistoryService {
 
         List<MovimientoPlantillaResponse> movimientos = new ArrayList<>();
 
-        // Altas y bajas: cada fila de miembro_equipo es una etapa de la
-        // relación jugador-equipo (ACTIVO, TRANSFERIDO, EXPULSADO).
+        // Las transferencias van primero: una llegada por transferencia y su
+        // "alta" en miembro_equipo son EL MISMO evento (ejecutarTransferencia
+        // reescribe fechaUnion con la fecha de aprobación), así que la ALTA
+        // se suprime cuando una transferencia entrante la explica.
+        List<HistorialTransferencia> transferencias = historialTransferenciaRepository
+                .findByEquipoOrigenIdOrEquipoDestinoIdOrderByFechaTransferenciaDesc(equipoId, equipoId);
+        Set<String> llegadasPorTransferencia = new HashSet<>();
+        for (HistorialTransferencia t : transferencias) {
+            if (t.getEquipoDestino().getId().equals(equipoId)) {
+                llegadasPorTransferencia.add(
+                        t.getJugador().getId() + "|" + t.getFechaTransferencia().toLocalDate());
+            }
+        }
+
+        // Altas y bajas desde miembro_equipo. La fila se reutiliza cuando un
+        // jugador regresa, por eso la BAJA se emite siempre que haya quedado
+        // registrada (fechaBaja), aunque el estado actual ya no sea EXPULSADO:
+        // esa salida ocurrió y el historial no debe reescribirse.
         List<MiembroEquipo> membresias = miembroEquipoRepository.findByEquipoId(equipoId);
         for (MiembroEquipo m : membresias) {
 
-            movimientos.add(new MovimientoPlantillaResponse(
-                    "ALTA",
-                    m.getFechaUnion().atStartOfDay(),
-                    m.getUsuario().getId(),
-                    m.getUsuario().getNombre(),
-                    esPublico(m.getUsuario()),
-                    m.getRol(),
-                    null, null, null, null, null,
-                    null, null
-            ));
+            boolean llegoPorTransferencia = llegadasPorTransferencia.contains(
+                    m.getUsuario().getId() + "|" + m.getFechaUnion());
+            if (!llegoPorTransferencia) {
+                movimientos.add(new MovimientoPlantillaResponse(
+                        "ALTA",
+                        m.getFechaUnion().atStartOfDay(),
+                        m.getUsuario().getId(),
+                        m.getUsuario().getNombre(),
+                        esPublico(m.getUsuario()),
+                        m.getRol(),
+                        null, null, null, null, null,
+                        null, null
+                ));
+            }
 
-            if ("EXPULSADO".equals(m.getEstado()) && m.getFechaBaja() != null) {
+            if (m.getFechaBaja() != null) {
                 movimientos.add(new MovimientoPlantillaResponse(
                         "BAJA",
                         m.getFechaBaja(),
@@ -86,9 +108,6 @@ public class TeamHistoryServiceImpl implements TeamHistoryService {
             }
         }
 
-        // Transferencias: el equipo participó como origen o como destino.
-        List<HistorialTransferencia> transferencias = historialTransferenciaRepository
-                .findByEquipoOrigenIdOrEquipoDestinoIdOrderByFechaTransferenciaDesc(equipoId, equipoId);
         for (HistorialTransferencia t : transferencias) {
             movimientos.add(new MovimientoPlantillaResponse(
                     "TRANSFERENCIA",
