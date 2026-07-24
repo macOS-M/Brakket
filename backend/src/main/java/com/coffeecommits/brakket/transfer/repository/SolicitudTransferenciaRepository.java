@@ -25,4 +25,7 @@ public interface SolicitudTransferenciaRepository extends JpaRepository<Solicitu
               and (s.jugador.id = :usuarioId or s.equipoOrigen.capitan.id = :usuarioId)
             order by s.fechaSolicitud desc""")
     List<SolicitudTransferencia> findPendientesParaUsuario(@Param("usuarioId") Long usuarioId);
+
+    /** ¿El equipo aparece en solicitudes de transferencia? (bloquea el borrado) */
+    boolean existsByEquipoOrigenIdOrEquipoDestinoId(Long equipoOrigenId, Long equipoDestinoId);
 }

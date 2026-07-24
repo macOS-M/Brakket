@@ -16,6 +16,8 @@ import com.coffeecommits.brakket.tournament.dto.EquipoElegibleResponse;
 import com.coffeecommits.brakket.tournament.dto.EquipoInscritoResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoDetalleResponse;
 import com.coffeecommits.brakket.tournament.dto.TorneoResponse;
+import com.coffeecommits.brakket.tournament.model.AjustePartida;
+import com.coffeecommits.brakket.tournament.model.FormatoTorneo;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
@@ -70,8 +72,12 @@ public class TorneoServiceImpl implements TorneoService {
                     "El juego '%s' no está disponible para torneos".formatted(juego.getNombre()));
         }
 
-        if (!request.fechaInicio().isAfter(LocalDateTime.now())) {
-            throw new BusinessException("La fecha de inicio debe ser futura");
+        // Margen de 5 minutos: tolera desfases de reloj entre el navegador
+        // y el servidor sin rechazar torneos que arrancan "ya mismo".
+        if (request.fechaInicio().isBefore(LocalDateTime.now().minusMinutes(5))) {
+            throw new BusinessException(
+                    "La fecha de inicio ya pasó (hora del servidor: %s)"
+                            .formatted(LocalDateTime.now().withNano(0)));
         }
 
         // El perfil competitivo (RF-21) actúa como curaduría opcional: si
@@ -111,13 +117,14 @@ public class TorneoServiceImpl implements TorneoService {
                 .organizador(organizador)
                 .nombre(request.nombre().trim())
                 .descripcion(normalizar(request.descripcion()))
-                .formato(request.formato().trim())
+                .formato(formatoValido(request.formato()))
                 .tamanoEquipo(request.tamanoEquipo())
                 .maxEquipos(request.maxEquipos())
                 .fechaInicio(request.fechaInicio())
                 .estado(EstadoTorneo.INSCRIPCION_ABIERTA)
                 .publico(request.publico() == null || request.publico())
                 .premio(normalizar(request.premio()))
+                .ajustesPartida(normalizarAjustes(request.ajustesPartida()))
                 .build());
         return TorneoResponse.from(torneo, 0);
     }
@@ -147,6 +154,21 @@ public class TorneoServiceImpl implements TorneoService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TorneoResponse> misCompetencias(String correo) {
+        Usuario usuario = buscarUsuario(correo);
+        Map<Long, Torneo> visibles = new LinkedHashMap<>();
+        torneoRepository.findByOrganizadorIdOrderByFechaInicioAsc(usuario.getId())
+                .forEach(t -> visibles.put(t.getId(), t));
+        inscripcionRepository.inscripcionesVigentesDeUsuario(usuario.getId())
+                .forEach(i -> visibles.put(i.getTorneo().getId(), i.getTorneo()));
+        return visibles.values().stream()
+                .sorted((a, b) -> a.getFechaInicio().compareTo(b.getFechaInicio()))
+                .map(t -> TorneoResponse.from(t, inscripcionRepository.countVigentesPorTorneo(t.getId())))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public TorneoDetalleResponse obtenerDetalle(Long torneoId, String correoOpcional, boolean esAdmin) {
         Torneo torneo = buscarVisible(torneoId, correoOpcional, esAdmin);
         return detalleDe(torneo);
@@ -154,7 +176,8 @@ public class TorneoServiceImpl implements TorneoService {
 
     @Override
     @Transactional
-    public TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId) {
+    public TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId,
+                                                 String usuarioEnJuego) {
         Usuario usuario = buscarUsuario(correo);
         Torneo torneo = buscarVisible(torneoId, correo, false);
 
@@ -181,12 +204,8 @@ public class TorneoServiceImpl implements TorneoService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
 
-        if (equipo.getJuego() != null
-                && !equipo.getJuego().getId().equals(torneo.getJuego().getId())) {
-            throw new BusinessException(
-                    "El equipo compite en %s, no en %s".formatted(
-                            equipo.getJuego().getNombre(), torneo.getJuego().getNombre()));
-        }
+        // El juego del equipo es su disciplina favorita, no una restricción:
+        // cualquier equipo puede competir en torneos de otros juegos.
         long plantilla = inscripcionRepository.countMiembrosActivos(equipoId);
         if (plantilla < torneo.getTamanoEquipo()) {
             throw new BusinessException(
@@ -199,6 +218,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .equipo(equipo)
                 .estado("CONFIRMADA")
                 .fechaSolicitud(LocalDate.now())
+                .usuarioEnJuego(usuarioEnJuego.trim())
                 .build());
         return detalleDe(torneo);
     }
@@ -207,11 +227,12 @@ public class TorneoServiceImpl implements TorneoService {
     @Transactional(readOnly = true)
     public List<EquipoElegibleResponse> equiposElegibles(Long torneoId, String correo) {
         Usuario usuario = buscarUsuario(correo);
-        Torneo torneo = buscarVisible(torneoId, correo, false);
+        buscarVisible(torneoId, correo, false); // 404 si es privado y ajeno
 
+
+        // Sin filtro por juego: la disciplina del equipo es preferencia,
+        // no requisito (cualquier equipo compite donde quiera).
         return inscripcionRepository.equiposCapitaneadosPor(usuario.getId()).stream()
-                .filter(equipo -> equipo.getJuego() == null
-                        || equipo.getJuego().getId().equals(torneo.getJuego().getId()))
                 .filter(equipo -> !inscripcionRepository
                         .existsByTorneoIdAndEquipoId(torneoId, equipo.getId()))
                 .map(EquipoElegibleResponse::from)
@@ -229,6 +250,12 @@ public class TorneoServiceImpl implements TorneoService {
                 throw new ForbiddenException(
                         "Solo el organizador o un administrador pueden eliminar este torneo");
             }
+        }
+        // Un torneo con la llave en juego no se borra por accidente (se
+        // llevaría bracket y resultados por el ON DELETE CASCADE).
+        if (torneo.getEstado() == EstadoTorneo.EN_CURSO) {
+            throw new BusinessException(
+                    "El torneo está en curso: terminalo o resolvé sus partidas antes de eliminarlo");
         }
         // Las inscripciones caen por el ON DELETE CASCADE del esquema.
         torneoRepository.delete(torneo);
@@ -260,6 +287,7 @@ public class TorneoServiceImpl implements TorneoService {
                         i.getEquipo().getId(),
                         i.getEquipo().getNombre(),
                         i.getEquipo().getLogo(),
+                        i.getUsuarioEnJuego(),
                         inscripcionRepository.miembrosActivosDeEquipo(i.getEquipo().getId()).stream()
                                 .map(m -> new EquipoInscritoResponse.JugadorInscritoResponse(
                                         m.getUsuario().getId(),
@@ -277,5 +305,29 @@ public class TorneoServiceImpl implements TorneoService {
 
     private static String normalizar(String valor) {
         return valor == null || valor.trim().isEmpty() ? null : valor.trim();
+    }
+
+    /**
+     * El formato se guarda con su código canónico del catálogo: es lo que
+     * el motor de llaves interpreta al iniciar el torneo (DD-05 cerrada).
+     */
+    private static String formatoValido(String formato) {
+        return FormatoTorneo.interpretar(formato)
+                .orElseThrow(() -> new BusinessException(
+                        "Formato no soportado: %s. Valen eliminación directa, doble eliminación, round robin, suizo o fase de grupos y eliminación"
+                                .formatted(formato)))
+                .name();
+    }
+
+    /** Descarta pares vacíos y recorta espacios de los ajustes de partida. */
+    private static List<AjustePartida> normalizarAjustes(List<AjustePartida> ajustes) {
+        if (ajustes == null) {
+            return List.of();
+        }
+        return ajustes.stream()
+                .filter(a -> a != null && a.clave() != null && !a.clave().isBlank()
+                        && a.valor() != null && !a.valor().isBlank())
+                .map(a -> new AjustePartida(a.clave().trim(), a.valor().trim()))
+                .toList();
     }
 }

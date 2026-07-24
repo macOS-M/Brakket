@@ -43,9 +43,10 @@ Desarrollar una plataforma web completa para la gestión de ligas y torneos espo
 
 ### Formatos soportados
 - Eliminación simple
-- Eliminación doble
-- Round Robin
-- Sistema Suizo
+- Eliminación doble (llave inferior y gran final)
+- Round Robin (tabla de posiciones)
+- Sistema Suizo (emparejamiento por marcas)
+- Fase de grupos + llave eliminatoria
 
 ## 📊 Fixtures y Brackets
 - Generación automática de enfrentamientos

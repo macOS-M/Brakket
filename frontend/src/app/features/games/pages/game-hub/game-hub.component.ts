@@ -1,4 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
@@ -36,6 +44,7 @@ export class GameHubComponent {
   private readonly tournamentsService = inject(TournamentsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly auth = inject(AuthService);
 
   readonly juego = signal<Juego | null>(null);
@@ -59,6 +68,11 @@ export class GameHubComponent {
   readonly menuCrearAbierto = signal(false);
   readonly wizardAbierto = signal(false);
 
+  /** Zona y disparador del menú "Crear" (patrón menu button de ARIA). */
+  private readonly zonaCrear = viewChild<ElementRef<HTMLElement>>('zonaCrear');
+  private readonly btnCrear = viewChild<ElementRef<HTMLButtonElement>>('btnCrear');
+  private readonly menuCrear = viewChild<ElementRef<HTMLElement>>('menuCrear');
+
   readonly confirmandoDesactivar = signal(false);
   readonly errorAccion = signal<string | null>(null);
 
@@ -73,6 +87,15 @@ export class GameHubComponent {
   readonly gradiente = computed(() => portadaGradiente(this.juego()?.nombre ?? '?'));
 
   constructor() {
+    // El menú "Crear" se cierra al clickear fuera de su zona.
+    const alClickGlobal = (evento: MouseEvent) => {
+      if (this.menuCrearAbierto() && !this.zonaCrear()?.nativeElement.contains(evento.target as Node)) {
+        this.menuCrearAbierto.set(false);
+      }
+    };
+    document.addEventListener('click', alClickGlobal);
+    this.destroyRef.onDestroy(() => document.removeEventListener('click', alClickGlobal));
+
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.gamesService.obtenerPorId(id).subscribe({
       next: (juego) => {
@@ -115,6 +138,60 @@ export class GameHubComponent {
 
   gradienteLiga(liga: League): string {
     return portadaGradiente(liga.nombre);
+  }
+
+  /** Abre/cierra el menú; al abrir, el foco pasa a la primera opción. */
+  alternarMenuCrear(): void {
+    const abrir = !this.menuCrearAbierto();
+    this.menuCrearAbierto.set(abrir);
+    if (abrir) {
+      setTimeout(() => this.opcionesMenuCrear()[0]?.focus());
+    }
+  }
+
+  /** Cierra el menú y devuelve el foco al disparador. */
+  cerrarMenuCrear(): void {
+    this.menuCrearAbierto.set(false);
+    this.btnCrear()?.nativeElement.focus();
+  }
+
+  /** Flechas / Home / End / Escape / Tab, según el patrón menu de ARIA. */
+  tecladoMenuCrear(evento: KeyboardEvent): void {
+    const opciones = this.opcionesMenuCrear();
+    if (opciones.length === 0) {
+      return;
+    }
+    const actual = opciones.indexOf(document.activeElement as HTMLElement);
+    switch (evento.key) {
+      case 'ArrowDown':
+        evento.preventDefault();
+        opciones[(actual + 1) % opciones.length].focus();
+        break;
+      case 'ArrowUp':
+        evento.preventDefault();
+        opciones[(actual - 1 + opciones.length) % opciones.length].focus();
+        break;
+      case 'Home':
+        evento.preventDefault();
+        opciones[0].focus();
+        break;
+      case 'End':
+        evento.preventDefault();
+        opciones[opciones.length - 1].focus();
+        break;
+      case 'Escape':
+        this.cerrarMenuCrear();
+        break;
+      case 'Tab':
+        // Tab sale del menú: se cierra sin secuestrar el foco.
+        this.menuCrearAbierto.set(false);
+        break;
+    }
+  }
+
+  private opcionesMenuCrear(): HTMLElement[] {
+    const menu = this.menuCrear()?.nativeElement;
+    return menu ? Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]')) : [];
   }
 
   abrirWizard(): void {

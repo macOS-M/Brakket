@@ -1,16 +1,18 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { Juego } from '../../../../models/juego.model';
 import { GamesService } from '../../../games/services/games.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
 import { TeamsService } from '../../services/teams.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-team-form',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeaderComponent],
+  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent, FotoInputComponent],
   templateUrl: './team-form.component.html',
   styleUrl: './team-form.component.scss'
 })
@@ -20,6 +22,13 @@ export class TeamFormComponent implements OnInit {
   private readonly teamsService = inject(TeamsService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
+
+  /**
+   * Un ADMIN crea el equipo para otros jugadores: no se auto-inscribe;
+   * designa por correo al jugador que será capitán.
+   */
+  readonly esAdmin = computed(() => this.auth.hasRole('ADMIN'));
 
   readonly juegos = signal<Juego[]>([]);
   readonly guardando = signal(false);
@@ -30,16 +39,24 @@ export class TeamFormComponent implements OnInit {
   /** null = modo "crear"; con valor = modo "editar" ese equipo. */
   readonly equipoId = signal<number | null>(null);
 
+  /** Sección activa del panel de ajustes (referencia Challenger Mode). */
+  readonly seccion = signal<'acerca' | 'apariencia'>('acerca');
+
   /** Versión del equipo leída en el GET; viaja en el PUT (concurrencia optimista). */
   private readonly version = signal<number | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
     logo: [''],
+    bannerUrl: [''],
     descripcion: ['', [Validators.maxLength(500)]],
+    sitioWeb: [''],
+    videoUrl: [''],
     juegoId: [null as number | null, [Validators.required]],
     estadoPrivacidad: ['PUBLIC'],
-    redesSociales: this.fb.nonNullable.array<string>([])
+    redesSociales: this.fb.nonNullable.array<string>([]),
+    /** Solo lo usa (y lo exige el backend a) un ADMIN al crear. */
+    capitanCorreo: ['', [Validators.email, Validators.maxLength(254)]]
   });
 
   get redesSociales(): FormArray {
@@ -72,7 +89,10 @@ export class TeamFormComponent implements OnInit {
         this.form.patchValue({
           nombre: equipo.nombre,
           logo: equipo.logo ?? '',
+          bannerUrl: equipo.bannerUrl ?? '',
           descripcion: equipo.descripcion ?? '',
+          sitioWeb: equipo.sitioWeb ?? '',
+          videoUrl: equipo.videoUrl ?? '',
           juegoId: equipo.juegoId,
           estadoPrivacidad: equipo.estadoPrivacidad
         });
@@ -102,6 +122,10 @@ export class TeamFormComponent implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    if (!this.esEdicion && this.esAdmin() && !this.form.getRawValue().capitanCorreo.trim()) {
+      this.error.set('Como administrador debés indicar el correo del jugador que será capitán.');
+      return;
+    }
 
     this.guardando.set(true);
     this.error.set(null);
@@ -114,7 +138,10 @@ export class TeamFormComponent implements OnInit {
       this.teamsService.editar(this.equipoId()!, {
         nombre: valores.nombre,
         logo: valores.logo.trim(),
+        bannerUrl: valores.bannerUrl.trim(),
         descripcion: valores.descripcion.trim(),
+        sitioWeb: valores.sitioWeb.trim(),
+        videoUrl: valores.videoUrl.trim(),
         juegoId: valores.juegoId,
         estadoPrivacidad: valores.estadoPrivacidad,
         redesSociales: valores.redesSociales,
@@ -136,9 +163,13 @@ export class TeamFormComponent implements OnInit {
     this.teamsService.crear({
       nombre: valores.nombre,
       logo: valores.logo || null,
+      bannerUrl: valores.bannerUrl || null,
       descripcion: valores.descripcion || null,
+      sitioWeb: valores.sitioWeb || null,
+      videoUrl: valores.videoUrl || null,
       juegoId: valores.juegoId!,
-      redesSociales: valores.redesSociales
+      redesSociales: valores.redesSociales,
+      capitanCorreo: this.esAdmin() ? valores.capitanCorreo.trim() : null
     }).subscribe({
       next: (equipo) => this.router.navigate(['/teams', equipo.id, 'plantilla']),
       error: (err) => {
