@@ -59,6 +59,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/teams/teams.routes').then((m) => m.routes)
       },
       {
+        path: 'players',
+        loadChildren: () => import('./features/players/players.routes').then((m) => m.routes)
+      },
+      {
         path: 'transfers',
         canActivate: [authGuard],
         loadChildren: () => import('./features/transfers/transfers.routes').then((m) => m.routes)
