@@ -81,8 +81,10 @@ public class CanalTwitchService {
         TwitchGateway.StreamInfo live = twitchGateway.findLiveStream(canal.getLoginCanal());
         TransmisionTwitch entity = transmisionRepository.save(TransmisionTwitch.builder()
                 .canal(canal).torneo(torneo).partida(partida)
+                .loginCanal(canal.getLoginCanal())
                 .twitchStreamId(live == null ? null : live.id())
                 .estado(live == null ? "SIN_DATOS_EN_VIVO" : "EN_VIVO")
+                .verificadaEn(live == null ? null : LocalDateTime.now())
                 .iniciadaEn(live == null ? null : live.startedAt()).creadaEn(LocalDateTime.now()).build());
         return new TransmisionTwitchResponse(entity.getId(), entity.getTwitchStreamId(),
                 torneo == null ? null : torneo.getId(), partida == null ? null : partida.getId(),
