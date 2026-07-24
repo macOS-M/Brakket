@@ -73,7 +73,8 @@ export class SidebarComponent {
           icono: 'swords',
           exact: false
         },
-        { ruta: '/games', etiqueta: 'Juegos', icono: 'gamepad', exact: false }
+        { ruta: '/games', etiqueta: 'Juegos', icono: 'gamepad', exact: false },
+        { ruta: '/calendar', etiqueta: 'Calendario', icono: 'calendar', exact: false }
       ]
     },
     {

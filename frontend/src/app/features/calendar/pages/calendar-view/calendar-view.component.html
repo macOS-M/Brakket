@@ -1,0 +1,71 @@
+<section class="page">
+  <h1>Calendario de eventos</h1>
+
+  <div class="filtros">
+    <div class="campo">
+      <label for="juego">Juego</label>
+      <select id="juego" [value]="juegoIdFiltro() ?? ''"
+              (change)="juegoIdFiltro.set($any($event.target).value ? +$any($event.target).value : null)">
+        <option value="">Todos</option>
+        @for (juego of juegos(); track juego.id) {
+        <option [value]="juego.id">{{ juego.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="liga">Liga</label>
+      <select id="liga" [value]="ligaIdFiltro() ?? ''"
+              (change)="ligaIdFiltro.set($any($event.target).value ? +$any($event.target).value : null)">
+        <option value="">Todas</option>
+        @for (liga of ligas(); track liga.id) {
+        <option [value]="liga.id">{{ liga.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="desde">Desde</label>
+      <input id="desde" type="date" [value]="desdeFiltro()"
+             (input)="desdeFiltro.set($any($event.target).value)" />
+    </div>
+
+    <div class="campo">
+      <label for="hasta">Hasta</label>
+      <input id="hasta" type="date" [value]="hastaFiltro()"
+             (input)="hastaFiltro.set($any($event.target).value)" />
+    </div>
+
+    <button type="button" class="btn-buscar" (click)="buscar()">Buscar</button>
+    <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
+  </div>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando eventos...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (eventos().length === 0) {
+  <p class="placeholder">No hay eventos programados con esos filtros.</p>
+  } @else {
+  <div class="lista">
+    @for (evento of eventos(); track evento.torneoId) {
+    <div class="evento-card">
+      <div class="fecha">
+        <span class="dia">{{ evento.fechaInicio.substring(8, 10) }}</span>
+        <span class="mes">{{ evento.fechaInicio.substring(5, 7) }}/{{ evento.fechaInicio.substring(0, 4) }}</span>
+      </div>
+      <div class="info">
+        <p class="nombre">{{ evento.nombre }}</p>
+        <p class="detalle">
+          {{ evento.juegoNombre }}
+          @if (evento.ligaNombre) {
+          · {{ evento.ligaNombre }}
+          }
+        </p>
+      </div>
+      <span class="badge-estado" [attr.data-estado]="evento.estado">{{ evento.estado }}</span>
+    </div>
+    }
+  </div>
+  }
+</section>
