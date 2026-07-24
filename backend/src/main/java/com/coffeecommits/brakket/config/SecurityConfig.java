@@ -79,6 +79,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/leagues/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/search").permitAll()
+                        // RF-15: el historial del jugador se enlaza desde el perfil
+                        // público del equipo; el service ya degrada a "solo perfiles
+                        // PUBLIC" cuando no hay sesión.
+                        .requestMatchers(HttpMethod.GET, "/api/players/*/historial-equipos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/*/equipos-elegibles").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/mios").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
