@@ -1,0 +1,163 @@
+.page {
+  padding: 1.5rem 0;
+
+  h1 {
+    margin: 0 0 1.25rem;
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 1.1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 12px;
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted, #94a3b8);
+    }
+
+    select,
+    input {
+      padding: 0.45rem 0.6rem;
+      background: var(--bg, #0b1120);
+      border: 1px solid var(--border, #334155);
+      border-radius: 8px;
+      color: var(--text, #e2e8f0);
+      font-size: 0.85rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--brand-cyan, #22d3ee);
+      }
+    }
+  }
+
+  .btn-buscar,
+  .btn-limpiar {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .btn-buscar {
+    background: var(--brand-blue, #2563eb);
+    color: #fff;
+  }
+
+  .btn-limpiar {
+    background: transparent;
+    border-color: var(--border, #334155);
+    color: var(--text, #e2e8f0);
+  }
+}
+
+.placeholder {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--brand-cyan, #22d3ee);
+  border-radius: 8px;
+  color: var(--text-muted, #94a3b8);
+
+  &.error {
+    border-color: #f87171;
+    color: #f87171;
+  }
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 600px;
+}
+
+.evento-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 12px;
+
+  .fecha {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(34, 211, 238, 0.1);
+    color: var(--brand-cyan, #22d3ee);
+
+    .dia {
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .mes {
+      font-size: 0.68rem;
+      margin-top: 0.15rem;
+    }
+  }
+
+  .info {
+    flex: 1;
+
+    .nombre {
+      margin: 0 0 0.2rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text, #e2e8f0);
+    }
+
+    .detalle {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--text-muted, #94a3b8);
+    }
+  }
+
+  .badge-estado {
+    flex-shrink: 0;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--text-muted, #94a3b8);
+
+    &[data-estado='INSCRIPCION_ABIERTA'] {
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--brand-cyan, #22d3ee);
+    }
+
+    &[data-estado='EN_CURSO'] {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    &[data-estado='CANCELADO'] {
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+    }
+  }
+}

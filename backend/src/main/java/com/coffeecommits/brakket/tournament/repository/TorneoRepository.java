@@ -36,13 +36,10 @@ public interface TorneoRepository extends JpaRepository<Torneo, Long> {
     /** Torneos públicos de un juego, próximos primero. */
     List<Torneo> findByJuegoIdAndPublicoTrueOrderByFechaInicioAsc(Long juegoId);
 
-    /** Todos los torneos públicos (listado global), próximos primero. */
     List<Torneo> findByPublicoTrueOrderByFechaInicioAsc();
 
-    /** Torneos organizados por un usuario (incluye privados), próximos primero. */
     List<Torneo> findByOrganizadorIdOrderByFechaInicioAsc(Long organizadorId);
 
-    /** Desde el modelo abierto (V22) todo torneo referencia su juego directo. */
     boolean existsByJuegoIdAndEstadoNotIn(Long juegoId, Collection<EstadoTorneo> estadosCerrados);
 
     boolean existsByTemporadaIdAndEstadoNotIn(
@@ -55,4 +52,12 @@ public interface TorneoRepository extends JpaRepository<Torneo, Long> {
     default boolean existsActivoByTemporadaId(Long temporadaId) {
         return existsByTemporadaIdAndEstadoNotIn(temporadaId, ESTADOS_CERRADOS);
     }
+
+    @Query("""
+            select distinct t from Torneo t
+            where t.publico = true or t.organizador.id = :usuarioId or :esAdmin = true
+            order by t.fechaInicio asc
+            """)
+    List<Torneo> buscarVisiblesParaCalendario(@Param("usuarioId") Long usuarioId,
+                                              @Param("esAdmin") boolean esAdmin);
 }

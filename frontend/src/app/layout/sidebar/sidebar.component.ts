@@ -73,7 +73,8 @@ export class SidebarComponent {
           icono: 'swords',
           exact: false
         },
-        { ruta: '/games', etiqueta: 'Juegos', icono: 'gamepad', exact: false }
+        { ruta: '/games', etiqueta: 'Juegos', icono: 'gamepad', exact: false },
+        { ruta: '/calendar', etiqueta: 'Calendario', icono: 'calendar', exact: false }
       ]
     },
     {
@@ -154,7 +155,7 @@ export class SidebarComponent {
       ]
     },
     {
-      // Gestión de la competencia y de la plataforma. Los patrocinios los
+      // Gestión de la competencibackend/src/main/java/com/coffeecommits/brakket/tournament/dto/backend/src/main/java/com/coffeecommits/brakket/tournament/dto/a y de la plataforma. Los patrocinios los
       // gestionan administrador y comisionado (RF-42/RF-43 de la ERS).
       titulo: 'Gestión',
       enlaces: [
