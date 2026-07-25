@@ -1,0 +1,542 @@
+.page {
+  max-width: var(--content-max, 1280px);
+  margin: 0 auto;
+  padding: 1.75rem 2rem 3rem;
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent-text, #ff6a1f);
+  }
+}
+
+// ----- Encabezado -----
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1.25rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+
+  // Con banner, el hero se vuelve portada: la imagen de fondo con un velo
+  // que garantiza la lectura del nombre y los enlaces.
+  &.con-banner {
+    min-height: 148px;
+
+    .logo { border: 3px solid var(--surface, #111827); }
+  }
+}
+
+.hero-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.hero-velo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(4, 8, 18, 0.82) 0%, rgba(4, 8, 18, 0.55) 55%, rgba(4, 8, 18, 0.35) 100%);
+}
+
+// El contenido del hero siempre por encima del banner.
+.hero > .logo,
+.hero > .identidad,
+.hero > app-status-badge {
+  position: relative;
+  z-index: 1;
+}
+
+.enlaces {
+  margin: 0.45rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+
+  a {
+    color: var(--text, #e2e8f0);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border, #334155);
+
+    &:hover {
+      color: var(--accent-text, #ff6a1f);
+      border-color: var(--accent-text, #ff6a1f);
+    }
+  }
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md, 12px);
+  object-fit: cover;
+  // Mismo aro que en las tarjetas: la foto oscura no pierde su forma.
+  outline: 1px solid var(--border, #334155);
+
+  &.sin-logo {
+    background: var(--info-bg, rgba(59, 130, 246, 0.12));
+    color: var(--info-text, #60a5fa);
+    font-size: 1.5rem; // paso "headline" de la escala
+    font-weight: 700;
+  }
+}
+
+.identidad {
+  flex: 1;
+  min-width: 0;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .juego {
+    margin: 0.2rem 0 0;
+    color: var(--accent-text, #ff6a1f);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+// ----- Avisos de estado -----
+
+.aviso {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.875rem;
+}
+
+.aviso-peligro {
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--danger-text, #f87171);
+  color: var(--danger-text, #f87171);
+
+  // El aviso de disuelto enlaza a la plantilla (reactivar/eliminar).
+  .enlace-aviso {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+  }
+}
+
+.aviso-atencion {
+  background: var(--warning-bg, rgba(245, 158, 11, 0.12));
+  border: 1px solid var(--warning-text, #fbbf24);
+  color: var(--warning-text, #fbbf24);
+}
+
+// ----- Métricas -----
+
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+// ----- Columnas -----
+
+.columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.principal,
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.bloque {
+  padding: 1.1rem 1.2rem 1.2rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+}
+
+.bloque-titulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.0625rem; // paso "title" de la escala
+    font-weight: 600;
+  }
+
+  .conteo {
+    color: var(--text-subtle, #64748b);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ----- Plantilla -----
+
+.miembros,
+.torneos,
+.enlaces {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.miembro {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface-2, #1f2937);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--info-bg, rgba(59, 130, 246, 0.12));
+  color: var(--info-text, #60a5fa);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.miembro-datos {
+  flex: 1;
+  min-width: 0;
+
+  .nombre {
+    margin: 0;
+    color: var(--text, #e2e8f0);
+    font-size: 0.875rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desde {
+    margin: 0.1rem 0 0;
+    color: var(--text-subtle, #64748b);
+    font-size: 0.75rem;
+  }
+}
+
+.rol {
+  flex-shrink: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// RF-15: entrada discreta al historial del jugador desde la plantilla.
+.enlace-historial {
+  flex-shrink: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border, #334155);
+
+  &:hover {
+    color: var(--accent-text, #ff6a1f);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}
+
+// ----- Torneos -----
+
+.torneo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--surface-2, #1f2937);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.torneo-datos {
+  min-width: 0;
+
+  .nombre {
+    margin: 0;
+    color: var(--text, #e2e8f0);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .fechas {
+    margin: 0.1rem 0 0;
+    color: var(--text-subtle, #64748b);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.torneo-estados {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  text-align: right;
+
+  .inscripcion {
+    color: var(--text-subtle, #64748b);
+    font-size: 0.75rem;
+  }
+}
+
+// ----- Lateral -----
+
+.descripcion {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  // Prosa: se limita el largo de línea aunque la columna sea más ancha.
+  max-width: 70ch;
+  text-wrap: pretty;
+}
+
+.enlaces a {
+  display: block;
+  padding: 0.5rem 0.7rem;
+  background: var(--surface-2, #1f2937);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--accent-text, #ff6a1f);
+  font-size: 0.875rem; // paso "body" de la escala
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ----- Responsive -----
+
+@media (max-width: 900px) {
+  .page {
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    flex-wrap: wrap;
+  }
+
+  .identidad {
+    // Con el logo a la izquierda y el badge al final, el nombre necesita
+    // toda la fila en pantallas angostas.
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  .torneo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .torneo-estados {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+// ----- Perfil con tabs (referencia Challenger Mode) -----
+
+.identidad .eyebrow {
+  margin: 0 0 2px;
+  color: var(--accent-text, #ff6a1f);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.identidad .sub {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
+
+.hero-acciones {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tabs-fila {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  margin-bottom: 1.25rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 0.6rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease-out, border-color 0.15s ease-out;
+
+  &:hover { color: var(--text, #e2e8f0); }
+
+  &.activo {
+    color: var(--text, #e2e8f0);
+    border-bottom-color: var(--accent, #ff5500);
+  }
+}
+
+.btn-ajustes {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  margin-bottom: 0.4rem;
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease-out, border-color 0.15s ease-out;
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}
+
+.lateral-titulo {
+  margin: 0 0 4px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+// Tarjeta de setup: guía al capitán a completar la identidad del equipo.
+.bloque.setup {
+  border-color: var(--accent, #ff5500);
+
+  // Paso "title" del ramp: es el título de la tarjeta.
+  h3 { margin: 0 0 6px; font-size: 1.0625rem; font-weight: 700; }
+  p { margin: 0 0 12px; color: var(--text-muted, #94a3b8); font-size: 0.8125rem; line-height: 1.5; }
+}
+
+// Tarjeta de video: presente o invitación a agregarlo (solo capitán).
+.bloque.video {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+
+  .video-icono { font-size: 1.75rem; }
+  p { margin: 0; color: var(--text-muted, #94a3b8); font-size: 0.8125rem; }
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease-out, border-color 0.2s ease-out;
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover { background: var(--accent-hover, #ff6a1f); }
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}
+
+.btn-secondary.gestionar {
+  margin-top: 12px;
+}

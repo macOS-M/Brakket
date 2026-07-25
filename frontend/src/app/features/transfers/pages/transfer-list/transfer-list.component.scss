@@ -1,0 +1,306 @@
+.page {
+  padding: 0 0 1.5rem;
+}
+
+// Confirmación en línea tras responder una solicitud (nunca alert/confirm).
+.aviso {
+  display: block;
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--success-bg, rgba(34, 197, 94, 0.12));
+  color: var(--success-text, #4ade80);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.bloque {
+  margin-top: 2rem;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.bloque-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--text, #e2e8f0);
+  }
+}
+
+// Chip de conteo: mismo lenguaje que en la lista de equipos.
+.conteo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface-2, #1f2937);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  color: var(--text-muted, #94a3b8);
+  font-family: var(--font-data, 'Barlow Condensed', sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+// ----- Estados vacíos con personalidad (referencia Aquament) -----
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 2rem 1.5rem 1.75rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  text-align: center;
+}
+
+// Emoji grande como "asset 3D" juguetón, igual que el banner de ligas.
+.vacio-emoji {
+  font-size: 2.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  user-select: none;
+}
+
+.vacio-titulo {
+  margin: 0.5rem 0 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text, #e2e8f0);
+}
+
+.vacio-detalle {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.vacio .btn-secondary {
+  margin-top: 0.85rem;
+}
+
+// ----- Lista de solicitudes -----
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  padding: 0.9rem 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+}
+
+.item-cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+// Monograma del jugador: color determinístico por nombre.
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  user-select: none;
+}
+
+.item-cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--text, #e2e8f0);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ruta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  font-variant-numeric: tabular-nums;
+}
+
+.item-meta {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.dato {
+  font-variant-numeric: tabular-nums;
+}
+
+.justificacion {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+  font-style: italic;
+  line-height: 1.55;
+}
+
+// ----- Acciones de respuesta -----
+
+.acciones {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+.btn-aceptar,
+.btn-rechazar {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background-color 200ms ease-out, border-color 200ms ease-out;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// Aceptar es la acción que cierra el trámite: naranja con tinta navy.
+.btn-aceptar {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-rechazar {
+  border-color: rgba(248, 113, 113, 0.4);
+  color: var(--danger-text, #f87171);
+
+  &:hover:not(:disabled) {
+    background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+    border-color: rgba(248, 113, 113, 0.6);
+  }
+}
+
+// ----- Sub-estado de aprobaciones -----
+
+.aprobaciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
+
+.aprobacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.aprobacion-rol {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+// ----- Botones de la cabecera -----
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 200ms ease-out, border-color 200ms ease-out;
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}
+
+// ----- Responsive -----
+
+@media (max-width: 640px) {
+  .item-cabecera {
+    flex-wrap: wrap;
+  }
+
+  .acciones {
+    width: 100%;
+
+    .btn-aceptar,
+    .btn-rechazar {
+      flex: 1;
+    }
+  }
+}

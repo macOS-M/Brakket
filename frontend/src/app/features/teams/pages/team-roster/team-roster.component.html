@@ -1,0 +1,417 @@
+<section class="page">
+  <a class="volver" [routerLink]="['/team-profile', equipoId]">← Volver al equipo</a>
+
+  <h1>Plantilla {{ equipo() ? 'de ' + equipo()!.nombre : 'del equipo' }}</h1>
+
+  @if (equipoDisuelto(); as equipo) {
+  <div class="banner-disuelto">
+    <p class="titulo">Equipo disuelto</p>
+    <p>
+      "{{ equipo.nombre }}" fue disuelto y ya no aparecerá entre los equipos activos.
+      Su historial se conserva para consultas.
+    </p>
+    @if (equipo.motivoDisolucion) {
+    <p class="motivo">Motivo: {{ equipo.motivoDisolucion }}</p>
+    }
+  </div>
+  } @else if (vistaHistorica()) {
+  <!-- RF-08: equipo ya disuelto al entrar -> plantilla histórica de solo lectura -->
+  <div class="banner-disuelto">
+    <p class="titulo">Plantilla histórica</p>
+    <p>
+      Este equipo está disuelto. La plantilla se muestra únicamente para consulta
+      y no admite cambios.
+    </p>
+    @if (equipo()?.motivoDisolucion) {
+    <p class="motivo">Motivo: {{ equipo()!.motivoDisolucion }}</p>
+    }
+  </div>
+  }
+
+  <!-- Ciclo de vida del equipo disuelto: volver a la cancha o dejar de estorbar.
+       Lo ve el capitán del equipo o un ADMIN (moderación). -->
+  @if (vistaHistorica() && (esCapitan() || esAdmin())) {
+  <section class="acciones-disuelto">
+    <h2>¿Y ahora qué?</h2>
+    <p class="advertencia">
+      Podés <strong>reactivar</strong> el equipo para que vuelva a competir con su
+      historial intacto, o <strong>eliminarlo definitivamente</strong> para que no
+      quede estorbando. La eliminación solo procede si el equipo no tiene
+      historial competitivo (torneos, partidas o transferencias) y no se puede
+      deshacer.
+    </p>
+
+    @if (errorCicloVida()) {
+    <p class="error-disolucion" role="alert">{{ errorCicloVida() }}</p>
+    }
+
+    <div class="acciones-fila">
+      <button
+        type="button"
+        class="btn-reactivar"
+        [disabled]="reactivando() || eliminando()"
+        (click)="reactivarEquipo()"
+      >
+        {{ reactivando() ? 'Reactivando...' : 'Reactivar equipo' }}
+      </button>
+    </div>
+
+    <label class="confirmacion">
+      <input
+        type="checkbox"
+        [checked]="confirmaEliminacion()"
+        (change)="confirmaEliminacion.set($any($event.target).checked)"
+      />
+      Entiendo que eliminar el equipo es permanente y quiero hacerlo.
+    </label>
+    <button
+      type="button"
+      class="btn-disolver"
+      [disabled]="!confirmaEliminacion() || eliminando() || reactivando()"
+      (click)="eliminarEquipo()"
+    >
+      {{ eliminando() ? 'Eliminando...' : 'Eliminar equipo definitivamente' }}
+    </button>
+  </section>
+  }
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando plantilla...</p>
+  } @else if (error()) {
+  <div class="placeholder error">
+    <p>{{ error() }}</p>
+    <button type="button" class="btn-reintentar" (click)="reintentar()">Reintentar</button>
+  </div>
+  } @else if (miembros().length === 0) {
+  <p class="placeholder">Este equipo no tiene integrantes.</p>
+  } @else {
+  <div class="tabla-scroll">
+  <table class="tabla">
+    <thead>
+    <tr>
+      <th>Integrante</th>
+      <th>Estado</th>
+      <th>Incorporación</th>
+      <th>Rol</th>
+      @if (esCapitan() && !vistaHistorica()) {
+      <th></th>
+      }
+    </tr>
+    </thead>
+    <tbody>
+    @for (miembro of miembrosOrdenados(); track miembro.id) {
+    <tr [class.fila-inactiva]="miembro.estado !== 'ACTIVO'">
+      <td>
+        {{ miembro.nombreUsuario }}
+        @if (miembro.rol === 'CAPITAN' && miembro.estado === 'ACTIVO') {
+        <span class="badge badge-capitan">Capitán</span>
+        }
+      </td>
+      <td>
+              <span class="badge" [class.inactivo]="miembro.estado !== 'ACTIVO'">
+                {{ miembro.estado }}
+              </span>
+      </td>
+      <td>{{ miembro.fechaUnion ? (miembro.fechaUnion | date: 'dd/MM/yyyy') : '—' }}</td>
+      <td>
+        @if (esCapitan() && !vistaHistorica()) {
+        <select
+          [attr.aria-label]="'Rol de ' + miembro.nombreUsuario"
+          [disabled]="miembro.estado !== 'ACTIVO' || guardandoId() === miembro.usuarioId"
+          (change)="cambiarRol(miembro, $any($event.target).value)"
+        >
+          @for (rol of roles; track rol) {
+          <option [value]="rol" [selected]="rol === miembro.rol">{{ rol | rolEquipo }}</option>
+          }
+        </select>
+        } @else {
+        <span class="badge badge-rol">{{ miembro.rol | rolEquipo }}</span>
+        }
+      </td>
+      @if (esCapitan() && !vistaHistorica()) {
+      <td class="celda-acciones">
+        <!-- RF-10: solo integrantes activos y nunca la propia fila del capitán -->
+        @if (miembro.estado === 'ACTIVO' && miembro.rol !== 'CAPITAN') {
+        <button
+          type="button"
+          class="btn-expulsar"
+          [disabled]="expulsando()"
+          (click)="iniciarExpulsion(miembro)"
+        >
+          Expulsar
+        </button>
+        }
+      </td>
+      }
+    </tr>
+    }
+    </tbody>
+  </table>
+  </div>
+  }
+
+  @if (esCapitan() && !vistaHistorica()) {
+  <section class="buscar-jugadores">
+    <h2>Buscar jugadores disponibles</h2>
+
+    <div class="filtros-busqueda">
+      <input
+        type="search"
+        aria-label="Buscar jugadores por nombre"
+        placeholder="Buscar por nombre…"
+        [value]="textoBusqueda()"
+        (input)="onTextoBusqueda($any($event.target).value)"
+      />
+      <select
+        aria-label="Filtrar por juego"
+        [value]="juegoIdBusqueda() ?? ''"
+        (change)="juegoIdBusqueda.set($any($event.target).value ? +$any($event.target).value : null)"
+      >
+        <option value="">Todos los juegos</option>
+        @for (juego of juegos(); track juego.id) {
+        <option [value]="juego.id">{{ juego.nombre }}</option>
+        }
+      </select>
+      <label class="check-disponibles">
+        <input
+          type="checkbox"
+          [checked]="soloDisponibles()"
+          (change)="soloDisponibles.set($any($event.target).checked)"
+        />
+        Solo invitación directa
+      </label>
+      <button type="button" class="btn-buscar" [disabled]="buscando()" (click)="buscarJugadores()">
+        {{ buscando() ? 'Buscando...' : 'Buscar' }}
+      </button>
+    </div>
+
+    @if (errorBusqueda()) {
+    <p class="error-busqueda">{{ errorBusqueda() }}</p>
+    }
+
+    @if (resultados() !== null) {
+    @if (resultados()!.length === 0) {
+    <p class="placeholder">No hay jugadores disponibles con esos filtros.</p>
+    } @else {
+    <div class="resultados-lista">
+      @for (jugador of resultados()!; track jugador.id) {
+      <div class="resultado-item">
+        <div class="info-jugador">
+          <p class="nombre">{{ jugador.nombre }}</p>
+          @if (jugador.requiereTransferencia) {
+          <span class="badge-transferencia">
+                  Requiere transferencia · actualmente en {{ jugador.equipoActualNombre }}
+                </span>
+          } @else {
+          <span class="badge-directo">Disponible para invitación directa</span>
+          }
+        </div>
+        <button
+          type="button"
+          class="btn-invitar"
+          [class.seleccionado]="estaSeleccionado(jugador.id)"
+          (click)="toggleSeleccion(jugador)"
+        >
+          {{ estaSeleccionado(jugador.id) ? '✓ Seleccionado' : '+ Seleccionar' }}
+        </button>
+      </div>
+      }
+    </div>
+    }
+    }
+  </section>
+  }
+
+  <!-- RF-10: confirmación de expulsión con causa obligatoria -->
+  @if (miembroAExpulsar(); as miembro) {
+  <div class="expulsion-box">
+    <h2>Expulsar a {{ miembro.nombreUsuario }}</h2>
+    <p class="advertencia">
+      El integrante quedará fuera de la plantilla y será notificado.
+      Esta acción queda registrada con fecha, causa y responsable.
+    </p>
+
+    <label class="campo-causa">
+      Causa de la expulsión *
+      <textarea
+        rows="2"
+        maxlength="500"
+        placeholder="Ej. Inasistencia reiterada a las prácticas"
+        [value]="causaExpulsion()"
+        (input)="causaExpulsion.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    @if (errorExpulsion()) {
+    <p class="mensaje-error">{{ errorExpulsion() }}</p>
+    }
+
+    <div class="acciones">
+      <button
+        type="button"
+        class="btn-confirmar-expulsion"
+        [disabled]="expulsando() || !causaExpulsion().trim()"
+        (click)="confirmarExpulsion()"
+      >
+        {{ expulsando() ? 'Expulsando...' : 'Confirmar expulsión' }}
+      </button>
+      <button type="button" class="btn-cancelar" [disabled]="expulsando()" (click)="cancelarExpulsion()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+  }
+
+  @if (esCapitan() && !vistaHistorica()) {
+  <div class="invitar-box">
+    <h2>Invitar jugadores</h2>
+
+    @if (resumenInvitaciones()) {
+    <p class="mensaje-exito">{{ resumenInvitaciones() }}</p>
+    }
+    @if (errorInvitar()) {
+    <p class="mensaje-error">{{ errorInvitar() }}</p>
+    }
+
+    @if (seleccionados().length === 0) {
+    <p class="pista-invitar">
+      Buscá jugadores arriba y seleccioná uno o varios: acá les asignás el rol
+      y les enviás la invitación de una sola vez.
+    </p>
+    } @else {
+    <ul class="seleccion-lista">
+      @for (s of seleccionados(); track s.id) {
+      <li class="seleccion-item">
+        <span class="seleccion-nombre">{{ s.nombre }} <span class="seleccion-id">ID {{ s.id }}</span></span>
+        <select
+          [value]="s.rol"
+          (change)="cambiarRolSeleccion(s.id, $any($event.target).value)"
+          attr.aria-label="Rol para {{ s.nombre }}"
+        >
+          @for (rol of roles; track rol) {
+          <option [value]="rol">{{ rol | rolEquipo }}</option>
+          }
+        </select>
+        <button
+          type="button"
+          class="seleccion-quitar"
+          (click)="quitarSeleccion(s.id)"
+          attr.aria-label="Quitar a {{ s.nombre }}"
+        >
+          ✕
+        </button>
+      </li>
+      }
+    </ul>
+
+    <label class="campo-mensaje">
+      Mensaje (opcional, va en todas las invitaciones)
+      <textarea
+        rows="2"
+        maxlength="300"
+        [value]="mensajeInvitacion()"
+        (input)="mensajeInvitacion.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    <button type="button" class="btn-primary" [disabled]="invitando()" (click)="invitarSeleccionados()">
+      {{ invitando() ? 'Enviando…' : seleccionados().length === 1 ? 'Enviar invitación' : 'Enviar ' + seleccionados().length + ' invitaciones' }}
+    </button>
+    }
+  </div>
+
+  <!-- Solicitudes de unión: jugadores que pidieron entrar al equipo. -->
+  @if (solicitudes().length > 0) {
+  <div class="solicitudes-box">
+    <h2>Solicitudes de unión ({{ solicitudes().length }})</h2>
+    @if (errorSolicitudes()) {
+    <p class="mensaje-error">{{ errorSolicitudes() }}</p>
+    }
+    <ul class="solicitudes-lista">
+      @for (s of solicitudes(); track s.id) {
+      <li class="solicitud-item">
+        <div>
+          <p class="solicitud-nombre">{{ s.jugadorNombre }} <span class="seleccion-id">ID {{ s.jugadorId }}</span></p>
+          @if (s.mensaje) {
+          <p class="solicitud-mensaje">"{{ s.mensaje }}"</p>
+          }
+        </div>
+        <div class="solicitud-acciones">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="respondiendoSolicitud() === s.id"
+            (click)="responderSolicitud(s, true)"
+          >
+            Aceptar
+          </button>
+          <button
+            type="button"
+            class="btn-cancelar"
+            [disabled]="respondiendoSolicitud() === s.id"
+            (click)="responderSolicitud(s, false)"
+          >
+            Rechazar
+          </button>
+        </div>
+      </li>
+      }
+    </ul>
+  </div>
+  }
+  }
+
+  <!-- Disolver: el capitán del equipo, o un ADMIN como moderación. -->
+  @if ((esCapitan() || esAdmin()) && !cargando() && !error() && !vistaHistorica()) {
+  <section class="zona-peligro" id="disolver">
+    <h2>Disolver equipo</h2>
+    <p class="advertencia">
+      Esta acción cierra formalmente la participación del equipo y no se puede deshacer desde
+      la plataforma. Consecuencias:
+    </p>
+    <ul class="consecuencias">
+      <li>El equipo pasa a estado <strong>DISUELTO</strong> y deja de aparecer en búsquedas de equipos activos.</li>
+      <li>Su historial y su plantilla se conservan para consultas históricas.</li>
+      <li>No podrá inscribirse en ligas ni torneos.</li>
+      <li>Se registran la fecha y el responsable de la disolución.</li>
+    </ul>
+    <p class="advertencia">
+      No es posible disolver un equipo con inscripciones activas o partidas pendientes;
+      en ese caso hay que resolverlas o pedir autorización administrativa.
+    </p>
+
+    <label class="campo-motivo">
+      Motivo (opcional, máx. 500 caracteres)
+      <textarea
+        rows="3"
+        maxlength="500"
+        placeholder="Ej. El equipo deja de competir esta temporada"
+        [value]="motivoDisolucion()"
+        (input)="motivoDisolucion.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    <label class="confirmacion">
+      <input
+        type="checkbox"
+        [checked]="confirmaDisolucion()"
+        (change)="confirmaDisolucion.set($any($event.target).checked)"
+      />
+      Confirmo que quiero disolver este equipo definitivamente.
+    </label>
+
+    @if (errorDisolucion()) {
+    <p class="error-disolucion">{{ errorDisolucion() }}</p>
+    }
+
+    <button
+      type="button"
+      class="btn-disolver"
+      [disabled]="!confirmaDisolucion() || disolviendo()"
+      (click)="disolverEquipo()"
+    >
+      {{ disolviendo() ? 'Disolviendo...' : 'Disolver equipo' }}
+    </button>
+  </section>
+  }
+</section>

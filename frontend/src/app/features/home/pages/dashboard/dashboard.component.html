@@ -1,0 +1,261 @@
+<section class="page">
+  <app-page-header [titulo]="saludo()" [subtitulo]="hoy | date: 'EEEE, d \'de\' MMMM \'de\' y'" />
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando tu panel…" />
+  } @else if (errorGeneral()) {
+  <app-empty-state
+    modo="error"
+    titulo="No se pudo cargar el panel"
+    mensaje="No hubo respuesta del servidor. Revisá que el backend esté corriendo."
+  >
+    <button type="button" class="btn-secondary" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else {
+
+  <!-- Héroe a toda la anchura (referencia Challenger Mode): el arte del
+       juego llena el marco y se funde hacia abajo con el lienzo, así la
+       sección siguiente emerge del hero en vez de cortarlo. -->
+  @if (heroJuegos().length > 0) {
+  <div
+    class="hero-carrusel"
+    (mouseenter)="heroPausado.set(true)"
+    (mouseleave)="heroPausado.set(false)"
+    (focusin)="heroPausado.set(true)"
+    (focusout)="heroPausado.set(false)"
+  >
+    <div
+      class="hero-pista"
+      [style.transform]="'translateX(-' + heroVisible() * 100 + '%)'"
+    >
+      @for (hero of heroJuegos(); track hero.id) {
+      <a
+        class="hero-slide"
+        [routerLink]="['/games', hero.id]"
+        [attr.tabindex]="heroVisible() === $index ? null : -1"
+        [attr.aria-hidden]="heroVisible() === $index ? null : true"
+        [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+      >
+        @if (foto(hero)) {
+        <img [src]="foto(hero)" alt="" />
+        }
+        <div class="hero-velo" aria-hidden="true"></div>
+        <div class="hero-texto">
+          <h2>{{ hero.nombre }}</h2>
+          <span class="hero-cta">Ver juego →</span>
+        </div>
+      </a>
+      }
+    </div>
+    <div class="hero-fundido" aria-hidden="true"></div>
+    @if (heroJuegos().length > 1) {
+    <span class="hero-puntos">
+      @for (j of heroJuegos(); track j.id; let i = $index) {
+      <button
+        type="button"
+        class="hero-punto"
+        [class.activo]="heroVisible() === i"
+        [attr.aria-label]="'Ver ' + j.nombre"
+        (click)="heroIndex.set(i)"
+      ></button>
+      }
+    </span>
+    }
+  </div>
+  }
+
+  <div class="tablero">
+    <div class="columna-principal">
+      <!-- Tus competencias: lo accionable primero (referencia CM). -->
+      @if (competencias().length > 0) {
+      <h2 class="seccion">Tus competencias</h2>
+      <ul class="competencias">
+        @for (torneo of competencias(); track torneo.id) {
+        <li>
+          <a
+            class="competencia"
+            [routerLink]="['/tournaments', torneo.id]"
+            [queryParams]="torneo.estado === 'EN_CURSO' ? { tab: 'llaves' } : null"
+          >
+            <span class="competencia-info">
+              <span class="competencia-nombre">{{ torneo.nombre }}</span>
+              <span class="competencia-meta">
+                {{ torneo.juegoNombre }} ·
+                {{ esOrganizadorDe(torneo) ? 'Lo organizás' : 'Competís' }} ·
+                {{ torneo.fechaInicio | fechaRelativa }}
+              </span>
+            </span>
+            <span class="competencia-chip" [class]="'chip-' + badgeDe(torneo).clase">
+              {{ badgeDe(torneo).texto }}
+            </span>
+            <span class="competencia-cta">
+              {{ torneo.estado === 'EN_CURSO' ? 'Ver llaves →' : 'Ver torneo →' }}
+            </span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+
+      <!-- CM le dedica un banner entero a "Hazte organizador". -->
+      @if (auth.isAuthenticated() && !organizaAlgo()) {
+      <div class="banner-organizador">
+        <div>
+          <h2>Convertite en organizador</h2>
+          <p>
+            Cualquier usuario puede crear su torneo: elegí un juego, definí las
+            reglas y la llave se arma sola.
+          </p>
+        </div>
+        <a class="btn-primary" routerLink="/games">Crear mi torneo</a>
+      </div>
+      }
+
+      <!-- Fila de juegos top, como los pósters de la referencia. -->
+      @if (topJuegos().length > 0) {
+      <h2 class="seccion">Juegos top</h2>
+      <div class="top-juegos">
+        @for (juego of topJuegos(); track juego.nombre) {
+        <a
+          class="poster"
+          [routerLink]="juego.idCatalogo ? ['/games', juego.idCatalogo] : ['/games']"
+          [style.background]="juego.imagenUrl ? undefined : gradiente(juego.nombre)"
+        >
+          @if (juego.imagenUrl) {
+          <img [src]="juego.imagenUrl" alt="" loading="lazy" />
+          }
+          <div class="poster-velo" aria-hidden="true"></div>
+          <span class="poster-nombre">{{ juego.nombre }}</span>
+        </a>
+        }
+      </div>
+      <button type="button" class="ver-mas" (click)="mostrandoMas.set(!mostrandoMas())">
+        {{ mostrandoMas() ? 'Ver menos ↑' : 'Ver más juegos ↓' }}
+      </button>
+      }
+
+      <!-- Pendientes accionables / invitación a entrar -->
+      @if (auth.hasRole('PATROCINADOR')) {
+      <section class="bloque-suave">
+        <h2 class="seccion">Mi marca</h2>
+        <app-empty-state
+          titulo="Panel comercial en camino"
+          mensaje="Acá vas a auditar la audiencia, la interacción y el sentimiento del público de las competencias que patrocinás."
+        >
+          <a class="btn-secondary" routerLink="/analytics">Ver panel</a>
+        </app-empty-state>
+      </section>
+      } @else if (!auth.isAuthenticated()) {
+      <section class="bloque-suave">
+        <h2 class="seccion">Competí en Brakket</h2>
+        <app-empty-state
+          titulo="Entrá para competir"
+          mensaje="Creá tu cuenta en segundos: armá un equipo, inscribite a torneos u organizá el tuyo."
+        >
+          <button type="button" class="btn-primary" (click)="auth.login()">Iniciar sesión</button>
+        </app-empty-state>
+      </section>
+      } @else if (!sinPendientes()) {
+      <h2 class="seccion">Requieren tu atención</h2>
+      <ul class="lista">
+        @for (invitacion of invitaciones(); track invitacion.id) {
+        <li class="item">
+          <span class="item-icono icono-invitacion" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M18 20h4a6 6 0 0 0-4-5.6" />
+            </svg>
+          </span>
+          <div class="item-cuerpo">
+            <p class="item-titulo">Invitación de {{ invitacion.equipoNombre }}</p>
+            <p class="item-detalle">
+              Rol propuesto: {{ invitacion.rolPropuesto }} · enviada por
+              {{ invitacion.creadoPorNombre }}
+            </p>
+          </div>
+          <a class="btn-secondary" routerLink="/teams/invitaciones">Responder</a>
+        </li>
+        }
+        @for (transferencia of transferencias(); track transferencia.id) {
+        <li class="item">
+          <span class="item-icono icono-transferencia" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5" />
+            </svg>
+          </span>
+          <div class="item-cuerpo">
+            <p class="item-titulo">Transferencia de {{ transferencia.jugadorNombre }}</p>
+            <p class="item-detalle">
+              {{ transferencia.equipoOrigenNombre }} → {{ transferencia.equipoDestinoNombre }}
+            </p>
+          </div>
+          <a class="btn-secondary" routerLink="/transfers">Revisar</a>
+        </li>
+        }
+      </ul>
+      }
+
+      <!-- Gestión de plataforma: solo administración. -->
+      @if (auth.hasRole('ADMIN', 'COMISIONADO')) {
+      <h2 class="seccion">Gestión</h2>
+      <div class="accesos">
+        <a class="acceso" routerLink="/games">
+          <span class="acceso-titulo">Catálogo de juegos</span>
+          <span class="acceso-detalle">Curaduría de títulos y perfiles competitivos</span>
+        </a>
+        <a class="acceso" routerLink="/sponsorships">
+          <span class="acceso-titulo">Patrocinios</span>
+          <span class="acceso-detalle">Marcas y espacios publicitarios</span>
+        </a>
+        @if (auth.hasRole('ADMIN')) {
+        <a class="acceso" routerLink="/admin">
+          <span class="acceso-titulo">Administración</span>
+          <span class="acceso-detalle">Usuarios, roles y permisos de la plataforma</span>
+        </a>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Rail derecho: próximos torneos (referencia "Upcoming Tournaments"). -->
+    <aside class="rail" aria-label="Próximos torneos">
+      <div class="rail-titulo">
+        <h2>Próximos torneos</h2>
+        <a routerLink="/tournaments">Ver más →</a>
+      </div>
+
+      @if (proximosTorneos().length === 0) {
+      <p class="rail-vacio">
+        Todavía no hay torneos programados. Entrá a un juego y creá el primero.
+      </p>
+      } @else {
+      <ul class="rail-lista">
+        @for (torneo of proximosTorneos(); track torneo.id) {
+        <li>
+          <a class="rail-torneo" [routerLink]="['/tournaments', torneo.id]">
+            <span class="rail-arte" [style.background]="fotoTorneo(torneo) ? undefined : gradiente(torneo.juegoNombre)">
+              @if (fotoTorneo(torneo)) {
+              <img [src]="fotoTorneo(torneo)" alt="" loading="lazy" />
+              }
+            </span>
+            <span class="rail-info">
+              <span class="rail-nombre">{{ torneo.nombre }}</span>
+              @if (torneo.premio) {
+              <span class="rail-premio">🏆 {{ torneo.premio }}</span>
+              }
+              <span class="rail-meta">
+                {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos ·
+                <span class="rail-fecha">{{ torneo.fechaInicio | fechaRelativa }}</span>
+              </span>
+              <span class="rail-chip" [class]="'chip-' + badgeDe(torneo).clase">
+                {{ badgeDe(torneo).texto }}
+              </span>
+            </span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+    </aside>
+  </div>
+  }
+</section>

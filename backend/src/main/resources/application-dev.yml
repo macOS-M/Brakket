@@ -1,0 +1,12 @@
+# Perfil de desarrollo (local). Activo por defecto.
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.coffeecommits.brakket: DEBUG
+    org.hibernate.SQL: DEBUG

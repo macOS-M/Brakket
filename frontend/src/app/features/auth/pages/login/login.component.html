@@ -1,0 +1,129 @@
+<section class="login">
+  <!-- Panel de marca: da contexto de producto antes de pedir la sesión.
+       Se oculta por debajo de 900px, donde solo importa entrar. -->
+  <aside class="panel-marca">
+    <div class="panel-contenido">
+      <div class="marca-grande">
+        <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z" />
+        </svg>
+        <span>BRAKKET</span>
+      </div>
+      <p class="claim">Dirigí la <span class="resaltado">competencia</span>.</p>
+      <ul class="capacidades">
+        <li>Ligas, temporadas y formatos configurables</li>
+        <li>Inscripciones, plantillas y transferencias</li>
+        <li>Resultados con evidencia y arbitraje</li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="login-card">
+    <div class="marca">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z" />
+      </svg>
+      <h1>Brakket</h1>
+    </div>
+    <p class="bajada">Administrá tus ligas y torneos de esports desde un solo lugar.</p>
+
+    @if (loginError()) {
+    <p class="error" role="alert">
+      No se pudo iniciar sesión con Google.
+      @if (oauthError()) {
+      <span> Código: {{ oauthError() }}.</span>
+      }
+      @if (oauthErrorDescription()) {
+      <span> {{ oauthErrorDescription() }}</span>
+      }
+      @if (errorMessage()) {
+      <span> {{ errorMessage() }}</span>
+      }
+    </p>
+    }
+
+    <!-- Cuenta local (DD-04): correo y contraseña, estilo referencia. -->
+    <div class="modos" role="tablist" aria-label="Forma de entrar">
+      <button
+        type="button"
+        class="modo"
+        [class.activo]="modo() === 'login'"
+        (click)="cambiarModo('login')"
+      >
+        Iniciar sesión
+      </button>
+      <button
+        type="button"
+        class="modo"
+        [class.activo]="modo() === 'registro'"
+        (click)="cambiarModo('registro')"
+      >
+        Registrarse
+      </button>
+    </div>
+
+    <form class="form-local" [formGroup]="form" (ngSubmit)="enviarLocal()" novalidate>
+      @if (modo() === 'registro') {
+      <label class="campo">
+        <span>Nombre</span>
+        <input type="text" formControlName="nombre" autocomplete="name" />
+        @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <span class="error-campo">Poné tu nombre.</span>
+        }
+      </label>
+      }
+      <label class="campo">
+        <span>Correo</span>
+        <input type="email" formControlName="correo" autocomplete="email" />
+        @if (form.controls.correo.touched && form.controls.correo.invalid) {
+        <span class="error-campo">Poné un correo válido.</span>
+        }
+      </label>
+      <label class="campo">
+        <span>Contraseña</span>
+        <input
+          type="password"
+          formControlName="password"
+          [attr.autocomplete]="modo() === 'registro' ? 'new-password' : 'current-password'"
+        />
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+        <span class="error-campo">Mínimo 8 caracteres.</span>
+        }
+      </label>
+
+      @if (errorLocal()) {
+      <p class="error" role="alert">{{ errorLocal() }}</p>
+      }
+
+      <button type="submit" class="btn-local" [disabled]="enviando()">
+        {{ enviando() ? 'Un momento…' : modo() === 'registro' ? 'Crear cuenta gratis' : 'Entrar' }}
+      </button>
+    </form>
+
+    <div class="divisor" aria-hidden="true"><span>o</span></div>
+
+    <button type="button" class="btn-google" (click)="login()">
+      <svg class="icono-google" viewBox="0 0 18 18" aria-hidden="true">
+        <path
+          fill="#4285F4"
+          d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"
+        />
+        <path
+          fill="#34A853"
+          d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"
+        />
+        <path
+          fill="#FBBC05"
+          d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"
+        />
+        <path
+          fill="#EA4335"
+          d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"
+        />
+      </svg>
+      Continuar con Google
+    </button>
+
+    <p class="nota">Brakket usa tu cuenta de Google. No guardamos tu contraseña.</p>
+  </div>
+</section>

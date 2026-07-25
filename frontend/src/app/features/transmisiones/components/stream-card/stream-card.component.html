@@ -1,0 +1,81 @@
+@if (transmision; as t) {
+<article class="tarjeta">
+  <button
+    type="button"
+    class="miniatura"
+    (click)="seleccionada.emit(t)"
+    [attr.aria-label]="'Ver ' + (t.titulo || 'la transmisión') + ' de ' + t.nombreCanal"
+  >
+    @if (t.estado === 'EN_VIVO' && t.thumbnailUrl) {
+    <img [src]="t.thumbnailUrl" [alt]="'Vista previa del directo de ' + t.nombreCanal" />
+    } @else if (t.vod?.thumbnailUrl) {
+    <img [src]="t.vod!.thumbnailUrl" [alt]="'Miniatura del último VOD de ' + t.nombreCanal" />
+    } @else if (t.thumbnailUrl) {
+    <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
+    } @else {
+    <div class="miniatura-vacia" aria-hidden="true"></div>
+    }
+
+    @switch (t.estado) {
+      @case ('EN_VIVO') {
+        <span class="badge badge-vivo">EN VIVO</span>
+        @if (t.espectadores !== null) {
+        <span class="badge badge-espectadores">
+          {{ t.espectadores | number }} espectadores
+        </span>
+        }
+      }
+      @case ('OFFLINE') {
+        <span class="badge badge-offline">OFFLINE</span>
+        @if (t.vod) {
+        <span class="badge badge-espectadores">Último VOD</span>
+        }
+      }
+      @case ('DESCONOCIDO') {
+        <span class="badge badge-desconocido">Estado desconocido</span>
+      }
+    }
+  </button>
+
+  <div class="info">
+    @if (t.avatarUrl) {
+    <img class="avatar" [src]="t.avatarUrl" [alt]="'Avatar de ' + t.nombreCanal" />
+    } @else {
+    <div class="avatar avatar-vacio" aria-hidden="true">{{ t.nombreCanal.charAt(0).toUpperCase() }}</div>
+    }
+    <div class="detalle">
+      <p class="titulo" [title]="t.titulo || t.vod?.titulo || ''">
+        {{ t.titulo || t.vod?.titulo || 'Sin transmisión activa' }}
+      </p>
+      <a class="canal" [href]="t.urlCanal" target="_blank" rel="noopener noreferrer">
+        {{ t.nombreCanal }}
+      </a>
+      @if (t.categoria) {
+      <p class="categoria">{{ t.categoria }}</p>
+      }
+      <div class="tags">
+        @if (etiquetaIdioma(t.idioma); as idioma) {
+        <span class="tag">{{ idioma }}</span>
+        }
+        @if (t.nombreTorneo) {
+        <span class="tag">{{ t.nombreTorneo }}</span>
+        }
+        <span class="tag tag-plataforma">Twitch</span>
+      </div>
+    </div>
+  </div>
+</article>
+} @else {
+<article class="tarjeta tarjeta-proximamente" aria-label="Espacio para una próxima transmisión">
+  <div class="miniatura miniatura-proximamente">
+    <span class="icono" aria-hidden="true">📺</span>
+    <span class="badge badge-proximamente">Próximamente</span>
+  </div>
+  <div class="info">
+    <div class="detalle">
+      <p class="titulo">Más transmisiones en camino</p>
+      <p class="categoria">Los directos de la comunidad aparecerán aquí</p>
+    </div>
+  </div>
+</article>
+}

@@ -1,0 +1,122 @@
+<section class="page">
+  <a class="back" routerLink="/leagues">← Volver a ligas</a>
+  @if (loading()) { <p class="muted">Cargando…</p> }
+  @else if (error()) { <p class="error">{{ error() }}</p> }
+  @else { @if (league(); as liga) {
+    <header class="league-head"><div><span class="eyebrow">Panel de liga</span><h1>{{ liga.nombre }}</h1>
+      <p class="meta">{{ liga.juegoNombre }} · Comisionado: {{ liga.comisionadoNombre }}</p></div>
+      <span class="status" [class.inactive]="!liga.activo">{{ liga.activo ? 'Liga activa' : 'Liga inactiva' }}</span>
+      @if (esComisionado()) { <a class="btn btn-ghost" [routerLink]="['editar']">Configurar liga</a> }
+    </header>
+    @if (confirmation()) { <p class="success" role="status">✓ {{ confirmation() }}</p> }
+    <section class="calendar"><div class="section-title"><div><span class="eyebrow">Calendario competitivo</span><h2>Temporadas</h2></div>
+      <div class="season-actions"><span>{{ seasons().length }} período(s)</span>
+        @if (esComisionado()) { <button type="button" class="btn btn-primary" (click)="abrirCreacion()" [disabled]="!liga.activo">+ Crear temporada</button> }
+      </div></div>
+      @if (!seasons().length) { <p class="empty">Esta liga aún no tiene temporadas.</p> }
+      @else { <div class="season-list"> @for (temporada of seasons(); track temporada.id) {
+        <article class="season-card entra-tarjeta"><div class="date-box"><strong>{{ temporada.fechaInicio | date:'dd' }}</strong><span>{{ temporada.fechaInicio | date:'MMM yyyy' }}</span></div>
+          <div class="season-content"><div class="season-heading"><h3>{{ temporada.nombre }}</h3><span class="status"
+            [class.status-planned]="temporada.estado === 'PLANIFICADA'"
+            [class.status-active]="temporada.estado === 'ACTIVA'"
+            [class.status-finished]="temporada.estado === 'FINALIZADA'"
+            [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado }}</span></div>
+            <p>{{ temporada.fechaInicio | date:'dd/MM/yyyy' }} — {{ temporada.fechaFin | date:'dd/MM/yyyy' }}</p>
+            <div class="chips"><span>{{ temporada.formatoNombre | formatoTorneo }}</span><span>Cupo: {{ temporada.cupoEquipos }}</span><span>{{ temporada.juegoNombre }}</span></div>
+            <details><summary>Ver reglas</summary><p class="rules">{{ temporada.reglas }}</p></details></div>
+          @if (esComisionado() && liga.activo) { <button type="button" class="btn btn-ghost" (click)="editar(temporada)">Editar</button> }
+        </article> } </div> }
+    </section>
+    @if (esComisionado() && showingForm()) {
+      <div class="modal-backdrop" (pointerdown)="registrarInicioEnFondo($event)" (pointerup)="cerrarDesdeFondo($event)">
+      <form [formGroup]="seasonForm" (ngSubmit)="guardarTemporada()" class="season-form modal" role="dialog" aria-modal="true" aria-labelledby="season-modal-title" (click)="$event.stopPropagation()">
+        <div class="section-title"><div><span class="eyebrow">Temporada</span><h2 id="season-modal-title">{{ editingId() ? 'Actualizar temporada' : 'Crear temporada' }}</h2></div></div>
+        @if (!liga.activo) { <p class="error">La liga está inactiva. No se pueden crear ni modificar temporadas.</p> }
+        <div class="form-grid">
+          <label class="field wide"><span>Nombre</span><input formControlName="nombre" placeholder="Ej. Apertura 2026"></label>
+          <label class="field"><span>Fecha de inicio</span><input type="date" formControlName="fechaInicio"></label>
+          <label class="field"><span>Fecha de fin</span><input type="date" formControlName="fechaFin"></label>
+          <label class="field"><span>Estado</span><select formControlName="estado"><option value="PLANIFICADA">Planificada</option><option value="ACTIVA">Activa</option><option value="FINALIZADA">Finalizada</option><option value="CANCELADA">Cancelada</option></select></label>
+          <label class="field"><span>Cupo de equipos</span><input type="number" min="2" max="1024" formControlName="cupoEquipos"></label>
+          <label class="field wide"><span>Formato competitivo activo</span><select formControlName="formatoId"><option [ngValue]="null">Seleccionar formato</option>@for (formato of formats(); track formato.id) { <option [ngValue]="formato.id">{{ formato.nombre | formatoTorneo }}</option> }</select></label>
+          <label class="field full"><span>Reglas específicas</span><textarea rows="5" formControlName="reglas" placeholder="Criterios de participación, desempates, conducta y puntuación"></textarea></label>
+        </div>
+        @if (seasonForm.hasError('rangoFechas')) { <p class="field-error">La fecha de inicio no puede ser posterior a la fecha de fin.</p> }
+        @if (seasonForm.touched && seasonForm.invalid && !seasonForm.hasError('rangoFechas')) { <p class="field-error">Corrige los campos marcados antes de guardar.</p> }
+        @if (seasonError()) { <p class="error">{{ seasonError() }}</p> }
+        <div class="actions"><button class="btn btn-primary" type="submit" [disabled]="savingSeason() || !liga.activo">{{ savingSeason() ? 'Guardando…' : (editingId() ? 'Guardar cambios' : 'Crear temporada') }}</button>
+          <button class="btn btn-ghost" type="button" (click)="cancelarEdicion()">Cancelar</button></div>
+      </form>
+      </div>
+    }
+
+    <!-- Torneos hospedados en la liga (RF-24: juego→liga→temporada→torneo). -->
+    <div class="torneos-liga">
+      <h2>Torneos de la liga</h2>
+
+      @if (esComisionado()) {
+      <button type="button" class="crear-torneo" (click)="wizardAbierto.set(true)">
+        <span class="mas" aria-hidden="true">+</span>
+        <span class="crear-texto">
+          <strong>Crear torneo en esta liga</strong>
+          <span>El wizard llega con {{ liga.nombre }} preseleccionada; elegí la temporada.</span>
+        </span>
+      </button>
+      }
+
+      @if (torneos().length === 0) {
+      <p class="empty">Esta liga todavía no tiene torneos.</p>
+      } @else {
+      <div class="torneos-lista">
+        @for (torneo of torneos(); track torneo.id) {
+        <app-torneo-card class="entra-tarjeta" [torneo]="torneo" />
+        }
+      </div>
+      }
+    </div>
+
+    @if (wizardAbierto()) {
+    <app-tournament-wizard
+      [juegoId]="liga.juegoId"
+      [juegoNombre]="liga.juegoNombre"
+      [juegoImagen]="portada()"
+      [ligaIdInicial]="liga.id"
+      (cerrado)="wizardAbierto.set(false)"
+      (creado)="torneoCreado($event)"
+    />
+    }
+
+    @if (puedeEliminar()) {
+    <div class="danger-zone">
+      <h2>{{ esModeracion() ? 'Moderación (admin)' : 'Zona de peligro' }}</h2>
+      @if (esModeracion()) {
+      <p class="danger-nota">
+        Ves esto porque sos administrador: esta liga pertenece a
+        {{ liga.comisionadoNombre }}. Los usuarios comunes no ven esta sección.
+      </p>
+      }
+      @if (errorEliminar()) {
+      <p class="error" role="alert">{{ errorEliminar() }}</p>
+      }
+      @if (confirmandoEliminar()) {
+      <p class="danger-aviso">
+        Se eliminará <strong>{{ liga.nombre }}</strong> con todas sus temporadas. Esta acción no
+        se puede deshacer.
+      </p>
+      <div class="danger-acciones">
+        <button type="button" class="btn btn-danger" [disabled]="eliminando()" (click)="eliminarLiga()">
+          {{ eliminando() ? 'Eliminando…' : 'Sí, eliminar la liga' }}
+        </button>
+        <button type="button" class="btn btn-ghost" [disabled]="eliminando()" (click)="confirmandoEliminar.set(false)">
+          Cancelar
+        </button>
+      </div>
+      } @else {
+      <button type="button" class="btn btn-danger" (click)="confirmandoEliminar.set(true)">
+        Eliminar liga
+      </button>
+      }
+    </div>
+    }
+  } }
+</section>

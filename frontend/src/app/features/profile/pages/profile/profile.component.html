@@ -1,0 +1,320 @@
+<section class="page">
+  <app-page-header
+    titulo="Mi perfil"
+    subtitulo="Gestiona cómo te ve el resto de la comunidad y tus datos personales."
+  />
+
+  @if (usuario(); as u) {
+    @if (u.authenticated) {
+      <div class="columnas">
+        <div class="principal">
+          <form class="formulario" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <section class="bloque">
+              <div class="bloque-titulo">
+                <h2>Datos básicos</h2>
+                <span class="conteo">Visible para toda la comunidad</span>
+              </div>
+
+              <div class="campos">
+                <div class="campo-fila">
+                  <label class="campo">
+                    <span class="campo-etiqueta">Nombre visible</span>
+                    <input type="text" formControlName="nombre" />
+                  </label>
+                  <label class="campo">
+                    <span class="campo-etiqueta">Avatar (URL)</span>
+                    <input type="url" formControlName="foto" placeholder="https://…" />
+                  </label>
+                </div>
+
+                <label class="campo">
+                  <span class="campo-etiqueta">Biografía</span>
+                  <textarea rows="5" formControlName="biografia"></textarea>
+                </label>
+              </div>
+            </section>
+
+            <section class="bloque">
+              <div class="bloque-titulo">
+                <h2>Ajustes personales</h2>
+                <span class="conteo">{{ camposPersonalesCompletos }}/{{ totalCamposPersonales }} completos</span>
+              </div>
+
+              <p class="nota-privacidad">
+                <span class="nota-icono" aria-hidden="true">🔒</span>
+                Estos datos son privados: no aparecen en tu perfil público. Los usamos para
+                verificar tu identidad, coordinar horarios de partidos y entregar premios.
+              </p>
+
+              <div class="campos">
+                <div class="campo-fila">
+                  <label class="campo">
+                    <span class="campo-etiqueta">Nombre completo</span>
+                    <input
+                      type="text"
+                      formControlName="nombreCompleto"
+                      autocomplete="name"
+                      placeholder="Como aparece en tu documento"
+                    />
+                  </label>
+
+                  <label class="campo">
+                    <span class="campo-etiqueta">
+                      Fecha de nacimiento
+                      @if (edad !== null) {
+                        <span class="campo-pista">{{ edad }} años</span>
+                      }
+                    </span>
+                    <input
+                      type="date"
+                      formControlName="fechaNacimiento"
+                      autocomplete="bday"
+                      [max]="maxFechaNacimiento"
+                    />
+                  </label>
+                </div>
+
+                <div class="campo-fila">
+                  <label class="campo">
+                    <span class="campo-etiqueta">Teléfono</span>
+                    <input
+                      type="tel"
+                      formControlName="telefono"
+                      autocomplete="tel"
+                      placeholder="+506 8888 7777"
+                    />
+                  </label>
+                  <label class="campo">
+                    <span class="campo-etiqueta">País</span>
+                    <input
+                      type="text"
+                      formControlName="pais"
+                      list="paises-sugeridos"
+                      autocomplete="country-name"
+                      placeholder="Costa Rica"
+                    />
+                  </label>
+                </div>
+
+                <datalist id="paises-sugeridos">
+                  @for (pais of paisesSugeridos; track pais) {
+                    <option [value]="pais"></option>
+                  }
+                </datalist>
+
+                <div class="campo-fila campo-fila-direccion">
+                  <label class="campo">
+                    <span class="campo-etiqueta">Ciudad</span>
+                    <input
+                      type="text"
+                      formControlName="ciudad"
+                      autocomplete="address-level2"
+                      placeholder="San José"
+                    />
+                  </label>
+                  <label class="campo">
+                    <span class="campo-etiqueta">Código postal</span>
+                    <input
+                      type="text"
+                      formControlName="codigoPostal"
+                      autocomplete="postal-code"
+                      placeholder="10101"
+                    />
+                  </label>
+                </div>
+
+                <label class="campo">
+                  <span class="campo-etiqueta">Dirección</span>
+                  <input
+                    type="text"
+                    formControlName="direccion"
+                    autocomplete="street-address"
+                    placeholder="Calle, número, señas"
+                  />
+                </label>
+
+                <div class="campo campo-zona">
+                  <span class="campo-etiqueta">Zona horaria</span>
+                  <div class="campo-con-accion">
+                    <select formControlName="zonaHoraria">
+                      <option value="">Sin definir</option>
+                      @for (zona of zonasHorarias; track zona.valor) {
+                        <option [value]="zona.valor">{{ zona.etiqueta }}</option>
+                      }
+                    </select>
+                    <button type="button" class="btn-ghost" (click)="detectarZonaHoraria()">
+                      Detectar
+                    </button>
+                  </div>
+                  <span class="campo-ayuda">
+                    Con esto mostramos los horarios de tus partidos en tu hora local.
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section class="bloque" formGroupName="redesSociales">
+              <div class="bloque-titulo">
+                <h2>Redes sociales</h2>
+                <span class="conteo">Deja vacío el canal que no uses</span>
+              </div>
+
+              <div class="redes-grid">
+                @for (network of socialNetworks; track network.key) {
+                  <label class="campo">
+                    <span class="campo-etiqueta">{{ network.label }}</span>
+                    <input
+                      type="url"
+                      [formControlName]="network.key"
+                      [placeholder]="network.placeholder"
+                    />
+                  </label>
+                }
+              </div>
+            </section>
+
+            <section class="bloque">
+              <div class="bloque-titulo">
+                <h2>Visibilidad</h2>
+              </div>
+
+              <label class="toggle-fila">
+                <input
+                  type="checkbox"
+                  [checked]="isPrivateVisibility()"
+                  (change)="setVisibility($any($event.target).checked)"
+                />
+                <span class="toggle-track" aria-hidden="true">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-copy">
+                  <span class="toggle-title">
+                    {{ isPrivateVisibility() ? 'Perfil privado' : 'Perfil público' }}
+                  </span>
+                  <span class="toggle-description">
+                    {{ isPrivateVisibility()
+                      ? 'Solo usuarios autorizados verán el contenido.'
+                      : 'Tu perfil será visible para toda la comunidad.' }}
+                  </span>
+                </span>
+              </label>
+            </section>
+
+            <section class="bloque">
+              <div class="bloque-titulo">
+                <h2>Juegos preferidos</h2>
+                <span class="conteo">{{ profileForm.controls.juegoIds.value.length }} seleccionados</span>
+              </div>
+
+              @if (games.length) {
+                <div class="juegos-grid">
+                  @for (game of games; track game.id) {
+                    <label class="juego" [class.seleccionado]="isGameSelected(game.id)">
+                      <input
+                        type="checkbox"
+                        class="juego-input"
+                        [checked]="isGameSelected(game.id)"
+                        (change)="toggleGame(game.id, $any($event.target).checked)"
+                      />
+                      <span class="juego-dot" aria-hidden="true"></span>
+                      <span class="juego-nombre">{{ game.nombre }}</span>
+                    </label>
+                  }
+                </div>
+              } @else {
+                <app-empty-state mensaje="No hay juegos disponibles por ahora." />
+              }
+            </section>
+
+            <div class="acciones">
+              @if (saveSuccess) {
+                <p class="estado-guardado exito" role="status">{{ saveSuccess }}</p>
+              }
+              @if (saveError) {
+                <p class="estado-guardado error" role="alert">{{ saveError }}</p>
+              }
+
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="profileForm.pristine || profileForm.invalid || savingProfile"
+              >
+                {{ savingProfile ? 'Guardando…' : 'Guardar cambios' }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="lateral">
+          <section class="bloque preview">
+            <div class="preview-cabecera">
+              @if (u.foto) {
+                <img
+                  class="avatar"
+                  [src]="u.foto"
+                  [alt]="u.nombre ?? 'Avatar'"
+                  referrerpolicy="no-referrer"
+                />
+              } @else {
+                <span class="avatar sin-foto" aria-hidden="true">
+                  {{ (u.nombre || '?').charAt(0).toUpperCase() }}
+                </span>
+              }
+              <div class="preview-identidad">
+                <p class="preview-nombre">{{ u.nombre }}</p>
+                <p class="preview-correo">{{ u.correo }}</p>
+              </div>
+            </div>
+
+            <p class="preview-bio">{{ u.biografia || 'Aún no agregaste una biografía.' }}</p>
+
+            <div class="preview-chips">
+              <app-status-badge
+                [estado]="isPrivateVisibility() ? 'privado' : 'publico'"
+                [texto]="isPrivateVisibility() ? 'Perfil privado' : 'Perfil público'"
+                [tono]="isPrivateVisibility() ? 'neutral' : 'info'"
+              />
+              @for (rol of u.roles ?? []; track rol) {
+                <app-status-badge [estado]="rol" tono="neutral" />
+              }
+            </div>
+          </section>
+
+          <section class="bloque preview-datos">
+            <h3 class="preview-datos-titulo">Datos personales</h3>
+
+            <dl class="datos-lista">
+              <div class="dato-fila">
+                <dt>Nombre legal</dt>
+                <dd>{{ u.nombreCompleto || 'Sin definir' }}</dd>
+              </div>
+              <div class="dato-fila">
+                <dt>Teléfono</dt>
+                <dd>{{ u.telefono || 'Sin definir' }}</dd>
+              </div>
+              <div class="dato-fila">
+                <dt>Ubicación</dt>
+                <dd>
+                  {{ (u.ciudad && u.pais) ? u.ciudad + ', ' + u.pais : (u.ciudad || u.pais || 'Sin definir') }}
+                </dd>
+              </div>
+              <div class="dato-fila">
+                <dt>Zona horaria</dt>
+                <dd>{{ u.zonaHoraria || 'Sin definir' }}</dd>
+              </div>
+            </dl>
+
+            <p class="preview-datos-nota">Solo vos podés ver esta sección.</p>
+          </section>
+        </aside>
+      </div>
+    } @else {
+      <app-empty-state
+        titulo="Sin sesión activa"
+        mensaje="Iniciá sesión para ver y editar tu perfil."
+      />
+    }
+  } @else {
+    <app-empty-state modo="cargando" mensaje="Cargando perfil…" />
+  }
+</section>

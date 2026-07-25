@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: brakket-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/brakket}
+    username: ${DB_USER:brakket}
+    password: ${DB_PASSWORD:brakket}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Flyway es dueño del esquema; Hibernate solo valida que las entidades calcen.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  servlet:
+    multipart:
+      # Subida directa de imágenes (logos/banners): límite razonable para
+      # fotos de perfil sin permitir que suban archivos gigantes.
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            # Placeholders para que la app arranque sin credenciales reales.
+            # El login con Google recién funciona al poner las verdaderas en .env
+            # (crear en https://console.cloud.google.com/apis/credentials).
+            client-id: ${GOOGLE_CLIENT_ID:changeme}
+            client-secret: ${GOOGLE_CLIENT_SECRET:changeme}
+            scope: openid,profile,email
+
+# ---------- Configuración propia de Brakket ----------
+brakket:
+  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  uploads:
+    # Directorio de imágenes subidas; en Docker es un volumen persistente.
+    dir: ${UPLOADS_DIR:uploads}
+  jwt:
+    secret: ${JWT_SECRET:cambiar-esta-clave-secreta-de-al-menos-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  twitch:
+    client-id: ${TWITCH_CLIENT_ID:}
+    client-secret: ${TWITCH_CLIENT_SECRET:}
+    channel: ${TWITCH_CHANNEL:}
+    # Fail-fast: sin credenciales la app no arranca. Solo test/CI lo apagan.
+    required: ${TWITCH_REQUIRED:true}
+  streams:
+    # false = /transmisiones muestra solo el canal oficial; true incorpora
+    # además las transmisiones registradas (RF-35). El código siempre
+    # recorre una lista: encender el flag no requiere tocar nada más.
+    multi-source-enabled: ${STREAMS_MULTI_SOURCE_ENABLED:false}
+    # RF-36: cadencia del muestreo de audiencia (1 request batcheada por tick;
+    # 60s mantiene el desfase bajo el minuto de RNF-02 sin gastar cuota).
+    muestreo-intervalo-ms: ${STREAMS_MUESTREO_INTERVALO_MS:60000}
+  ai:
+    api-key: ${AI_API_KEY:}
+    api-base-url: ${AI_API_BASE_URL:}
+  rawg:
+    api-key: ${RAWG_API_KEY:}
+    base-url: https://api.rawg.io/api
+  # Correos que reciben ADMIN al iniciar sesión (bootstrap de plataforma).
+  # El seed de V8 solo cubría cuentas ya existentes al migrar: en una base
+  # recién creada nadie quedaba admin. Esta lista lo garantiza en el login.
+  admin-emails: ${ADMIN_EMAILS:gvalverdem@ucenfotec.ac.cr,dchavarriam@ucenfotec.ac.cr,mmoralesc@ucenfotec.ac.cr,mcalvoe@ucenfotec.ac.cr,ccespedesc@ucenfotec.ac.cr,dcarmiola@ucenfotec.ac.cr}
+
+# ---------- Actuator (RNF-21) ----------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ---------- Swagger / OpenAPI ----------
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

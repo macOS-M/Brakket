@@ -1,0 +1,144 @@
+<section class="page">
+  <app-page-header
+    titulo="Panel de administración"
+    subtitulo="Gestioná los roles y permisos de las cuentas de la plataforma."
+  />
+
+  @if (usuarioActual; as u) {
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Mi sesión</h2>
+    </div>
+    <div class="sesion">
+      <p class="correo">{{ u.correo }}</p>
+      @if (u.roles.length) {
+      <div class="roles">
+        @for (rol of u.roles; track rol) {
+        <app-status-badge [estado]="rol" tono="info" />
+        }
+      </div>
+      } @else {
+      <span class="sin-roles">Sin roles asignados</span>
+      }
+    </div>
+  </section>
+  }
+
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Catálogo de roles</h2>
+      <span class="conteo">{{ catalogo.length }} roles</span>
+    </div>
+
+    @if (catalogo.length) {
+    <div class="tabla" role="table" aria-label="Roles reconocidos por el sistema">
+      <div class="tabla-encabezado" role="row">
+        <span role="columnheader">Rol</span>
+        <span role="columnheader" class="col-nivel">Nivel</span>
+        <span role="columnheader">Permisos</span>
+      </div>
+      @for (rol of catalogo; track rol.id) {
+      <div class="fila" role="row">
+        <span class="celda-rol" role="cell">{{ rol.nombreRol }}</span>
+        <span class="celda-nivel" role="cell">{{ rol.nivel }}</span>
+        <div class="celda-permisos" role="cell">
+          @for (permiso of rol.permisos; track permiso) {
+          <span class="permiso">{{ permiso }}</span>
+          } @empty {
+          <span class="sin-roles">Sin permisos</span>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <app-empty-state
+      titulo="Sin roles todavía"
+      mensaje="El sistema aún no reporta roles reconocidos."
+    />
+    }
+  </section>
+
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Roles de un usuario</h2>
+    </div>
+
+    <div class="busqueda">
+      <label class="campo">
+        <span class="etiqueta">ID de usuario</span>
+        <input type="number" [(ngModel)]="usuarioIdBuscado" placeholder="Ej: 1" />
+      </label>
+      <button type="button" class="btn-secondary" (click)="buscarUsuario()" [disabled]="cargando">
+        Buscar
+      </button>
+    </div>
+
+    @if (mensajeExito) {
+    <p class="feedback exito" role="status">{{ mensajeExito }}</p>
+    }
+    @if (mensajeError) {
+    <p class="feedback error" role="alert">{{ mensajeError }}</p>
+    }
+
+    @if (cargando && !usuarioConsultado) {
+    <app-empty-state modo="cargando" mensaje="Consultando usuario…" />
+    } @else {
+    <!-- `as` solo se admite en el @if primario, por eso este bloque va anidado. -->
+    @if (usuarioConsultado; as uc) {
+    <div class="usuario">
+      <p class="correo">{{ uc.correo }}</p>
+
+      <div class="subbloque">
+        <span class="etiqueta">Roles actuales</span>
+        @if (uc.roles.length) {
+        <ul class="roles-usuario">
+          @for (rol of uc.roles; track rol) {
+          <li class="rol-usuario">
+            <app-status-badge [estado]="rol" tono="info" />
+            <button
+              type="button"
+              class="btn-revocar"
+              (click)="revocarRol(rol)"
+              [disabled]="cargando"
+              [attr.aria-label]="'Revocar rol ' + rol"
+            >
+              Revocar
+            </button>
+          </li>
+          }
+        </ul>
+        } @else {
+        <p class="sin-roles">Sin roles asignados.</p>
+        }
+      </div>
+
+      <div class="subbloque">
+        <span class="etiqueta">Asignar rol</span>
+        <div class="asignar">
+          <select [(ngModel)]="rolSeleccionadoId" aria-label="Rol a asignar">
+            <option [ngValue]="null">— Seleccionar —</option>
+            @for (rol of catalogo; track rol.id) {
+            <option [ngValue]="rol.id">{{ rol.nombreRol }}</option>
+            }
+          </select>
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="asignarRol()"
+            [disabled]="cargando || !rolSeleccionadoId"
+          >
+            Asignar
+          </button>
+        </div>
+      </div>
+    </div>
+    } @else if (!mensajeError) {
+    <app-empty-state
+      titulo="Buscá un usuario"
+      mensaje="Ingresá el ID de una cuenta para ver y editar sus roles."
+    />
+    }
+    }
+  </section>
+</section>

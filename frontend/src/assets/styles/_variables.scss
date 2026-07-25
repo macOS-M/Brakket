@@ -1,0 +1,140 @@
+// ============================================================
+// Brakket · tokens de diseño
+// ------------------------------------------------------------
+// Cada color de estado tiene tres variantes, porque así se usa
+// realmente en la UI:
+//   $x         → bordes y acentos sólidos
+//   $x-text    → texto e iconos sobre fondo oscuro (más claro,
+//                para que contraste contra $surface)
+//   $x-bg      → relleno tenue de banners, chips y badges
+// ============================================================
+
+// ----- Marca -----
+// El acento de acción es el naranja de competencia (referencia Aquament):
+// carga la identidad sobre el azul marino neutro. La tinta sobre acento
+// es blanca y en negrita (AA de texto grande); el texto chico sobre
+// acento se evita.
+$accent: #ff5500;
+$accent-hover: #ff6a1f;
+$accent-ink: #0b1120; // texto sobre superficies naranjas (5.6:1)
+$accent-text: #ff6a1f; // naranja como texto sobre fondo oscuro (5.9:1)
+
+// El azul y el cyan quedan para estados informativos y compatibilidad;
+// ya no son el color de acción.
+$brand-blue: #2563eb;
+$brand-blue-hover: #3b82f6;
+$brand-cyan: #22d3ee;
+
+// ----- Superficies (tema oscuro) -----
+$bg: #0b1120;
+$surface: #111827;
+$surface-2: #1f2937;
+$surface-3: #0d1526; // barra lateral: un punto más oscura que el fondo
+$border: #334155;
+$border-soft: rgba(148, 163, 184, 0.18);
+
+// ----- Texto -----
+$text: #e2e8f0;
+$text-muted: #94a3b8;
+// #64748b daba 3.3:1 sobre el chip y 3.7:1 sobre superficie: por debajo del
+// 4.5:1 que exige AA. Este valor llega a 6.0:1 sobre superficie, 6.1:1 sobre
+// la barra lateral y 5.2:1 sobre el relleno neutro de los chips.
+$text-subtle: #8496ad;
+
+// ----- Estados -----
+$danger: #ef4444;
+$danger-text: #f87171;
+$danger-bg: rgba(239, 68, 68, 0.12);
+
+$success: #22c55e;
+$success-text: #4ade80;
+$success-bg: rgba(34, 197, 94, 0.12);
+
+$warning: #f59e0b;
+$warning-text: #fbbf24;
+$warning-bg: rgba(245, 158, 11, 0.12);
+
+$info: #3b82f6;
+$info-text: #60a5fa;
+$info-bg: rgba(59, 130, 246, 0.12);
+
+$neutral-bg: rgba(148, 163, 184, 0.1);
+
+// ----- Acentos de competencia -----
+// Rangos, rarezas de logros y posiciones de podio.
+$accent-purple: #8b5cf6;
+$accent-purple-text: #c4b5fd;
+$accent-purple-bg: rgba(139, 92, 246, 0.14);
+
+$accent-gold: #eab308;
+$accent-gold-text: #facc15;
+$accent-gold-bg: rgba(234, 179, 8, 0.12);
+
+// ============================================================
+// Tema claro
+// ------------------------------------------------------------
+// Los neutros se invierten; la marca y los estados conservan su
+// identidad pero bajan de luminosidad para contrastar sobre blanco.
+// Todos los valores están verificados a 4.5:1 mínimo sobre la
+// superficie donde se usan.
+// ============================================================
+
+$l-bg: #f8fafc;
+$l-surface: #ffffff;
+$l-surface-2: #f1f5f9;
+$l-surface-3: #f1f5f9;
+$l-border: #cbd5e1;
+$l-border-soft: rgba(100, 116, 139, 0.2);
+
+$l-text: #0f172a; // 17.9:1
+$l-text-muted: #475569; // 7.6:1
+$l-text-subtle: #5a677a; // 5.5:1 — #64748b daba 4.55, demasiado justo
+
+// El naranja pleno no es legible como texto sobre blanco (3.1:1); esta
+// variante oscura conserva el matiz y llega a 4.9:1.
+$l-accent-text: #c2410c;
+
+// El cyan de marca es inusable como texto sobre blanco (1.8:1).
+// Esta variante oscura conserva el matiz y llega a 5.4:1.
+$l-brand-cyan: #0e7490;
+
+$l-danger-text: #dc2626; // 4.8:1
+$l-danger-bg: rgba(220, 38, 38, 0.1);
+$l-success-text: #15803d; // 5.0:1
+$l-success-bg: rgba(21, 128, 61, 0.1);
+$l-warning-text: #b45309; // 5.0:1
+$l-warning-bg: rgba(180, 83, 9, 0.1);
+$l-info-text: #1d4ed8; // 6.7:1
+$l-info-bg: rgba(29, 78, 216, 0.1);
+$l-accent-purple-text: #6d28d9;
+$l-accent-purple-bg: rgba(109, 40, 217, 0.1);
+$l-accent-gold-text: #a16207;
+$l-accent-gold-bg: rgba(161, 98, 7, 0.12);
+$l-neutral-bg: rgba(100, 116, 139, 0.1);
+
+$l-shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08);
+$l-shadow-modal: 0 24px 80px rgba(15, 23, 42, 0.18);
+
+// ----- Tipografía -----
+// Barlow es una grotesca de baja modulación diseñada para señalética
+// deportiva: tiene carácter competitivo sin caer en lo estridente, y
+// aguanta bien tamaños chicos en interfaces densas.
+$font-ui: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+  sans-serif;
+// La variante condensada se reserva para datos tabulares (marcadores,
+// posiciones, contadores), donde el ancho de columna es escaso.
+$font-data: 'Barlow Condensed', 'Barlow', 'Segoe UI', sans-serif;
+
+// ----- Radios y sombras -----
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px; // chrome grande de la referencia (banners, modales)
+$radius-pill: 999px;
+
+$shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+$shadow-modal: 0 24px 80px rgba(0, 0, 0, 0.55);
+
+// ----- Layout -----
+$sidebar-width: 252px;
+$content-max: 1280px;

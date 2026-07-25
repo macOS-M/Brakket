@@ -1,0 +1,569 @@
+// Tablero de dos columnas (referencia dashboard de jugador): contenido
+// principal + rail de próximos torneos. Jerarquía por arte y espacio,
+// sin cajas delineadas alrededor de cada cosa.
+
+.tablero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.columna-principal {
+  min-width: 0;
+}
+
+.seccion {
+  margin: 1.75rem 0 0.9rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+// ----- Héroe -----
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 260px;
+  overflow: hidden;
+  border-radius: var(--radius-xl, 20px);
+  text-decoration: none;
+  box-shadow: var(--shadow-card, 0 1px 3px rgba(0, 0, 0, 0.3));
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.25s ease;
+  }
+
+  &:hover img {
+    transform: scale(1.03);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 3px;
+  }
+}
+
+.hero-velo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(4, 8, 18, 0.9) 0%, rgba(4, 8, 18, 0.35) 55%, rgba(4, 8, 18, 0.1) 100%);
+}
+
+.hero-texto {
+  position: relative;
+  max-width: 46ch;
+  padding: 1.5rem;
+
+  h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 0.4rem 0 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+}
+
+.hero-cta {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent, #ff5500);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+// ----- Fila de juegos top -----
+
+.top-juegos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.75rem;
+}
+
+.poster {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-md, 12px);
+  text-decoration: none;
+  transition: transform 0.15s ease;
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 3px;
+  }
+}
+
+.poster-velo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(4, 8, 18, 0.85) 0%, rgba(4, 8, 18, 0.05) 45%);
+}
+
+.poster-nombre {
+  position: relative;
+  padding: 0.5rem 0.6rem;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+// ----- Pendientes accionables -----
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--surface, #111827);
+  border-radius: var(--radius-md, 12px);
+}
+
+.item-icono {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill, 999px);
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.icono-invitacion {
+  background: var(--info-bg, rgba(59, 130, 246, 0.12));
+  color: var(--info-text, #60a5fa);
+}
+
+.icono-transferencia {
+  background: var(--warning-bg, rgba(245, 158, 11, 0.12));
+  color: var(--warning-text, #fbbf24);
+}
+
+.item-cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-titulo {
+  margin: 0;
+  color: var(--text, #e2e8f0);
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-detalle {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bloque-suave {
+  margin-top: 0.5rem;
+}
+
+// ----- Gestión -----
+
+.accesos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.6rem;
+}
+
+.acceso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.8rem 0.95rem;
+  background: var(--surface, #111827);
+  border-radius: var(--radius-md, 12px);
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+  }
+
+  .acceso-titulo {
+    color: var(--text, #e2e8f0);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .acceso-detalle {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.8125rem;
+  }
+}
+
+// ----- Rail de próximos torneos -----
+
+.rail {
+  position: sticky;
+  top: 4.5rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface, #111827);
+  border-radius: var(--radius-lg, 16px);
+}
+
+.rail-titulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+
+  h2 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  a {
+    color: var(--accent-text, #ff6a1f);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.rail-vacio {
+  margin: 0;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.rail-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rail-torneo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem;
+  border-radius: var(--radius-sm, 8px);
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 2px;
+  }
+}
+
+.rail-arte {
+  position: relative;
+  width: 52px;
+  height: 38px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm, 8px);
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.rail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.rail-nombre {
+  color: var(--text, #e2e8f0);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-premio {
+  color: var(--accent-gold-text, #facc15);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-meta {
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+// ----- Botones -----
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero img,
+  .poster,
+  .rail-torneo,
+  .acceso {
+    transition: none;
+  }
+}
+
+// ---------- Tus competencias (accionable primero, referencia CM) ----------
+
+.competencias {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.competencia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+
+  &:hover { border-color: var(--accent); }
+
+  .competencia-info { flex: 1; min-width: 180px; }
+  .competencia-nombre { display: block; font-weight: 700; color: var(--text); }
+  .competencia-meta { display: block; margin-top: 2px; font-size: 0.8rem; color: var(--text-muted); }
+  .competencia-cta { font-size: 0.85rem; font-weight: 600; color: var(--accent-text); }
+}
+
+.competencia-chip, .rail-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+
+  &.chip-verde { background: var(--success-bg); color: var(--success-text); }
+  &.chip-en-curso { background: var(--success-bg); color: var(--success-text); }
+  &.chip-ambar { background: var(--warning-bg); color: var(--warning-text); }
+  &.chip-neutro { background: var(--neutral-bg); color: var(--text-muted); }
+}
+
+.rail-chip { align-self: flex-start; margin-top: 4px; }
+.rail-fecha { color: var(--accent-text); font-weight: 600; }
+
+.banner-organizador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 20px 0 8px;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(120deg, var(--surface), var(--surface-2));
+
+  h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  p { margin: 0; color: var(--text-muted); font-size: 0.9rem; max-width: 52ch; }
+}
+
+.hero-puntos { position: absolute; bottom: 14px; right: 18px; display: flex; gap: 6px; z-index: 3; }
+.hero-punto { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.35); transition: background 0.2s ease; }
+.hero-punto.activo { background: var(--accent); }
+.ver-mas { display: block; width: 100%; margin-top: 10px; padding: 9px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; }
+.ver-mas:hover { color: var(--accent-text); border-color: var(--accent); }
+
+// ---------- hero carousel de marco fijo con slide suave ----------
+
+// A toda la anchura del contenido y con altura de portada (referencia CM):
+// el arte manda y la página emerge de él.
+.hero-carrusel {
+  position: relative;
+  height: clamp(320px, 44vh, 470px);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  overflow: hidden;
+  margin-bottom: 6px;
+
+  @media (max-width: 700px) { height: 240px; }
+}
+
+// El fundido hacia el lienzo: el borde inferior del hero no existe; el
+// arte se disuelve y "Tus competencias" aparece desde adentro.
+.hero-fundido {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 46%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, var(--bg, #0b1120) 96%);
+}
+
+.hero-pista {
+  display: flex;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+.hero-slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  text-decoration: none;
+
+  // La imagen se adapta al marco (nunca al revés).
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero-velo {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(4, 8, 18, 0.85) 0%, rgba(4, 8, 18, 0.25) 55%, transparent 100%);
+  }
+
+  .hero-texto {
+    position: relative;
+    z-index: 2;
+    padding: 20px 28px 26px;
+
+    // Con la altura de portada, el título sube al paso display.
+    h2 { margin: 0 0 10px; color: #fff; font-size: 2rem; font-weight: 800; }
+  }
+
+  .hero-cta {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+}

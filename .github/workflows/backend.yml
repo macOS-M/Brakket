@@ -1,0 +1,51 @@
+name: CI Backend
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: [ 'backend/**', '.github/workflows/backend.yml' ]
+  pull_request:
+    branches: [ main, develop ]
+    paths: [ 'backend/**', '.github/workflows/backend.yml' ]
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: brakket
+          POSTGRES_USER: brakket
+          POSTGRES_PASSWORD: brakket
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U brakket"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/brakket
+      DB_USER: brakket
+      DB_PASSWORD: brakket
+      JWT_SECRET: clave-de-prueba-de-ci-con-al-menos-32-caracteres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Compilar y probar
+        run: ./mvnw --batch-mode clean verify

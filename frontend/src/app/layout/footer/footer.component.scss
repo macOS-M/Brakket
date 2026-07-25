@@ -1,0 +1,9 @@
+.footer {
+  padding: 1.25rem 2rem;
+  // Sin fondo propio: el pie ahora vive dentro de la columna de contenido
+  // y una franja más clara acá cortaba la página visualmente.
+  border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  color: var(--text-subtle, #64748b);
+  font-size: 0.8125rem;
+  text-align: center;
+}

@@ -1,0 +1,211 @@
+<section class="page">
+  @if (!esEdicion) {
+  <app-page-header
+    titulo="Nuevo equipo"
+    subtitulo="Definí el nombre, la disciplina y la identidad del equipo."
+  />
+  }
+
+  @if (cargando()) {
+  <p class="placeholder-inline">Cargando información del equipo…</p>
+  }
+
+  @if (error()) {
+  <p class="aviso-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (exito()) {
+  <p class="aviso-exito" role="status">{{ exito() }}</p>
+  }
+
+  @if (!cargando()) {
+  <div class="ajustes" [class.con-rail]="esEdicion">
+    @if (esEdicion) {
+    <!-- Rail de ajustes (referencia Challenger Mode): identidad + navegación. -->
+    <aside class="rail">
+      @if (form.controls.logo.value) {
+      <img class="rail-logo" [src]="form.controls.logo.value" alt="" />
+      } @else {
+      <span class="rail-logo sin-logo" aria-hidden="true">{{ form.controls.nombre.value.charAt(0) || '?' }}</span>
+      }
+      <p class="rail-nombre">{{ form.controls.nombre.value }}</p>
+      <a class="rail-volver" [routerLink]="['/team-profile', equipoId()]">← Ver equipo</a>
+
+      <nav class="rail-nav" aria-label="Secciones de ajustes">
+        <button
+          type="button"
+          [class.activo]="seccion() === 'acerca'"
+          [attr.aria-current]="seccion() === 'acerca' ? 'true' : null"
+          (click)="seccion.set('acerca')"
+        >
+          ✎ Acerca de
+        </button>
+        <button
+          type="button"
+          [class.activo]="seccion() === 'apariencia'"
+          [attr.aria-current]="seccion() === 'apariencia' ? 'true' : null"
+          (click)="seccion.set('apariencia')"
+        >
+          ◨ Apariencia
+        </button>
+        <a [routerLink]="['/teams', equipoId(), 'plantilla']">👥 Miembros</a>
+      </nav>
+
+      <!-- La disolución vive en la plantilla, con su confirmación completa. -->
+      <a class="rail-borrar" [routerLink]="['/teams', equipoId(), 'plantilla']" fragment="disolver">Disolver equipo</a>
+    </aside>
+    }
+
+    <div class="contenido-form">
+      @if (esEdicion) {
+      <header class="seccion-cabecera">
+        <h1>{{ seccion() === 'acerca' ? 'Acerca de' : 'Apariencia' }}</h1>
+        <p>
+          {{ seccion() === 'acerca'
+            ? 'Contale al resto quiénes son: la información pública del equipo.'
+            : 'Personalizá el equipo con su logo y su banner de portada.' }}
+        </p>
+      </header>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="form" novalidate>
+        <div [hidden]="esEdicion && seccion() !== 'acerca'">
+          <div class="field">
+            <label class="label" for="nombre">Nombre *</label>
+            <input
+              id="nombre"
+              type="text"
+              formControlName="nombre"
+              placeholder="Ej. Dragones de Cristal"
+              [class.invalido]="form.controls.nombre.invalid && form.controls.nombre.touched"
+              [attr.aria-invalid]="form.controls.nombre.invalid && form.controls.nombre.touched"
+              [attr.aria-describedby]="form.controls.nombre.invalid && form.controls.nombre.touched ? 'nombre-error' : null"
+            />
+            @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+            <span id="nombre-error" class="field-error">El nombre es obligatorio (máx. 120 caracteres).</span>
+            }
+          </div>
+
+          @if (!esEdicion && esAdmin()) {
+          <div class="field">
+            <label class="label" for="capitanCorreo">Capitán designado (correo) *</label>
+            <input
+              id="capitanCorreo"
+              type="email"
+              formControlName="capitanCorreo"
+              placeholder="jugador@correo.com"
+              [class.invalido]="form.controls.capitanCorreo.invalid && form.controls.capitanCorreo.touched"
+              [attr.aria-invalid]="form.controls.capitanCorreo.invalid && form.controls.capitanCorreo.touched"
+            />
+            <span class="field-pista">
+              Como administrador, el equipo se crea para otros jugadores: indicá
+              el correo del jugador que será su capitán. Vos no formás parte del roster.
+            </span>
+            @if (form.controls.capitanCorreo.invalid && form.controls.capitanCorreo.touched) {
+            <span class="field-error">Debe ser un correo válido.</span>
+            }
+          </div>
+          }
+
+          <div class="field">
+            <label class="label" for="juegoId">Disciplina / juego principal *</label>
+            <select
+              id="juegoId"
+              formControlName="juegoId"
+              [class.invalido]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
+              [attr.aria-invalid]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
+              [attr.aria-describedby]="form.controls.juegoId.invalid && form.controls.juegoId.touched ? 'juego-error' : null"
+            >
+              <option [ngValue]="null">Seleccioná un juego…</option>
+              @for (juego of juegos(); track juego.id) {
+              <option [ngValue]="juego.id">{{ juego.nombre }}</option>
+              }
+            </select>
+            @if (form.controls.juegoId.invalid && form.controls.juegoId.touched) {
+            <span id="juego-error" class="field-error">Debés seleccionar un juego.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="label" for="descripcion">Descripción</label>
+            <textarea
+              id="descripcion"
+              formControlName="descripcion"
+              rows="4"
+              placeholder="Contá brevemente la identidad del equipo."
+              [class.invalido]="form.controls.descripcion.invalid && form.controls.descripcion.touched"
+              [attr.aria-invalid]="form.controls.descripcion.invalid && form.controls.descripcion.touched"
+              [attr.aria-describedby]="form.controls.descripcion.invalid && form.controls.descripcion.touched ? 'descripcion-error' : null"
+            ></textarea>
+            @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
+            <span id="descripcion-error" class="field-error">Máximo 500 caracteres.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="label" for="videoUrl">URL de video</label>
+            <input id="videoUrl" type="url" formControlName="videoUrl" placeholder="Insertá el enlace del video" />
+            <span class="field-pista">Un enlace a YouTube o Twitch que presente al equipo.</span>
+          </div>
+
+          <div class="field">
+            <label class="label" for="sitioWeb">Sitio web</label>
+            <input id="sitioWeb" type="url" formControlName="sitioWeb" placeholder="URL del sitio web" />
+          </div>
+
+          <div class="field">
+            <label class="label">Redes sociales</label>
+            @for (control of redesSociales.controls; track $index) {
+            <div class="red-social-item">
+              <input type="text" [formControl]="$any(control)" placeholder="https://twitter.com/…" />
+              <button
+                type="button"
+                class="btn-quitar"
+                (click)="quitarRedSocial($index)"
+                aria-label="Quitar enlace"
+              >✕</button>
+            </div>
+            }
+            <button type="button" class="btn-agregar" (click)="agregarRedSocial()">+ Agregar enlace</button>
+          </div>
+
+          @if (esEdicion) {
+          <div class="field">
+            <label class="label" for="estadoPrivacidad">Visibilidad del equipo</label>
+            <select id="estadoPrivacidad" formControlName="estadoPrivacidad">
+              <option value="PUBLIC">Público</option>
+              <option value="PRIVATE">Privado</option>
+            </select>
+          </div>
+          }
+        </div>
+
+        <div [hidden]="esEdicion && seccion() !== 'apariencia'">
+          @if (!esEdicion) {
+          <h2 class="seccion-form">Apariencia</h2>
+          }
+
+          <div class="field">
+            <span class="label" id="etiqueta-logo">Logo</span>
+            <app-foto-input etiqueta="Logo" formControlName="logo" aria-labelledby="etiqueta-logo" />
+            <span class="field-pista">El logo ayuda a reconocer a tu equipo. Cuadrado, ideal 256×256 píxeles.</span>
+          </div>
+
+          <div class="field">
+            <span class="label" id="etiqueta-banner">Banner</span>
+            <app-foto-input etiqueta="Banner" forma="banner" formControlName="bannerUrl" aria-labelledby="etiqueta-banner" />
+            <span class="field-pista">El banner le da al perfil una apariencia única. Apaisado, ideal 2400×600 píxeles.</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : (esEdicion ? 'Guardar cambios' : 'Crear equipo') }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  }
+</section>

@@ -1,0 +1,299 @@
+// ----- Escaparate en marquesina (referencia Challenger Mode) -----
+
+.escaparate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  // Desvanece los bordes para que las tarjetas entren y salgan suave.
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.marquesina {
+  overflow: hidden;
+
+  .pista {
+    display: flex;
+    gap: 0.75rem;
+    width: max-content;
+    animation: desfile 40s linear infinite;
+  }
+
+  &.reversa .pista {
+    animation-direction: reverse;
+    animation-duration: 52s;
+  }
+
+  &:hover .pista {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes desfile {
+  to {
+    // La pista lleva el catálogo duplicado: a mitad de camino el contenido
+    // es idéntico al inicio y el loop no salta.
+    transform: translateX(calc(-50% - 0.375rem));
+  }
+}
+
+.tarjeta-mini {
+  position: relative;
+  width: 150px;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm, 8px);
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquesina .pista {
+    animation: none;
+  }
+}
+
+// ----- Buscador y filtros -----
+
+.buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+
+  svg {
+    position: absolute;
+    left: 0.9rem;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--text-muted, #94a3b8);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.65rem 1rem 0.65rem 2.5rem;
+    background: var(--surface, #111827);
+    border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+    border-radius: var(--radius-md, 12px);
+    color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.875rem;
+
+    &::placeholder {
+      color: var(--text-muted, #94a3b8);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #ff5500);
+    }
+  }
+}
+
+.chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.chip {
+  padding: 0.4rem 0.85rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-pill, 999px);
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: var(--text, #e2e8f0);
+  }
+
+  &.activo {
+    background: var(--accent, #ff5500);
+    border-color: var(--accent, #ff5500);
+    color: #fff;
+  }
+}
+
+// ----- Grilla de portadas altas -----
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem 0.9rem;
+}
+
+.juego-card {
+  display: flex;
+  flex-direction: column;
+  // Reset para cuando la tarjeta es un <button> (resultados externos).
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 3px;
+    border-radius: var(--radius-md, 12px);
+  }
+}
+
+.portada {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+
+  // Absoluta contra la portada: un height:100% en flujo dentro del grid
+  // no constriñe (lección aprendida de las listas anteriores).
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+  }
+}
+
+.juego-card:hover .portada img {
+  transform: scale(1.04);
+}
+
+.monograma-grande {
+  font-family: var(--font-data, 'Barlow Condensed', sans-serif);
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+.juego-card .nombre {
+  margin-top: 0.55rem;
+  color: var(--text, #e2e8f0);
+  font-size: 0.875rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.juego-card .genero {
+  margin-top: 0.1rem;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// Tarjeta de resultado del catálogo global: mismo lenguaje visual, con el
+// chip de acción encima del arte.
+.chip-agregar {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent, #ff5500);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mensaje-error {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--danger-text, #f87171);
+  font-size: 0.875rem;
+}
+
+.buscando-externos {
+  margin: 1rem 0 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .juego-card,
+  .portada img {
+    transition: none;
+  }
+}
+
+// ----- Botones -----
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: #fff;
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+  }
+}

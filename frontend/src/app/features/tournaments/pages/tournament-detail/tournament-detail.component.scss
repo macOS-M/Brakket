@@ -1,0 +1,740 @@
+// ----- Banner (arte del juego del torneo) -----
+
+.banner {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin-bottom: 1.25rem;
+  border-radius: var(--radius-xl);
+}
+
+.banner-arte {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-velo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(4, 8, 18, 0.9) 0%, rgba(4, 8, 18, 0.4) 55%, rgba(4, 8, 18, 0.15) 100%);
+}
+
+.volver {
+  position: relative;
+  align-self: flex-start;
+  margin: 1rem 0 0 1.25rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-pill);
+  background: rgba(4, 8, 18, 0.65);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    background: rgba(4, 8, 18, 0.85);
+  }
+}
+
+.banner-contenido {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.25rem;
+}
+
+.fecha {
+  margin: 0;
+  // Fijo: va sobre el velo oscuro del banner, que no cambia con el tema.
+  color: #ff6a1f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.titulos h1 {
+  margin: 0.15rem 0 0;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.meta {
+  margin: 0.3rem 0 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+
+  strong {
+    color: #fff;
+  }
+}
+
+.liga-link {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.stats-torneo {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: rgba(4, 8, 18, 0.65);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &.resaltado {
+    background: var(--accent);
+    color: var(--accent-ink, #0b1120);
+  }
+
+  &.privado {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+  }
+
+  &.premio {
+    background: var(--accent-gold-bg);
+    color: var(--accent-gold-text);
+  }
+}
+
+// ----- Tabs -----
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-soft);
+  // Cinco tabs no entran en un teléfono angosto: scrollea la fila, no la página.
+  overflow-x: auto;
+
+  .tab {
+    flex-shrink: 0;
+  }
+}
+
+// En táctil los controles chicos suben al mínimo cómodo (44px de alto
+// efectivo) sin engordar la vista densa de escritorio.
+@media (pointer: coarse) {
+  .tab {
+    min-height: 44px;
+  }
+
+  .filtro {
+    min-height: 44px;
+  }
+}
+
+.tab {
+  padding: 0.6rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &.activo {
+    color: var(--accent-text);
+    border-bottom-color: var(--accent);
+  }
+}
+
+// ----- Contenido -----
+
+.descripcion {
+  max-width: 70ch;
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.mensaje-ok {
+  margin: 0 0 1.25rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--success-bg);
+  border: 1px solid var(--success-text);
+  border-radius: var(--radius-sm);
+  color: var(--success-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.aviso-cerrado {
+  margin: 0 0 1.25rem;
+  color: var(--text-subtle);
+  font-size: 0.875rem;
+}
+
+.mensaje-error {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.9rem;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-text);
+  border-radius: var(--radius-sm);
+  color: var(--danger-text);
+  font-size: 0.875rem;
+}
+
+// ----- Inscripción -----
+
+.inscripcion {
+  max-width: 480px;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+
+  p {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.inscripcion-fila {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+
+  select {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.5rem 0.7rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.875rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-text);
+    }
+  }
+}
+
+// ----- Jugadores (chips compartidos) -----
+
+.chip-capitan {
+  padding: 0.08rem 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--accent-purple-bg);
+  color: var(--accent-purple-text);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+// ----- Zona de peligro -----
+
+.danger-zone {
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-text);
+  border-radius: var(--radius-md);
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.0625rem;
+    color: var(--danger-text);
+  }
+}
+
+.danger-aviso {
+  margin: 0 0 0.75rem;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.danger-acciones {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+// ----- Botones -----
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+
+  &:hover {
+    background: var(--surface-2);
+  }
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+.danger-nota {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+// ---------- vista Challenger Mode (RF-26/27/29) ----------
+
+// Sobre la foto del banner el tinte al 12% desaparece: backdrop oscuro fijo
+// (como el resto de los stats) y color de estado fijo del tema oscuro.
+.stat.en-curso { background: rgba(4, 8, 18, 0.65); color: #4ade80; }
+
+// El punto del directo: respira mientras el torneo está en curso.
+.punto-vivo {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: respira 1.8s ease-in-out infinite;
+}
+
+@keyframes respira {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+// Overlay de la ceremonia del campeón: encima de todo, sin robar clics.
+.confeti {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.stat.finalizado { background: rgba(4, 8, 18, 0.65); color: #94a3b8; }
+
+.seccion-titulo { font-size: 1.0625rem; margin: 28px 0 12px; }
+
+// Resumen: contenido principal + rail derecho, como la referencia.
+.resumen-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 32px;
+  align-items: start;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.formato-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.formato-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 14px 16px;
+  transition: border-color 0.2s ease-out;
+
+  &:hover { border-color: var(--accent-text); }
+
+  .formato-etiqueta {
+    margin: 0;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .formato-valor { margin: 4px 0 0; font-weight: 700; color: var(--text); }
+}
+
+.organizador-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 14px 16px;
+
+  .organizador-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .organizador-nombre { margin: 0; font-weight: 700; color: var(--text); }
+  .organizador-detalle { margin: 2px 0 0; font-size: 0.82rem; color: var(--text-muted); }
+}
+
+.resumen-rail { display: flex; flex-direction: column; gap: 12px; }
+
+.rail-titulo { font-size: 1.0625rem; margin: 16px 0 4px; }
+
+.rail-stats {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+
+  .rail-stat { flex: 1; text-align: center; padding: 14px 8px; }
+  .rail-stat + .rail-stat { border-left: 1px solid var(--border); }
+  .rail-numero { margin: 0; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .rail-etiqueta { margin: 2px 0 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  // La vena que une los puntos, como la referencia.
+  &::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border);
+  }
+}
+
+.timeline-item {
+  display: flex;
+  gap: 14px;
+  padding: 8px 0;
+  position: relative;
+
+  .timeline-punto {
+    flex: 0 0 16px;
+    height: 16px;
+    margin-top: 2px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    background: var(--bg);
+    z-index: 1;
+  }
+  &.cumplido .timeline-punto { border-color: var(--accent); }
+
+  .timeline-fecha { margin: 0; font-size: 0.72rem; color: var(--accent-text); font-weight: 600; }
+  .timeline-titulo { margin: 0; font-weight: 700; font-size: 0.9rem; color: var(--text); }
+  .timeline-detalle { margin: 2px 0 0; font-size: 0.8rem; color: var(--text-muted); }
+}
+
+.campeon-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--accent-gold-text);
+  background: var(--accent-gold-bg);
+  margin-bottom: 8px;
+
+  .campeon-copa { font-size: 2rem; }
+  .campeon-titulo {
+    margin: 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent-gold-text);
+  }
+  .campeon-nombre { margin: 2px 0 0; font-size: 1.5rem; font-weight: 800; color: var(--text); }
+
+  // Solo cuando la coronación ocurre en vivo: un destello dorado que
+  // barre el banner una vez, junto con el confetti.
+  &.celebrando {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        transparent 35%,
+        rgba(250, 204, 21, 0.22) 50%,
+        transparent 65%
+      );
+      transform: translateX(-100%);
+      animation: destello 1.2s ease-out 0.3s forwards;
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes destello {
+  to { transform: translateX(100%); }
+}
+
+.ajustes-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 16px;
+
+  .ajustes-nota { margin: 0 0 14px; font-size: 0.8rem; color: var(--text-muted); }
+}
+
+.ajustes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin: 0;
+
+  dt { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+  dd { margin: 2px 0 0; font-weight: 600; font-size: 0.88rem; color: var(--text); }
+}
+
+.iniciar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 20px 24px;
+  margin: 20px 0;
+
+  h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  p { margin: 0; color: var(--text-muted); font-size: 0.9rem; max-width: 52ch; }
+}
+
+.inscripcion-fila input[type='text'] {
+  flex: 1;
+  min-width: 180px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.pista-gamertag { display: block; margin-top: 8px; font-size: 0.8rem; color: var(--text-muted); }
+
+// ---------- Matches ----------
+
+.filtros-matches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .filtro {
+    padding: 8px 18px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+
+    &.activo { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  }
+}
+
+.matches-conteo { margin: 16px 0 8px; font-weight: 700; }
+
+.matches-lista { display: flex; flex-direction: column; }
+
+.match-fila {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 8px 24px;
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  align-items: center;
+  transition: background 0.2s ease-out;
+
+  &:hover { background: var(--surface); }
+
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+
+  .match-chip {
+    display: inline-block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--neutral-bg);
+    color: var(--text-muted);
+
+    &.disputa { background: var(--warning-bg); color: var(--warning-text); }
+  }
+  .match-nombre { margin: 4px 0 0; font-weight: 700; font-size: 0.9rem; }
+  .match-ronda { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+
+  .match-lado {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+
+    &.ganador { color: var(--text); font-weight: 700; }
+    .match-marcador { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+  }
+  .match-lobby {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.78rem;
+    font-family: var(--font-data);
+    color: var(--text-muted);
+  }
+}
+
+// ---------- Jugadores ----------
+
+.buscador-jugadores {
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.jugadores-lista { display: flex; flex-direction: column; }
+
+.jugador-fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border-soft);
+
+  .jugador-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .jugador-nombre { margin: 0; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .jugador-equipo {
+    margin: 2px 0 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    a { color: var(--accent-text); }
+    strong { font-family: var(--font-data); color: var(--text); }
+  }
+}
+
+// ---------- Resultados ----------
+
+.podio {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.podio-card {
+  flex: 1;
+  min-width: 200px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 20px 24px;
+
+  &.oro {
+    border-color: var(--accent-gold-text);
+    background: var(--accent-gold-bg);
+
+    .podio-etiqueta { color: var(--accent-gold-text); }
+    .podio-medalla { font-size: 2rem; }
+  }
+
+  .podio-medalla { font-size: 1.5rem; }
+  .podio-etiqueta { margin: 6px 0 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+  .podio-nombre { margin: 2px 0 0; font-size: 1.0625rem; font-weight: 800; color: var(--text); }
+}

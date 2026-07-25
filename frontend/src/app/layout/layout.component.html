@@ -1,0 +1,20 @@
+<!-- Primer elemento tabulable de la página: deja al usuario de teclado
+     saltar los ~13 ítems de navegación y aterrizar directo en el contenido.
+     Invisible hasta que recibe foco (ver .skip-link en el SCSS). -->
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<div class="shell">
+  <app-sidebar />
+
+  <div class="columna">
+    <app-topbar />
+
+    <!-- tabindex=-1 para que el ancla pueda mover el foco real aquí, no solo
+         el scroll. Sin esto el lector de pantalla sigue leyendo desde el nav. -->
+    <main class="content" id="contenido" tabindex="-1">
+      <router-outlet />
+    </main>
+
+    <app-footer />
+  </div>
+</div>

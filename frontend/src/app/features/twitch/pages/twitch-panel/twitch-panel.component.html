@@ -1,0 +1,72 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Canal oficial de Twitch</h1>
+    <p>Configura el canal de Brakket.</p>
+  </header>
+
+  @if (canal; as c) {
+    <article class="card status-card">
+      <div>
+        <span class="status" [class.active]="c.activo">{{ c.estado }}</span>
+        <h2>{{ c.nombreMostrado || c.loginCanal || 'Sin configurar' }}</h2>
+        @if (c.urlCanal) {
+          <a [href]="c.urlCanal" target="_blank" rel="noopener">{{ c.urlCanal }}</a>
+        }
+      </div>
+      <dl>
+        <div><dt>Credenciales</dt><dd>{{ c.credencialesConfiguradas ? 'Configuradas' : 'Pendientes' }}</dd></div>
+        <div><dt>Última validación</dt><dd>{{ c.ultimaValidacion || 'Sin validar' }}</dd></div>
+      </dl>
+      @if (c.ultimoError) { <p class="notice">{{ c.ultimoError }}</p> }
+    </article>
+  }
+
+  <article class="card">
+    <h2>Configurar canal</h2>
+    <label for="canal">Usuario o URL de Twitch</label>
+    <input id="canal" [(ngModel)]="canalEntrada" maxlength="300">
+    <div class="actions">
+      <button (click)="guardar()" [disabled]="cargando || !canalEntrada.trim()">Guardar</button>
+      <button class="secondary" (click)="validar()" [disabled]="cargando || !canal?.id">Validar conexión</button>
+    </div>
+  </article>
+
+  <article class="card">
+    <h2>Asociar transmisión</h2>
+    <p>Puede asociarse al torneo, a una partida o a ambos.</p>
+    <div class="fields">
+      <label>ID del torneo <input type="number" min="1" [(ngModel)]="torneoId"></label>
+      <label>ID de la partida <input type="number" min="1" [(ngModel)]="partidaId"></label>
+    </div>
+    <button (click)="asociar()" [disabled]="cargando || !canal?.activo">
+      Asociar y consultar estado en vivo
+    </button>
+    @if (transmision) { <p class="result">Estado: {{ transmision.estado }}</p> }
+  </article>
+
+  @if (transmision) {
+  <article class="card">
+    <h2>Métricas de audiencia (RF-36)</h2>
+    <p>Muestras reales capturadas cada minuto mientras la transmisión está en vivo.</p>
+    @if (metricas; as m) {
+    <dl class="metricas">
+      <div><dt>Estado</dt><dd>{{ m.estado }}</dd></div>
+      <div><dt>Muestras</dt><dd>{{ m.muestras }}</dd></div>
+      <div><dt>Pico de espectadores</dt><dd>{{ m.pico ?? '—' }}</dd></div>
+      <div><dt>Promedio</dt><dd>{{ m.promedio !== null ? (m.promedio | number : '1.0-1') : '—' }}</dd></div>
+      <div><dt>Duración</dt><dd>{{ m.duracionMinutos !== null ? m.duracionMinutos + ' min' : '—' }}</dd></div>
+      <div><dt>Última muestra</dt><dd>{{ (m.ultimaMuestra | date : 'HH:mm:ss') ?? 'Sin muestras aún' }}</dd></div>
+    </dl>
+    @if (m.muestras === 0) {
+    <p class="notice-info">Todavía no hay muestras: se capturan automáticamente cuando el canal sale en vivo.</p>
+    }
+    }
+    <div class="actions">
+      <button class="secondary" (click)="cargarMetricas()" [disabled]="cargando">Actualizar métricas</button>
+    </div>
+  </article>
+  }
+
+  @if (mensaje) { <p class="feedback success">{{ mensaje }}</p> }
+  @if (error) { <p class="feedback error">{{ error }}</p> }
+</section>

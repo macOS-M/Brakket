@@ -1,0 +1,51 @@
+<section class="page">
+  <div class="header">
+    <h1>Patrocinadores</h1>
+    @if (puedeGestionar()) {
+    <a class="btn-primary" routerLink="/sponsorships/nuevo">+ Nuevo patrocinador</a>
+    }
+  </div>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando patrocinadores...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (patrocinadores().length === 0) {
+  <p class="placeholder">Todavía no hay patrocinadores registrados.</p>
+  } @else {
+  <div class="grid">
+    @for (patrocinador of patrocinadores(); track patrocinador.id) {
+    <div class="patrocinador-card">
+      @if (patrocinador.logo) {
+      <img class="logo" [src]="patrocinador.logo" [alt]="patrocinador.nombre" />
+      } @else {
+      <div class="logo placeholder-logo">Sin logo</div>
+      }
+      <div class="info">
+        <p class="nombre">{{ patrocinador.nombre }}</p>
+        <span class="badge" [class.inactivo]="patrocinador.estado !== 'ACTIVO'">
+              {{ patrocinador.estado }}
+            </span>
+        @if (patrocinador.descripcion) {
+        <p class="descripcion">{{ patrocinador.descripcion }}</p>
+        }
+        <p class="contacto">{{ patrocinador.contacto }}</p>
+      </div>
+      @if (puedeGestionar()) {
+      <div class="acciones">
+        <a class="btn-secondary" [routerLink]="['/sponsorships', patrocinador.id, 'editar']">Editar</a>
+        <button
+          class="btn-toggle"
+          [class.activar]="patrocinador.estado !== 'ACTIVO'"
+          [disabled]="cambiandoId() === patrocinador.id"
+          (click)="cambiarEstado(patrocinador)"
+        >
+          {{ patrocinador.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+</section>

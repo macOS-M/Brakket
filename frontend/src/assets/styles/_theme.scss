@@ -1,0 +1,301 @@
+@use 'variables' as v;
+
+// Solo se redefine lo que cambia entre temas. La marca, los radios, la
+// tipografía y las medidas de layout son las mismas en ambos.
+@mixin tema-claro {
+  color-scheme: light;
+
+  --bg: #{v.$l-bg};
+  --surface: #{v.$l-surface};
+  --surface-2: #{v.$l-surface-2};
+  --surface-3: #{v.$l-surface-3};
+  --border: #{v.$l-border};
+  --border-soft: #{v.$l-border-soft};
+
+  --text: #{v.$l-text};
+  --text-muted: #{v.$l-text-muted};
+  --text-subtle: #{v.$l-text-subtle};
+  --color-text-muted: #{v.$l-text-muted};
+
+  // El cyan de marca no es legible como texto sobre blanco.
+  --brand-cyan: #{v.$l-brand-cyan};
+
+  // El naranja pleno tampoco: como texto usa la variante oscura.
+  --accent-text: #{v.$l-accent-text};
+
+  --danger-text: #{v.$l-danger-text};
+  --danger-bg: #{v.$l-danger-bg};
+  --success-text: #{v.$l-success-text};
+  --success-bg: #{v.$l-success-bg};
+  --warning-text: #{v.$l-warning-text};
+  --warning-bg: #{v.$l-warning-bg};
+  --info-text: #{v.$l-info-text};
+  --info-bg: #{v.$l-info-bg};
+  --accent-purple-text: #{v.$l-accent-purple-text};
+  --accent-purple-bg: #{v.$l-accent-purple-bg};
+  --accent-gold-text: #{v.$l-accent-gold-text};
+  --accent-gold-bg: #{v.$l-accent-gold-bg};
+  --neutral-bg: #{v.$l-neutral-bg};
+
+  --shadow-card: #{v.$l-shadow-card};
+  --shadow-modal: #{v.$l-shadow-modal};
+}
+
+// Exponemos la paleta como custom properties para que los componentes
+// (que usan var(--brand-blue, ...)) puedan consumirla.
+:root {
+  color-scheme: dark;
+  // Marca
+  --accent: #{v.$accent};
+  --accent-hover: #{v.$accent-hover};
+  --accent-ink: #{v.$accent-ink};
+  --accent-text: #{v.$accent-text};
+  --brand-blue: #{v.$brand-blue};
+  --brand-blue-hover: #{v.$brand-blue-hover};
+  --brand-cyan: #{v.$brand-cyan};
+
+  // Superficies
+  --bg: #{v.$bg};
+  --surface: #{v.$surface};
+  --surface-2: #{v.$surface-2};
+  --surface-3: #{v.$surface-3};
+  --border: #{v.$border};
+  --border-soft: #{v.$border-soft};
+
+  // Texto
+  --text: #{v.$text};
+  --text-muted: #{v.$text-muted};
+  --text-subtle: #{v.$text-subtle};
+
+  // Estados
+  --danger: #{v.$danger};
+  --danger-text: #{v.$danger-text};
+  --danger-bg: #{v.$danger-bg};
+
+  --success: #{v.$success};
+  --success-text: #{v.$success-text};
+  --success-bg: #{v.$success-bg};
+
+  --warning: #{v.$warning};
+  --warning-text: #{v.$warning-text};
+  --warning-bg: #{v.$warning-bg};
+
+  --info: #{v.$info};
+  --info-text: #{v.$info-text};
+  --info-bg: #{v.$info-bg};
+
+  --neutral-bg: #{v.$neutral-bg};
+
+  // Acentos de competencia (rangos, rarezas, podio)
+  --accent-purple: #{v.$accent-purple};
+  --accent-purple-text: #{v.$accent-purple-text};
+  --accent-purple-bg: #{v.$accent-purple-bg};
+
+  --accent-gold: #{v.$accent-gold};
+  --accent-gold-text: #{v.$accent-gold-text};
+  --accent-gold-bg: #{v.$accent-gold-bg};
+
+  // Radios y sombras
+  --radius-sm: #{v.$radius-sm};
+  --radius-md: #{v.$radius-md};
+  --radius-lg: #{v.$radius-lg};
+  --radius-xl: #{v.$radius-xl};
+  --radius-pill: #{v.$radius-pill};
+  --shadow-card: #{v.$shadow-card};
+  --shadow-modal: #{v.$shadow-modal};
+
+  // Tipografía
+  --font-ui: #{v.$font-ui};
+  --font-data: #{v.$font-data};
+
+  // Layout
+  --sidebar-width: #{v.$sidebar-width};
+  --content-max: #{v.$content-max};
+
+  // Alias heredado: algún componente usa --color-text-muted por error.
+  // Se mantiene definido para que no caiga al fallback mientras se migra.
+  --color-text-muted: #{v.$text-muted};
+}
+
+// Preferencia del sistema, salvo que el usuario haya elegido oscuro a mano.
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    @include tema-claro;
+  }
+}
+
+// Elección explícita del usuario: gana siempre sobre la del sistema.
+:root[data-theme='light'] {
+  @include tema-claro;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--accent-text);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--text);
+  // Barlow es ligeramente ancha; a tamaños de título necesita cerrarse
+  // un poco. El piso es -0.04em: más apretado y las letras se tocan.
+  letter-spacing: -0.015em;
+}
+
+// Reparte las líneas de forma pareja en vez de dejar una palabra huérfana.
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+// Cifras de ancho fijo: sin esto las columnas de marcadores, puntos y
+// porcentajes bailan de fila en fila. Es la razón principal por la que
+// una tabla de posiciones se ve amateur.
+table,
+.dato {
+  font-variant-numeric: tabular-nums;
+}
+
+// Números que compiten por atención en poco ancho: marcadores, posiciones,
+// contadores de métricas.
+.dato-condensado {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+// ----- Accesibilidad -----
+
+// Foco visible y consistente. Sin esto, navegar con teclado sobre el
+// tema oscuro es prácticamente imposible.
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+// Respeta a quien configuró menos animación a nivel de sistema.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Texto solo para lectores de pantalla: nombra controles que
+// visualmente se entienden por contexto.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// ---------- Lenguaje "craft" (Aquament): selects, tarjetas y modals ----------
+
+// Los <select> nativos delatan la plataforma: flecha del sistema y padding
+// desparejo. Chevron propio y el mismo cuerpo que los inputs del sistema —
+// completo, para que un select sin estilos de componente también salga
+// vestido (los componentes con estilos propios ganan por especificidad).
+select {
+  appearance: none;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+
+  // El panel desplegado hereda el color-scheme del tema, pero algunos
+  // Chromium pintan las opciones con sus colores propios: fijarlas a los
+  // tokens garantiza panel oscuro en oscuro y claro en claro.
+  option {
+    background-color: var(--surface);
+    color: var(--text);
+  }
+  padding-right: 2rem !important;
+
+  &:hover {
+    border-color: var(--text-muted);
+  }
+}
+
+// Entrada de tarjetas: fade-up corto, solo transform/opacity (composita).
+// El bloque global de prefers-reduced-motion ya lo anula.
+@keyframes entrada-tarjeta {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// Aplicable a cualquier grilla: las primeras 8 entran en cascada.
+.entra-tarjeta {
+  animation: entrada-tarjeta 0.22s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+  @for $i from 1 through 8 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 0.04}s;
+    }
+  }
+}
+
+// Modal: aparece levantándose, no de golpe. Solo transform/opacity.
+@keyframes entrada-modal {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes entrada-telon {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

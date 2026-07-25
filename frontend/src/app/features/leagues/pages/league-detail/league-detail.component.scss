@@ -1,0 +1,332 @@
+.page {
+  padding: 1.5rem 0;
+  max-width: 980px;
+}
+
+.back {
+  color: var(--text-muted, #94a3b8);
+  text-decoration: none;
+  font-size: 0.875rem;
+
+  &:hover {
+    color: var(--accent-text, #ff6a1f);
+  }
+}
+
+.league-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.5rem 0 1.5rem;
+
+  h1 {
+    margin: 0.25rem 0 0.35rem;
+  }
+
+  .meta {
+    margin: 0;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.9rem;
+  }
+}
+
+.seasons {
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.0625rem;
+  }
+}
+
+.muted {
+  color: var(--text-muted, #94a3b8);
+}
+
+.error {
+  color: #ef4444;
+  margin: 0;
+}
+
+.empty {
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #94a3b8);
+}
+
+.season-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.season-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+
+  .season-name {
+    font-weight: 600;
+  }
+
+  .season-dates {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.85rem;
+  }
+}
+
+.season-content { flex: 1; min-width: 0; h3, p { margin: 0; } }
+.season-heading, .section-title, .actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.season-actions { display: flex; align-items: center; gap: .75rem; }
+.eyebrow { color: var(--accent-text, #ff6a1f); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.status, .chips span { padding: .25rem .55rem; border-radius: var(--radius-pill, 999px); background: var(--success-bg, rgba(34, 197, 94, .12)); color: var(--success-text, #4ade80); font-size: .75rem; font-weight: 700; }
+.chips span { background: var(--neutral-bg, rgba(148, 163, 184, .1)); color: var(--text-muted, #94a3b8); }
+.status.inactive { color: #f87171; background: rgba(239, 68, 68, .12); }
+.status.status-planned { color: #60a5fa; background: rgba(59, 130, 246, .16); border: 1px solid rgba(96, 165, 250, .28); }
+.status.status-active { color: #4ade80; background: rgba(34, 197, 94, .16); border: 1px solid rgba(74, 222, 128, .28); }
+.status.status-finished { color: #c4b5fd; background: rgba(139, 92, 246, .16); border: 1px solid rgba(196, 181, 253, .28); }
+.status.status-cancelled { color: #f87171; background: rgba(239, 68, 68, .16); border: 1px solid rgba(248, 113, 113, .3); }
+.date-box { display: grid; min-width: 72px; text-align: center; strong { font-size: 1.5rem; } span { color: var(--text-muted, #94a3b8); font-size: .72rem; text-transform: uppercase; } }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0; }
+.rules { white-space: pre-wrap; color: var(--text-muted, #94a3b8); }
+.success { padding: .75rem 1rem; border: 1px solid rgba(34, 197, 94, .4); border-radius: 8px; color: #4ade80; background: rgba(34, 197, 94, .08); }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+.field.wide, .field.full { grid-column: 1 / -1; }
+
+.season-form {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+  display: grid;
+  gap: 1rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+  flex: 1 1 160px;
+
+  // La misma jerarquía del wizard: etiqueta chica y apagada, campo oscuro.
+  > span,
+  .label {
+    color: var(--text-muted, #94a3b8);
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  input, select, textarea {
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--radius-sm, 8px);
+    // background-color, no el shorthand: el shorthand borraba el chevron
+    // global de los <select> (que vive en background-image del tema).
+    background-color: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.875rem;
+
+    &::placeholder {
+      color: var(--text-subtle, #8496ad);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #ff5500);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 6, 23, .78);
+  animation: entrada-telon 0.15s ease-out;
+}
+
+.season-form.modal {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 2rem);
+  margin: 0;
+  overflow-y: auto;
+  background: var(--surface, #0f172a);
+  box-shadow: var(--shadow-modal, 0 24px 80px rgba(0, 0, 0, .55));
+  // Centrado por grid, no por translate: entra con el fade-up de tarjeta.
+  animation: entrada-tarjeta 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (max-width: 680px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .season-card, .league-head { align-items: flex-start; flex-direction: column; }
+  .section-title, .season-actions { align-items: flex-start; flex-direction: column; }
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 0.8rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  justify-self: start;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  // Tinta navy sobre naranja: blanco a este cuerpo no llega a AA.
+  color: var(--accent-ink, #0b1120);
+
+  &:hover:not([disabled]) {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text, #e2e8f0);
+  border-color: var(--border, #334155);
+
+  &:hover:not([disabled]) {
+    background: var(--surface-2, #1f2937);
+  }
+}
+
+// ----- Torneos de la liga (RF-24, modelo abierto) -----
+
+.torneos-liga {
+  margin-top: 2rem;
+
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+}
+
+.crear-torneo {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: transparent;
+  border: 1px dashed var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover { border-color: var(--accent-text, #ff6a1f); }
+
+  .mas {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill, 999px);
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .crear-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    strong { color: var(--text, #e2e8f0); font-size: 0.875rem; }
+    span { color: var(--text-muted, #94a3b8); font-size: 0.8125rem; }
+  }
+}
+
+.torneos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 760px;
+}
+
+// ----- Zona de peligro / moderacion -----
+
+.btn-danger {
+  background: var(--danger, #ef4444);
+  color: #fff;
+
+  &:hover:not([disabled]) { filter: brightness(1.08); }
+}
+
+.danger-zone {
+  margin-top: 2.5rem;
+  padding: 1.1rem 1.2rem 1.2rem;
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-md, 12px);
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.0625rem;
+    color: var(--danger-text, #f87171);
+  }
+}
+
+.danger-nota {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+}
+
+.danger-aviso {
+  margin: 0 0 0.9rem;
+  color: var(--text, #e2e8f0);
+  font-size: 0.875rem;
+}
+
+.danger-acciones {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

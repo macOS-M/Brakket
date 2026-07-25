@@ -1,0 +1,105 @@
+<section class="page">
+  <a class="volver" routerLink="/leagues">← Volver a ligas</a>
+
+  <app-page-header
+    [titulo]="esEdicion ? 'Configurar liga' : 'Nueva liga'"
+    [subtitulo]="esEdicion
+      ? 'Actualizá los datos, las reglas y la foto de la liga.'
+      : 'Definí el juego, la descripción y las reglas de tu competencia.'"
+  />
+
+  @if (sinPermiso()) {
+  <p class="aviso-error" role="alert">Solo el comisionado puede configurar esta liga.</p>
+  } @else {
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+    <div class="field">
+      <label class="label" for="nombre">Nombre de la liga</label>
+      <input
+        id="nombre"
+        type="text"
+        formControlName="nombre"
+        placeholder="Ej. Liga Universitaria 2026"
+        [class.invalido]="form.controls.nombre.touched && form.controls.nombre.invalid"
+        [attr.aria-invalid]="form.controls.nombre.touched && form.controls.nombre.invalid"
+        [attr.aria-describedby]="form.controls.nombre.touched && form.controls.nombre.invalid ? 'nombre-error' : null"
+      />
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+      <span id="nombre-error" class="field-error">El nombre es obligatorio (máx. 150 caracteres).</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="label" for="juegoId">Juego</label>
+      <select
+        id="juegoId"
+        formControlName="juegoId"
+        [class.invalido]="form.controls.juegoId.touched && form.controls.juegoId.invalid"
+        [attr.aria-invalid]="form.controls.juegoId.touched && form.controls.juegoId.invalid"
+        [attr.aria-describedby]="form.controls.juegoId.touched && form.controls.juegoId.invalid ? 'juego-error' : null"
+      >
+        <option [ngValue]="null" disabled>Seleccioná un juego…</option>
+        @for (juego of games(); track juego.id) {
+        <option [ngValue]="juego.id">{{ juego.nombre }}</option>
+        }
+      </select>
+      @if (form.controls.juegoId.touched && form.controls.juegoId.invalid) {
+      <span id="juego-error" class="field-error">Seleccioná un juego.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="label" for="descripcion">Descripción</label>
+      <textarea
+        id="descripcion"
+        formControlName="descripcion"
+        rows="3"
+        placeholder="De qué se trata la liga, quién puede participar…"
+      ></textarea>
+      @if (form.controls.descripcion.touched && form.controls.descripcion.invalid) {
+      <span class="field-error">Máximo 1000 caracteres.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="label" for="reglas">Reglas</label>
+      <textarea
+        id="reglas"
+        formControlName="reglas"
+        rows="5"
+        placeholder="Formato, horarios, conducta, requisitos de inscripción…"
+      ></textarea>
+      @if (form.controls.reglas.touched && form.controls.reglas.invalid) {
+      <span class="field-error">Máximo 4000 caracteres.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="label" for="fotoUrl">Foto de la liga (URL)</label>
+      <input
+        id="fotoUrl"
+        type="url"
+        formControlName="fotoUrl"
+        placeholder="https://…"
+      />
+      <span class="field-hint">Si la dejás vacía, la portada será el arte del juego.</span>
+      @if (form.controls.fotoUrl.touched && form.controls.fotoUrl.invalid) {
+      <span class="field-error">Máximo 500 caracteres.</span>
+      }
+      @if (fotoPreview) {
+      <img class="foto-preview" [src]="fotoPreview" alt="Vista previa de la portada" />
+      }
+    </div>
+
+    @if (error()) {
+    <p class="aviso-error" role="alert">{{ error() }}</p>
+    }
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Guardando…' : (esEdicion ? 'Guardar cambios' : 'Crear liga') }}
+      </button>
+      <a class="btn-secondary" routerLink="/leagues">Cancelar</a>
+    </div>
+  </form>
+  }
+</section>

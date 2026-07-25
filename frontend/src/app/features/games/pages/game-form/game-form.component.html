@@ -1,0 +1,92 @@
+<section class="page">
+  <app-page-header
+    [titulo]="editando() ? 'Editar juego' : 'Nuevo juego'"
+    subtitulo="Buscá el título en el catálogo y ajustá sus datos antes de guardar"
+  ></app-page-header>
+
+  @if (error()) {
+  <p class="mensaje-error" role="alert">{{ error() }}</p>
+  }
+
+  <!-- Buscador contra RAWG (referencia Challenger Mode: "Selecciona un
+       juego para continuar"). Elegir una tarjeta precarga el formulario. -->
+  <div class="buscador-externo">
+    <label class="buscador">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input
+        type="search"
+        placeholder="Buscá el juego (ej. Valorant, FC 25…)"
+        aria-label="Buscar juego en el catálogo externo"
+        [value]="consulta()"
+        (input)="alBuscar($any($event.target).value)"
+      />
+    </label>
+
+    @if (errorBusqueda()) {
+    <p class="mensaje-error" role="alert">{{ errorBusqueda() }}</p>
+    } @if (buscando()) {
+    <p class="buscando" role="status">Buscando en el catálogo…</p>
+    } @else if (resultados() !== null) { @if (resultados()!.length === 0) {
+    <p class="buscando" role="status">Sin coincidencias. Podés completar los campos a mano.</p>
+    } @else {
+    <div class="resultados-externos" role="listbox" aria-label="Resultados del catálogo">
+      @for (juego of resultados()!; track juego.nombre) {
+      <button type="button" class="resultado-externo" (click)="elegir(juego)">
+        <span class="arte" [class.sin-arte]="!juego.imagenUrl">
+          @if (juego.imagenUrl) {
+          <img [src]="juego.imagenUrl" [alt]="" loading="lazy" />
+          } @else {
+          <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
+          }
+        </span>
+        <span class="nombre">{{ juego.nombre }}</span>
+        @if (juego.genero) {
+        <span class="genero">{{ juego.genero }}</span>
+        }
+      </button>
+      }
+    </div>
+    } }
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+    <div class="campo">
+      <span class="label-portada" id="etiqueta-portada">Portada</span>
+      <app-foto-input etiqueta="Portada" forma="banner" formControlName="imagenUrl" aria-labelledby="etiqueta-portada" />
+    </div>
+
+    <div class="campo">
+      <label for="nombre">Nombre *</label>
+      <input id="nombre" type="text" formControlName="nombre" />
+      @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+      <span class="error-campo">El nombre es obligatorio (máx. 120 caracteres).</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="genero">Género *</label>
+      <input id="genero" type="text" formControlName="genero" placeholder="Ej. FPS Táctico" />
+      @if (form.controls.genero.invalid && form.controls.genero.touched) {
+      <span class="error-campo">El género es obligatorio (máx. 80 caracteres).</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" formControlName="descripcion" rows="4"></textarea>
+      @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {
+      <span class="error-campo">Máximo 1000 caracteres.</span>
+      }
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</section>

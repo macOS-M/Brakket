@@ -1,0 +1,63 @@
+# docker-compose para levantar Brakket en local (PostgreSQL + backend).
+# Uso:  docker compose up --build
+# Requiere un archivo .env (copiar de .env.example) en esta misma carpeta.
+
+services:
+  db:
+    image: postgres:16
+    container_name: brakket-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-brakket}
+      POSTGRES_USER: ${POSTGRES_USER:-brakket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brakket}
+    ports:
+      - "5432:5432"
+    volumes:
+      - brakket_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-brakket}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: brakket-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Sin TZ el contenedor corre en UTC (+6h respecto a Costa Rica) y las
+      # validaciones de fecha/hora rechazan torneos con horario local válido.
+      TZ: ${TZ:-America/Costa_Rica}
+      JAVA_TOOL_OPTIONS: -Duser.timezone=${TZ:-America/Costa_Rica}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-brakket}
+      DB_USER: ${POSTGRES_USER:-brakket}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-brakket}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-cambiar-esta-clave-secreta-de-al-menos-32-chars}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
+      TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
+      TWITCH_CHANNEL: ${TWITCH_CHANNEL:-}
+      # Fail-fast: sin credenciales de Twitch el backend no arranca (RF-35).
+      TWITCH_REQUIRED: ${TWITCH_REQUIRED:-true}
+      STREAMS_MULTI_SOURCE_ENABLED: ${STREAMS_MULTI_SOURCE_ENABLED:-false}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_API_BASE_URL: ${AI_API_BASE_URL:-}
+      RAWG_API_KEY: ${RAWG_API_KEY:-}
+      # Rescate puntual: bases locales que avanzaron en una rama pueden
+      # necesitar aplicar migraciones intermedias llegadas después por un
+      # merge. Ponerlo en true UNA vez en .env y volver a false.
+      SPRING_FLYWAY_OUT_OF_ORDER: ${SPRING_FLYWAY_OUT_OF_ORDER:-false}
+    ports:
+      - "8080:8080"
+    volumes:
+      # Imágenes subidas (logos/banners): sobreviven al recrear el contenedor.
+      - brakket_uploads:/app/uploads
+
+volumes:
+  brakket_pgdata:
+  brakket_uploads:

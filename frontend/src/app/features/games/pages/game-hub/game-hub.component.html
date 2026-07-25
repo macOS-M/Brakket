@@ -1,0 +1,301 @@
+<section class="page">
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando juego…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()!">
+    <a class="btn-secondary" routerLink="/games">Volver al catálogo</a>
+  </app-empty-state>
+  } @else { @if (juego(); as juego) {
+
+  <!-- Banner con el arte del juego (referencia Challenger Mode). -->
+  <header class="banner" [style.background]="foto() ? undefined : gradiente()">
+    @if (foto()) {
+    <img class="banner-arte" [src]="foto()" alt="" />
+    }
+    <div class="banner-velo" aria-hidden="true"></div>
+
+    <a class="volver" routerLink="/games">← Catálogo</a>
+
+    <div class="banner-contenido">
+      <div class="cartel" [style.background]="foto() ? undefined : gradiente()">
+        @if (foto()) {
+        <img [src]="foto()" alt="" loading="lazy" />
+        } @else {
+        <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
+        }
+      </div>
+      <div class="titulos">
+        <h1>{{ juego.nombre }}</h1>
+        @if (juego.genero) {
+        <span class="genero-chip">{{ juego.genero }}</span>
+        }
+      </div>
+
+      <div class="acciones-banner">
+        <!-- Modelo abierto: cualquier usuario con sesión crea liga o torneo. -->
+        @if (auth.isAuthenticated()) {
+        <div class="crear" #zonaCrear>
+          <button
+            #btnCrear
+            type="button"
+            class="btn-crear"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="menuCrearAbierto()"
+            (click)="alternarMenuCrear()"
+            (keydown.arrowdown)="!menuCrearAbierto() && alternarMenuCrear()"
+          >
+            Crear
+          </button>
+          @if (menuCrearAbierto()) {
+          <div class="menu-crear" #menuCrear role="menu" aria-label="Crear competencia" (keydown)="tecladoMenuCrear($event)">
+            <button type="button" role="menuitem" (click)="abrirWizard()">
+              <span class="titulo-opcion">Torneo</span>
+              <span class="detalle-opcion">Creá un torneo para tus amigos o tu comunidad.</span>
+            </button>
+            <button type="button" role="menuitem" (click)="crearLiga()">
+              <span class="titulo-opcion">Liga</span>
+              <span class="detalle-opcion">Organizá temporadas y competencias de este juego.</span>
+            </button>
+          </div>
+          }
+        </div>
+        }
+
+        @if (auth.hasRole('ADMIN')) {
+        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'editar']">Editar</a>
+        <a class="btn-secondary" [routerLink]="['/games', juego.id, 'perfil-competitivo']">
+          Perfil competitivo
+        </a>
+        <button type="button" class="btn-ghost-danger" (click)="confirmandoDesactivar.set(true)">
+          Desactivar
+        </button>
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (errorAccion()) {
+  <p class="mensaje-error" role="alert">{{ errorAccion() }}</p>
+  }
+  @if (confirmandoDesactivar()) {
+  <div class="confirmacion" role="alertdialog" aria-label="Confirmar desactivación">
+    <p>¿Desactivar {{ juego.nombre }}? Dejará de estar disponible para nuevas ligas y torneos.</p>
+    <div class="confirmacion-acciones">
+      <button type="button" class="btn-danger" (click)="confirmarDesactivar()">Sí, desactivar</button>
+      <button type="button" class="btn-secondary" (click)="confirmandoDesactivar.set(false)">
+        Cancelar
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Tabs del hub -->
+  <nav class="tabs" aria-label="Secciones del juego">
+    <button
+      type="button"
+      class="tab"
+      [class.activo]="tab() === 'descripcion'"
+      [attr.aria-current]="tab() === 'descripcion' ? 'page' : null"
+      (click)="tab.set('descripcion')"
+    >
+      Descripción
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.activo]="tab() === 'torneos'"
+      [attr.aria-current]="tab() === 'torneos' ? 'page' : null"
+      (click)="tab.set('torneos')"
+    >
+      Torneos ({{ torneos().length }})
+    </button>
+  </nav>
+
+  @if (tab() === 'descripcion') {
+  <div class="contenido">
+    <!-- Ficha del juego: datos reales de RAWG guardados al importar. -->
+    @if (juego.rating || juego.metacritic || juego.fechaLanzamiento || juego.plataformas) {
+    <div class="ficha-juego">
+      @if (juego.rating) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">★ {{ juego.rating }}</span>
+        <span class="ficha-etiqueta">Comunidad</span>
+      </div>
+      }
+      @if (juego.metacritic) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">{{ juego.metacritic }}</span>
+        <span class="ficha-etiqueta">Metacritic</span>
+      </div>
+      }
+      @if (juego.fechaLanzamiento) {
+      <div class="ficha-dato">
+        <span class="ficha-valor">{{ juego.fechaLanzamiento | date: 'y' }}</span>
+        <span class="ficha-etiqueta">Lanzamiento</span>
+      </div>
+      }
+      @if (juego.plataformas) {
+      <div class="ficha-dato ficha-plataformas">
+        <span class="ficha-valor">{{ juego.plataformas }}</span>
+        <span class="ficha-etiqueta">Plataformas</span>
+      </div>
+      }
+    </div>
+    }
+
+    @if (juego.etiquetas) {
+    <div class="tags-juego">
+      @for (tag of juego.etiquetas.split(', '); track tag) {
+      <span class="tag-juego">{{ tag }}</span>
+      }
+    </div>
+    }
+
+    @if (juego.descripcion) {
+    <p class="descripcion">{{ juego.descripcion }}</p>
+    }
+
+    @if (juego.capturas && juego.capturas.length > 0) {
+    <!-- Galería de capturas reales (RAWG), con scroll horizontal propio. -->
+    <div class="galeria" role="list" aria-label="Capturas del juego">
+      @for (captura of juego.capturas; track captura) {
+      <img class="galeria-item" role="listitem" [src]="captura" [alt]="'Captura de ' + juego.nombre" loading="lazy" />
+      }
+    </div>
+    }
+
+    <!-- Torneo destacado (referencia CM "Recommended tournaments"):
+         arte grande + datos al lado, sin caja alrededor. -->
+    @if (destacado(); as torneo) {
+    <h2 class="seccion">Torneos destacados</h2>
+    <a class="destacado" [routerLink]="['/tournaments', torneo.id]">
+      <div class="destacado-arte" [style.background]="foto() ? undefined : gradiente()">
+        @if (foto()) {
+        <img [src]="foto()" alt="" loading="lazy" />
+        }
+      </div>
+      <div class="destacado-info">
+        <p class="destacado-fecha">{{ torneo.fechaInicio | date: "EEEE d 'de' MMMM, HH:mm" }}</p>
+        <h3>{{ torneo.nombre }}</h3>
+        <p class="destacado-meta">
+          {{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }} ·
+          {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos
+          @if (torneo.premio) { · 🏆 {{ torneo.premio }} }
+        </p>
+        <p class="destacado-organizador">
+          Organizado por <strong>{{ torneo.organizadorNombre }}</strong>
+          @if (torneo.ligaNombre) { · {{ torneo.ligaNombre }} } @else { · Comunitario }
+        </p>
+      </div>
+    </a>
+
+    @if (otrosTorneos().length > 0) {
+    <div class="fila-torneos">
+      @for (torneo of otrosTorneos(); track torneo.id) {
+      <a class="torneo-mini" [routerLink]="['/tournaments', torneo.id]">
+        <div class="mini-arte" [style.background]="foto() ? undefined : gradiente()">
+          @if (foto()) {
+          <img [src]="foto()" alt="" loading="lazy" />
+          }
+          <span class="mini-fecha">{{ torneo.fechaInicio | date: "EEE d, HH:mm" }}</span>
+        </div>
+        <p class="mini-nombre">{{ torneo.nombre }}</p>
+        <p class="mini-meta">
+          {{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }} ·
+          {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos
+        </p>
+      </a>
+      }
+    </div>
+    }
+    <button type="button" class="ver-todos-btn" (click)="tab.set('torneos')">
+      Ver todos los torneos →
+    </button>
+    }
+
+    <h2 class="seccion">Ligas de {{ juego.nombre }}</h2>
+    @if (ligas().length === 0) {
+    <app-empty-state
+      titulo="Todavía no hay ligas de este juego"
+      [mensaje]="
+        auth.isAuthenticated()
+          ? 'Creá la primera desde el botón Crear: cualquier usuario puede organizar.'
+          : 'Iniciá sesión y creá la primera liga de este título.'
+      "
+    >
+      @if (auth.isAuthenticated()) {
+      <button type="button" class="btn-primary" (click)="crearLiga()">+ Nueva liga</button>
+      }
+    </app-empty-state>
+    } @else {
+    <!-- Pósters con el nombre sobre el arte (referencia dashboard):
+         nada de cajitas con borde. -->
+    <div class="ligas-posters">
+      @for (liga of ligas(); track liga.id) {
+      <a
+        class="liga-poster"
+        [routerLink]="['/leagues', liga.id]"
+        [style.background]="portadaLiga(liga) ? undefined : gradienteLiga(liga)"
+      >
+        @if (portadaLiga(liga)) {
+        <img [src]="portadaLiga(liga)" alt="" loading="lazy" />
+        }
+        <div class="poster-velo" aria-hidden="true"></div>
+        <div class="poster-texto">
+          <p class="poster-nombre">{{ liga.nombre }}</p>
+          <p class="poster-meta">{{ liga.comisionadoNombre }}</p>
+        </div>
+      </a>
+      }
+    </div>
+    }
+  </div>
+  } @else {
+  <div class="contenido">
+    <!-- Afordancia de creación, como la fila punteada de la referencia. -->
+    @if (auth.isAuthenticated()) {
+    <button type="button" class="crear-torneo" (click)="abrirWizard()">
+      <span class="mas" aria-hidden="true">+</span>
+      <span class="crear-texto">
+        <strong>Crear torneo</strong>
+        <span>Organizá una competencia de {{ juego.nombre }} para tu comunidad.</span>
+      </span>
+    </button>
+    } @else {
+    <button type="button" class="crear-torneo" (click)="auth.login()">
+      <span class="mas" aria-hidden="true">+</span>
+      <span class="crear-texto">
+        <strong>Crear torneo</strong>
+        <span>Iniciá sesión para organizar una competencia de {{ juego.nombre }}.</span>
+      </span>
+    </button>
+    }
+
+    @if (cargandoTorneos()) {
+    <app-empty-state modo="cargando" mensaje="Cargando torneos…" />
+    } @else if (torneos().length === 0) {
+    <app-empty-state
+      titulo="Todavía no hay torneos de este juego"
+      mensaje="Sé la primera persona en organizar uno."
+    />
+    } @else {
+    <div class="torneos-lista">
+      @for (torneo of torneos(); track torneo.id) {
+      <app-torneo-card [torneo]="torneo" />
+      }
+    </div>
+    }
+  </div>
+  }
+
+  @if (wizardAbierto()) {
+  <app-tournament-wizard
+    [juegoId]="juego.id"
+    [juegoNombre]="juego.nombre"
+    [juegoImagen]="foto()"
+    (cerrado)="wizardAbierto.set(false)"
+    (creado)="torneoCreado($event)"
+  />
+  }
+  } }
+</section>

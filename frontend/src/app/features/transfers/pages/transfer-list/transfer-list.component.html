@@ -1,0 +1,151 @@
+<section class="page">
+  <app-page-header
+    titulo="Transferencias"
+    subtitulo="Respondé las solicitudes que te llegan y seguí las que enviaste."
+  >
+    <a class="btn-primary" routerLink="/transfers/nueva">+ Solicitar transferencia</a>
+  </app-page-header>
+
+  @if (mensaje()) {
+  <p class="aviso" role="status">{{ mensaje() }}</p>
+  }
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando solicitudes…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudieron cargar las solicitudes" [mensaje]="error()">
+    <button class="btn-secondary" type="button" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else {
+
+  <!-- Pendientes de mi respuesta -->
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Pendientes de mi respuesta</h2>
+      @if (pendientes().length) {
+      <span class="conteo">{{ pendientes().length }}</span>
+      }
+    </div>
+
+    @if (pendientes().length === 0) {
+    <div class="vacio" role="status">
+      <span class="vacio-emoji" aria-hidden="true">📨</span>
+      <p class="vacio-titulo">Estás al día: nada por responder</p>
+      <p class="vacio-detalle">
+        Cuando alguien proponga una transferencia que necesite tu visto bueno, va a caer acá.
+      </p>
+    </div>
+    } @else {
+    <ul class="lista">
+      @for (t of pendientes(); track t.id) {
+      <li class="item entra-tarjeta">
+        <div class="item-cabecera">
+          <span class="avatar" aria-hidden="true" [style.background]="colorDe(t.jugadorNombre)">
+            {{ t.jugadorNombre.charAt(0) }}
+          </span>
+          <div class="item-cuerpo">
+            <p class="item-titulo">
+              {{ t.jugadorNombre }}
+              <span class="ruta">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
+            </p>
+            <p class="item-meta">
+              Rol propuesto: {{ t.rolPropuesto }} · Solicitada por {{ t.solicitanteNombre }} el
+              <time class="dato">{{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}</time>
+            </p>
+            @if (t.justificacion) {
+            <p class="justificacion">"{{ t.justificacion }}"</p>
+            }
+          </div>
+          <div class="acciones">
+            <button
+              class="btn-aceptar"
+              type="button"
+              [disabled]="respondiendo() !== null"
+              (click)="responder(t, 'ACEPTAR')"
+            >
+              {{ respondiendo() === t.id ? 'Enviando…' : 'Aceptar' }}
+            </button>
+            <button
+              class="btn-rechazar"
+              type="button"
+              [disabled]="respondiendo() !== null"
+              (click)="responder(t, 'RECHAZAR')"
+            >
+              Rechazar
+            </button>
+          </div>
+        </div>
+        <div class="aprobaciones">
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Jugador</span>
+            <app-status-badge [estado]="t.aprobacionJugador" [texto]="etiquetaAprobacion(t.aprobacionJugador)" />
+          </span>
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Capitán origen</span>
+            <app-status-badge [estado]="t.aprobacionCapitanOrigen" [texto]="etiquetaAprobacion(t.aprobacionCapitanOrigen)" />
+          </span>
+        </div>
+      </li>
+      }
+    </ul>
+    }
+  </section>
+
+  <!-- Solicitudes enviadas -->
+  <section class="bloque">
+    <div class="bloque-titulo">
+      <h2>Solicitudes enviadas</h2>
+      @if (enviadas().length) {
+      <span class="conteo">{{ enviadas().length }}</span>
+      }
+    </div>
+
+    @if (enviadas().length === 0) {
+    <div class="vacio" role="status">
+      <span class="vacio-emoji" aria-hidden="true">🔁</span>
+      <p class="vacio-titulo">Todavía no enviaste solicitudes</p>
+      <p class="vacio-detalle">
+        Fichá a un jugador de otro equipo: solicitá el traspaso y seguí acá cada aprobación.
+      </p>
+      <a class="btn-secondary" routerLink="/transfers/nueva">Solicitar transferencia</a>
+    </div>
+    } @else {
+    <ul class="lista">
+      @for (t of enviadas(); track t.id) {
+      <li class="item entra-tarjeta">
+        <div class="item-cabecera">
+          <span class="avatar" aria-hidden="true" [style.background]="colorDe(t.jugadorNombre)">
+            {{ t.jugadorNombre.charAt(0) }}
+          </span>
+          <div class="item-cuerpo">
+            <p class="item-titulo">
+              {{ t.jugadorNombre }}
+              <span class="ruta">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
+            </p>
+            <p class="item-meta">
+              Rol propuesto: {{ t.rolPropuesto }} · Solicitada el
+              <time class="dato">{{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}</time>
+            </p>
+            @if (t.justificacion) {
+            <p class="justificacion">"{{ t.justificacion }}"</p>
+            }
+          </div>
+          <app-status-badge [estado]="t.estado" [texto]="etiquetaEstado(t.estado)" />
+        </div>
+        <div class="aprobaciones">
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Jugador</span>
+            <app-status-badge [estado]="t.aprobacionJugador" [texto]="etiquetaAprobacion(t.aprobacionJugador)" />
+          </span>
+          <span class="aprobacion">
+            <span class="aprobacion-rol">Capitán origen</span>
+            <app-status-badge [estado]="t.aprobacionCapitanOrigen" [texto]="etiquetaAprobacion(t.aprobacionCapitanOrigen)" />
+          </span>
+        </div>
+      </li>
+      }
+    </ul>
+    }
+  </section>
+  }
+</section>
