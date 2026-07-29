@@ -1,4 +1,88 @@
-<app-coming-soon
-  titulo="Notificaciones"
-  descripcion="Todas tus novedades en un solo lugar: invitaciones, resultados, disputas y transferencias."
-/>
+<section class="page">
+  <app-page-header
+    eyebrow="Centro de actividad"
+    titulo="Notificaciones"
+    subtitulo="Invitaciones, resultados y novedades relacionadas con tu actividad."
+  >
+    <button class="btn-marcar" type="button" [disabled]="!noLeidas() || procesandoTodas()" (click)="marcarTodas()">
+      <span aria-hidden="true">✓</span>
+      {{ procesandoTodas() ? 'Actualizando…' : 'Marcar todas como leídas' }}
+    </button>
+  </app-page-header>
+
+  <div class="resumen" aria-live="polite">
+    <span class="pulso" [class.inactivo]="!noLeidas()"></span>
+    <strong>{{ noLeidas() }}</strong>
+    {{ noLeidas() === 1 ? 'notificación sin leer' : 'notificaciones sin leer' }}
+  </div>
+
+  <nav class="filtros" aria-label="Filtrar notificaciones">
+    @for (opcion of [
+      { id: 'TODAS', texto: 'Todas' },
+      { id: 'NO_LEIDAS', texto: 'No leídas' },
+      { id: 'INVITACION', texto: 'Invitaciones' },
+      { id: 'TRANSFERENCIA', texto: 'Transferencias' },
+      { id: 'RESULTADO', texto: 'Resultados' },
+      { id: 'DISPUTA', texto: 'Disputas' },
+      { id: 'TRANSMISION', texto: 'Transmisiones' },
+      { id: 'ADMINISTRATIVA', texto: 'Sistema' }
+    ]; track opcion.id) {
+      <button type="button" [class.activo]="filtro() === opcion.id" (click)="seleccionarFiltro($any(opcion.id))">
+        {{ opcion.texto }}
+      </button>
+    }
+  </nav>
+
+  @if (error()) {
+    <div class="alerta" role="alert">{{ error() }} <button type="button" (click)="cargar()">Reintentar</button></div>
+  }
+
+  <div class="bandeja" [attr.aria-busy]="cargando()">
+    @if (cargando()) {
+      @for (item of [1, 2, 3]; track item) {
+        <div class="esqueleto"><span></span><div><i></i><i></i></div></div>
+      }
+    } @else if (visibles().length === 0) {
+      <div class="vacio">
+        <span aria-hidden="true">✓</span>
+        <h2>Todo al día</h2>
+        <p>No hay notificaciones que coincidan con este filtro.</p>
+      </div>
+    } @else {
+      @for (notificacion of visibles(); track notificacion.id) {
+        <article
+          class="notificacion"
+          [class.no-leida]="!notificacion.leida"
+          (click)="marcarLeida(notificacion)"
+          [attr.title]="'Abrir ' + etiqueta(notificacion.tipo).toLowerCase()"
+        >
+          <div class="tipo-icono tipo-{{ categoria(notificacion.tipo).toLowerCase() }}" aria-hidden="true">
+            {{ icono(notificacion.tipo) }}
+          </div>
+          <div class="contenido">
+            <div class="meta">
+              <span class="etiqueta">{{ etiqueta(notificacion.tipo) }}</span>
+              <span>{{ notificacion.origen }}</span>
+              <span aria-hidden="true">·</span>
+              <time [attr.datetime]="notificacion.fecha">{{ fecha(notificacion.fecha) }}</time>
+            </div>
+            <p>{{ notificacion.mensaje }}</p>
+            @if (notificacion.estadoEntrega === 'PENDIENTE') {
+              <span class="estado-pendiente">Disponible en historial · entrega pendiente</span>
+            }
+          </div>
+          <div class="acciones-item">
+            @if (!notificacion.leida) {
+              <button type="button" class="leer" (click)="marcarSoloComoLeida(notificacion, $event)">
+                Marcar leída
+              </button>
+            }
+            <button type="button" class="quitar" title="Quitar de la bandeja" (click)="eliminar(notificacion, $event)">
+              ×<span class="sr-only">Quitar de la bandeja</span>
+            </button>
+          </div>
+        </article>
+      }
+    }
+  </div>
+</section>
