@@ -34,6 +34,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
+import com.coffeecommits.brakket.tournament.repository.CasoEspecialPartidaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PartidaServiceImplTest {
@@ -46,6 +48,12 @@ class PartidaServiceImplTest {
     private InscripcionRepository inscripcionRepository;
     @Mock
     private UsuarioRepository usuarioRepository;
+    // RF-28: el test tambien necesita estos dos mocks porque el constructor
+    // ahora los pide, aunque este archivo de pruebas no los use directamente.
+    @Mock
+    private ArbitroTorneoRepository arbitroTorneoRepository;
+    @Mock
+    private CasoEspecialPartidaRepository casoEspecialPartidaRepository;
 
     private PartidaServiceImpl service;
 
@@ -62,8 +70,8 @@ class PartidaServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new PartidaServiceImpl(
-                torneoRepository, partidaRepository, inscripcionRepository, usuarioRepository);
-
+                torneoRepository, partidaRepository, inscripcionRepository, usuarioRepository,
+                arbitroTorneoRepository, casoEspecialPartidaRepository);
         torneo = Torneo.builder()
                 .id(7L)
                 .juego(Juego.builder().id(3L).nombre("Rocket League").build())

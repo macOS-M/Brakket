@@ -29,6 +29,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+
+
+import com.coffeecommits.brakket.tournament.dto.RegistrarCasoEspecialRequest;
+import com.coffeecommits.brakket.tournament.model.CasoEspecialPartida;
+import com.coffeecommits.brakket.tournament.model.TipoCasoEspecial;
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
+import com.coffeecommits.brakket.tournament.repository.CasoEspecialPartidaRepository;
+
 @Service
 public class PartidaServiceImpl implements PartidaService {
 
@@ -41,14 +49,23 @@ public class PartidaServiceImpl implements PartidaService {
     private final InscripcionRepository inscripcionRepository;
     private final UsuarioRepository usuarioRepository;
 
+    // RF-28: para saber si quien registra un caso especial es arbitro del torneo
+    private final ArbitroTorneoRepository arbitroTorneoRepository;
+    // RF-28: guarda cada descanso, avance automatico o abandono que se registre
+    private final CasoEspecialPartidaRepository casoEspecialPartidaRepository;
+
     public PartidaServiceImpl(TorneoRepository torneoRepository,
                               PartidaRepository partidaRepository,
                               InscripcionRepository inscripcionRepository,
-                              UsuarioRepository usuarioRepository) {
+                              UsuarioRepository usuarioRepository,
+                              ArbitroTorneoRepository arbitroTorneoRepository,
+                              CasoEspecialPartidaRepository casoEspecialPartidaRepository) {
         this.torneoRepository = torneoRepository;
         this.partidaRepository = partidaRepository;
         this.inscripcionRepository = inscripcionRepository;
         this.usuarioRepository = usuarioRepository;
+        this.arbitroTorneoRepository = arbitroTorneoRepository;
+        this.casoEspecialPartidaRepository = casoEspecialPartidaRepository;
     }
 
     @Override
@@ -164,6 +181,86 @@ public class PartidaServiceImpl implements PartidaService {
         finalizar(partida, request.marcadorA(), request.marcadorB());
         return PartidaResponse.from(partida);
     }
+
+
+    @Override
+    @Transactional
+    public PartidaResponse registrarCasoEspecial(Long partidaId, String correo, boolean esAdmin,
+                                                 RegistrarCasoEspecialRequest request) {
+        // Reutilizamos la misma busqueda que usan reportar/confirmar/resolver:
+        // ya valida que el torneo este en curso, que la partida no este cerrada,
+        // y que existan los dos equipos rivales antes de dejar hacer nada.
+        Partida partida = buscarPartidaJugable(partidaId);
+
+        // El RF pide "comisionado o arbitro". Aqui tratamos "comisionado" como
+        // el organizador del torneo (mismo concepto que usa todo el motor de
+        // partidas), y le sumamos los arbitros asignados a este torneo especifico.
+        exigirOrganizadorOArbitro(partida.getTorneo(), correo, esAdmin,
+                "Solo el organizador, un arbitro del torneo o un administrador "
+                        + "pueden registrar un caso especial");
+
+        // El criterio de aceptacion es claro: la justificacion es obligatoria
+        // SOLO cuando el caso especial es un abandono, no para los otros tipos.
+        if (request.tipo() == TipoCasoEspecial.ABANDONO
+                && (request.justificacion() == null || request.justificacion().isBlank())) {
+            throw new BusinessException("La justificacion es obligatoria para registrar un abandono");
+        }
+
+        Usuario responsable = buscarUsuario(correo);
+
+        // Guardamos el caso especial en el historial primero, sin importar que
+        // pase despues con la partida: la trazabilidad debe quedar registrada
+        // siempre, incluso si el caso es solo un descanso sin consecuencias.
+        CasoEspecialPartida caso = CasoEspecialPartida.builder()
+                .partida(partida)
+                .tipo(request.tipo())
+                .justificacion(request.justificacion())
+                .evidenciaUrl(request.evidenciaUrl())
+                .registradoPor(responsable)
+                .fecha(LocalDateTime.now())
+                .build();
+        casoEspecialPartidaRepository.save(caso);
+
+        // DESCANSO no obliga a nadie a ganar ni perder: solo queda anotado en
+        // el historial (por ejemplo, en un formato suizo donde a un equipo le
+        // toca descansar una ronda por reglas del propio formato).
+        if (request.tipo() == TipoCasoEspecial.DESCANSO) {
+            return PartidaResponse.from(partida);
+        }
+
+        // ABANDONO y AVANCE_AUTOMATICO si necesitan que alguien avance en el
+        // bracket aunque la partida nunca se haya jugado de verdad.
+        if (request.equipoGanadorId() == null) {
+            throw new BusinessException(
+                    "Debes indicar el equipo ganador para este tipo de caso especial");
+        }
+
+        Equipo equipoA = partida.getEquipoA();
+        Equipo equipoB = partida.getEquipoB();
+        boolean ganaA = Objects.equals(equipoA.getId(), request.equipoGanadorId());
+        boolean ganaB = Objects.equals(equipoB.getId(), request.equipoGanadorId());
+        if (!ganaA && !ganaB) {
+            throw new BusinessException(
+                    "El equipo ganador debe ser uno de los dos rivales de esta partida");
+        }
+
+        // Aqui esta la reutilizacion clave: en vez de escribir de nuevo toda la
+        // logica de avance de bracket, usamos el mismo metodo finalizar() que
+        // ya usan confirmar() y resolver(). Le damos un marcador simbolico
+        // (1 a 0) solo para que sepa quien gano; el marcador real no importa
+        // porque este resultado no vino de un partido jugado.
+        partida.setMarcadorA(ganaA ? 1 : 0);
+        partida.setMarcadorB(ganaB ? 1 : 0);
+        finalizar(partida, partida.getMarcadorA(), partida.getMarcadorB());
+
+        return PartidaResponse.from(partida);
+    }
+
+
+
+
+
+
 
     // ---------- generación por formato ----------
 
@@ -803,6 +900,27 @@ public class PartidaServiceImpl implements PartidaService {
         if (!esAdmin && !esOrganizador(torneo, correo)) {
             throw new ForbiddenException(mensaje);
         }
+    }
+
+    // RF-28: version de exigirOrganizador que ademas deja pasar a los
+    // arbitros asignados a este torneo especifico, no solo al organizador.
+    private void exigirOrganizadorOArbitro(Torneo torneo, String correo, boolean esAdmin, String mensaje) {
+        if (esAdmin || esOrganizador(torneo, correo) || esArbitro(torneo, correo)) {
+            return;
+        }
+        throw new ForbiddenException(mensaje);
+    }
+
+    // Revisa si el usuario que hace la peticion esta en la lista de arbitros
+    // que alguien (el organizador o un admin) le asigno a este torneo.
+    private boolean esArbitro(Torneo torneo, String correoOpcional) {
+        if (correoOpcional == null) {
+            return false;
+        }
+        return usuarioRepository.findByCorreo(correoOpcional)
+                .map(usuario -> arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
+                        .anyMatch(a -> Objects.equals(a.getUsuario().getId(), usuario.getId())))
+                .orElse(false);
     }
 
     private boolean esOrganizador(Torneo torneo, String correoOpcional) {
