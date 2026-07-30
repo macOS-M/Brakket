@@ -48,4 +48,11 @@ public class Disputa {
 
     @Column(name = "estado", nullable = false, length = 40)
     private String estado;
+
+    /** Texto largo del reclamo; el motivo es la categoría corta. */
+    @Column(name = "descripcion", length = 1000)
+    private String descripcion;
+
+    @Column(name = "fecha_creacion", nullable = false)
+    private java.time.LocalDateTime fechaCreacion;
 }

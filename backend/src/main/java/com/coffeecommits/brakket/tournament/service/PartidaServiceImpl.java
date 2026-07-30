@@ -439,6 +439,7 @@ public class PartidaServiceImpl implements PartidaService {
         }
         partida.setGanador(ganador);
         partida.setEstado(EstadoPartida.FINALIZADA);
+        partida.setFechaFinalizacion(java.time.LocalDateTime.now());
         partidaRepository.save(partida);
 
         // Re-lectura con lock: si las dos partidas que alimentan a la misma
