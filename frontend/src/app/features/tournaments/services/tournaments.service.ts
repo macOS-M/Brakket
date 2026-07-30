@@ -9,6 +9,7 @@ import {
   Torneo,
   TorneoDetalle
 } from '../../../models/tournament.model';
+import { RegistrarCasoEspecialRequest } from '../../../models/caso-especial.model';
 
 /**
  * Servicio de datos de torneos (RF-24/RF-25, modelo abierto): torneos
@@ -83,5 +84,10 @@ export class TournamentsService {
   resolver(partidaId: number, marcadorA: number, marcadorB: number): Observable<Partida> {
     return this.api.post<Partida>(
       `/tournaments/partidas/${partidaId}/resolucion`, { marcadorA, marcadorB });
+  }
+
+  /** Organizador o árbitro registran descanso, avance o abandono . */
+  registrarCasoEspecial(partidaId: number, request: RegistrarCasoEspecialRequest): Observable<Partida> {
+    return this.api.post<Partida>(`/tournaments/partidas/${partidaId}/caso-especial`, request);
   }
 }

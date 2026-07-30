@@ -13,6 +13,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 
 import { Partida } from '../../../../models/tournament.model';
+import { RegistrarCasoEspecialRequest, TipoCasoEspecial } from '../../../../models/caso-especial.model';
 
 interface Ronda {
   numero: number;
@@ -62,6 +63,12 @@ export interface MarcadorEvent {
   resolucion: boolean;
 }
 
+/** Descanso, avance automático o abandono sobre una partida (RF-28). */
+export interface CasoEspecialEvent {
+  partida: Partida;
+  request: RegistrarCasoEspecialRequest;
+}
+
 /** Forma de dibujar el formato: árbol único, doble llave, liga o grupos. */
 type TipoVista = 'ARBOL' | 'DOBLE' | 'LIGA' | 'GRUPOS';
 
@@ -95,18 +102,31 @@ export class TournamentBracketComponent {
   readonly campeonEquipoId = input<number | null>(null);
   readonly misEquipos = input<number[]>([]);
   readonly esGestor = input(false);
+  /** Organizador o árbitro de este torneo: habilita el botón de RF-28. */
+  readonly puedeCasoEspecial = input(false);
   readonly enCurso = input(false);
   readonly ocupado = input(false);
 
   readonly enviarMarcador = output<MarcadorEvent>();
   readonly confirmar = output<Partida>();
   readonly rechazar = output<Partida>();
+  readonly casoEspecial = output<CasoEspecialEvent>();
 
   /** Partida con el formulario de marcador abierto. */
   readonly reportando = signal<number | null>(null);
   readonly marcadorA = signal(0);
   readonly marcadorB = signal(0);
   readonly errorLocal = signal<string | null>(null);
+
+  // ---------- RF-28: descansos, avances y abandonos ----------
+
+  /** Partida con el formulario de caso especial abierto. */
+  readonly registrandoCaso = signal<number | null>(null);
+  readonly tipoCaso = signal<TipoCasoEspecial>('DESCANSO');
+  readonly justificacionCaso = signal('');
+  readonly evidenciaCaso = signal('');
+  readonly equipoGanadorCaso = signal<number | null>(null);
+  readonly errorCaso = signal<string | null>(null);
 
   /** Rieles SVG calculados midiendo las tarjetas ya pintadas. */
   readonly rieles = signal<Riel[]>([]);
@@ -350,6 +370,7 @@ export class TournamentBracketComponent {
       this.partidas();
       this.maxEquipos();
       this.reportando();
+      this.registrandoCaso();
       this.recienActualizadas();
       this.programarMedicion();
     });
@@ -523,6 +544,54 @@ export class TournamentBracketComponent {
     return this.enCurso() && this.esGestor() && !p.bye
       && p.equipoAId !== null && p.equipoBId !== null
       && (p.estado === 'PENDIENTE' || p.estado === 'REPORTADA' || p.estado === 'EN_DISPUTA');
+  }
+
+  /** Organizador o árbitro, sobre una partida con ambos rivales ya definidos. */
+  puedeRegistrarCaso(p: Partida): boolean {
+    return this.enCurso() && this.puedeCasoEspecial() && !p.bye
+      && p.equipoAId !== null && p.equipoBId !== null
+      && p.estado !== 'FINALIZADA' && p.estado !== 'CANCELADA';
+  }
+
+  abrirCasoEspecial(p: Partida): void {
+    this.registrandoCaso.set(p.id);
+    this.tipoCaso.set('DESCANSO');
+    this.justificacionCaso.set('');
+    this.evidenciaCaso.set('');
+    this.equipoGanadorCaso.set(null);
+    this.errorCaso.set(null);
+  }
+
+  cerrarCasoEspecial(): void {
+    this.registrandoCaso.set(null);
+  }
+
+  enviarCasoEspecial(p: Partida): void {
+    const tipo = this.tipoCaso();
+    const justificacion = this.justificacionCaso().trim();
+
+    // El backend ya exige justificación solo para abandono; lo repetimos
+    // aquí para no hacerle perder el viaje al usuario con un 400.
+    if (tipo === 'ABANDONO' && !justificacion) {
+      this.errorCaso.set('El abandono necesita una justificación.');
+      return;
+    }
+    if (tipo !== 'DESCANSO' && this.equipoGanadorCaso() === null) {
+      this.errorCaso.set('Elegí cuál equipo avanza.');
+      return;
+    }
+
+    this.errorCaso.set(null);
+    this.casoEspecial.emit({
+      partida: p,
+      request: {
+        tipo,
+        justificacion: justificacion || null,
+        evidenciaUrl: this.evidenciaCaso().trim() || null,
+        equipoGanadorId: tipo === 'DESCANSO' ? null : this.equipoGanadorCaso()
+      }
+    });
+    this.registrandoCaso.set(null);
   }
 
   abrirMarcador(p: Partida): void {

@@ -17,6 +17,7 @@ import { TournamentsService } from '../../services/tournaments.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import {
+  CasoEspecialEvent,
   MarcadorEvent,
   TournamentBracketComponent
 } from '../../components/tournament-bracket/tournament-bracket.component';
@@ -135,6 +136,12 @@ export class TournamentDetailComponent {
     return !!t && !!usuario?.id && Number(usuario.id) === t.organizadorId;
   });
 
+  // Árbitro asignado a este torneo puntual (no es un rol global).
+  readonly esArbitro = computed(() => {
+    const uid = Number(this.auth.usuario()?.id);
+    return !!uid && (this.detalle()?.arbitrosIds ?? []).includes(uid);
+  });
+
   readonly puedeEliminar = computed(
     () => this.esOrganizador() || this.auth.hasRole('ADMIN')
   );
@@ -143,6 +150,9 @@ export class TournamentDetailComponent {
   readonly esModeracion = computed(() => this.puedeEliminar() && !this.esOrganizador());
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
+
+  // RF-28: quién puede reportar descansos/avances/abandonos.
+  readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
 
   /** Iniciar exige gestor, etapa de inscripción y al menos 2 equipos. */
   readonly puedeIniciar = computed(() => {
@@ -564,6 +574,18 @@ export class TournamentDetailComponent {
       error: (err) => {
         this.enviandoResultado.set(false);
         this.errorLlaves.set(err?.error?.message ?? 'No se pudo rechazar el resultado.');
+      }
+    });
+  }
+
+  onCasoEspecial(evento: CasoEspecialEvent): void {
+    this.enviandoResultado.set(true);
+    this.errorLlaves.set(null);
+    this.tournamentsService.registrarCasoEspecial(evento.partida.id, evento.request).subscribe({
+      next: () => this.refrescarLlaves(),
+      error: (err) => {
+        this.enviandoResultado.set(false);
+        this.errorLlaves.set(err?.error?.message ?? 'No se pudo registrar el caso especial.');
       }
     });
   }
