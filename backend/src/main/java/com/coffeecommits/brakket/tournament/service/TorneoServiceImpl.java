@@ -21,6 +21,7 @@ import com.coffeecommits.brakket.tournament.model.FormatoTorneo;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
 import org.springframework.stereotype.Service;
@@ -45,19 +46,23 @@ public class TorneoServiceImpl implements TorneoService {
     private final TemporadaRepository temporadaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PerfilCompetitivoRepository perfilCompetitivoRepository;
+    // RF-28: para exponer al frontend quiénes son árbitros de cada torneo.
+    private final ArbitroTorneoRepository arbitroTorneoRepository;
 
     public TorneoServiceImpl(TorneoRepository torneoRepository,
                              InscripcionRepository inscripcionRepository,
                              JuegoRepository juegoRepository,
                              TemporadaRepository temporadaRepository,
                              UsuarioRepository usuarioRepository,
-                             PerfilCompetitivoRepository perfilCompetitivoRepository) {
+                             PerfilCompetitivoRepository perfilCompetitivoRepository,
+                             ArbitroTorneoRepository arbitroTorneoRepository) {
         this.torneoRepository = torneoRepository;
         this.inscripcionRepository = inscripcionRepository;
         this.juegoRepository = juegoRepository;
         this.temporadaRepository = temporadaRepository;
         this.usuarioRepository = usuarioRepository;
         this.perfilCompetitivoRepository = perfilCompetitivoRepository;
+        this.arbitroTorneoRepository = arbitroTorneoRepository;
     }
 
     @Override
@@ -295,7 +300,13 @@ public class TorneoServiceImpl implements TorneoService {
                                         m.getRol()))
                                 .toList()))
                 .toList();
-        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos);
+        // RF-28: IDs de los usuarios árbitros de este torneo, para que el
+        // frontend decida si el usuario actual puede registrar descansos/
+        // avances automáticos/abandonos como árbitro (no solo organizador).
+        List<Long> arbitrosIds = arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
+                .map(a -> a.getUsuario().getId())
+                .toList();
+        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos, arbitrosIds);
     }
 
     private Usuario buscarUsuario(String correo) {
