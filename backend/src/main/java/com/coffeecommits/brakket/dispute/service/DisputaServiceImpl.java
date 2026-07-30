@@ -86,8 +86,22 @@ public class DisputaServiceImpl implements DisputaService {
         // de que un arbitro la resuelva (eso ya lo hara RF-32).
         partida.setEstado(EstadoPartida.EN_DISPUTA);
         partidaRepository.save(partida);
-
         return DisputaResponse.fromEntity(disputa);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DisputaResponse> listarPorPartida(Long partidaId, String correo, boolean esAdmin) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
+        Partida partida = partidaRepository.findById(partidaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Partida", partidaId));
+
+        exigirRelacionado(partida, usuario, esAdmin);
+
+        return disputaRepository.findByPartidaId(partidaId).stream()
+                .map(DisputaResponse::fromEntity)
+                .toList();
     }
 
     private void exigirRelacionado(Partida partida, Usuario usuario, boolean esAdmin) {

@@ -27,6 +27,14 @@ public class DisputaController {
         return disputaService.impugnar(partidaId, authentication.getName(), esAdmin(authentication), request);
     }
 
+    /** RF-31: para que el frontend sepa si hay una disputa activa y su ID. */
+    @GetMapping("/{partidaId}/disputas")
+    @PreAuthorize("isAuthenticated()")
+    public java.util.List<DisputaResponse> listarPorPartida(@PathVariable Long partidaId,
+                                                            Authentication authentication) {
+        return disputaService.listarPorPartida(partidaId, authentication.getName(), esAdmin(authentication));
+    }
+
     private static boolean esAdmin(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
