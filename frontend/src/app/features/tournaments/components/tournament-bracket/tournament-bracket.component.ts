@@ -13,8 +13,11 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 
 import { Partida } from '../../../../models/tournament.model';
-import { ImpugnarResultadoRequest } from '../../../../models/disputa.model';
-
+import { DisputaResponse, ImpugnarResultadoRequest } from '../../../../models/disputa.model';
+import { EvidenciaResponse } from '../../../../models/evidencia.model';
+import { TournamentsService } from '../../services/tournaments.service';
+import { DisputesService } from '../../../disputes/services/disputes.service';
+import { UploadsService } from '../../../../shared/services/uploads.service';
 interface Ronda {
   numero: number;
   etiqueta: string;
@@ -92,6 +95,9 @@ type TipoVista = 'ARBOL' | 'DOBLE' | 'LIGA' | 'GRUPOS';
 })
 export class TournamentBracketComponent {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly tournamentsService = inject(TournamentsService);
+  private readonly disputesService = inject(DisputesService);
+  private readonly uploadsService = inject(UploadsService);
 
   readonly partidas = input.required<Partida[]>();
   /** Cupo del torneo: dibuja la llave tentativa antes de generarse. */
@@ -124,6 +130,18 @@ export class TournamentBracketComponent {
   readonly evidenciaImpugnar = signal('');
   readonly errorImpugnar = signal<string | null>(null);
 
+  // ---------- RF-31: evidencia de una disputa ----------
+
+  /** Partida cuya evidencia está desplegada (null = ninguna). */
+  readonly verEvidencia = signal<number | null>(null);
+  readonly cargandoEvidencia = signal(false);
+  readonly disputaActivaId = signal<number | null>(null);
+  readonly evidencias = signal<EvidenciaResponse[]>([]);
+  readonly errorEvidencia = signal<string | null>(null);
+  readonly nuevaEvidenciaUrl = signal('');
+  readonly nuevaEvidenciaDescripcion = signal('');
+  readonly subiendoArchivo = signal(false);
+  readonly enviandoEvidencia = signal(false);
   /** Rieles SVG calculados midiendo las tarjetas ya pintadas. */
   readonly rieles = signal<Riel[]>([]);
   readonly lienzoAncho = signal(0);
@@ -367,6 +385,7 @@ export class TournamentBracketComponent {
       this.maxEquipos();
       this.reportando();
       this.impugnando();
+      this.verEvidencia();
       this.recienActualizadas();
       this.programarMedicion();
     });
@@ -581,6 +600,115 @@ export class TournamentBracketComponent {
       }
     });
     this.impugnando.set(null);
+  }
+
+  /** Mismo criterio que impugnar: relacionado con la partida, ya en disputa. */
+  puedeVerEvidencia(p: Partida): boolean {
+    return p.estado === 'EN_DISPUTA' && !p.bye
+      && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId) || this.esGestor());
+  }
+
+  toggleEvidencia(p: Partida): void {
+    if (this.verEvidencia() === p.id) {
+      this.verEvidencia.set(null);
+      return;
+    }
+    this.verEvidencia.set(p.id);
+    this.disputaActivaId.set(null);
+    this.evidencias.set([]);
+    this.errorEvidencia.set(null);
+    this.nuevaEvidenciaUrl.set('');
+    this.nuevaEvidenciaDescripcion.set('');
+    this.cargarEvidencia(p.id);
+  }
+
+  private cargarEvidencia(partidaId: number): void {
+    this.cargandoEvidencia.set(true);
+    this.tournamentsService.disputasDePartida(partidaId).subscribe({
+      next: (disputas: DisputaResponse[]) => {
+        // La activa es la más reciente sin resolver; si ya no hay
+        // ninguna, alguien ya la cerró.
+        const activa = disputas.find((d) => d.estado === 'PENDIENTE' || d.estado === 'EN_REVISION');
+        if (!activa) {
+          this.cargandoEvidencia.set(false);
+          this.errorEvidencia.set('Esta disputa ya no está activa.');
+          return;
+        }
+        this.disputaActivaId.set(activa.id);
+        this.disputesService.listarEvidencias(activa.id).subscribe({
+          next: (lista) => {
+            this.evidencias.set(lista);
+            this.cargandoEvidencia.set(false);
+          },
+          error: (err) => {
+            this.cargandoEvidencia.set(false);
+            this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la evidencia.');
+          }
+        });
+      },
+      error: (err) => {
+        this.cargandoEvidencia.set(false);
+        this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la disputa.');
+      }
+    });
+  }
+
+  /** Sube el archivo elegido y deja la URL lista para guardarla como evidencia. */
+  elegirArchivoEvidencia(evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo) {
+      return;
+    }
+    if (archivo.size > 5 * 1024 * 1024) {
+      this.errorEvidencia.set('La imagen supera los 5 MB.');
+      return;
+    }
+    this.subiendoArchivo.set(true);
+    this.errorEvidencia.set(null);
+    this.uploadsService.subirImagen(archivo).subscribe({
+      next: (url) => {
+        this.subiendoArchivo.set(false);
+        this.nuevaEvidenciaUrl.set(url);
+      },
+      error: (err) => {
+        this.subiendoArchivo.set(false);
+        this.errorEvidencia.set(err?.error?.message ?? 'No se pudo subir la imagen.');
+      }
+    });
+  }
+
+  enviarEvidencia(): void {
+    const disputaId = this.disputaActivaId();
+    const url = this.nuevaEvidenciaUrl().trim();
+    if (!disputaId || !url) {
+      this.errorEvidencia.set('Subí una imagen o pegá un enlace antes de guardar.');
+      return;
+    }
+    this.enviandoEvidencia.set(true);
+    this.errorEvidencia.set(null);
+    this.disputesService.adjuntarEvidencia(disputaId, {
+      url,
+      descripcion: this.nuevaEvidenciaDescripcion().trim() || null
+    }).subscribe({
+      next: (nueva) => {
+        this.enviandoEvidencia.set(false);
+        this.evidencias.update((lista) => [...lista, nueva]);
+        this.nuevaEvidenciaUrl.set('');
+        this.nuevaEvidenciaDescripcion.set('');
+      },
+      error: (err) => {
+        this.enviandoEvidencia.set(false);
+        this.errorEvidencia.set(err?.error?.message ?? 'No se pudo guardar la evidencia.');
+      }
+    });
+  }
+
+  formatearFecha(iso: string): string {
+    return new Date(iso).toLocaleString('es-CR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
   }
 
   abrirMarcador(p: Partida): void {

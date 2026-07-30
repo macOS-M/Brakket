@@ -30,8 +30,75 @@
     <p class="partida-estado reportada">Reporte enviado: falta la confirmación del rival</p>
     } @else if (p.estado === 'EN_DISPUTA') {
     <p class="partida-estado en-disputa">En disputa: resuelve el organizador</p>
+    @if (puedeVerEvidencia(p)) {
+    <button type="button" class="btn-secondary" (click)="toggleEvidencia(p)">
+      {{ verEvidencia() === p.id ? 'Ocultar evidencia' : 'Ver evidencia' }}
+    </button>
     }
+    @if (verEvidencia() === p.id) {
+    <div class="evidencia-panel">
+      @if (cargandoEvidencia()) {
+      <p class="evidencia-vacia">Cargando evidencia…</p>
+      } @else {
+      @if (evidencias().length === 0) {
+      <p class="evidencia-vacia">Todavía no hay evidencia adjunta.</p>
+      }
+      @for (e of evidencias(); track e.id) {
+      <div class="evidencia-item">
+        <a [href]="e.url" target="_blank" rel="noopener">{{ e.url }}</a>
+        @if (e.descripcion) {
+        <p class="evidencia-descripcion">{{ e.descripcion }}</p>
+        }
+        <p class="evidencia-meta">{{ e.subidoPorNombre }} · {{ formatearFecha(e.fechaCreacion) }}</p>
+      </div>
+      }
 
+      <div class="evidencia-form">
+        <label class="impugnar-campo">
+          <span>Subir imagen</span>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            [disabled]="subiendoArchivo()"
+            (change)="elegirArchivoEvidencia($event)"
+          />
+        </label>
+        <label class="impugnar-campo">
+          <span>O pegar un enlace (URL)</span>
+          <input
+            type="text"
+            maxlength="500"
+            [value]="nuevaEvidenciaUrl()"
+            (input)="nuevaEvidenciaUrl.set($any($event.target).value)"
+          />
+        </label>
+        <label class="impugnar-campo">
+          <span>Descripción (opcional)</span>
+          <input
+            type="text"
+            maxlength="500"
+            [value]="nuevaEvidenciaDescripcion()"
+            (input)="nuevaEvidenciaDescripcion.set($any($event.target).value)"
+          />
+        </label>
+        @if (errorEvidencia()) {
+        <p class="mensaje-error" role="alert">{{ errorEvidencia() }}</p>
+        }
+        <div class="marcador-acciones">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="enviandoEvidencia() || subiendoArchivo()"
+            (click)="enviarEvidencia()"
+          >
+            {{ subiendoArchivo() ? 'Subiendo…' : enviandoEvidencia() ? 'Guardando…' : 'Agregar evidencia' }}
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    }
+    }
     @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
     <!-- El puente con el juego: la partida privada que ambos capitanes
          crean dentro del juego con estas credenciales. Un tap copia. -->
