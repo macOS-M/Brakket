@@ -17,6 +17,7 @@ import { TournamentsService } from '../../services/tournaments.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import {
+  ImpugnarEvent,
   MarcadorEvent,
   TournamentBracketComponent
 } from '../../components/tournament-bracket/tournament-bracket.component';
@@ -555,7 +556,6 @@ export class TournamentDetailComponent {
       }
     });
   }
-
   onRechazar(p: Partida): void {
     this.enviandoResultado.set(true);
     this.errorLlaves.set(null);
@@ -564,6 +564,18 @@ export class TournamentDetailComponent {
       error: (err) => {
         this.enviandoResultado.set(false);
         this.errorLlaves.set(err?.error?.message ?? 'No se pudo rechazar el resultado.');
+      }
+    });
+  }
+
+  onImpugnar(evento: ImpugnarEvent): void {
+    this.enviandoResultado.set(true);
+    this.errorLlaves.set(null);
+    this.tournamentsService.impugnar(evento.partida.id, evento.request).subscribe({
+      next: () => this.refrescarLlaves(),
+      error: (err) => {
+        this.enviandoResultado.set(false);
+        this.errorLlaves.set(err?.error?.message ?? 'No se pudo registrar la impugnación.');
       }
     });
   }

@@ -13,6 +13,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 
 import { Partida } from '../../../../models/tournament.model';
+import { ImpugnarResultadoRequest } from '../../../../models/disputa.model';
 
 interface Ronda {
   numero: number;
@@ -62,6 +63,12 @@ export interface MarcadorEvent {
   resolucion: boolean;
 }
 
+/** Impugnación de un resultado ya finalizado (RF-30). */
+export interface ImpugnarEvent {
+  partida: Partida;
+  request: ImpugnarResultadoRequest;
+}
+
 /** Forma de dibujar el formato: árbol único, doble llave, liga o grupos. */
 type TipoVista = 'ARBOL' | 'DOBLE' | 'LIGA' | 'GRUPOS';
 
@@ -97,16 +104,25 @@ export class TournamentBracketComponent {
   readonly esGestor = input(false);
   readonly enCurso = input(false);
   readonly ocupado = input(false);
-
   readonly enviarMarcador = output<MarcadorEvent>();
   readonly confirmar = output<Partida>();
   readonly rechazar = output<Partida>();
+  readonly impugnar = output<ImpugnarEvent>();
 
   /** Partida con el formulario de marcador abierto. */
   readonly reportando = signal<number | null>(null);
   readonly marcadorA = signal(0);
   readonly marcadorB = signal(0);
   readonly errorLocal = signal<string | null>(null);
+
+  // ---------- RF-30: impugnar un resultado finalizado ----------
+
+  /** Partida con el formulario de impugnación abierto. */
+  readonly impugnando = signal<number | null>(null);
+  readonly motivoImpugnar = signal('');
+  readonly descripcionImpugnar = signal('');
+  readonly evidenciaImpugnar = signal('');
+  readonly errorImpugnar = signal<string | null>(null);
 
   /** Rieles SVG calculados midiendo las tarjetas ya pintadas. */
   readonly rieles = signal<Riel[]>([]);
@@ -350,6 +366,7 @@ export class TournamentBracketComponent {
       this.partidas();
       this.maxEquipos();
       this.reportando();
+      this.impugnando();
       this.recienActualizadas();
       this.programarMedicion();
     });
@@ -517,12 +534,53 @@ export class TournamentBracketComponent {
     const rival = p.reportadoPorEquipoId === p.equipoAId ? p.equipoBId : p.equipoAId;
     return this.soyCapitanDe(rival);
   }
-
   /** El gestor destraba cualquier partida activa (rival ausente, disputa…). */
   puedeResolver(p: Partida): boolean {
     return this.enCurso() && this.esGestor() && !p.bye
       && p.equipoAId !== null && p.equipoBId !== null
       && (p.estado === 'PENDIENTE' || p.estado === 'REPORTADA' || p.estado === 'EN_DISPUTA');
+  }
+
+  /**
+   * Capitán de cualquiera de los 2 equipos, organizador o admin, sobre un
+   * resultado ya cerrado. El plazo de 48h lo valida el backend; si venció,
+   * el error se muestra igual que cualquier otro rechazo del servidor.
+   */
+  puedeImpugnar(p: Partida): boolean {
+    return p.estado === 'FINALIZADA' && !p.bye
+      && p.equipoAId !== null && p.equipoBId !== null
+      && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId) || this.esGestor());
+  }
+
+  abrirImpugnar(p: Partida): void {
+    this.impugnando.set(p.id);
+    this.motivoImpugnar.set('');
+    this.descripcionImpugnar.set('');
+    this.evidenciaImpugnar.set('');
+    this.errorImpugnar.set(null);
+  }
+
+  cerrarImpugnar(): void {
+    this.impugnando.set(null);
+  }
+
+  enviarImpugnar(p: Partida): void {
+    const motivo = this.motivoImpugnar().trim();
+    const descripcion = this.descripcionImpugnar().trim();
+    if (!motivo || !descripcion) {
+      this.errorImpugnar.set('Motivo y descripción son obligatorios.');
+      return;
+    }
+    this.errorImpugnar.set(null);
+    this.impugnar.emit({
+      partida: p,
+      request: {
+        motivo,
+        descripcion,
+        evidenciaUrl: this.evidenciaImpugnar().trim() || null
+      }
+    });
+    this.impugnando.set(null);
   }
 
   abrirMarcador(p: Partida): void {
