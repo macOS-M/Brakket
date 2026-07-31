@@ -76,10 +76,11 @@ public class ApelacionServiceImpl implements ApelacionService {
                     "El plazo de %d horas para apelar esta resolucion ya vencio".formatted(PLAZO_HORAS));
         }
 
-        boolean yaHayApelacionActiva = apelacionRepository.findByDisputaId(disputaId).stream()
-                .anyMatch(a -> "PENDIENTE".equals(a.getEstado()));
-        if (yaHayApelacionActiva) {
-            throw new BusinessException("Esta disputa ya tiene una apelacion en curso");
+        // Una sola apelación por disputa, sin importar su estado: ya
+        // resuelta o pendiente, no se puede volver a apelar la misma.
+        boolean yaFueApelada = !apelacionRepository.findByDisputaId(disputaId).isEmpty();
+        if (yaFueApelada) {
+            throw new BusinessException("Esta disputa ya fue apelada anteriormente");
         }
 
         Apelacion apelacion = apelacionRepository.save(Apelacion.builder()

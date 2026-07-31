@@ -30,16 +30,28 @@
     <p class="partida-estado reportada">Reporte enviado: falta la confirmación del rival</p>
     } @else if (p.estado === 'EN_DISPUTA') {
     <p class="partida-estado en-disputa">En disputa: resuelve el organizador</p>
+    }
     @if (puedeVerEvidencia(p)) {
     <button type="button" class="btn-secondary" (click)="toggleEvidencia(p)">
-      {{ verEvidencia() === p.id ? 'Ocultar evidencia' : 'Ver evidencia' }}
+      {{ verEvidencia() === p.id ? 'Ocultar disputa' : 'Ver disputa' }}
     </button>
     }
+
     @if (verEvidencia() === p.id) {
     <div class="evidencia-panel">
       @if (cargandoEvidencia()) {
-      <p class="evidencia-vacia">Cargando evidencia…</p>
+      <p class="evidencia-vacia">Cargando…</p>
+      } @else if (!disputaActual()) {
+      <p class="evidencia-vacia">Esta partida no tiene una disputa.</p>
       } @else {
+
+      <p class="evidencia-meta">
+        Impugnado por {{ disputaActual()!.levantadaPorNombre }} · {{ disputaActual()!.motivo }}
+      </p>
+      @if (disputaActual()!.descripcion) {
+      <p class="evidencia-descripcion">{{ disputaActual()!.descripcion }}</p>
+      }
+
       @if (evidencias().length === 0) {
       <p class="evidencia-vacia">Todavía no hay evidencia adjunta.</p>
       }
@@ -53,6 +65,7 @@
       </div>
       }
 
+      @if (disputaActual()!.estado === 'PENDIENTE' || disputaActual()!.estado === 'EN_REVISION') {
       <div class="evidencia-form">
         <label class="impugnar-campo">
           <span>Subir imagen</span>
@@ -95,10 +108,168 @@
           </button>
         </div>
       </div>
+
+      @if (puedeResolverDisputa()) {
+      @if (!resolviendoDisputa()) {
+      <div class="marcador-acciones">
+        <button type="button" class="btn-primary" (click)="abrirResolverDisputa()">Resolver disputa</button>
+      </div>
+      } @else {
+      <div class="evidencia-form">
+        <label class="impugnar-campo">
+          <span>Decisión</span>
+          <select [value]="decisionResolver()" (change)="decisionResolver.set($any($event.target).value)">
+            <option value="MANTENER">Mantener el resultado</option>
+            <option value="REVERTIR">Revertir el resultado</option>
+          </select>
+        </label>
+        @if (decisionResolver() === 'REVERTIR') {
+        <label class="impugnar-campo">
+          <span>Equipo que gana</span>
+          <select
+            [value]="equipoGanadorResolver() ?? ''"
+            (change)="equipoGanadorResolver.set(+$any($event.target).value)"
+          >
+            <option value="" disabled>Elegí un equipo</option>
+            @if (p.equipoAId !== null) {
+            <option [value]="p.equipoAId">{{ p.equipoANombre }}</option>
+            }
+            @if (p.equipoBId !== null) {
+            <option [value]="p.equipoBId">{{ p.equipoBNombre }}</option>
+            }
+          </select>
+        </label>
+        }
+        <label class="impugnar-campo">
+          <span>Justificación</span>
+          <textarea
+            rows="2"
+            maxlength="1000"
+            [value]="justificacionResolver()"
+            (input)="justificacionResolver.set($any($event.target).value)"
+          ></textarea>
+        </label>
+        <label class="impugnar-campo">
+          <span>Sanción (opcional)</span>
+          <input
+            type="text"
+            maxlength="500"
+            [value]="sancionResolver()"
+            (input)="sancionResolver.set($any($event.target).value)"
+          />
+        </label>
+        @if (errorResolucion()) {
+        <p class="mensaje-error" role="alert">{{ errorResolucion() }}</p>
+        }
+        <div class="marcador-acciones">
+          <button type="button" class="btn-primary" [disabled]="enviandoResolucion()" (click)="enviarResolucion()">
+            {{ enviandoResolucion() ? 'Enviando…' : 'Confirmar resolución' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="cerrarResolverDisputa()">Cancelar</button>
+        </div>
+      </div>
+      }
+      }
+      }
+
+      @if (disputaActual()!.estado === 'RESUELTA' || disputaActual()!.estado === 'EN_APELACION') {
+      <div class="evidencia-item">
+        <p class="evidencia-meta">Resuelto por {{ disputaActual()!.resueltaPorNombre }} · {{ disputaActual()!.decision }}</p>
+        <p class="evidencia-descripcion">{{ disputaActual()!.justificacionResolucion }}</p>
+        @if (disputaActual()!.sancion) {
+        <p class="evidencia-descripcion">Sanción: {{ disputaActual()!.sancion }}</p>
+        }
+      </div>
+      }
+
+      @if (disputaActual()!.estado === 'RESUELTA' && puedeApelar(p)) {
+      @if (!apelando()) {
+      <div class="marcador-acciones">
+        <button type="button" class="btn-secondary" (click)="abrirApelar()">Apelar resolución</button>
+      </div>
+      } @else {
+      <div class="evidencia-form">
+        <label class="impugnar-campo">
+          <span>Motivo de la apelación</span>
+          <textarea
+            rows="2"
+            maxlength="500"
+            [value]="motivoApelar()"
+            (input)="motivoApelar.set($any($event.target).value)"
+          ></textarea>
+        </label>
+        @if (errorApelacion()) {
+        <p class="mensaje-error" role="alert">{{ errorApelacion() }}</p>
+        }
+        <div class="marcador-acciones">
+          <button type="button" class="btn-primary" [disabled]="enviandoApelacion()" (click)="enviarApelacion()">
+            {{ enviandoApelacion() ? 'Enviando…' : 'Apelar' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="cerrarApelar()">Cancelar</button>
+        </div>
+      </div>
+      }
+      }
+
+      @if (disputaActual()!.estado === 'EN_APELACION') {
+      @if (apelacionActual()) {
+      <p class="evidencia-meta">
+        Apelado por {{ apelacionActual()!.apeladaPorNombre }} — {{ apelacionActual()!.motivo }}
+      </p>
+      }
+      @if (puedeResolverApelacion()) {
+      @if (!resolviendoApelacion()) {
+      <div class="marcador-acciones">
+        <button type="button" class="btn-primary" (click)="abrirResolverApelacion()">Resolver apelación</button>
+      </div>
+      } @else {
+      <div class="evidencia-form">
+        <label class="impugnar-campo">
+          <span>Corregir equipo ganador (opcional)</span>
+          <select
+            [value]="equipoGanadorApelacion() ?? ''"
+            (change)="equipoGanadorApelacion.set($any($event.target).value ? +$any($event.target).value : null)"
+          >
+            <option value="">No cambiar</option>
+            @if (p.equipoAId !== null) {
+            <option [value]="p.equipoAId">{{ p.equipoANombre }}</option>
+            }
+            @if (p.equipoBId !== null) {
+            <option [value]="p.equipoBId">{{ p.equipoBNombre }}</option>
+            }
+          </select>
+        </label>
+        <label class="impugnar-campo">
+          <span>Decisión final (opcional)</span>
+          <textarea
+            rows="2"
+            maxlength="1000"
+            [value]="decisionFinalApelacion()"
+            (input)="decisionFinalApelacion.set($any($event.target).value)"
+          ></textarea>
+        </label>
+        @if (errorResolucionApelacion()) {
+        <p class="mensaje-error" role="alert">{{ errorResolucionApelacion() }}</p>
+        }
+        <div class="marcador-acciones">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="enviandoResolucionApelacion()"
+            (click)="enviarResolucionApelacion()"
+          >
+            {{ enviandoResolucionApelacion() ? 'Enviando…' : 'Confirmar' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="cerrarResolverApelacion()">Cancelar</button>
+        </div>
+      </div>
+      }
+      }
+      }
       }
     </div>
     }
-    }
+
     @if (p.lobbyNombre && p.estado !== 'FINALIZADA') {
     <!-- El puente con el juego: la partida privada que ambos capitanes
          crean dentro del juego con estas credenciales. Un tap copia. -->
@@ -242,34 +413,34 @@
 <ng-template #tablaPosiciones let-filas let-etiqueta="etiqueta">
   <table class="tabla" [attr.aria-label]="etiqueta">
     <thead>
-      <tr>
-        <th class="col-num">#</th>
-        <th class="col-equipo">Equipo</th>
-        <th class="col-num" title="Partidas jugadas">PJ</th>
-        <th class="col-num" title="Ganadas">G</th>
-        <th class="col-num" title="Perdidas">P</th>
-        <th class="col-num" title="Diferencia de puntos">DIF</th>
-      </tr>
+    <tr>
+      <th class="col-num">#</th>
+      <th class="col-equipo">Equipo</th>
+      <th class="col-num" title="Partidas jugadas">PJ</th>
+      <th class="col-num" title="Ganadas">G</th>
+      <th class="col-num" title="Perdidas">P</th>
+      <th class="col-num" title="Diferencia de puntos">DIF</th>
+    </tr>
     </thead>
     <tbody>
-      @for (fila of filas; track fila.equipoId; let i = $index) {
-      <tr
-        [class.campeon]="campeonId() === fila.equipoId"
-        [class.mio]="campeonId() === null && soyCapitanDe(fila.equipoId)"
-      >
-        <td class="col-num">{{ i + 1 }}</td>
-        <td class="col-equipo">
-          {{ fila.nombre }}
-          @if (campeonId() === fila.equipoId) {
-          <span class="corona" aria-label="campeón">🏆</span>
-          }
-        </td>
-        <td class="col-num">{{ fila.jugadas }}</td>
-        <td class="col-num">{{ fila.ganadas }}</td>
-        <td class="col-num">{{ fila.perdidas }}</td>
-        <td class="col-num">{{ fila.diferencia > 0 ? '+' + fila.diferencia : fila.diferencia }}</td>
-      </tr>
-      }
+    @for (fila of filas; track fila.equipoId; let i = $index) {
+    <tr
+      [class.campeon]="campeonId() === fila.equipoId"
+      [class.mio]="campeonId() === null && soyCapitanDe(fila.equipoId)"
+    >
+      <td class="col-num">{{ i + 1 }}</td>
+      <td class="col-equipo">
+        {{ fila.nombre }}
+        @if (campeonId() === fila.equipoId) {
+        <span class="corona" aria-label="campeón">🏆</span>
+        }
+      </td>
+      <td class="col-num">{{ fila.jugadas }}</td>
+      <td class="col-num">{{ fila.ganadas }}</td>
+      <td class="col-num">{{ fila.perdidas }}</td>
+      <td class="col-num">{{ fila.diferencia > 0 ? '+' + fila.diferencia : fila.diferencia }}</td>
+    </tr>
+    }
     </tbody>
   </table>
 </ng-template>

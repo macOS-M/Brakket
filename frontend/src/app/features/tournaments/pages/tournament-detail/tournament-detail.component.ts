@@ -510,7 +510,7 @@ export class TournamentDetailComponent {
   }
 
   /** Tras cada resultado el avance puede tocar otras partidas y el torneo. */
-  private refrescarLlaves(): void {
+  protected refrescarLlaves(): void {
     forkJoin({
       detalle: this.tournamentsService.obtener(this.torneoId).pipe(catchError(() => of(null))),
       partidas: this.tournamentsService.bracket(this.torneoId).pipe(catchError(() => of([] as Partida[])))
