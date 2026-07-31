@@ -131,6 +131,14 @@ public class ApelacionServiceImpl implements ApelacionService {
         return ApelacionResponse.fromEntity(apelacion);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<ApelacionResponse> listarPorDisputa(Long disputaId) {
+        return apelacionRepository.findByDisputaId(disputaId).stream()
+                .map(ApelacionResponse::fromEntity)
+                .toList();
+    }
+
     /**
      * La apelación escala por encima del árbitro: solo el comisionado de
      * la liga, o un admin si el torneo no tiene liga/comisionado.

@@ -28,6 +28,13 @@ public class ApelacionController {
         return apelacionService.apelar(disputaId, authentication.getName(), esAdmin(authentication), request);
     }
 
+    /** Para que el frontend sepa si hay una apelación (y su ID/estado). */
+    @GetMapping("/disputas/{disputaId}/apelaciones")
+    @PreAuthorize("isAuthenticated()")
+    public java.util.List<ApelacionResponse> listarPorDisputa(@PathVariable Long disputaId) {
+        return apelacionService.listarPorDisputa(disputaId);
+    }
+
     /** Solo el comisionado de la liga (o admin) resuelve la apelación. */
     @PostMapping("/apelaciones/{apelacionId}/resolucion")
     @PreAuthorize("isAuthenticated()")

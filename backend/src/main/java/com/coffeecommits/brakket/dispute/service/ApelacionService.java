@@ -12,4 +12,6 @@ public interface ApelacionService {
     /** Solo el comisionado de la liga (o admin); el árbitro no resuelve su propia apelación. */
     ApelacionResponse resolver(Long apelacionId, String correo, boolean esAdmin,
                                ResolverApelacionRequest request);
+
+    java.util.List<ApelacionResponse> listarPorDisputa(Long disputaId);
 }
