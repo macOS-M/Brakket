@@ -124,7 +124,10 @@ export class TopbarComponent {
     const abrir = !this.panelNotificacionesAbierto();
     this.panelNotificacionesAbierto.set(abrir);
     this.abierto.set(false);
-    if (abrir) this.cargarNotificaciones();
+    if (abrir) {
+      this.actualizarContador();
+      this.cargarNotificaciones();
+    }
   }
 
   cerrarNotificaciones(): void {
@@ -171,12 +174,18 @@ export class TopbarComponent {
 
   private cargarNotificaciones(): void {
     this.cargandoNotificaciones.set(true);
-    this.notificationsService.list()
+    this.notificationsService.list(5)
       .pipe(
         catchError(() => of([] as Notificacion[])),
         tap(() => this.cargandoNotificaciones.set(false))
       )
-      .subscribe((items) => this.notificacionesRecientes.set(items.slice(0, 5)));
+      .subscribe((items) => this.notificacionesRecientes.set(items));
+  }
+
+  @HostListener('document:keydown.escape')
+  alPresionarEscape(): void {
+    this.cerrar();
+    this.cerrarNotificaciones();
   }
 
   alEscribir(valor: string): void {

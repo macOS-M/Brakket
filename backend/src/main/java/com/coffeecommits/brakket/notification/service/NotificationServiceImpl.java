@@ -10,6 +10,7 @@ import com.coffeecommits.brakket.notification.repository.NotificacionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,7 +43,7 @@ public class NotificationServiceImpl implements NotificationService {
             throw new IllegalArgumentException("La notificación requiere destinatario, tipo, evento y motivo");
         }
         String mensajeLimpio = mensaje.trim();
-        if (notificacionRepository.existsByUsuarioIdAndTipoAndEntidadAndEntidadIdAndMensaje(
+        if (notificacionRepository.existsByUsuarioIdAndTipoAndEntidadAndEntidadIdAndMensajeAndEliminadaBandejaFalse(
                 destinatario.getId(), tipo.name(), entidad, entidadId, mensajeLimpio)) {
             return;
         }
@@ -63,10 +64,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificacionResponse> listar(String correo) {
+    public List<NotificacionResponse> listar(String correo, Integer limit) {
         Usuario usuario = usuario(correo);
-        return notificacionRepository
-                .findByUsuarioIdAndEliminadaBandejaFalseOrderByFechaDesc(usuario.getId())
+        List<Notificacion> notificaciones = limit == null
+                ? notificacionRepository.findByUsuarioIdAndEliminadaBandejaFalseOrderByFechaDesc(usuario.getId())
+                : notificacionRepository.findByUsuarioIdAndEliminadaBandejaFalseOrderByFechaDesc(
+                        usuario.getId(), PageRequest.of(0, Math.max(1, Math.min(limit, 100))));
+        return notificaciones
                 .stream().map(NotificacionResponse::from).toList();
     }
 

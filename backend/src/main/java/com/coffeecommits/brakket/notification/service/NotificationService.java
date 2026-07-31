@@ -13,7 +13,7 @@ public interface NotificationService {
     void notificar(Usuario destinatario, TipoNotificacion tipo, String mensaje,
                    String origen, String entidad, Long entidadId);
 
-    List<NotificacionResponse> listar(String correo);
+    List<NotificacionResponse> listar(String correo, Integer limit);
 
     long contarNoLeidas(String correo);
 

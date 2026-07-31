@@ -24,7 +24,10 @@
       { id: 'TRANSFERENCIA', texto: 'Transferencias' },
       { id: 'RESULTADO', texto: 'Resultados' },
       { id: 'DISPUTA', texto: 'Disputas' },
+      { id: 'CAMBIO_TORNEO', texto: 'Torneos' },
       { id: 'TRANSMISION', texto: 'Transmisiones' },
+      { id: 'EXPULSION_EQUIPO', texto: 'Equipo' },
+      { id: 'CORRECCION', texto: 'Correcciones' },
       { id: 'ADMINISTRATIVA', texto: 'Sistema' }
     ]; track opcion.id) {
       <button type="button" [class.activo]="filtro() === opcion.id" (click)="seleccionarFiltro($any(opcion.id))">

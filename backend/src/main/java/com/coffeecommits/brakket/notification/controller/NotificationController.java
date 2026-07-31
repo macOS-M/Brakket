@@ -20,8 +20,9 @@ public class NotificationController {
     }
 
     @GetMapping
-    public List<NotificacionResponse> listar(Authentication auth) {
-        return notificationService.listar(auth.getName());
+    public List<NotificacionResponse> listar(
+            @RequestParam(required = false) Integer limit, Authentication auth) {
+        return notificationService.listar(auth.getName(), limit);
     }
 
     @GetMapping("/unread-count")

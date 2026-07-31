@@ -14,8 +14,9 @@ export class NotificationsService {
   private readonly cambios = new Subject<void>();
   readonly cambios$ = this.cambios.asObservable();
 
-  list(): Observable<Notificacion[]> {
-    return this.api.get<Notificacion[]>('/notifications');
+  list(limit?: number): Observable<Notificacion[]> {
+    const query = limit === undefined ? '' : `?limit=${limit}`;
+    return this.api.get<Notificacion[]>(`/notifications${query}`);
   }
 
   unreadCount(): Observable<number> {
@@ -46,7 +47,7 @@ export class NotificationsService {
    * en esos casos se abre su listado contextual.
    */
   destination(notification: Notificacion): (string | number)[] {
-    const entity = notification.entidad?.toLowerCase();
+    const entity = notification.entidad?.replace(/[^a-z0-9]/gi, '').toLowerCase();
     const type = notification.tipo;
 
     if (entity === 'torneo' || entity === 'tournament') {
@@ -55,7 +56,7 @@ export class NotificationsService {
     if (entity === 'equipo' || entity === 'team') {
       return ['/team-profile', notification.entidadId];
     }
-    if (entity === 'miembro_equipo') {
+    if (entity === 'miembroequipo') {
       return ['/teams'];
     }
     if (entity === 'disputa' || type === 'DISPUTA') {
@@ -65,19 +66,19 @@ export class NotificationsService {
       return ['/transmisiones'];
     }
     if (
-      entity === 'invitacion_equipo' ||
+      entity === 'invitacionequipo' ||
       type.startsWith('INVITACION') ||
       type.startsWith('SOLICITUD_')
     ) {
       return ['/teams/invitaciones'];
     }
-    if (entity === 'solicitud_transferencia' || type.startsWith('TRANSFERENCIA')) {
+    if (entity === 'solicitudtransferencia' || type.startsWith('TRANSFERENCIA')) {
       return ['/transfers'];
     }
     if (entity === 'partida' || type === 'RESULTADO' || type === 'CAMBIO_TORNEO') {
       return ['/tournaments'];
     }
-    if (type === 'ADMINISTRATIVA' || entity === 'accion_administrativa') {
+    if (type === 'ADMINISTRATIVA' || entity === 'accionadministrativa') {
       return ['/inicio'];
     }
     return ['/notifications'];

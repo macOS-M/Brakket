@@ -5,8 +5,7 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
-import com.coffeecommits.brakket.notification.model.Notificacion;
-import com.coffeecommits.brakket.notification.repository.NotificacionRepository;
+import com.coffeecommits.brakket.notification.service.NotificationService;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
@@ -49,7 +48,7 @@ class TransferResponseServiceImplTest {
     @Mock
     private UsuarioRepository usuarioRepository;
     @Mock
-    private NotificacionRepository notificacionRepository;
+    private NotificationService notificationService;
     @Mock
     private HistorialTransferenciaService historialTransferenciaService; // RF-14
     @InjectMocks
@@ -134,7 +133,7 @@ class TransferResponseServiceImplTest {
         assertThat(alta.getRol()).isEqualTo("TITULAR");
 
         // Notifica a jugador, capitán de origen y solicitante.
-        verify(notificacionRepository, times(3)).save(any(Notificacion.class));
+        verify(notificationService, times(3)).notificar(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -145,7 +144,7 @@ class TransferResponseServiceImplTest {
         assertThat(resp.estado()).isEqualTo("RECHAZADA");
         assertThat(resp.aprobacionCapitanOrigen()).isEqualTo("RECHAZADA");
         verify(miembroEquipoRepository, never()).save(any());
-        verify(notificacionRepository, times(3)).save(any(Notificacion.class));
+        verify(notificationService, times(3)).notificar(any(), any(), any(), any(), any(), any());
     }
 
     @Test

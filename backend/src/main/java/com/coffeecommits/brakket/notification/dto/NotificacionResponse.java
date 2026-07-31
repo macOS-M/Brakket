@@ -18,7 +18,13 @@ public record NotificacionResponse(
         EstadoEntrega estadoEntrega) {
 
     public static NotificacionResponse from(Notificacion n) {
-        return new NotificacionResponse(n.getId(), TipoNotificacion.valueOf(n.getTipo()), n.getMensaje(), n.getOrigen(),
+        TipoNotificacion tipo;
+        try {
+            tipo = TipoNotificacion.valueOf(n.getTipo());
+        } catch (IllegalArgumentException | NullPointerException ignored) {
+            tipo = TipoNotificacion.ADMINISTRATIVA;
+        }
+        return new NotificacionResponse(n.getId(), tipo, n.getMensaje(), n.getOrigen(),
                 n.getEntidad(), n.getEntidadId(), Boolean.TRUE.equals(n.getLeida()), n.getFecha(),
                 n.getEstadoEntrega());
     }

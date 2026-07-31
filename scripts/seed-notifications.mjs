@@ -101,7 +101,7 @@ try {
     CROSS JOIN (VALUES
       ('INVITACION_EQUIPO',
        'Fénix Esports te invitó a formar parte de su plantilla como titular.',
-       'invitacion_equipo', 45001::bigint, false, interval '4 minutes', 'DISPONIBLE'),
+       'InvitacionEquipo', 45001::bigint, false, interval '4 minutes', 'DISPONIBLE'),
       ('TRANSFERENCIA_SOLICITADA',
        'Se solicitó tu transferencia de Lobos Demo a Titanes Demo.',
        'solicitud_transferencia', 45002::bigint, false, interval '18 minutes', 'DISPONIBLE'),
@@ -122,7 +122,7 @@ try {
        'accion_administrativa', 45007::bigint, true, interval '4 days', 'ENTREGADA'),
       ('EXPULSION_EQUIPO',
        'Fuiste removido del equipo Lobos Demo. Causa: inactividad prolongada.',
-       'miembro_equipo', 45008::bigint, true, interval '7 days', 'ENTREGADA'),
+       'MiembroEquipo', 45008::bigint, true, interval '7 days', 'ENTREGADA'),
       ('CORRECCION',
        'Corrección: la final anunciada anteriormente fue reprogramada, no cancelada.',
        'torneo', 45009::bigint, false, interval '8 days', 'CORREGIDA')

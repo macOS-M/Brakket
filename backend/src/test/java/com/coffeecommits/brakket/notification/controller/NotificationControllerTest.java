@@ -36,9 +36,9 @@ class NotificationControllerTest {
     void listar_usa_la_identidad_autenticada() {
         NotificacionResponse response = notificacion();
         when(authentication.getName()).thenReturn(CORREO);
-        when(notificationService.listar(CORREO)).thenReturn(List.of(response));
+        when(notificationService.listar(CORREO, null)).thenReturn(List.of(response));
 
-        assertThat(controller.listar(authentication)).containsExactly(response);
+        assertThat(controller.listar(null, authentication)).containsExactly(response);
     }
 
     @Test

@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,7 +49,7 @@ class NotificationServiceImplTest {
 
     @Test
     void notificar_crea_una_notificacion_valida() {
-        when(notificacionRepository.existsByUsuarioIdAndTipoAndEntidadAndEntidadIdAndMensaje(
+        when(notificacionRepository.existsByUsuarioIdAndTipoAndEntidadAndEntidadIdAndMensajeAndEliminadaBandejaFalse(
                 7L, "DISPUTA", "disputa", 25L, "Debes aportar evidencia"))
                 .thenReturn(false);
 
@@ -69,7 +70,7 @@ class NotificationServiceImplTest {
 
     @Test
     void notificar_no_duplica_el_mismo_evento() {
-        when(notificacionRepository.existsByUsuarioIdAndTipoAndEntidadAndEntidadIdAndMensaje(
+        when(notificacionRepository.existsByUsuarioIdAndTipoAndEntidadAndEntidadIdAndMensajeAndEliminadaBandejaFalse(
                 7L, "DISPUTA", "disputa", 25L, "Debes aportar evidencia"))
                 .thenReturn(true);
 
@@ -94,11 +95,38 @@ class NotificationServiceImplTest {
         when(notificacionRepository.findByUsuarioIdAndEliminadaBandejaFalseOrderByFechaDesc(7L))
                 .thenReturn(List.of(notificacion));
 
-        List<NotificacionResponse> resultado = service.listar(CORREO);
+        List<NotificacionResponse> resultado = service.listar(CORREO, null);
 
         assertThat(resultado).hasSize(1);
         assertThat(resultado.getFirst().id()).isEqualTo(9L);
         assertThat(resultado.getFirst().tipo()).isEqualTo(TipoNotificacion.DISPUTA);
+    }
+
+    @Test
+    void listar_aplica_un_limite_acotado() {
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(usuario));
+        when(notificacionRepository.findByUsuarioIdAndEliminadaBandejaFalseOrderByFechaDesc(
+                org.mockito.ArgumentMatchers.eq(7L), any(Pageable.class)))
+                .thenReturn(List.of(notificacion(9L, false)));
+
+        assertThat(service.listar(CORREO, 5)).hasSize(1);
+
+        ArgumentCaptor<Pageable> pagina = ArgumentCaptor.forClass(Pageable.class);
+        verify(notificacionRepository).findByUsuarioIdAndEliminadaBandejaFalseOrderByFechaDesc(
+                org.mockito.ArgumentMatchers.eq(7L), pagina.capture());
+        assertThat(pagina.getValue().getPageSize()).isEqualTo(5);
+    }
+
+    @Test
+    void listar_no_falla_por_un_tipo_legacy_desconocido() {
+        Notificacion legacy = notificacion(10L, false);
+        legacy.setTipo("TIPO_RETIRADO");
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(usuario));
+        when(notificacionRepository.findByUsuarioIdAndEliminadaBandejaFalseOrderByFechaDesc(7L))
+                .thenReturn(List.of(legacy));
+
+        assertThat(service.listar(CORREO, null).getFirst().tipo())
+                .isEqualTo(TipoNotificacion.ADMINISTRATIVA);
     }
 
     @Test
