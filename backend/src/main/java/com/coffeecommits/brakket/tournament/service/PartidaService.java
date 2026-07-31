@@ -34,4 +34,12 @@ public interface PartidaService {
     /** El organizador (o un ADMIN) fija el resultado final de la partida. */
     PartidaResponse resolver(Long partidaId, String correo, boolean esAdmin,
                              ReportarResultadoRequest request);
+
+    /**
+     * RF-32: tras resolver una disputa, vuelve a fijar el resultado.
+     * equipoGanadorId null = mantener el resultado original; con un ID,
+     * lo revierte a favor de ese equipo (bloqueado si la llave ya avanzó
+     * más allá de este cruce).
+     */
+    PartidaResponse finalizarPorResolucionDeDisputa(Long partidaId, Long equipoGanadorId);
 }

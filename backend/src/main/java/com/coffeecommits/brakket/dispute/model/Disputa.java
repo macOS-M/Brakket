@@ -55,4 +55,18 @@ public class Disputa {
 
     @Column(name = "fecha_creacion", nullable = false)
     private java.time.LocalDateTime fechaCreacion;
+
+    /** 'MANTENER' o 'REVERTIR', lo que decidió quien resolvió. */
+    @Column(name = "decision", length = 20)
+    private String decision;
+
+    @Column(name = "justificacion_resolucion", length = 1000)
+    private String justificacionResolucion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resuelta_por_id")
+    private Usuario resueltaPor;
+
+    @Column(name = "fecha_resolucion")
+    private java.time.LocalDateTime fechaResolucion;
 }

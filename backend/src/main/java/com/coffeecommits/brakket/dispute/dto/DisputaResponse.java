@@ -13,10 +13,14 @@ public record DisputaResponse(
         String descripcion,
         String evidenciaUrl,
         String estado,
-        LocalDateTime fechaCreacion
+        LocalDateTime fechaCreacion,
+        String decision,
+        String justificacionResolucion,
+        String sancion,
+        String resueltaPorNombre,
+        LocalDateTime fechaResolucion
 ) {
 
-    // Arma la respuesta a partir de la entidad.
     public static DisputaResponse fromEntity(Disputa d) {
         return new DisputaResponse(
                 d.getId(),
@@ -27,7 +31,12 @@ public record DisputaResponse(
                 d.getDescripcion(),
                 d.getEvidenciaUrl(),
                 d.getEstado(),
-                d.getFechaCreacion()
+                d.getFechaCreacion(),
+                d.getDecision(),
+                d.getJustificacionResolucion(),
+                d.getSancion(),
+                d.getResueltaPor() == null ? null : d.getResueltaPor().getNombre(),
+                d.getFechaResolucion()
         );
     }
 }
