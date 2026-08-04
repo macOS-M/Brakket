@@ -146,8 +146,8 @@
       }
 
       <div class="marcador-acciones">
-        <button type="button" class="btn-primary" [disabled]="ocupado()" (click)="enviarCasoEspecial(p)">
-          {{ ocupado() ? 'Enviando…' : 'Registrar' }}
+        <button type="button" class="btn-primary" [disabled]="enviandoCaso()" (click)="enviarCasoEspecial(p)">
+          {{ enviandoCaso() ? 'Enviando…' : 'Registrar' }}
         </button>
         <button type="button" class="btn-secondary" (click)="cerrarCasoEspecial()">Cancelar</button>
       </div>

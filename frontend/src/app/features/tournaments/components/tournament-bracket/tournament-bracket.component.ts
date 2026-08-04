@@ -11,10 +11,9 @@ import {
   viewChild
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-
 import { Partida } from '../../../../models/tournament.model';
 import { RegistrarCasoEspecialRequest, TipoCasoEspecial } from '../../../../models/caso-especial.model';
-
+import { TournamentsService } from '../../services/tournaments.service';
 interface Ronda {
   numero: number;
   etiqueta: string;
@@ -92,6 +91,7 @@ type TipoVista = 'ARBOL' | 'DOBLE' | 'LIGA' | 'GRUPOS';
 })
 export class TournamentBracketComponent {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly tournamentsService = inject(TournamentsService);
 
   readonly partidas = input.required<Partida[]>();
   /** Cupo del torneo: dibuja la llave tentativa antes de generarse. */
@@ -110,7 +110,7 @@ export class TournamentBracketComponent {
   readonly enviarMarcador = output<MarcadorEvent>();
   readonly confirmar = output<Partida>();
   readonly rechazar = output<Partida>();
-  readonly casoEspecial = output<CasoEspecialEvent>();
+  readonly casoEspecialRegistrado = output<void>();
 
   /** Partida con el formulario de marcador abierto. */
   readonly reportando = signal<number | null>(null);
@@ -127,6 +127,7 @@ export class TournamentBracketComponent {
   readonly evidenciaCaso = signal('');
   readonly equipoGanadorCaso = signal<number | null>(null);
   readonly errorCaso = signal<string | null>(null);
+  readonly enviandoCaso = signal(false);
 
   /** Rieles SVG calculados midiendo las tarjetas ya pintadas. */
   readonly rieles = signal<Riel[]>([]);
@@ -581,19 +582,30 @@ export class TournamentBracketComponent {
       return;
     }
 
+    const request: RegistrarCasoEspecialRequest = {
+      tipo,
+      justificacion: justificacion || null,
+      evidenciaUrl: this.evidenciaCaso().trim() || null,
+      equipoGanadorId: tipo === 'DESCANSO' ? null : this.equipoGanadorCaso()
+    };
+
+    // El formulario se queda abierto (con "Enviando…") hasta saber si el
+    // backend aceptó. Si falla, la justificación tecleada no se pierde y
+    // el error aparece aquí mismo, no arriba del bracket.
     this.errorCaso.set(null);
-    this.casoEspecial.emit({
-      partida: p,
-      request: {
-        tipo,
-        justificacion: justificacion || null,
-        evidenciaUrl: this.evidenciaCaso().trim() || null,
-        equipoGanadorId: tipo === 'DESCANSO' ? null : this.equipoGanadorCaso()
+    this.enviandoCaso.set(true);
+    this.tournamentsService.registrarCasoEspecial(p.id, request).subscribe({
+      next: () => {
+        this.enviandoCaso.set(false);
+        this.registrandoCaso.set(null);
+        this.casoEspecialRegistrado.emit();
+      },
+      error: (err) => {
+        this.enviandoCaso.set(false);
+        this.errorCaso.set(err?.error?.message ?? 'No se pudo registrar el caso especial.');
       }
     });
-    this.registrandoCaso.set(null);
   }
-
   abrirMarcador(p: Partida): void {
     this.reportando.set(p.id);
     this.marcadorA.set(p.marcadorA ?? 0);

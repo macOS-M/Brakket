@@ -49,7 +49,7 @@ export interface EquipoInscrito {
 export interface TorneoDetalle {
   torneo: Torneo;
   equipos: EquipoInscrito[];
-  arbitrosIds: number[];
+  esArbitro: boolean;
 }
 
 export interface EquipoElegible {

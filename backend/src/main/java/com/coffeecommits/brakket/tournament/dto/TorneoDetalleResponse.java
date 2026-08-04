@@ -4,13 +4,13 @@ import java.util.List;
 
 /**
  * Detalle del torneo: los datos de la tarjeta, los equipos inscritos, y
- * los IDs de usuario de los árbitros asignados a este torneo (RF-28).
- * El frontend usa arbitrosIds para saber si el usuario autenticado puede
- * actuar como árbitro sobre las partidas de este torneo específico.
+ * si el usuario autenticado es árbitro de este torneo (RF-28). Se manda
+ * ya calculado (no la lista completa de árbitros) para no exponer datos
+ * de otros usuarios a cualquier visitante del torneo.
  */
 public record TorneoDetalleResponse(
         TorneoResponse torneo,
         List<EquipoInscritoResponse> equipos,
-        List<Long> arbitrosIds
+        boolean esArbitro
 ) {
 }

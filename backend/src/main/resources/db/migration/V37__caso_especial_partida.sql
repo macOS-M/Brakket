@@ -7,3 +7,5 @@ CREATE TABLE caso_especial_partida (
                                        registrado_por_id BIGINT NOT NULL REFERENCES usuario(id),
                                        fecha            TIMESTAMP NOT NULL DEFAULT now()
 );
+
+CREATE INDEX idx_caso_especial_partida ON caso_especial_partida(partida_id);

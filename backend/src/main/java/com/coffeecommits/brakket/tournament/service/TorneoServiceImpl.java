@@ -176,9 +176,8 @@ public class TorneoServiceImpl implements TorneoService {
     @Transactional(readOnly = true)
     public TorneoDetalleResponse obtenerDetalle(Long torneoId, String correoOpcional, boolean esAdmin) {
         Torneo torneo = buscarVisible(torneoId, correoOpcional, esAdmin);
-        return detalleDe(torneo);
+        return detalleDe(torneo, correoOpcional);
     }
-
     @Override
     @Transactional
     public TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId,
@@ -217,7 +216,6 @@ public class TorneoServiceImpl implements TorneoService {
                     "El torneo es %dv%d y el equipo tiene %d jugador(es) activo(s)"
                             .formatted(torneo.getTamanoEquipo(), torneo.getTamanoEquipo(), plantilla));
         }
-
         inscripcionRepository.save(Inscripcion.builder()
                 .torneo(torneo)
                 .equipo(equipo)
@@ -225,9 +223,8 @@ public class TorneoServiceImpl implements TorneoService {
                 .fechaSolicitud(LocalDate.now())
                 .usuarioEnJuego(usuarioEnJuego.trim())
                 .build());
-        return detalleDe(torneo);
+        return detalleDe(torneo, correo);
     }
-
     @Override
     @Transactional(readOnly = true)
     public List<EquipoElegibleResponse> equiposElegibles(Long torneoId, String correo) {
@@ -285,7 +282,7 @@ public class TorneoServiceImpl implements TorneoService {
         return torneo;
     }
 
-    private TorneoDetalleResponse detalleDe(Torneo torneo) {
+    private TorneoDetalleResponse detalleDe(Torneo torneo, String correoOpcional) {
         List<EquipoInscritoResponse> equipos = inscripcionRepository.findByTorneoId(torneo.getId()).stream()
                 .filter(i -> !INSCRIPCION_CERRADA.contains(i.getEstado()))
                 .map(i -> new EquipoInscritoResponse(
@@ -300,15 +297,14 @@ public class TorneoServiceImpl implements TorneoService {
                                         m.getRol()))
                                 .toList()))
                 .toList();
-        // RF-28: IDs de los usuarios árbitros de este torneo, para que el
-        // frontend decida si el usuario actual puede registrar descansos/
-        // avances automáticos/abandonos como árbitro (no solo organizador).
-        List<Long> arbitrosIds = arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
-                .map(a -> a.getUsuario().getId())
-                .toList();
-        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos, arbitrosIds);
+        // RF-28: ya calculado en el backend (no se manda la lista completa
+        // de árbitros a cualquier visitante del torneo, solo el booleano).
+        boolean esArbitro = correoOpcional != null && usuarioRepository.findByCorreo(correoOpcional)
+                .map(u -> arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
+                        .anyMatch(a -> a.getUsuario().getId().equals(u.getId())))
+                .orElse(false);
+        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos, esArbitro);
     }
-
     private Usuario buscarUsuario(String correo) {
         return usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
