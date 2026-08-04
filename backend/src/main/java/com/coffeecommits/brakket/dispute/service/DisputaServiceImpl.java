@@ -52,17 +52,26 @@ public class DisputaServiceImpl implements DisputaService {
                                     ImpugnarResultadoRequest request) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
-        Partida partida = partidaRepository.findById(partidaId)
+        // Con lock: dos capitanes impugnando la misma partida a la vez no
+        // deben poder crear dos disputas (mismo criterio que el resto del
+        // motor de partidas, via bloquearPorId).
+        Partida partida = partidaRepository.bloquearPorId(partidaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Partida", partidaId));
 
+        // Autorizar ANTES de revelar el estado: si no, cualquier usuario
+        // autenticado podria sondear el estado de disputa de partidas de
+        // torneos privados sin tener nada que ver con ellas.
+        exigirRelacionado(partida, usuario, esAdmin);
+
+        if (partida.esBye()) {
+            throw new BusinessException("Una partida bye (sin dos rivales reales) no se puede impugnar");
+        }
         if (partida.getEstado() == EstadoPartida.EN_DISPUTA) {
             throw new BusinessException("Esta partida ya tiene una impugnacion en curso");
         }
         if (partida.getEstado() != EstadoPartida.FINALIZADA) {
             throw new BusinessException("Solo se puede impugnar un resultado ya finalizado");
         }
-
-        exigirRelacionado(partida, usuario, esAdmin);
 
         // Partidas de antes de RF-30 no tienen fecha guardada: sin forma
         // de calcular el plazo, se tratan como vencidas por seguridad.

@@ -30,7 +30,7 @@ export class TournamentsService {
     return this.api.get<TorneoDetalle>(`/tournaments/${id}`);
   }
 
-  /** " competencias": los que organizo + donde compite mi equipo. */
+  /** "Tus competencias": los que organizo + donde compite mi equipo. */
   misCompetencias(): Observable<Torneo[]> {
     return this.api.get<Torneo[]>('/tournaments/mios');
   }
