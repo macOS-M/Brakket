@@ -20,6 +20,7 @@ public class DisputaController {
 
     /** RF-30: impugnar el resultado de una partida ya finalizada. */
     @PostMapping("/{partidaId}/disputas")
+    @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
     @PreAuthorize("isAuthenticated()")
     public DisputaResponse impugnar(@PathVariable Long partidaId,
                                     @Valid @RequestBody ImpugnarResultadoRequest request,

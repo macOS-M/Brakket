@@ -21,6 +21,7 @@ import com.coffeecommits.brakket.tournament.model.FormatoTorneo;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
 import org.springframework.stereotype.Service;
@@ -45,21 +46,24 @@ public class TorneoServiceImpl implements TorneoService {
     private final TemporadaRepository temporadaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PerfilCompetitivoRepository perfilCompetitivoRepository;
+    // RF-30: para exponer si el usuario autenticado es árbitro de cada torneo.
+    private final ArbitroTorneoRepository arbitroTorneoRepository;
 
     public TorneoServiceImpl(TorneoRepository torneoRepository,
                              InscripcionRepository inscripcionRepository,
                              JuegoRepository juegoRepository,
                              TemporadaRepository temporadaRepository,
                              UsuarioRepository usuarioRepository,
-                             PerfilCompetitivoRepository perfilCompetitivoRepository) {
+                             PerfilCompetitivoRepository perfilCompetitivoRepository,
+                             ArbitroTorneoRepository arbitroTorneoRepository) {
         this.torneoRepository = torneoRepository;
         this.inscripcionRepository = inscripcionRepository;
         this.juegoRepository = juegoRepository;
         this.temporadaRepository = temporadaRepository;
         this.usuarioRepository = usuarioRepository;
         this.perfilCompetitivoRepository = perfilCompetitivoRepository;
+        this.arbitroTorneoRepository = arbitroTorneoRepository;
     }
-
     @Override
     @Transactional
     public TorneoResponse crearTorneo(String correo, boolean esAdmin, CrearTorneoRequest request) {
@@ -171,7 +175,7 @@ public class TorneoServiceImpl implements TorneoService {
     @Transactional(readOnly = true)
     public TorneoDetalleResponse obtenerDetalle(Long torneoId, String correoOpcional, boolean esAdmin) {
         Torneo torneo = buscarVisible(torneoId, correoOpcional, esAdmin);
-        return detalleDe(torneo);
+        return detalleDe(torneo, correoOpcional);
     }
 
     @Override
@@ -220,7 +224,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .fechaSolicitud(LocalDate.now())
                 .usuarioEnJuego(usuarioEnJuego.trim())
                 .build());
-        return detalleDe(torneo);
+        return detalleDe(torneo, correo);
     }
 
     @Override
@@ -279,8 +283,7 @@ public class TorneoServiceImpl implements TorneoService {
         }
         return torneo;
     }
-
-    private TorneoDetalleResponse detalleDe(Torneo torneo) {
+    private TorneoDetalleResponse detalleDe(Torneo torneo, String correoOpcional) {
         List<EquipoInscritoResponse> equipos = inscripcionRepository.findByTorneoId(torneo.getId()).stream()
                 .filter(i -> !INSCRIPCION_CERRADA.contains(i.getEstado()))
                 .map(i -> new EquipoInscritoResponse(
@@ -295,7 +298,13 @@ public class TorneoServiceImpl implements TorneoService {
                                         m.getRol()))
                                 .toList()))
                 .toList();
-        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos);
+        // RF-30: ya calculado en el backend (no se manda la lista completa
+        // de árbitros a cualquier visitante del torneo, solo el booleano).
+        boolean esArbitro = correoOpcional != null && usuarioRepository.findByCorreo(correoOpcional)
+                .map(u -> arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
+                        .anyMatch(a -> a.getUsuario().getId().equals(u.getId())))
+                .orElse(false);
+        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos, esArbitro);
     }
 
     private Usuario buscarUsuario(String correo) {
