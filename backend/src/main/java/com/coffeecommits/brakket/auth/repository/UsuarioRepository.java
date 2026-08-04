@@ -15,6 +15,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByCorreo(String correo);
 
+    /** Cuentas bloqueadas: métrica de moderación del panel global (RF-49). */
+    long countByBloqueadoTrue();
+
     /**
      * Jugadores disponibles para invitar a un equipo. Todos los filtros van en
      * la query para paginar bien y evitar el N+1 que tenia el servicio:
