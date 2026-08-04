@@ -8,6 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/tournaments/partidas")
 public class DisputaController {
@@ -31,7 +33,7 @@ public class DisputaController {
     /** RF-31: para que el frontend sepa si hay una disputa activa y su ID. */
     @GetMapping("/{partidaId}/disputas")
     @PreAuthorize("isAuthenticated()")
-    public java.util.List<DisputaResponse> listarPorPartida(@PathVariable Long partidaId,
+    public List<DisputaResponse> listarPorPartida(@PathVariable Long partidaId,
                                                             Authentication authentication) {
         return disputaService.listarPorPartida(partidaId, authentication.getName(), esAdmin(authentication));
     }

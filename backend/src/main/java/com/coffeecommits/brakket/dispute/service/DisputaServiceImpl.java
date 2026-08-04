@@ -3,7 +3,6 @@ package com.coffeecommits.brakket.dispute.service;
 import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
-import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.dispute.dto.DisputaResponse;
 import com.coffeecommits.brakket.dispute.dto.ImpugnarResultadoRequest;
@@ -11,9 +10,6 @@ import com.coffeecommits.brakket.dispute.model.Disputa;
 import com.coffeecommits.brakket.dispute.repository.DisputaRepository;
 import com.coffeecommits.brakket.tournament.model.EstadoPartida;
 import com.coffeecommits.brakket.tournament.model.Partida;
-import com.coffeecommits.brakket.tournament.model.Torneo;
-import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
-import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,24 +22,20 @@ public class DisputaServiceImpl implements DisputaService {
 
     // Regla de negocio del equipo: 48 horas desde que la partida finalizó.
     private static final long PLAZO_HORAS = 48;
-    private static final List<String> ESTADOS_ACTIVOS = List.of("PENDIENTE", "EN_REVISION");
 
     private final DisputaRepository disputaRepository;
     private final PartidaRepository partidaRepository;
     private final UsuarioRepository usuarioRepository;
-    private final InscripcionRepository inscripcionRepository;
-    private final ArbitroTorneoRepository arbitroTorneoRepository;
+    private final DisputaGuard guard;
 
     public DisputaServiceImpl(DisputaRepository disputaRepository,
                               PartidaRepository partidaRepository,
                               UsuarioRepository usuarioRepository,
-                              InscripcionRepository inscripcionRepository,
-                              ArbitroTorneoRepository arbitroTorneoRepository) {
+                              DisputaGuard guard) {
         this.disputaRepository = disputaRepository;
         this.partidaRepository = partidaRepository;
         this.usuarioRepository = usuarioRepository;
-        this.inscripcionRepository = inscripcionRepository;
-        this.arbitroTorneoRepository = arbitroTorneoRepository;
+        this.guard = guard;
     }
 
     @Override
@@ -61,7 +53,7 @@ public class DisputaServiceImpl implements DisputaService {
         // Autorizar ANTES de revelar el estado: si no, cualquier usuario
         // autenticado podria sondear el estado de disputa de partidas de
         // torneos privados sin tener nada que ver con ellas.
-        exigirRelacionado(partida, usuario, esAdmin);
+        guard.exigirRelacionado(partida, usuario, esAdmin);
 
         if (partida.esBye()) {
             throw new BusinessException("Una partida bye (sin dos rivales reales) no se puede impugnar");
@@ -106,30 +98,11 @@ public class DisputaServiceImpl implements DisputaService {
         Partida partida = partidaRepository.findById(partidaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Partida", partidaId));
 
-        exigirRelacionado(partida, usuario, esAdmin);
+        guard.exigirRelacionado(partida, usuario, esAdmin);
 
         return disputaRepository.findByPartidaId(partidaId).stream()
                 .map(DisputaResponse::fromEntity)
                 .toList();
-    }
-
-    private void exigirRelacionado(Partida partida, Usuario usuario, boolean esAdmin) {
-        if (esAdmin) {
-            return;
-        }
-        Torneo torneo = partida.getTorneo();
-        boolean esOrganizador = torneo.getOrganizador().getId().equals(usuario.getId());
-        boolean esArbitro = arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
-                .anyMatch(a -> a.getUsuario().getId().equals(usuario.getId()));
-        boolean esCapitanA = partida.getEquipoA() != null
-                && inscripcionRepository.esCapitanActivo(usuario.getId(), partida.getEquipoA().getId());
-        boolean esCapitanB = partida.getEquipoB() != null
-                && inscripcionRepository.esCapitanActivo(usuario.getId(), partida.getEquipoB().getId());
-
-        if (!esOrganizador && !esArbitro && !esCapitanA && !esCapitanB) {
-            throw new ForbiddenException(
-                    "Solo un capitan de la partida, el organizador o un arbitro del torneo pueden impugnar");
-        }
     }
 
     private static String normalizar(String valor) {

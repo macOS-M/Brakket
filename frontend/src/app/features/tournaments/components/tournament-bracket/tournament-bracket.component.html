@@ -53,6 +53,7 @@
       </div>
       }
 
+      @if (disputaActivaId() !== null) {
       <div class="evidencia-form">
         <label class="impugnar-campo">
           <span>Subir imagen</span>
@@ -95,6 +96,9 @@
           </button>
         </div>
       </div>
+      } @else if (errorEvidencia()) {
+      <p class="mensaje-error" role="alert">{{ errorEvidencia() }}</p>
+      }
       }
     </div>
     }

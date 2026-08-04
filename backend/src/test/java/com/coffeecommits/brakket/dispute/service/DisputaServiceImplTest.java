@@ -60,10 +60,8 @@ class DisputaServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new DisputaServiceImpl(
-                disputaRepository, partidaRepository, usuarioRepository,
-                inscripcionRepository, arbitroTorneoRepository);
-
+        DisputaGuard guard = new DisputaGuard(inscripcionRepository, arbitroTorneoRepository);
+        service = new DisputaServiceImpl(disputaRepository, partidaRepository, usuarioRepository, guard);
         torneo = Torneo.builder().id(7L)
                 .organizador(Usuario.builder().id(1L).correo(ORGANIZADOR).build())
                 .estado(EstadoTorneo.FINALIZADO)

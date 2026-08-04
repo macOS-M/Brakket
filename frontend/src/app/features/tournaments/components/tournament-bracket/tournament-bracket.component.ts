@@ -608,6 +608,9 @@ export class TournamentBracketComponent {
       && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId) || this.esGestor());
   }
 
+  /** Sube en cada apertura de panel; si una respuesta vieja llega tarde, se descarta. */
+  private cargaEvidenciaToken = 0;
+
   toggleEvidencia(p: Partida): void {
     if (this.verEvidencia() === p.id) {
       this.verEvidencia.set(null);
@@ -623,9 +626,15 @@ export class TournamentBracketComponent {
   }
 
   private cargarEvidencia(partidaId: number): void {
+    const token = ++this.cargaEvidenciaToken;
     this.cargandoEvidencia.set(true);
     this.tournamentsService.disputasDePartida(partidaId).subscribe({
       next: (disputas: DisputaResponse[]) => {
+        // Si el usuario ya abrió otra partida mientras esta respuesta
+        // viajaba, se descarta: no debe pisar el estado de la nueva.
+        if (token !== this.cargaEvidenciaToken) {
+          return;
+        }
         // La activa es la más reciente sin resolver; si ya no hay
         // ninguna, alguien ya la cerró.
         const activa = disputas.find((d) => d.estado === 'PENDIENTE' || d.estado === 'EN_REVISION');
@@ -637,16 +646,25 @@ export class TournamentBracketComponent {
         this.disputaActivaId.set(activa.id);
         this.disputesService.listarEvidencias(activa.id).subscribe({
           next: (lista) => {
+            if (token !== this.cargaEvidenciaToken) {
+              return;
+            }
             this.evidencias.set(lista);
             this.cargandoEvidencia.set(false);
           },
           error: (err) => {
+            if (token !== this.cargaEvidenciaToken) {
+              return;
+            }
             this.cargandoEvidencia.set(false);
             this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la evidencia.');
           }
         });
       },
       error: (err) => {
+        if (token !== this.cargaEvidenciaToken) {
+          return;
+        }
         this.cargandoEvidencia.set(false);
         this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la disputa.');
       }
@@ -707,10 +725,9 @@ export class TournamentBracketComponent {
 
   formatearFecha(iso: string): string {
     return new Date(iso).toLocaleString('es-CR', {
-      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   }
-
   abrirMarcador(p: Partida): void {
     this.reportando.set(p.id);
     this.marcadorA.set(p.marcadorA ?? 0);
