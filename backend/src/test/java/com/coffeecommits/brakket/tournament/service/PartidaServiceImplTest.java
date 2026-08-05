@@ -13,6 +13,8 @@ import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
+import com.coffeecommits.brakket.tournament.repository.CasoEspecialPartidaRepository;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
@@ -46,6 +48,10 @@ class PartidaServiceImplTest {
     private InscripcionRepository inscripcionRepository;
     @Mock
     private UsuarioRepository usuarioRepository;
+    @Mock
+    private ArbitroTorneoRepository arbitroTorneoRepository;
+    @Mock
+    private CasoEspecialPartidaRepository casoEspecialPartidaRepository;
 
     private PartidaServiceImpl service;
 
@@ -62,7 +68,8 @@ class PartidaServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new PartidaServiceImpl(
-                torneoRepository, partidaRepository, inscripcionRepository, usuarioRepository);
+                torneoRepository, partidaRepository, inscripcionRepository, usuarioRepository,
+                arbitroTorneoRepository, casoEspecialPartidaRepository);
 
         torneo = Torneo.builder()
                 .id(7L)

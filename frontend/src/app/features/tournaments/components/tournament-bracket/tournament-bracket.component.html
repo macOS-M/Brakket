@@ -170,6 +170,8 @@
       </div>
       }
       }
+      } @else if (errorEvidencia()) {
+      <p class="mensaje-error" role="alert">{{ errorEvidencia() }}</p>
       }
 
       @if (disputaActual()!.estado === 'RESUELTA' || disputaActual()!.estado === 'EN_APELACION') {
@@ -369,6 +371,66 @@
         <button type="button" class="btn-secondary" (click)="cerrarImpugnar()">Cancelar</button>
       </div>
     </div>
+    } @else if (registrandoCaso() === p.id) {
+    <div class="marcador-form caso-especial-form">
+      <label class="caso-campo">
+        <span>Tipo de caso</span>
+        <select [value]="tipoCaso()" (change)="tipoCaso.set($any($event.target).value)">
+          <option value="DESCANSO">Descanso</option>
+          <option value="AVANCE_AUTOMATICO">Avance automático</option>
+          <option value="ABANDONO">Abandono</option>
+        </select>
+      </label>
+
+      @if (tipoCaso() !== 'DESCANSO') {
+      <label class="caso-campo">
+        <span>Equipo que avanza</span>
+        <select
+          [value]="equipoGanadorCaso() ?? ''"
+          (change)="equipoGanadorCaso.set(+$any($event.target).value)"
+        >
+          <option value="" disabled>Elegí un equipo</option>
+          @if (p.equipoAId !== null) {
+          <option [value]="p.equipoAId">{{ p.equipoANombre }}</option>
+          }
+          @if (p.equipoBId !== null) {
+          <option [value]="p.equipoBId">{{ p.equipoBNombre }}</option>
+          }
+        </select>
+      </label>
+      }
+
+      <label class="caso-campo">
+        <span>Justificación{{ tipoCaso() === 'ABANDONO' ? ' (obligatoria)' : ' (opcional)' }}</span>
+        <textarea
+          rows="2"
+          maxlength="500"
+          [value]="justificacionCaso()"
+          (input)="justificacionCaso.set($any($event.target).value)"
+        ></textarea>
+      </label>
+
+      <label class="caso-campo">
+        <span>Evidencia, URL (opcional)</span>
+        <input
+          type="text"
+          maxlength="500"
+          [value]="evidenciaCaso()"
+          (input)="evidenciaCaso.set($any($event.target).value)"
+        />
+      </label>
+
+      @if (errorCaso()) {
+      <p class="mensaje-error" role="alert">{{ errorCaso() }}</p>
+      }
+
+      <div class="marcador-acciones">
+        <button type="button" class="btn-primary" [disabled]="enviandoCaso()" (click)="enviarCasoEspecial(p)">
+          {{ enviandoCaso() ? 'Enviando…' : 'Registrar' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="cerrarCasoEspecial()">Cancelar</button>
+      </div>
+    </div>
     } @else {
     <div class="partida-acciones">
       @if (puedeReportar(p)) {
@@ -402,6 +464,11 @@
       @if (puedeImpugnar(p)) {
       <button type="button" class="btn-secondary" (click)="abrirImpugnar(p)">
         Impugnar resultado
+      </button>
+      }
+      @if (puedeRegistrarCaso(p)) {
+      <button type="button" class="btn-secondary" (click)="abrirCasoEspecial(p)">
+        Caso especial
       </button>
       }
     </div>

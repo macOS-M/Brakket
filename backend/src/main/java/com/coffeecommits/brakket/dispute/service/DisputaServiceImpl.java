@@ -11,10 +11,10 @@ import com.coffeecommits.brakket.dispute.dto.ResolverDisputaRequest;
 import com.coffeecommits.brakket.dispute.model.Disputa;
 import com.coffeecommits.brakket.dispute.repository.DisputaRepository;
 import com.coffeecommits.brakket.tournament.model.EstadoPartida;
+import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
-import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,25 +27,27 @@ public class DisputaServiceImpl implements DisputaService {
 
     // Regla de negocio del equipo: 48 horas desde que la partida finalizó.
     private static final long PLAZO_HORAS = 48;
-    private static final List<String> ESTADOS_ACTIVOS = List.of("PENDIENTE", "EN_REVISION");
 
     private final DisputaRepository disputaRepository;
     private final PartidaRepository partidaRepository;
     private final UsuarioRepository usuarioRepository;
-    private final InscripcionRepository inscripcionRepository;
+    private final DisputaGuard guard;
+    // RF-32: exigirArbitroOComisionado usa un criterio distinto al de guard
+    // (arbitro/comisionado, sin capitanes ni organizador), asi que necesita
+    // el repositorio de arbitros por separado.
     private final ArbitroTorneoRepository arbitroTorneoRepository;
     private final com.coffeecommits.brakket.tournament.service.PartidaService partidaService;
 
     public DisputaServiceImpl(DisputaRepository disputaRepository,
                               PartidaRepository partidaRepository,
                               UsuarioRepository usuarioRepository,
-                              InscripcionRepository inscripcionRepository,
+                              DisputaGuard guard,
                               ArbitroTorneoRepository arbitroTorneoRepository,
                               com.coffeecommits.brakket.tournament.service.PartidaService partidaService) {
         this.disputaRepository = disputaRepository;
         this.partidaRepository = partidaRepository;
         this.usuarioRepository = usuarioRepository;
-        this.inscripcionRepository = inscripcionRepository;
+        this.guard = guard;
         this.arbitroTorneoRepository = arbitroTorneoRepository;
         this.partidaService = partidaService;
     }
@@ -56,17 +58,34 @@ public class DisputaServiceImpl implements DisputaService {
                                     ImpugnarResultadoRequest request) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
-        Partida partida = partidaRepository.findById(partidaId)
+        // Con lock: dos capitanes impugnando la misma partida a la vez no
+        // deben poder crear dos disputas (mismo criterio que el resto del
+        // motor de partidas, via bloquearPorId).
+        Partida partida = partidaRepository.bloquearPorId(partidaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Partida", partidaId));
 
+        // Autorizar ANTES de revelar el estado: si no, cualquier usuario
+        // autenticado podria sondear el estado de disputa de partidas de
+        // torneos privados sin tener nada que ver con ellas.
+        guard.exigirRelacionado(partida, usuario, esAdmin);
+
+        if (partida.esBye()) {
+            throw new BusinessException("Una partida bye (sin dos rivales reales) no se puede impugnar");
+        }
         if (partida.getEstado() == EstadoPartida.EN_DISPUTA) {
             throw new BusinessException("Esta partida ya tiene una impugnacion en curso");
         }
         if (partida.getEstado() != EstadoPartida.FINALIZADA) {
             throw new BusinessException("Solo se puede impugnar un resultado ya finalizado");
         }
-
-        exigirRelacionado(partida, usuario, esAdmin);
+        // El torneo tiene que seguir EN_CURSO: resolver una disputa pasa por
+        // el motor de partidas, que exige exactamente eso. Sin este corte se
+        // puede impugnar la final de un torneo ya FINALIZADO y la disputa
+        // queda sin nadie que pueda cerrarla, con el campeon ya coronado.
+        if (partida.getTorneo().getEstado() != EstadoTorneo.EN_CURSO) {
+            throw new BusinessException(
+                    "Solo se puede impugnar mientras el torneo sigue en curso");
+        }
 
         // Partidas de antes de RF-30 no tienen fecha guardada: sin forma
         // de calcular el plazo, se tratan como vencidas por seguridad.
@@ -87,7 +106,7 @@ public class DisputaServiceImpl implements DisputaService {
                 .build());
 
         // Queda igual que un reporte rechazado: EN_DISPUTA, a la espera
-        // de que un arbitro la resuelva (eso ya lo hara RF-32).
+        // de que un arbitro la resuelva.
         partida.setEstado(EstadoPartida.EN_DISPUTA);
         partidaRepository.save(partida);
         return DisputaResponse.fromEntity(disputa);
@@ -101,12 +120,13 @@ public class DisputaServiceImpl implements DisputaService {
         Partida partida = partidaRepository.findById(partidaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Partida", partidaId));
 
-        exigirRelacionado(partida, usuario, esAdmin);
+        guard.exigirRelacionado(partida, usuario, esAdmin);
 
         return disputaRepository.findByPartidaId(partidaId).stream()
                 .map(DisputaResponse::fromEntity)
                 .toList();
     }
+
     @Override
     @Transactional
     public DisputaResponse resolver(Long disputaId, String correo, boolean esAdmin,
@@ -116,7 +136,7 @@ public class DisputaServiceImpl implements DisputaService {
         Disputa disputa = disputaRepository.findById(disputaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Disputa", disputaId));
 
-        if (!ESTADOS_ACTIVOS.contains(disputa.getEstado())) {
+        if (!guard.estaActiva(disputa.getEstado())) {
             throw new BusinessException("Esta disputa ya fue resuelta");
         }
         exigirArbitroOComisionado(disputa.getPartida().getTorneo(), usuario, esAdmin);
@@ -160,25 +180,6 @@ public class DisputaServiceImpl implements DisputaService {
         if (!esArbitro && !esComisionado) {
             throw new ForbiddenException(
                     "Solo un arbitro del torneo, el comisionado de su liga o un admin pueden resolver la disputa");
-        }
-    }
-
-    private void exigirRelacionado(Partida partida, Usuario usuario, boolean esAdmin) {
-        if (esAdmin) {
-            return;
-        }
-        Torneo torneo = partida.getTorneo();
-        boolean esOrganizador = torneo.getOrganizador().getId().equals(usuario.getId());
-        boolean esArbitro = arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
-                .anyMatch(a -> a.getUsuario().getId().equals(usuario.getId()));
-        boolean esCapitanA = partida.getEquipoA() != null
-                && inscripcionRepository.esCapitanActivo(usuario.getId(), partida.getEquipoA().getId());
-        boolean esCapitanB = partida.getEquipoB() != null
-                && inscripcionRepository.esCapitanActivo(usuario.getId(), partida.getEquipoB().getId());
-
-        if (!esOrganizador && !esArbitro && !esCapitanA && !esCapitanB) {
-            throw new ForbiddenException(
-                    "Solo un capitan de la partida, el organizador o un arbitro del torneo pueden impugnar");
         }
     }
 

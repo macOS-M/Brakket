@@ -145,8 +145,17 @@ export class TournamentDetailComponent {
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
 
+// Árbitro asignado a este torneo puntual (no es un rol global). Ya
+// viene calculado del backend, así no exponemos la lista completa de
+// árbitros del torneo a cualquier visitante.
+  readonly esArbitro = computed(() => this.detalle()?.esArbitro ?? false);
+
+// RF-28: quién puede reportar descansos/avances/abandonos.
+  readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
+
   /** Iniciar exige gestor, etapa de inscripción y al menos 2 equipos. */
   readonly puedeIniciar = computed(() => {
+
     const t = this.torneo();
     return !!t && this.esGestor() && t.estado === 'INSCRIPCION_ABIERTA' && t.inscritos >= 2;
   });

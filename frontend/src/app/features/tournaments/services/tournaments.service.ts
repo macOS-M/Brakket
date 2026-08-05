@@ -10,6 +10,7 @@ import {
   TorneoDetalle
 } from '../../../models/tournament.model';
 import { DisputaResponse, ImpugnarResultadoRequest } from '../../../models/disputa.model';
+import { RegistrarCasoEspecialRequest } from '../../../models/caso-especial.model';
 
 /**
  * Servicio de datos de torneos (RF-24/RF-25, modelo abierto): torneos
@@ -30,7 +31,7 @@ export class TournamentsService {
     return this.api.get<TorneoDetalle>(`/tournaments/${id}`);
   }
 
-  /** " competencias": los que organizo + donde compite mi equipo. */
+  /** "Tus competencias": los que organizo + donde compite mi equipo. */
   misCompetencias(): Observable<Torneo[]> {
     return this.api.get<Torneo[]>('/tournaments/mios');
   }
@@ -94,5 +95,10 @@ export class TournamentsService {
   /** RF-31: para saber el ID de la disputa activa antes de pedir su evidencia. */
   disputasDePartida(partidaId: number): Observable<DisputaResponse[]> {
     return this.api.get<DisputaResponse[]>(`/tournaments/partidas/${partidaId}/disputas`);
+  }
+
+  /** Organizador o árbitro registran descanso, avance o abandono (RF-28). */
+  registrarCasoEspecial(partidaId: number, request: RegistrarCasoEspecialRequest): Observable<Partida> {
+    return this.api.post<Partida>(`/tournaments/partidas/${partidaId}/caso-especial`, request);
   }
 }

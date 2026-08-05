@@ -11,7 +11,6 @@ import {
   viewChild
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-
 import { Partida } from '../../../../models/tournament.model';
 import {
   ApelacionResponse,
@@ -22,10 +21,12 @@ import {
   ResolverApelacionRequest,
   ResolverDisputaRequest
 } from '../../../../models/disputa.model';
+import { RegistrarCasoEspecialRequest, TipoCasoEspecial } from '../../../../models/caso-especial.model';
 import { EvidenciaResponse } from '../../../../models/evidencia.model';
 import { TournamentsService } from '../../services/tournaments.service';
 import { DisputesService } from '../../../disputes/services/disputes.service';
 import { UploadsService } from '../../../../shared/services/uploads.service';
+
 interface Ronda {
   numero: number;
   etiqueta: string;
@@ -80,6 +81,12 @@ export interface ImpugnarEvent {
   request: ImpugnarResultadoRequest;
 }
 
+/** Descanso, avance automático o abandono sobre una partida (RF-28). */
+export interface CasoEspecialEvent {
+  partida: Partida;
+  request: RegistrarCasoEspecialRequest;
+}
+
 /** Forma de dibujar el formato: árbol único, doble llave, liga o grupos. */
 type TipoVista = 'ARBOL' | 'DOBLE' | 'LIGA' | 'GRUPOS';
 
@@ -116,6 +123,8 @@ export class TournamentBracketComponent {
   readonly campeonEquipoId = input<number | null>(null);
   readonly misEquipos = input<number[]>([]);
   readonly esGestor = input(false);
+  /** Organizador o árbitro de este torneo: habilita el botón de RF-28. */
+  readonly puedeCasoEspecial = input(false);
   readonly enCurso = input(false);
   readonly ocupado = input(false);
   readonly enviarMarcador = output<MarcadorEvent>();
@@ -124,6 +133,7 @@ export class TournamentBracketComponent {
   readonly impugnar = output<ImpugnarEvent>();
   /** Cuando resolver una disputa o apelación cambió el resultado de la partida. */
   readonly disputaResuelta = output<void>();
+  readonly casoEspecialRegistrado = output<void>();
 
   /** Partida con el formulario de marcador abierto. */
   readonly reportando = signal<number | null>(null);
@@ -140,7 +150,7 @@ export class TournamentBracketComponent {
   readonly evidenciaImpugnar = signal('');
   readonly errorImpugnar = signal<string | null>(null);
 
-// ---------- RF-31/32: disputa de una partida (evidencia, resolver, apelar) ----------
+  // ---------- RF-31/32: disputa de una partida (evidencia, resolver, apelar) ----------
 
   /** Partida cuyo panel de disputa está desplegado (null = ninguna). */
   readonly verEvidencia = signal<number | null>(null);
@@ -176,6 +186,17 @@ export class TournamentBracketComponent {
   readonly equipoGanadorApelacion = signal<number | null>(null);
   readonly enviandoResolucionApelacion = signal(false);
   readonly errorResolucionApelacion = signal<string | null>(null);
+
+  // ---------- RF-28: descansos, avances y abandonos ----------
+
+  /** Partida con el formulario de caso especial abierto. */
+  readonly registrandoCaso = signal<number | null>(null);
+  readonly tipoCaso = signal<TipoCasoEspecial>('DESCANSO');
+  readonly justificacionCaso = signal('');
+  readonly evidenciaCaso = signal('');
+  readonly equipoGanadorCaso = signal<number | null>(null);
+  readonly errorCaso = signal<string | null>(null);
+  readonly enviandoCaso = signal(false);
   /** Rieles SVG calculados midiendo las tarjetas ya pintadas. */
   readonly rieles = signal<Riel[]>([]);
   readonly lienzoAncho = signal(0);
@@ -423,6 +444,7 @@ export class TournamentBracketComponent {
       this.resolviendoDisputa();
       this.apelando();
       this.resolviendoApelacion();
+      this.registrandoCaso();
       this.recienActualizadas();
       this.programarMedicion();
     });
@@ -648,6 +670,9 @@ export class TournamentBracketComponent {
       && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId) || this.esGestor());
   }
 
+  /** Sube en cada apertura de panel; si una respuesta vieja llega tarde, se descarta. */
+  private cargaEvidenciaToken = 0;
+
   toggleEvidencia(p: Partida): void {
     if (this.verEvidencia() === p.id) {
       this.verEvidencia.set(null);
@@ -667,9 +692,16 @@ export class TournamentBracketComponent {
   }
 
   private cargarDisputa(partidaId: number): void {
+    // Si el usuario ya abrió otra partida mientras la respuesta viajaba,
+    // se descarta: no debe pisar el estado de la nueva (mismo criterio
+    // que ya usa el resto del panel).
+    const token = ++this.cargaEvidenciaToken;
     this.cargandoEvidencia.set(true);
     this.tournamentsService.disputasDePartida(partidaId).subscribe({
       next: (disputas: DisputaResponse[]) => {
+        if (token !== this.cargaEvidenciaToken) {
+          return;
+        }
         // La más reciente, sea cual sea su estado (pendiente, resuelta
         // o en apelación), es la que hay que mostrar.
         const ultima = disputas.length ? disputas[disputas.length - 1] : null;
@@ -679,14 +711,27 @@ export class TournamentBracketComponent {
           return;
         }
         this.disputesService.listarEvidencias(ultima.id).subscribe({
-          next: (lista) => this.evidencias.set(lista),
-          error: (err) => this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la evidencia.')
+          next: (lista) => {
+            if (token !== this.cargaEvidenciaToken) {
+              return;
+            }
+            this.evidencias.set(lista);
+          },
+          error: (err) => {
+            if (token !== this.cargaEvidenciaToken) {
+              return;
+            }
+            this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la evidencia.');
+          }
         });
         if (ultima.estado === 'EN_APELACION') {
           this.cargarApelacion(ultima.id);
         }
       },
       error: (err) => {
+        if (token !== this.cargaEvidenciaToken) {
+          return;
+        }
         this.cargandoEvidencia.set(false);
         this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la disputa.');
       }
@@ -700,6 +745,68 @@ export class TournamentBracketComponent {
         this.apelacionActual.set(activa);
       },
       error: (err) => this.errorApelacion.set(err?.error?.message ?? 'No se pudo cargar la apelación.')
+    });
+  }
+
+  // ---------- RF-28: descansos, avances y abandonos ----------
+
+  /** Organizador o árbitro, sobre una partida con ambos rivales ya definidos. */
+  puedeRegistrarCaso(p: Partida): boolean {
+    return this.enCurso() && this.puedeCasoEspecial() && !p.bye
+      && p.equipoAId !== null && p.equipoBId !== null
+      && p.estado !== 'FINALIZADA' && p.estado !== 'CANCELADA';
+  }
+
+  abrirCasoEspecial(p: Partida): void {
+    this.registrandoCaso.set(p.id);
+    this.tipoCaso.set('DESCANSO');
+    this.justificacionCaso.set('');
+    this.evidenciaCaso.set('');
+    this.equipoGanadorCaso.set(null);
+    this.errorCaso.set(null);
+  }
+
+  cerrarCasoEspecial(): void {
+    this.registrandoCaso.set(null);
+  }
+
+  enviarCasoEspecial(p: Partida): void {
+    const tipo = this.tipoCaso();
+    const justificacion = this.justificacionCaso().trim();
+
+    // El backend ya exige justificación solo para abandono; lo repetimos
+    // aquí para no hacerle perder el viaje al usuario con un 400.
+    if (tipo === 'ABANDONO' && !justificacion) {
+      this.errorCaso.set('El abandono necesita una justificación.');
+      return;
+    }
+    if (tipo !== 'DESCANSO' && this.equipoGanadorCaso() === null) {
+      this.errorCaso.set('Elegí cuál equipo avanza.');
+      return;
+    }
+
+    const request: RegistrarCasoEspecialRequest = {
+      tipo,
+      justificacion: justificacion || null,
+      evidenciaUrl: this.evidenciaCaso().trim() || null,
+      equipoGanadorId: tipo === 'DESCANSO' ? null : this.equipoGanadorCaso()
+    };
+
+    // El formulario se queda abierto (con "Enviando…") hasta saber si el
+    // backend aceptó. Si falla, la justificación tecleada no se pierde y
+    // el error aparece aquí mismo, no arriba del bracket.
+    this.errorCaso.set(null);
+    this.enviandoCaso.set(true);
+    this.tournamentsService.registrarCasoEspecial(p.id, request).subscribe({
+      next: () => {
+        this.enviandoCaso.set(false);
+        this.registrandoCaso.set(null);
+        this.casoEspecialRegistrado.emit();
+      },
+      error: (err) => {
+        this.enviandoCaso.set(false);
+        this.errorCaso.set(err?.error?.message ?? 'No se pudo registrar el caso especial.');
+      }
     });
   }
 
@@ -758,11 +865,11 @@ export class TournamentBracketComponent {
   // ---------- RF-32: resolver la disputa ----------
 
   /**
-   * OJO: el backend exige árbitro/comisionado/admin (nunca solo el
-   * organizador). El frontend todavía no distingue árbitro/comisionado
-   * (eso llega con RF-28, que aún no se fusiona), así que por ahora
-   * muestra el botón a esGestor() y deja que el backend bloquee con su
-   * propio mensaje si el usuario no califica de verdad.
+   * El backend exige árbitro del torneo, comisionado de su liga, o admin
+   * (nunca solo el organizador). Por ahora, en el frontend, se muestra a
+   * esGestor() (organizador/admin) porque todavía no distinguimos
+   * árbitro/comisionado aquí; el backend igual bloquea con su propio
+   * mensaje si el usuario no califica de verdad.
    */
   puedeResolverDisputa(): boolean {
     return this.esGestor();
@@ -858,7 +965,7 @@ export class TournamentBracketComponent {
 
   // ---------- RF-32: el comisionado resuelve la apelación ----------
 
-  /** Mismo aviso que puedeResolverDisputa: workaround hasta que llegue esArbitro/esComisionado real. */
+  /** Mismo aviso que puedeResolverDisputa: workaround hasta tener esArbitro/esComisionado. */
   puedeResolverApelacion(): boolean {
     return this.esGestor();
   }
@@ -902,7 +1009,7 @@ export class TournamentBracketComponent {
 
   formatearFecha(iso: string): string {
     return new Date(iso).toLocaleString('es-CR', {
-      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   }
 
