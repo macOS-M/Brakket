@@ -10,6 +10,7 @@ import {
   TorneoDetalle
 } from '../../../models/tournament.model';
 import { DisputaResponse, ImpugnarResultadoRequest } from '../../../models/disputa.model';
+import { RegistrarCasoEspecialRequest } from '../../../models/caso-especial.model';
 
 /**
  * Servicio de datos de torneos (RF-24/RF-25, modelo abierto): torneos
@@ -89,5 +90,10 @@ export class TournamentsService {
   /** Impugnar un resultado ya finalizado, dentro del plazo (RF-30). */
   impugnar(partidaId: number, request: ImpugnarResultadoRequest): Observable<DisputaResponse> {
     return this.api.post<DisputaResponse>(`/tournaments/partidas/${partidaId}/disputas`, request);
+  }
+
+  /** Organizador o árbitro registran descanso, avance o abandono (RF-28). */
+  registrarCasoEspecial(partidaId: number, request: RegistrarCasoEspecialRequest): Observable<Partida> {
+    return this.api.post<Partida>(`/tournaments/partidas/${partidaId}/caso-especial`, request);
   }
 }

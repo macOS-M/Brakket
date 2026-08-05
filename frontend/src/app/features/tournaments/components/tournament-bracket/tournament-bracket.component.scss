@@ -237,7 +237,8 @@
 
 .marcador-form { margin-top: 10px; }
 
-.impugnar-campo {
+.impugnar-campo,
+.caso-campo {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -245,7 +246,7 @@
   font-size: 0.85rem;
   color: var(--text);
 
-  input, textarea {
+  select, textarea, input {
     padding: 6px 8px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);

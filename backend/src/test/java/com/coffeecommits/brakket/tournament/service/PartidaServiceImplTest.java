@@ -34,7 +34,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
-
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
+import com.coffeecommits.brakket.tournament.repository.CasoEspecialPartidaRepository;
+import com.coffeecommits.brakket.tournament.dto.CasoEspecialResponse;
+import com.coffeecommits.brakket.tournament.dto.RegistrarCasoEspecialRequest;
+import com.coffeecommits.brakket.tournament.model.ArbitroTorneo;
+import com.coffeecommits.brakket.tournament.model.CasoEspecialPartida;
+import com.coffeecommits.brakket.tournament.model.TipoCasoEspecial;
 @ExtendWith(MockitoExtension.class)
 class PartidaServiceImplTest {
 
@@ -46,6 +52,12 @@ class PartidaServiceImplTest {
     private InscripcionRepository inscripcionRepository;
     @Mock
     private UsuarioRepository usuarioRepository;
+    // RF-28: el test tambien necesita estos dos mocks porque el constructor
+    // ahora los pide, aunque este archivo de pruebas no los use directamente.
+    @Mock
+    private ArbitroTorneoRepository arbitroTorneoRepository;
+    @Mock
+    private CasoEspecialPartidaRepository casoEspecialPartidaRepository;
 
     private PartidaServiceImpl service;
 
@@ -62,8 +74,8 @@ class PartidaServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new PartidaServiceImpl(
-                torneoRepository, partidaRepository, inscripcionRepository, usuarioRepository);
-
+                torneoRepository, partidaRepository, inscripcionRepository, usuarioRepository,
+                arbitroTorneoRepository, casoEspecialPartidaRepository);
         torneo = Torneo.builder()
                 .id(7L)
                 .juego(Juego.builder().id(3L).nombre("Rocket League").build())
@@ -593,5 +605,136 @@ class PartidaServiceImplTest {
         // El organizador ve todas las claves.
         List<PartidaResponse> organizador = service.obtenerBracket(7L, ORGANIZADOR, false);
         assertThat(organizador.get(0).lobbyClave()).isEqualTo("abcd2345");
+    }
+
+    // ---------- RF-28: descansos, avances automáticos y abandonos ----------
+
+    private static final String ARBITRO = "arbitro@brakket.gg";
+    private static final String AJENO = "ajeno@brakket.gg";
+
+    private void arbitroAsignado() {
+        Usuario arbitro = Usuario.builder().id(50L).correo(ARBITRO).build();
+        lenient().when(usuarioRepository.findByCorreo(ARBITRO)).thenReturn(Optional.of(arbitro));
+        lenient().when(arbitroTorneoRepository.findByTorneoId(7L)).thenReturn(List.of(
+                ArbitroTorneo.builder().id(1L).torneo(torneo).usuario(arbitro).build()));
+    }
+
+    @Test
+    void caso_especial_lo_puede_registrar_el_arbitro_pero_no_un_ajeno() {
+        partidaJugable();
+        arbitroAsignado();
+        when(usuarioRepository.findByCorreo(AJENO))
+                .thenReturn(Optional.of(Usuario.builder().id(99L).correo(AJENO).build()));
+
+        RegistrarCasoEspecialRequest descanso =
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.DESCANSO, null, null, null);
+
+        // El árbitro sí puede.
+        PartidaResponse resp = service.registrarCasoEspecial(200L, ARBITRO, false, descanso);
+        assertThat(resp.estado()).isEqualTo("PENDIENTE");
+
+        // Alguien ajeno al torneo, no.
+        assertThatThrownBy(() -> service.registrarCasoEspecial(200L, AJENO, false, descanso))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void descanso_no_cambia_el_estado_ni_el_marcador_de_la_partida() {
+        Partida p = partidaJugable();
+
+        PartidaResponse resp = service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.DESCANSO, null, null, null));
+
+        assertThat(resp.estado()).isEqualTo("PENDIENTE");
+        assertThat(p.getGanador()).isNull();
+        assertThat(p.getMarcadorA()).isNull();
+        assertThat(p.getMarcadorB()).isNull();
+    }
+
+    @Test
+    void abandono_exige_justificacion_pero_avance_automatico_no() {
+        partidaJugable();
+
+        assertThatThrownBy(() -> service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.ABANDONO, null, null, 10L)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("justificacion");
+
+        // Avance automático no exige justificación.
+        PartidaResponse resp = service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.AVANCE_AUTOMATICO, null, null, 10L));
+        assertThat(resp.estado()).isEqualTo("FINALIZADA");
+    }
+
+    @Test
+    void abandono_y_avance_exigen_un_equipo_ganador_valido() {
+        partidaJugable();
+
+        // Sin equipo ganador.
+        assertThatThrownBy(() -> service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.ABANDONO, "se fue", null, null)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("equipo ganador");
+
+        // Equipo que no es rival de esta partida.
+        assertThatThrownBy(() -> service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.ABANDONO, "se fue", null, 999L)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("rivales");
+    }
+
+    @Test
+    void abandono_finaliza_la_partida_sin_marcador_y_avanza_al_ganador() {
+        Partida p = partidaJugable();
+
+        PartidaResponse resp = service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.ABANDONO, "no se presento", null, 10L));
+
+        assertThat(resp.estado()).isEqualTo("FINALIZADA");
+        assertThat(resp.ganadorEquipoId()).isEqualTo(10L);
+        // Sin marcador simbólico: no debe inflar diferencia de puntos en tablas.
+        assertThat(resp.marcadorA()).isNull();
+        assertThat(resp.marcadorB()).isNull();
+        // El ganador avanzó al slot A de la siguiente partida.
+        assertThat(p.getSiguiente().getEquipoA().getId()).isEqualTo(10L);
+    }
+
+    @Test
+    void caso_especial_rechaza_partida_cerrada_o_torneo_que_no_esta_en_curso() {
+        Partida p = partidaJugable();
+        p.setEstado(EstadoPartida.FINALIZADA);
+
+        assertThatThrownBy(() -> service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.DESCANSO, null, null, null)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("cerrada");
+
+        p.setEstado(EstadoPartida.PENDIENTE);
+        torneo.setEstado(EstadoTorneo.FINALIZADO);
+        assertThatThrownBy(() -> service.registrarCasoEspecial(200L, ORGANIZADOR, false,
+                new RegistrarCasoEspecialRequest(TipoCasoEspecial.DESCANSO, null, null, null)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("en curso");
+    }
+
+    @Test
+    void historial_de_caso_especial_exige_el_mismo_permiso_y_devuelve_lo_guardado() {
+        Partida p = partidaJugable();
+        when(partidaRepository.findById(200L)).thenReturn(Optional.of(p));
+        when(casoEspecialPartidaRepository.findByPartidaIdOrderByFechaDesc(200L)).thenReturn(List.of(
+                CasoEspecialPartida.builder().id(1L).partida(p)
+                        .tipo(TipoCasoEspecial.DESCANSO)
+                        .registradoPor(torneo.getOrganizador())
+                        .fecha(LocalDateTime.now())
+                        .build()));
+
+        List<CasoEspecialResponse> historial = service.historialCasoEspecial(200L, ORGANIZADOR, false);
+        assertThat(historial).hasSize(1);
+        assertThat(historial.get(0).tipo()).isEqualTo("DESCANSO");
+
+        when(usuarioRepository.findByCorreo("otro@x.com"))
+                .thenReturn(Optional.of(Usuario.builder().id(88L).correo("otro@x.com").build()));
+        assertThatThrownBy(() -> service.historialCasoEspecial(200L, "otro@x.com", false))
+                .isInstanceOf(ForbiddenException.class);
     }
 }
