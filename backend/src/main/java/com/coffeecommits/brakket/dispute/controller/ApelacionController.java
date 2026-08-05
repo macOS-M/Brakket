@@ -40,7 +40,7 @@ public class ApelacionController {
     @PostMapping("/apelaciones/{apelacionId}/resolucion")
     @PreAuthorize("isAuthenticated()")
     public ApelacionResponse resolver(@PathVariable Long apelacionId,
-                                      @RequestBody ResolverApelacionRequest request,
+                                      @jakarta.validation.Valid @RequestBody ResolverApelacionRequest request,
                                       Authentication authentication) {
         return apelacionService.resolver(apelacionId, authentication.getName(), esAdmin(authentication), request);
     }

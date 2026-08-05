@@ -165,10 +165,7 @@ public class DisputaServiceImpl implements DisputaService {
         return DisputaResponse.fromEntity(disputa);
     }
 
-    /**
-     * A propósito NO incluye al organizador: RF-32 exige que resuelva
-     * alguien ajeno al torneo (árbitro, comisionado de la liga, o admin).
-     */
+    
     private void exigirArbitroOComisionado(Torneo torneo, Usuario usuario, boolean esAdmin) {
         if (esAdmin) {
             return;

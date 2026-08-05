@@ -724,7 +724,8 @@ export class TournamentBracketComponent {
             this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la evidencia.');
           }
         });
-        if (ultima.estado === 'EN_APELACION') {
+        
+        if (ultima.estado === 'EN_APELACION' || ultima.estado === 'RESUELTA') {
           this.cargarApelacion(ultima.id);
         }
       },
@@ -864,15 +865,9 @@ export class TournamentBracketComponent {
 
   // ---------- RF-32: resolver la disputa ----------
 
-  /**
-   * El backend exige árbitro del torneo, comisionado de su liga, o admin
-   * (nunca solo el organizador). Por ahora, en el frontend, se muestra a
-   * esGestor() (organizador/admin) porque todavía no distinguimos
-   * árbitro/comisionado aquí; el backend igual bloquea con su propio
-   * mensaje si el usuario no califica de verdad.
-   */
+
   puedeResolverDisputa(): boolean {
-    return this.esGestor();
+    return this.puedeCasoEspecial();
   }
 
   abrirResolverDisputa(): void {

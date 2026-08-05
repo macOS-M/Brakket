@@ -184,7 +184,19 @@
       </div>
       }
 
-      @if (disputaActual()!.estado === 'RESUELTA' && puedeApelar(p)) {
+      @if (disputaActual()!.estado === 'RESUELTA' && apelacionActual() && apelacionActual()!.estado === 'RESUELTA') {
+      <div class="evidencia-item">
+        <p class="evidencia-meta">
+          Apelado por {{ apelacionActual()!.apeladaPorNombre }} — {{ apelacionActual()!.motivo }}
+        </p>
+        @if (apelacionActual()!.decisionFinal) {
+        <p class="evidencia-descripcion">Decisión del comisionado: {{ apelacionActual()!.decisionFinal }}</p>
+        }
+        <p class="evidencia-meta">Resuelto por {{ apelacionActual()!.comisionadoNombre }}</p>
+      </div>
+      }
+
+      @if (disputaActual()!.estado === 'RESUELTA' && !apelacionActual() && puedeApelar(p)) {
       @if (!apelando()) {
       <div class="marcador-acciones">
         <button type="button" class="btn-secondary" (click)="abrirApelar()">Apelar resolución</button>
