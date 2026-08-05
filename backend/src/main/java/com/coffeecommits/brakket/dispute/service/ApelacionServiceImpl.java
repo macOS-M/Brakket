@@ -15,15 +15,15 @@ import com.coffeecommits.brakket.dispute.repository.DisputaRepository;
 import com.coffeecommits.brakket.tournament.model.EstadoPartida;
 import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
-import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
-import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import com.coffeecommits.brakket.tournament.service.PartidaService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ApelacionServiceImpl implements ApelacionService {
@@ -36,23 +36,20 @@ public class ApelacionServiceImpl implements ApelacionService {
     private final DisputaRepository disputaRepository;
     private final PartidaRepository partidaRepository;
     private final UsuarioRepository usuarioRepository;
-    private final InscripcionRepository inscripcionRepository;
-    private final ArbitroTorneoRepository arbitroTorneoRepository;
+    private final DisputaGuard guard;
     private final PartidaService partidaService;
 
     public ApelacionServiceImpl(ApelacionRepository apelacionRepository,
                                 DisputaRepository disputaRepository,
                                 PartidaRepository partidaRepository,
                                 UsuarioRepository usuarioRepository,
-                                InscripcionRepository inscripcionRepository,
-                                ArbitroTorneoRepository arbitroTorneoRepository,
+                                DisputaGuard guard,
                                 PartidaService partidaService) {
         this.apelacionRepository = apelacionRepository;
         this.disputaRepository = disputaRepository;
         this.partidaRepository = partidaRepository;
         this.usuarioRepository = usuarioRepository;
-        this.inscripcionRepository = inscripcionRepository;
-        this.arbitroTorneoRepository = arbitroTorneoRepository;
+        this.guard = guard;
         this.partidaService = partidaService;
     }
 
@@ -67,7 +64,14 @@ public class ApelacionServiceImpl implements ApelacionService {
         if (!"RESUELTA".equals(disputa.getEstado())) {
             throw new BusinessException("Solo se puede apelar una disputa ya resuelta");
         }
-        exigirRelacionado(partida, usuario, esAdmin);
+        guard.exigirRelacionado(partida, usuario, esAdmin);
+
+        // Quien resolvió la disputa no puede apelar su propia decisión:
+        // la apelación existe justo para que alguien más la revise.
+        if (disputa.getResueltaPor() != null
+                && Objects.equals(disputa.getResueltaPor().getId(), usuario.getId())) {
+            throw new ForbiddenException("Quien resolvió la disputa no puede apelar su propia decisión");
+        }
 
         LocalDateTime limite = disputa.getFechaResolucion() == null
                 ? null : disputa.getFechaResolucion().plusHours(PLAZO_HORAS);
@@ -78,18 +82,29 @@ public class ApelacionServiceImpl implements ApelacionService {
 
         // Una sola apelación por disputa, sin importar su estado: ya
         // resuelta o pendiente, no se puede volver a apelar la misma.
+        // El chequeo de aplicación no alcanza solo por sí mismo contra 2
+        // peticiones simultáneas; el índice único de la migración es la
+        // barrera real (aquí solo damos el mensaje bonito si alcanzamos
+        // a verlo antes).
         boolean yaFueApelada = !apelacionRepository.findByDisputaId(disputaId).isEmpty();
         if (yaFueApelada) {
             throw new BusinessException("Esta disputa ya fue apelada anteriormente");
         }
 
-        Apelacion apelacion = apelacionRepository.save(Apelacion.builder()
-                .disputa(disputa)
-                .apeladaPor(usuario)
-                .motivo(request.motivo().trim())
-                .estado("PENDIENTE")
-                .fechaCreacion(LocalDateTime.now())
-                .build());
+        Apelacion apelacion;
+        try {
+            apelacion = apelacionRepository.save(Apelacion.builder()
+                    .disputa(disputa)
+                    .apeladaPor(usuario)
+                    .motivo(request.motivo().trim())
+                    .estado("PENDIENTE")
+                    .fechaCreacion(LocalDateTime.now())
+                    .build());
+        } catch (DataIntegrityViolationException ex) {
+            // Dos apelaciones a la vez: la segunda choca con el índice
+            // único de la base y cae aquí en vez de corromper datos.
+            throw new BusinessException("Esta disputa ya fue apelada anteriormente");
+        }
 
         // Reabre el caso: el comisionado necesita poder tocar la partida
         // otra vez si decide corregir el resultado.
@@ -134,7 +149,15 @@ public class ApelacionServiceImpl implements ApelacionService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.List<ApelacionResponse> listarPorDisputa(Long disputaId) {
+    public List<ApelacionResponse> listarPorDisputa(Long disputaId, String correo, boolean esAdmin) {
+        Usuario usuario = buscarUsuario(correo);
+        Disputa disputa = disputaRepository.findById(disputaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Disputa", disputaId));
+
+        // Antes esto no validaba nada: cualquier autenticado podía leer
+        // las apelaciones de cualquier disputa del sistema.
+        guard.exigirRelacionado(disputa.getPartida(), usuario, esAdmin);
+
         return apelacionRepository.findByDisputaId(disputaId).stream()
                 .map(ApelacionResponse::fromEntity)
                 .toList();
@@ -153,26 +176,6 @@ public class ApelacionServiceImpl implements ApelacionService {
         if (!esComisionado) {
             throw new ForbiddenException(
                     "Solo el comisionado de la liga o un admin pueden resolver la apelacion");
-        }
-    }
-
-    // Mismo criterio que ya usa DisputaServiceImpl para impugnar/evidencia.
-    private void exigirRelacionado(Partida partida, Usuario usuario, boolean esAdmin) {
-        if (esAdmin) {
-            return;
-        }
-        Torneo torneo = partida.getTorneo();
-        boolean esOrganizador = torneo.getOrganizador().getId().equals(usuario.getId());
-        boolean esArbitro = arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
-                .anyMatch(a -> a.getUsuario().getId().equals(usuario.getId()));
-        boolean esCapitanA = partida.getEquipoA() != null
-                && inscripcionRepository.esCapitanActivo(usuario.getId(), partida.getEquipoA().getId());
-        boolean esCapitanB = partida.getEquipoB() != null
-                && inscripcionRepository.esCapitanActivo(usuario.getId(), partida.getEquipoB().getId());
-
-        if (!esOrganizador && !esArbitro && !esCapitanA && !esCapitanB) {
-            throw new ForbiddenException(
-                    "Solo un capitan de la partida, el organizador o un arbitro del torneo pueden apelar");
         }
     }
 

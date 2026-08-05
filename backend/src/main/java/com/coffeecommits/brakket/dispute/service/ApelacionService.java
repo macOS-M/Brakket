@@ -13,5 +13,5 @@ public interface ApelacionService {
     ApelacionResponse resolver(Long apelacionId, String correo, boolean esAdmin,
                                ResolverApelacionRequest request);
 
-    java.util.List<ApelacionResponse> listarPorDisputa(Long disputaId);
+    java.util.List<ApelacionResponse> listarPorDisputa(Long disputaId, String correo, boolean esAdmin);
 }
