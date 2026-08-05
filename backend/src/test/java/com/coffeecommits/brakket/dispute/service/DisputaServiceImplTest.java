@@ -60,9 +60,8 @@ class DisputaServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new DisputaServiceImpl(
-                disputaRepository, partidaRepository, usuarioRepository,
-                inscripcionRepository, arbitroTorneoRepository);
+        DisputaGuard guard = new DisputaGuard(inscripcionRepository, arbitroTorneoRepository);
+        service = new DisputaServiceImpl(disputaRepository, partidaRepository, usuarioRepository, guard);
 
         // EN_CURSO: impugnar exige que el torneo siga abierto, porque
         // resolver la disputa pasa por el motor de partidas, que lo exige.
