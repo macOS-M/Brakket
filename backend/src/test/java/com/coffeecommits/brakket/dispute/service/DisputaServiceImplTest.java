@@ -67,7 +67,7 @@ class DisputaServiceImplTest {
                 arbitroTorneoRepository, partidaService);
         torneo = Torneo.builder().id(7L)
                 .organizador(Usuario.builder().id(1L).correo(ORGANIZADOR).build())
-                .estado(EstadoTorneo.FINALIZADO)
+                .estado(EstadoTorneo.EN_CURSO)
                 .build();
         equipoA = Equipo.builder().id(10L).nombre("Azules").build();
         equipoB = Equipo.builder().id(20L).nombre("Rojos").build();
