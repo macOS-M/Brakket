@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import com.coffeecommits.brakket.tournament.dto.CasoEspecialResponse;
 import com.coffeecommits.brakket.tournament.dto.RegistrarCasoEspecialRequest;
 
 /**
@@ -147,6 +148,16 @@ public class TorneoController {
                                                  Authentication authentication) {
         return partidaService.registrarCasoEspecial(partidaId, authentication.getName(),
                 esAdmin(authentication), request);
+    }
+
+    // RF-28: historial de descansos/avances/abandonos de la partida. Mismo
+    // criterio de acceso que registrarlos: no es informacion publica.
+    @GetMapping("/partidas/{partidaId}/casos-especiales")
+    @PreAuthorize("isAuthenticated()")
+    public List<CasoEspecialResponse> historialCasoEspecial(@PathVariable Long partidaId,
+                                                            Authentication authentication) {
+        return partidaService.historialCasoEspecial(partidaId, authentication.getName(),
+                esAdmin(authentication));
     }
 
     @DeleteMapping("/{id}")
