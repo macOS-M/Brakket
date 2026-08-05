@@ -5,8 +5,8 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
-import com.coffeecommits.brakket.notification.model.Notificacion;
-import com.coffeecommits.brakket.notification.repository.NotificacionRepository;
+import com.coffeecommits.brakket.notification.model.TipoNotificacion;
+import com.coffeecommits.brakket.notification.service.NotificationService;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 import com.coffeecommits.brakket.team.repository.EquipoRepository;
@@ -18,7 +18,6 @@ import com.coffeecommits.brakket.transfer.repository.SolicitudTransferenciaRepos
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -38,18 +37,18 @@ public class TransferRequestServiceImpl implements TransferRequestService {
     private final EquipoRepository equipoRepository;
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final UsuarioRepository usuarioRepository;
-    private final NotificacionRepository notificacionRepository;
+    private final NotificationService notificationService;
 
     public TransferRequestServiceImpl(SolicitudTransferenciaRepository transferenciaRepository,
                                       EquipoRepository equipoRepository,
                                       MiembroEquipoRepository miembroEquipoRepository,
                                       UsuarioRepository usuarioRepository,
-                                      NotificacionRepository notificacionRepository) {
+                                      NotificationService notificationService) {
         this.transferenciaRepository = transferenciaRepository;
         this.equipoRepository = equipoRepository;
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.usuarioRepository = usuarioRepository;
-        this.notificacionRepository = notificacionRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -162,15 +161,8 @@ public class TransferRequestServiceImpl implements TransferRequestService {
     }
 
     private void notificar(Usuario destinatario, SolicitudTransferencia solicitud, String mensaje) {
-        notificacionRepository.save(Notificacion.builder()
-                .usuario(destinatario)
-                .tipo("TRANSFERENCIA_SOLICITADA")
-                .mensaje(mensaje)
-                .entidad("solicitud_transferencia")
-                .entidadId(solicitud.getId())
-                .leida(false)
-                .fecha(LocalDateTime.now())
-                .build());
+        notificationService.notificar(destinatario, TipoNotificacion.TRANSFERENCIA_SOLICITADA, mensaje,
+                "Transferencias", "solicitud_transferencia", solicitud.getId());
     }
 
     private String normalizar(String valor) {
