@@ -64,9 +64,11 @@ class DisputaServiceImplTest {
                 disputaRepository, partidaRepository, usuarioRepository,
                 inscripcionRepository, arbitroTorneoRepository);
 
+        // EN_CURSO: impugnar exige que el torneo siga abierto, porque
+        // resolver la disputa pasa por el motor de partidas, que lo exige.
         torneo = Torneo.builder().id(7L)
                 .organizador(Usuario.builder().id(1L).correo(ORGANIZADOR).build())
-                .estado(EstadoTorneo.FINALIZADO)
+                .estado(EstadoTorneo.EN_CURSO)
                 .build();
         equipoA = Equipo.builder().id(10L).nombre("Azules").build();
         equipoB = Equipo.builder().id(20L).nombre("Rojos").build();
@@ -202,5 +204,18 @@ class DisputaServiceImplTest {
         Partida p = partidaFinalizadaHaceHoras(1);
         service.impugnar(200L, CAPITAN_A, false, request());
         assertThat(p.getEstado()).isEqualTo(EstadoPartida.EN_DISPUTA);
+    }
+
+    @Test
+    void no_se_puede_impugnar_si_el_torneo_ya_finalizo() {
+        // Sin este corte, impugnar la final dentro del plazo dejaba la
+        // disputa sin nadie que pudiera cerrarla: resolver exige que el
+        // torneo siga EN_CURSO, pero el campeon ya estaba coronado.
+        torneo.setEstado(EstadoTorneo.FINALIZADO);
+        partidaFinalizadaHaceHoras(1);
+
+        assertThatThrownBy(() -> service.impugnar(200L, CAPITAN_A, false, request()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("en curso");
     }
 }

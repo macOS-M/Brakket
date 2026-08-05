@@ -10,6 +10,7 @@ import com.coffeecommits.brakket.dispute.dto.ImpugnarResultadoRequest;
 import com.coffeecommits.brakket.dispute.model.Disputa;
 import com.coffeecommits.brakket.dispute.repository.DisputaRepository;
 import com.coffeecommits.brakket.tournament.model.EstadoPartida;
+import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
@@ -71,6 +72,14 @@ public class DisputaServiceImpl implements DisputaService {
         }
         if (partida.getEstado() != EstadoPartida.FINALIZADA) {
             throw new BusinessException("Solo se puede impugnar un resultado ya finalizado");
+        }
+        // El torneo tiene que seguir EN_CURSO: resolver una disputa pasa por
+        // el motor de partidas, que exige exactamente eso. Sin este corte se
+        // puede impugnar la final de un torneo ya FINALIZADO y la disputa
+        // queda sin nadie que pueda cerrarla, con el campeon ya coronado.
+        if (partida.getTorneo().getEstado() != EstadoTorneo.EN_CURSO) {
+            throw new BusinessException(
+                    "Solo se puede impugnar mientras el torneo sigue en curso");
         }
 
         // Partidas de antes de RF-30 no tienen fecha guardada: sin forma
