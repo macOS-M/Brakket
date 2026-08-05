@@ -12,8 +12,10 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Partida } from '../../../../models/tournament.model';
+import { ImpugnarResultadoRequest } from '../../../../models/disputa.model';
 import { RegistrarCasoEspecialRequest, TipoCasoEspecial } from '../../../../models/caso-especial.model';
 import { TournamentsService } from '../../services/tournaments.service';
+
 interface Ronda {
   numero: number;
   etiqueta: string;
@@ -62,6 +64,12 @@ export interface MarcadorEvent {
   resolucion: boolean;
 }
 
+/** Impugnación de un resultado ya finalizado (RF-30). */
+export interface ImpugnarEvent {
+  partida: Partida;
+  request: ImpugnarResultadoRequest;
+}
+
 /** Descanso, avance automático o abandono sobre una partida (RF-28). */
 export interface CasoEspecialEvent {
   partida: Partida;
@@ -106,10 +114,10 @@ export class TournamentBracketComponent {
   readonly puedeCasoEspecial = input(false);
   readonly enCurso = input(false);
   readonly ocupado = input(false);
-
   readonly enviarMarcador = output<MarcadorEvent>();
   readonly confirmar = output<Partida>();
   readonly rechazar = output<Partida>();
+  readonly impugnar = output<ImpugnarEvent>();
   readonly casoEspecialRegistrado = output<void>();
 
   /** Partida con el formulario de marcador abierto. */
@@ -117,6 +125,15 @@ export class TournamentBracketComponent {
   readonly marcadorA = signal(0);
   readonly marcadorB = signal(0);
   readonly errorLocal = signal<string | null>(null);
+
+  // ---------- RF-30: impugnar un resultado finalizado ----------
+
+  /** Partida con el formulario de impugnación abierto. */
+  readonly impugnando = signal<number | null>(null);
+  readonly motivoImpugnar = signal('');
+  readonly descripcionImpugnar = signal('');
+  readonly evidenciaImpugnar = signal('');
+  readonly errorImpugnar = signal<string | null>(null);
 
   // ---------- RF-28: descansos, avances y abandonos ----------
 
@@ -371,6 +388,7 @@ export class TournamentBracketComponent {
       this.partidas();
       this.maxEquipos();
       this.reportando();
+      this.impugnando();
       this.registrandoCaso();
       this.recienActualizadas();
       this.programarMedicion();
@@ -539,12 +557,53 @@ export class TournamentBracketComponent {
     const rival = p.reportadoPorEquipoId === p.equipoAId ? p.equipoBId : p.equipoAId;
     return this.soyCapitanDe(rival);
   }
-
   /** El gestor destraba cualquier partida activa (rival ausente, disputa…). */
   puedeResolver(p: Partida): boolean {
     return this.enCurso() && this.esGestor() && !p.bye
       && p.equipoAId !== null && p.equipoBId !== null
       && (p.estado === 'PENDIENTE' || p.estado === 'REPORTADA' || p.estado === 'EN_DISPUTA');
+  }
+
+  /**
+   * Capitán de cualquiera de los 2 equipos, organizador o admin, sobre un
+   * resultado ya cerrado. El plazo de 48h lo valida el backend; si venció,
+   * el error se muestra igual que cualquier otro rechazo del servidor.
+   */
+  puedeImpugnar(p: Partida): boolean {
+    return p.estado === 'FINALIZADA' && !p.bye
+      && p.equipoAId !== null && p.equipoBId !== null
+      && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId) || this.esGestor());
+  }
+
+  abrirImpugnar(p: Partida): void {
+    this.impugnando.set(p.id);
+    this.motivoImpugnar.set('');
+    this.descripcionImpugnar.set('');
+    this.evidenciaImpugnar.set('');
+    this.errorImpugnar.set(null);
+  }
+
+  cerrarImpugnar(): void {
+    this.impugnando.set(null);
+  }
+
+  enviarImpugnar(p: Partida): void {
+    const motivo = this.motivoImpugnar().trim();
+    const descripcion = this.descripcionImpugnar().trim();
+    if (!motivo || !descripcion) {
+      this.errorImpugnar.set('Motivo y descripción son obligatorios.');
+      return;
+    }
+    this.errorImpugnar.set(null);
+    this.impugnar.emit({
+      partida: p,
+      request: {
+        motivo,
+        descripcion,
+        evidenciaUrl: this.evidenciaImpugnar().trim() || null
+      }
+    });
+    this.impugnando.set(null);
   }
 
   /** Organizador o árbitro, sobre una partida con ambos rivales ya definidos. */
@@ -606,6 +665,7 @@ export class TournamentBracketComponent {
       }
     });
   }
+
   abrirMarcador(p: Partida): void {
     this.reportando.set(p.id);
     this.marcadorA.set(p.marcadorA ?? 0);

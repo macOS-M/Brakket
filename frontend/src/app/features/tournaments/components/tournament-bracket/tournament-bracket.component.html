@@ -92,6 +92,45 @@
         <button type="button" class="btn-secondary" (click)="cerrarMarcador()">Cancelar</button>
       </div>
     </div>
+    } @else if (impugnando() === p.id) {
+    <div class="marcador-form impugnar-form">
+      <label class="impugnar-campo">
+        <span>Motivo</span>
+        <input
+          type="text"
+          maxlength="500"
+          [value]="motivoImpugnar()"
+          (input)="motivoImpugnar.set($any($event.target).value)"
+        />
+      </label>
+      <label class="impugnar-campo">
+        <span>Descripción</span>
+        <textarea
+          rows="3"
+          maxlength="1000"
+          [value]="descripcionImpugnar()"
+          (input)="descripcionImpugnar.set($any($event.target).value)"
+        ></textarea>
+      </label>
+      <label class="impugnar-campo">
+        <span>Evidencia, URL (opcional)</span>
+        <input
+          type="text"
+          maxlength="500"
+          [value]="evidenciaImpugnar()"
+          (input)="evidenciaImpugnar.set($any($event.target).value)"
+        />
+      </label>
+      @if (errorImpugnar()) {
+      <p class="mensaje-error" role="alert">{{ errorImpugnar() }}</p>
+      }
+      <div class="marcador-acciones">
+        <button type="button" class="btn-primary" [disabled]="ocupado()" (click)="enviarImpugnar(p)">
+          {{ ocupado() ? 'Enviando…' : 'Impugnar' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="cerrarImpugnar()">Cancelar</button>
+      </div>
+    </div>
     } @else if (registrandoCaso() === p.id) {
     <div class="marcador-form caso-especial-form">
       <label class="caso-campo">
@@ -180,6 +219,11 @@
       @if (puedeResolver(p) && !puedeReportar(p) && !puedeConfirmar(p)) {
       <button type="button" class="btn-secondary" (click)="abrirMarcador(p)">
         Resolver (organizador)
+      </button>
+      }
+      @if (puedeImpugnar(p)) {
+      <button type="button" class="btn-secondary" (click)="abrirImpugnar(p)">
+        Impugnar resultado
       </button>
       }
       @if (puedeRegistrarCaso(p)) {

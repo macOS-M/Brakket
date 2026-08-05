@@ -46,7 +46,7 @@ public class TorneoServiceImpl implements TorneoService {
     private final TemporadaRepository temporadaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PerfilCompetitivoRepository perfilCompetitivoRepository;
-    // RF-28: para exponer al frontend quiénes son árbitros de cada torneo.
+    // RF-28/RF-30: para exponer si el usuario autenticado es árbitro de cada torneo.
     private final ArbitroTorneoRepository arbitroTorneoRepository;
 
     public TorneoServiceImpl(TorneoRepository torneoRepository,
@@ -64,7 +64,6 @@ public class TorneoServiceImpl implements TorneoService {
         this.perfilCompetitivoRepository = perfilCompetitivoRepository;
         this.arbitroTorneoRepository = arbitroTorneoRepository;
     }
-
     @Override
     @Transactional
     public TorneoResponse crearTorneo(String correo, boolean esAdmin, CrearTorneoRequest request) {
@@ -297,7 +296,7 @@ public class TorneoServiceImpl implements TorneoService {
                                         m.getRol()))
                                 .toList()))
                 .toList();
-        // RF-28: ya calculado en el backend (no se manda la lista completa
+        // RF-28/RF-30: ya calculado en el backend (no se manda la lista completa
         // de árbitros a cualquier visitante del torneo, solo el booleano).
         boolean esArbitro = correoOpcional != null && usuarioRepository.findByCorreo(correoOpcional)
                 .map(u -> arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
