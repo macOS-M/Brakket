@@ -85,6 +85,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/players/*/historial-equipos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/*/equipos-elegibles").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/mios").authenticated()
+                        // RF-28: el historial de casos especiales no es público;
+                        // el @PreAuthorize del controller no debe ser la única capa.
+                        .requestMatchers(HttpMethod.GET, "/api/tournaments/partidas/*/casos-especiales").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // RF-35: ver los directos no exige sesión, como el catálogo.
                         .requestMatchers(HttpMethod.GET, "/api/transmisiones").permitAll()

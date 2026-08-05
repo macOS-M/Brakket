@@ -237,6 +237,24 @@
 
 .marcador-form { margin-top: 10px; }
 
+.caso-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+
+  select, textarea, input {
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font: inherit;
+  }
+}
+
 .marcador-campo {
   display: flex;
   align-items: center;
