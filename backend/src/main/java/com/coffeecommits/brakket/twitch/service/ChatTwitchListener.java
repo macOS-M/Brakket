@@ -41,6 +41,13 @@ public  class ChatTwitchListener {
 
     private volatile WebSocket webSocket;
 
+    /**
+     * false apenas la conexion se cae. El muestreador lo consulta para
+     * reconectar: sin esto seguiria guardando ventanas de cero mensajes como
+     * si el chat estuviera mudo, en vez de volver a conectarse.
+     */
+    private volatile boolean conectado;
+
     public void conectar(String canal) {
         String login = canal.trim().toLowerCase(Locale.ROOT).replace("#", "");
         // Cerrar la conexion anterior antes de abrir otra: si no, quedan dos
@@ -54,7 +61,13 @@ public  class ChatTwitchListener {
         int sufijo = ThreadLocalRandom.current().nextInt(10_000, 99_999);
         webSocket.sendText("NICK justinfan" + sufijo + "\r\n", true);
         webSocket.sendText("JOIN #" + login + "\r\n", true);
+        conectado = true;
         log.info("Conectado al chat de #{}", login);
+    }
+
+    /** false si nunca se conecto o si la conexion se cayo. */
+    public boolean estaConectado() {
+        return conectado;
     }
 
     /**
@@ -64,6 +77,7 @@ public  class ChatTwitchListener {
     public void desconectar() {
         WebSocket actual = webSocket;
         webSocket = null;
+        conectado = false;
         if (actual != null) {
             try {
                 actual.sendClose(WebSocket.NORMAL_CLOSURE, "cambio de canal");
@@ -140,8 +154,27 @@ public  class ChatTwitchListener {
         }
 
         @Override
-        public void onError(WebSocket ws, Throwable error) {
-            log.warn("Error en el WebSocket del chat: {}", error.getMessage());
+        public CompletionStage<?> onClose(WebSocket ws, int codigo, String motivo) {
+            marcarCaida(ws, "cerrado por el servidor (" + codigo + " " + motivo + ")");
+            return null;
         }
+
+        @Override
+        public void onError(WebSocket ws, Throwable error) {
+            marcarCaida(ws, error.getMessage());
+        }
+    }
+
+    /**
+     * Marca la caida solo si el evento viene del socket vigente: al cambiar de
+     * canal cerramos el anterior a proposito, y su onClose no debe pisar el
+     * estado de la conexion nueva.
+     */
+    private void marcarCaida(WebSocket ws, String motivo) {
+        if (ws != webSocket) {
+            return;
+        }
+        conectado = false;
+        log.warn("Conexion con el chat de Twitch caida: {}. Se reintenta en el proximo tick.", motivo);
     }
 }

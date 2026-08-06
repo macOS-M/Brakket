@@ -19,6 +19,7 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
      */
     @Query("""
             select t from TransmisionTwitch t left join fetch t.canal
-            where t.activa = true and t.finalizadaEn is null""")
+            where t.activa = true and t.finalizadaEn is null
+            order by t.id""")
     List<TransmisionTwitch> findAbiertasParaMuestreo();
 }

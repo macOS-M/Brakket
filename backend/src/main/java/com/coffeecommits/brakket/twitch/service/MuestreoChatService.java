@@ -14,7 +14,6 @@ import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
 import com.coffeecommits.brakket.twitch.repository.MetricaChatRepository;
 import com.coffeecommits.brakket.twitch.repository.TransmisionTwitchRepository;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
  * se persisten los agregados (RNF de datos personales).</p>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class MuestreoChatService {
 
@@ -35,8 +33,17 @@ public class MuestreoChatService {
     private final MetricaChatRepository metricaChatRepository;
 
     /** Se necesita para convertir el conteo de la ventana a tasa por minuto. */
-    @Value("${brakket.streams.muestreo-intervalo-ms:60000}")
-    private long intervaloMs;
+    private final long intervaloMs;
+
+    public MuestreoChatService(ChatTwitchListener listener,
+                               TransmisionTwitchRepository transmisionRepository,
+                               MetricaChatRepository metricaChatRepository,
+                               @Value("${brakket.streams.muestreo-intervalo-ms:60000}") long intervaloMs) {
+        this.listener = listener;
+        this.transmisionRepository = transmisionRepository;
+        this.metricaChatRepository = metricaChatRepository;
+        this.intervaloMs = intervaloMs;
+    }
 
     /** Canal al que ya estamos conectados; null si todavia no hay conexion. */
     private volatile String canalConectado;
@@ -45,6 +52,10 @@ public class MuestreoChatService {
             initialDelayString = "${brakket.streams.muestreo-espera-inicial-ms:15000}")
     @Transactional
     public void muestrear() {
+        // Hoy se captura una sola transmision a la vez. La consulta esta
+        // ordenada por id para que la eleccion sea estable entre ticks: sin
+        // orden, con dos transmisiones abiertas el listener podria alternar
+        // entre canales y tirar la ventana en cada cambio.
         TransmisionTwitch transmision = transmisionRepository.findAbiertasParaMuestreo().stream()
                 .filter(t -> t.getPlataforma() == PlataformaTransmision.TWITCH)
                 .filter(t -> login(t) != null)
@@ -55,14 +66,20 @@ public class MuestreoChatService {
         }
         String canal = login(transmision);
 
-        if (!canal.equals(canalConectado)) {
+        // Reconecta si cambio el canal o si la conexion se cayo. Sin lo segundo
+        // el muestreo seguiria guardando ventanas de cero mensajes como si el
+        // chat estuviera mudo, que es peor que no guardar nada.
+        if (!canal.equals(canalConectado) || !listener.estaConectado()) {
             try {
                 listener.conectar(canal);
                 canalConectado = canal;
                 log.info("Chat de #{}: conectado. La primera ventana se lee en el proximo tick.", canal);
             } catch (Exception ex) {
+                canalConectado = null;
                 log.warn("No se pudo conectar al chat de #{}: {}", canal, ex.getMessage());
             }
+            // Este tick no escribe muestra: el ERS prohibe inventar valores y
+            // la ventana que acaba de empezar no cubre el intervalo completo.
             return;
         }
 
