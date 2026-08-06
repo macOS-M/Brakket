@@ -27,6 +27,11 @@
         <p class="descripcion">{{ p.condiciones }}</p>
         }
       </div>
+      <div class="acciones">
+        <a class="btn-icono" [routerLink]="['/sponsorships/asociaciones', p.id, 'espacios']" title="Gestionar espacios">
+          ⚙ Espacios
+        </a>
+      </div>
     </div>
     }
   </div>
