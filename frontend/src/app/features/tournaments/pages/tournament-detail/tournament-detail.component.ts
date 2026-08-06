@@ -136,6 +136,11 @@ export class TournamentDetailComponent {
     return !!t && !!usuario?.id && Number(usuario.id) === t.organizadorId;
   });
 
+// Árbitro asignado a este torneo puntual (no es un rol global). Ya
+// viene calculado del backend, así no exponemos la lista completa de
+// árbitros del torneo a cualquier visitante.
+  readonly esArbitro = computed(() => this.detalle()?.esArbitro ?? false);
+
   readonly puedeEliminar = computed(
     () => this.esOrganizador() || this.auth.hasRole('ADMIN')
   );
@@ -144,12 +149,6 @@ export class TournamentDetailComponent {
   readonly esModeracion = computed(() => this.puedeEliminar() && !this.esOrganizador());
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
-
-// Árbitro asignado a este torneo puntual (no es un rol global). Ya
-// viene calculado del backend, así no exponemos la lista completa de
-// árbitros del torneo a cualquier visitante.
-  readonly esArbitro = computed(() => this.detalle()?.esArbitro ?? false);
-
 // RF-28: quién puede reportar descansos/avances/abandonos.
   readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
 

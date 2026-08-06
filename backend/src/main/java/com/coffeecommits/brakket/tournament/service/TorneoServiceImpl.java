@@ -46,7 +46,7 @@ public class TorneoServiceImpl implements TorneoService {
     private final TemporadaRepository temporadaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PerfilCompetitivoRepository perfilCompetitivoRepository;
-    // RF-30: para exponer si el usuario autenticado es árbitro de cada torneo.
+    // RF-28/RF-30: para exponer si el usuario autenticado es árbitro de cada torneo.
     private final ArbitroTorneoRepository arbitroTorneoRepository;
 
     public TorneoServiceImpl(TorneoRepository torneoRepository,
@@ -177,7 +177,6 @@ public class TorneoServiceImpl implements TorneoService {
         Torneo torneo = buscarVisible(torneoId, correoOpcional, esAdmin);
         return detalleDe(torneo, correoOpcional);
     }
-
     @Override
     @Transactional
     public TorneoDetalleResponse inscribirEquipo(Long torneoId, String correo, Long equipoId,
@@ -216,7 +215,6 @@ public class TorneoServiceImpl implements TorneoService {
                     "El torneo es %dv%d y el equipo tiene %d jugador(es) activo(s)"
                             .formatted(torneo.getTamanoEquipo(), torneo.getTamanoEquipo(), plantilla));
         }
-
         inscripcionRepository.save(Inscripcion.builder()
                 .torneo(torneo)
                 .equipo(equipo)
@@ -226,7 +224,6 @@ public class TorneoServiceImpl implements TorneoService {
                 .build());
         return detalleDe(torneo, correo);
     }
-
     @Override
     @Transactional(readOnly = true)
     public List<EquipoElegibleResponse> equiposElegibles(Long torneoId, String correo) {
@@ -283,6 +280,7 @@ public class TorneoServiceImpl implements TorneoService {
         }
         return torneo;
     }
+
     private TorneoDetalleResponse detalleDe(Torneo torneo, String correoOpcional) {
         List<EquipoInscritoResponse> equipos = inscripcionRepository.findByTorneoId(torneo.getId()).stream()
                 .filter(i -> !INSCRIPCION_CERRADA.contains(i.getEstado()))
@@ -298,7 +296,7 @@ public class TorneoServiceImpl implements TorneoService {
                                         m.getRol()))
                                 .toList()))
                 .toList();
-        // RF-30: ya calculado en el backend (no se manda la lista completa
+        // RF-28/RF-30: ya calculado en el backend (no se manda la lista completa
         // de árbitros a cualquier visitante del torneo, solo el booleano).
         boolean esArbitro = correoOpcional != null && usuarioRepository.findByCorreo(correoOpcional)
                 .map(u -> arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
@@ -306,7 +304,6 @@ public class TorneoServiceImpl implements TorneoService {
                 .orElse(false);
         return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos, esArbitro);
     }
-
     private Usuario buscarUsuario(String correo) {
         return usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
