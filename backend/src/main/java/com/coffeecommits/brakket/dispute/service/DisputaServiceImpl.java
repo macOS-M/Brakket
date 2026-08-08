@@ -170,11 +170,18 @@ public class DisputaServiceImpl implements DisputaService {
         if (esAdmin) {
             return;
         }
+        boolean hayArbitros = !arbitroTorneoRepository.findByTorneoId(torneo.getId()).isEmpty();
         boolean esArbitro = arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
                 .anyMatch(a -> a.getUsuario().getId().equals(usuario.getId()));
-        boolean esComisionado = torneo.getTemporada() != null
+        boolean hayComisionado = torneo.getTemporada() != null;
+        boolean esComisionado = hayComisionado
                 && torneo.getTemporada().getLiga().getComisionado().getId().equals(usuario.getId());
-        if (!esArbitro && !esComisionado) {
+        // Ultimo recurso: el RF prefiere que el organizador no falle sus propios
+        // casos, pero un torneo suelto (sin liga y sin arbitros) no tiene a nadie
+        // mas. Sin esta salida la disputa quedaba trabada para siempre.
+        boolean esOrganizadorDeUltimoRecurso = !hayArbitros && !hayComisionado
+                && torneo.getOrganizador().getId().equals(usuario.getId());
+        if (!esArbitro && !esComisionado && !esOrganizadorDeUltimoRecurso) {
             throw new ForbiddenException(
                     "Solo un arbitro del torneo, el comisionado de su liga o un admin pueden resolver la disputa");
         }

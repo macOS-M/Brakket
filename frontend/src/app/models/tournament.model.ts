@@ -50,6 +50,10 @@ export interface TorneoDetalle {
   torneo: Torneo;
   equipos: EquipoInscrito[];
   esArbitro: boolean;
+  esComisionado: boolean;
+  /** RF-32: el backend ya resolvió quién puede cerrar cada caso. */
+  puedeResolverDisputa: boolean;
+  puedeResolverApelacion: boolean;
 }
 
 export interface EquipoElegible {

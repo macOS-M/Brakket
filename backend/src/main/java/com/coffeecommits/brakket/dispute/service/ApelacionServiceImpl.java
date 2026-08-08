@@ -129,7 +129,7 @@ public class ApelacionServiceImpl implements ApelacionService {
         if (!"PENDIENTE".equals(apelacion.getEstado())) {
             throw new BusinessException("Esta apelacion ya fue resuelta");
         }
-        exigirComisionado(torneo, usuario, esAdmin);
+        exigirComisionado(torneo, usuario, esAdmin, disputa);
 
         // El comisionado puede confirmar lo que decidió el árbitro
         // (equipoGanadorId null) o corregirlo una vez más.
@@ -164,16 +164,28 @@ public class ApelacionServiceImpl implements ApelacionService {
     }
 
     /**
-     * La apelación escala por encima del árbitro: solo el comisionado de
-     * la liga, o un admin si el torneo no tiene liga/comisionado.
+     * La apelación escala por encima del árbitro: el comisionado de la liga o
+     * un admin.
+     *
+     * <p>Último recurso: en un torneo sin liga no hay comisionado, y sin esta
+     * salida la apelación quedaba sin nadie que pudiera cerrarla. Entra el
+     * organizador — pero <b>no</b> si fue él quien resolvió la disputa: revisar
+     * su propia decisión vaciaría de sentido la apelación, que existe
+     * justamente para que la mire alguien más. En ese caso queda para un
+     * admin.</p>
      */
-    private void exigirComisionado(Torneo torneo, Usuario usuario, boolean esAdmin) {
+    private void exigirComisionado(Torneo torneo, Usuario usuario, boolean esAdmin, Disputa disputa) {
         if (esAdmin) {
             return;
         }
-        boolean esComisionado = torneo.getTemporada() != null
+        boolean hayComisionado = torneo.getTemporada() != null;
+        boolean esComisionado = hayComisionado
                 && torneo.getTemporada().getLiga().getComisionado().getId().equals(usuario.getId());
-        if (!esComisionado) {
+        boolean resolvioLaDisputa = disputa.getResueltaPor() != null
+                && Objects.equals(disputa.getResueltaPor().getId(), usuario.getId());
+        boolean esOrganizadorDeUltimoRecurso = !hayComisionado && !resolvioLaDisputa
+                && torneo.getOrganizador().getId().equals(usuario.getId());
+        if (!esComisionado && !esOrganizadorDeUltimoRecurso) {
             throw new ForbiddenException(
                     "Solo el comisionado de la liga o un admin pueden resolver la apelacion");
         }

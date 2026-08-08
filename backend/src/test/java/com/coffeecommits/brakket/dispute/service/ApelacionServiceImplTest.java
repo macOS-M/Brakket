@@ -61,6 +61,7 @@ class ApelacionServiceImplTest {
     private static final String COMISIONADO = "comisionado@brakket.gg";
     private static final String ARBITRO_QUE_RESOLVIO = "arbitro@brakket.gg";
     private static final String AJENO = "ajeno@brakket.gg";
+    private static final String ORGANIZADOR = "orga@brakket.gg";
 
     private Usuario resueltaPor;
     private Disputa disputa;
@@ -140,6 +141,60 @@ class ApelacionServiceImplTest {
     @Test
     void un_ajeno_a_la_partida_no_puede_apelar() {
         assertThatThrownBy(() -> service.apelar(100L, AJENO, false, request()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    // ---------- ultimo recurso: torneo sin liga (RF-32, A3) ----------
+
+    /** Deja el torneo sin temporada: sin liga no hay comisionado. */
+    private void torneoSinLiga() {
+        disputa.getPartida().getTorneo().setTemporada(null);
+    }
+
+    private Apelacion apelacionPendiente() {
+        Apelacion apelacion = Apelacion.builder().id(300L).disputa(disputa)
+                .estado("PENDIENTE").fechaCreacion(LocalDateTime.now()).build();
+        lenient().when(apelacionRepository.findById(300L)).thenReturn(Optional.of(apelacion));
+        return apelacion;
+    }
+
+    @Test
+    void sin_comisionado_el_organizador_resuelve_la_apelacion_como_ultimo_recurso() {
+        torneoSinLiga();
+        apelacionPendiente();
+        when(usuarioRepository.findByCorreo(ORGANIZADOR))
+                .thenReturn(Optional.of(disputa.getPartida().getTorneo().getOrganizador()));
+
+        ApelacionResponse resp = service.resolver(300L, ORGANIZADOR, false,
+                new ResolverApelacionRequest("Se mantiene el resultado", null));
+
+        assertThat(resp.estado()).isEqualTo("RESUELTA");
+    }
+
+    @Test
+    void el_organizador_no_resuelve_la_apelacion_si_el_mismo_resolvio_la_disputa() {
+        torneoSinLiga();
+        Usuario organizador = disputa.getPartida().getTorneo().getOrganizador();
+        // Fue el ultimo recurso al resolver la disputa: revisar su propia
+        // decision vaciaria de sentido la apelacion. Queda para un admin.
+        disputa.setResueltaPor(organizador);
+        apelacionPendiente();
+        when(usuarioRepository.findByCorreo(ORGANIZADOR)).thenReturn(Optional.of(organizador));
+
+        assertThatThrownBy(() -> service.resolver(300L, ORGANIZADOR, false,
+                new ResolverApelacionRequest("Insisto", null)))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining("comisionado");
+    }
+
+    @Test
+    void con_comisionado_el_organizador_sigue_sin_poder_resolver_la_apelacion() {
+        apelacionPendiente(); // el torneo conserva su liga
+        when(usuarioRepository.findByCorreo(ORGANIZADOR))
+                .thenReturn(Optional.of(disputa.getPartida().getTorneo().getOrganizador()));
+
+        assertThatThrownBy(() -> service.resolver(300L, ORGANIZADOR, false,
+                new ResolverApelacionRequest("Quiero cerrarla yo", null)))
                 .isInstanceOf(ForbiddenException.class);
     }
 
