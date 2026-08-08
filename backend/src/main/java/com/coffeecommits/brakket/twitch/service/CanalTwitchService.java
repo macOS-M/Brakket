@@ -1,5 +1,12 @@
 package com.coffeecommits.brakket.twitch.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.config.TwitchProperties;
@@ -7,14 +14,21 @@ import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
-import com.coffeecommits.brakket.twitch.dto.*;
-import com.coffeecommits.brakket.twitch.model.*;
-import com.coffeecommits.brakket.twitch.repository.*;
+import com.coffeecommits.brakket.twitch.dto.AsociarTransmisionRequest;
+import com.coffeecommits.brakket.twitch.dto.CanalTwitchResponse;
+import com.coffeecommits.brakket.twitch.dto.ConfigurarCanalTwitchRequest;
+import com.coffeecommits.brakket.twitch.dto.MetricasTransmisionResponse;
+import com.coffeecommits.brakket.twitch.dto.TransmisionTwitchResponse;
+import com.coffeecommits.brakket.twitch.model.CanalOficialTwitch;
+import com.coffeecommits.brakket.twitch.model.EstadoIntegracionTwitch;
+import com.coffeecommits.brakket.twitch.model.IncidenteIntegracionTwitch;
+import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
+import com.coffeecommits.brakket.twitch.repository.CanalOficialTwitchRepository;
+import com.coffeecommits.brakket.twitch.repository.IncidenteIntegracionTwitchRepository;
+import com.coffeecommits.brakket.twitch.repository.MetricaAudienciaRepository;
+import com.coffeecommits.brakket.twitch.repository.TransmisionTwitchRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -119,6 +133,18 @@ public class CanalTwitchService {
                     .tipo("CONEXION").detalle(ex.getMessage()).ocurridoEn(LocalDateTime.now()).build());
             return response(canal);
         }
+    }
+
+    /** RF-34: transmisiones con periodo de captura abierto (las que el muestreo sigue). */
+    @Transactional(readOnly = true)
+    public List<TransmisionTwitchResponse> listarAbiertas() {
+        return transmisionRepository.findAbiertasParaMuestreo().stream()
+                .map(t -> new TransmisionTwitchResponse(
+                        t.getId(), t.getTwitchStreamId(),
+                        t.getTorneo() == null ? null : t.getTorneo().getId(),
+                        t.getPartida() == null ? null : t.getPartida().getId(),
+                        t.getEstado(), t.getIniciadaEn()))
+                .toList();
     }
 
     /**
