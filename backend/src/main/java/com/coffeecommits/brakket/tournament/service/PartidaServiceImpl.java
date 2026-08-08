@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-
-
 import com.coffeecommits.brakket.tournament.dto.CasoEspecialResponse;
 import com.coffeecommits.brakket.tournament.dto.RegistrarCasoEspecialRequest;
 import com.coffeecommits.brakket.tournament.model.CasoEspecialPartida;
@@ -118,9 +116,9 @@ public class PartidaServiceImpl implements PartidaService {
         Set<Long> misEquipos = correoOpcional == null
                 ? Set.of()
                 : usuarioRepository.findByCorreo(correoOpcional)
-                        .map(u -> Set.copyOf(
-                                inscripcionRepository.equiposCapitaneadosEnTorneo(u.getId(), torneoId)))
-                        .orElse(Set.of());
+                .map(u -> Set.copyOf(
+                        inscripcionRepository.equiposCapitaneadosEnTorneo(u.getId(), torneoId)))
+                .orElse(Set.of());
         return partidaRepository.findByTorneoIdOrderByRondaAscOrdenAsc(torneoId).stream()
                 .map(p -> PartidaResponse.from(p, participaEn(p, misEquipos)))
                 .toList();
@@ -272,9 +270,6 @@ public class PartidaServiceImpl implements PartidaService {
                 .map(CasoEspecialResponse::fromEntity)
                 .toList();
     }
-
-
-
 
     // ---------- generación por formato ----------
 
@@ -933,6 +928,60 @@ public class PartidaServiceImpl implements PartidaService {
         if (!esAdmin && !esOrganizador(torneo, correo)) {
             throw new ForbiddenException(mensaje);
         }
+    }
+
+    @Override
+    @Transactional
+    public PartidaResponse finalizarPorResolucionDeDisputa(Long partidaId, Long equipoGanadorId) {
+        Partida partida = partidaRepository.bloquearPorId(partidaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Partida", partidaId));
+        if (partida.getEstado() != EstadoPartida.EN_DISPUTA) {
+            throw new BusinessException("Esta partida no tiene una disputa activa");
+        }
+
+        Long ganadorActualId = idDe(partida.getGanador());
+        if (equipoGanadorId == null || equipoGanadorId.equals(ganadorActualId)) {
+            // Mantener: se re-finaliza con el mismo marcador que ya tenía.
+            finalizar(partida, partida.getMarcadorA(), partida.getMarcadorB());
+            return PartidaResponse.from(partida);
+        }
+
+        // Revertir: solo si la llave todavía no avanzó más allá de este
+        // cruce con base en el resultado original.
+        exigirReversionSegura(partida);
+
+        Equipo nuevoGanador;
+        if (equipoGanadorId.equals(idDe(partida.getEquipoA()))) {
+            nuevoGanador = partida.getEquipoA();
+        } else if (equipoGanadorId.equals(idDe(partida.getEquipoB()))) {
+            nuevoGanador = partida.getEquipoB();
+        } else {
+            throw new BusinessException("El equipo ganador no pertenece a esta partida");
+        }
+
+        // Marcador simbólico: mismo criterio que ya usa el resto del
+        // sistema para un avance sin marcador real.
+        boolean ganaA = nuevoGanador.getId().equals(idDe(partida.getEquipoA()));
+        partida.setMarcadorA(ganaA ? 1 : 0);
+        partida.setMarcadorB(ganaA ? 0 : 1);
+        finalizar(partida, partida.getMarcadorA(), partida.getMarcadorB());
+        return PartidaResponse.from(partida);
+    }
+
+    private void exigirReversionSegura(Partida partida) {
+        if (avanzoMasAlla(partida.getSiguiente()) || avanzoMasAlla(partida.getPerdedorSiguiente())) {
+            throw new BusinessException(
+                    "No se puede revertir: la llave ya avanzó con base en el resultado original");
+        }
+    }
+
+    /** true si ya se jugó o se está jugando el cruce que recibió el avance. */
+    private boolean avanzoMasAlla(Partida destino) {
+        return destino != null && destino.getEstado() != EstadoPartida.PENDIENTE;
+    }
+
+    private static Long idDe(Equipo equipo) {
+        return equipo == null ? null : equipo.getId();
     }
 
     // RF-28: version de exigirOrganizador que ademas deja pasar a los

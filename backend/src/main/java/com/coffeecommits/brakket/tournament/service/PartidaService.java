@@ -42,4 +42,12 @@ public interface PartidaService {
     /** RF-28: historial de descansos/avances/abandonos de una partida. */
     java.util.List<com.coffeecommits.brakket.tournament.dto.CasoEspecialResponse> historialCasoEspecial(
             Long partidaId, String correo, boolean esAdmin);
+
+    /**
+     * RF-32: tras resolver una disputa, vuelve a fijar el resultado.
+     * equipoGanadorId null = mantener el resultado original; con un ID,
+     * lo revierte a favor de ese equipo (bloqueado si la llave ya avanzó
+     * más allá de este cruce).
+     */
+    PartidaResponse finalizarPorResolucionDeDisputa(Long partidaId, Long equipoGanadorId);
 }

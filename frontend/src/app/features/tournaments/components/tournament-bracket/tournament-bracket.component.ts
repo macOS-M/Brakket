@@ -12,7 +12,15 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Partida } from '../../../../models/tournament.model';
-import { DisputaResponse, ImpugnarResultadoRequest } from '../../../../models/disputa.model';
+import {
+  ApelacionResponse,
+  ApelarRequest,
+  DecisionDisputa,
+  DisputaResponse,
+  ImpugnarResultadoRequest,
+  ResolverApelacionRequest,
+  ResolverDisputaRequest
+} from '../../../../models/disputa.model';
 import { RegistrarCasoEspecialRequest, TipoCasoEspecial } from '../../../../models/caso-especial.model';
 import { EvidenciaResponse } from '../../../../models/evidencia.model';
 import { TournamentsService } from '../../services/tournaments.service';
@@ -123,6 +131,8 @@ export class TournamentBracketComponent {
   readonly confirmar = output<Partida>();
   readonly rechazar = output<Partida>();
   readonly impugnar = output<ImpugnarEvent>();
+  /** Cuando resolver una disputa o apelación cambió el resultado de la partida. */
+  readonly disputaResuelta = output<void>();
   readonly casoEspecialRegistrado = output<void>();
 
   /** Partida con el formulario de marcador abierto. */
@@ -140,18 +150,42 @@ export class TournamentBracketComponent {
   readonly evidenciaImpugnar = signal('');
   readonly errorImpugnar = signal<string | null>(null);
 
-  // ---------- RF-31: evidencia de una disputa ----------
+  // ---------- RF-31/32: disputa de una partida (evidencia, resolver, apelar) ----------
 
-  /** Partida cuya evidencia está desplegada (null = ninguna). */
+  /** Partida cuyo panel de disputa está desplegado (null = ninguna). */
   readonly verEvidencia = signal<number | null>(null);
   readonly cargandoEvidencia = signal(false);
-  readonly disputaActivaId = signal<number | null>(null);
+  /** La disputa más reciente de esa partida, sea cual sea su estado. */
+  readonly disputaActual = signal<DisputaResponse | null>(null);
   readonly evidencias = signal<EvidenciaResponse[]>([]);
   readonly errorEvidencia = signal<string | null>(null);
   readonly nuevaEvidenciaUrl = signal('');
   readonly nuevaEvidenciaDescripcion = signal('');
   readonly subiendoArchivo = signal(false);
   readonly enviandoEvidencia = signal(false);
+
+  // RF-32: resolver la disputa.
+  readonly resolviendoDisputa = signal(false);
+  readonly decisionResolver = signal<DecisionDisputa>('MANTENER');
+  readonly justificacionResolver = signal('');
+  readonly sancionResolver = signal('');
+  readonly equipoGanadorResolver = signal<number | null>(null);
+  readonly enviandoResolucion = signal(false);
+  readonly errorResolucion = signal<string | null>(null);
+
+  // RF-32: apelar la resolución.
+  readonly apelacionActual = signal<ApelacionResponse | null>(null);
+  readonly apelando = signal(false);
+  readonly motivoApelar = signal('');
+  readonly enviandoApelacion = signal(false);
+  readonly errorApelacion = signal<string | null>(null);
+
+  // RF-32: el comisionado resuelve la apelación.
+  readonly resolviendoApelacion = signal(false);
+  readonly decisionFinalApelacion = signal('');
+  readonly equipoGanadorApelacion = signal<number | null>(null);
+  readonly enviandoResolucionApelacion = signal(false);
+  readonly errorResolucionApelacion = signal<string | null>(null);
 
   // ---------- RF-28: descansos, avances y abandonos ----------
 
@@ -310,8 +344,6 @@ export class TournamentBracketComponent {
         }
       }
     }
-    // Mismo desempate final que TablaPosiciones del backend (id de equipo):
-    // si difieren, la corona podría dibujarse en otra fila de la tabla.
     return [...filas.values()].sort((a, b) =>
       b.ganadas - a.ganadas
       || b.diferencia - a.diferencia
@@ -356,7 +388,7 @@ export class TournamentBracketComponent {
       return this.granFinal();
     }
     if (this.tipo() === 'LIGA') {
-      return null; // la corona vive en la tabla, no en una partida
+      return null;
     }
     const arbol = this.tipo() === 'GRUPOS'
       ? lista.filter((p) => p.fase === 'ELIMINACION')
@@ -379,8 +411,6 @@ export class TournamentBracketComponent {
   });
 
   constructor() {
-    // Detecta transiciones de estado (para pulso/flash) y la generación
-    // en vivo de la llave (para la cascada). Corre antes del repintado.
     effect(() => {
       const lista = this.partidas();
       const previos = this.estadosPrevios;
@@ -401,13 +431,15 @@ export class TournamentBracketComponent {
       this.estadosPrevios = actuales;
     });
 
-    // Re-mide los rieles cuando cambian los datos que alteran el layout.
     effect(() => {
       this.partidas();
       this.maxEquipos();
       this.reportando();
       this.impugnando();
       this.verEvidencia();
+      this.resolviendoDisputa();
+      this.apelando();
+      this.resolviendoApelacion();
       this.registrandoCaso();
       this.recienActualizadas();
       this.programarMedicion();
@@ -433,11 +465,6 @@ export class TournamentBracketComponent {
     this.observador.observe(nodo);
   }
 
-  /**
-   * Mide cada tarjeta contra el lienzo y traza el codo hasta su cruce de
-   * avance. En la llave real el enlace es el de verdad (siguientePartidaId,
-   * data-nodo="p{id}"); en la tentativa rige el árbol binario (r-o).
-   */
   private medirRieles(): void {
     const lienzo = this.lienzo()?.nativeElement;
     if (!lienzo) {
@@ -552,20 +579,11 @@ export class TournamentBracketComponent {
   }
 
   puedeReportar(p: Partida): boolean {
-    // Ambos rivales definidos: sin esto, la gran final (que espera al
-    // sobreviviente de la inferior) ofrecía reportar y el backend lo
-    // rechazaba con "aún espera rivales".
     return this.enCurso() && p.estado === 'PENDIENTE'
       && p.equipoAId !== null && p.equipoBId !== null
       && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId));
   }
 
-  /**
-   * Confirmar/rechazar es del capitán del equipo que NO reportó. Quien
-   * también capitanea al equipo reportante no puede (el backend lo
-   * rechaza): sin este freno, un capitán de ambos equipos veía un botón
-   * Confirmar que siempre fallaba y tapaba el Resolver del organizador.
-   */
   puedeConfirmar(p: Partida): boolean {
     if (!this.enCurso() || p.estado !== 'REPORTADA' || p.reportadoPorEquipoId === null) {
       return false;
@@ -576,18 +594,13 @@ export class TournamentBracketComponent {
     const rival = p.reportadoPorEquipoId === p.equipoAId ? p.equipoBId : p.equipoAId;
     return this.soyCapitanDe(rival);
   }
-  /** El gestor destraba cualquier partida activa (rival ausente, disputa…). */
+
   puedeResolver(p: Partida): boolean {
     return this.enCurso() && this.esGestor() && !p.bye
       && p.equipoAId !== null && p.equipoBId !== null
       && (p.estado === 'PENDIENTE' || p.estado === 'REPORTADA' || p.estado === 'EN_DISPUTA');
   }
 
-  /**
-   * Capitán de cualquiera de los 2 equipos, organizador o admin, sobre un
-   * resultado ya cerrado. El plazo de 48h lo valida el backend; si venció,
-   * el error se muestra igual que cualquier otro rechazo del servidor.
-   */
   puedeImpugnar(p: Partida): boolean {
     return p.estado === 'FINALIZADA' && !p.bye
       && p.equipoAId !== null && p.equipoBId !== null
@@ -625,13 +638,11 @@ export class TournamentBracketComponent {
     this.impugnando.set(null);
   }
 
-  /** Mismo criterio que impugnar: relacionado con la partida, ya en disputa. */
   puedeVerEvidencia(p: Partida): boolean {
-    return p.estado === 'EN_DISPUTA' && !p.bye
+    return (p.estado === 'EN_DISPUTA' || p.estado === 'FINALIZADA') && !p.bye
       && (this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId) || this.esGestor());
   }
 
-  /** Sube en cada apertura de panel; si una respuesta vieja llega tarde, se descarta. */
   private cargaEvidenciaToken = 0;
 
   toggleEvidencia(p: Partida): void {
@@ -640,49 +651,50 @@ export class TournamentBracketComponent {
       return;
     }
     this.verEvidencia.set(p.id);
-    this.disputaActivaId.set(null);
+    this.disputaActual.set(null);
+    this.apelacionActual.set(null);
     this.evidencias.set([]);
     this.errorEvidencia.set(null);
     this.nuevaEvidenciaUrl.set('');
     this.nuevaEvidenciaDescripcion.set('');
-    this.cargarEvidencia(p.id);
+    this.resolviendoDisputa.set(false);
+    this.apelando.set(false);
+    this.resolviendoApelacion.set(false);
+    this.cargarDisputa(p.id);
   }
 
-  private cargarEvidencia(partidaId: number): void {
+  private cargarDisputa(partidaId: number): void {
     const token = ++this.cargaEvidenciaToken;
     this.cargandoEvidencia.set(true);
     this.tournamentsService.disputasDePartida(partidaId).subscribe({
       next: (disputas: DisputaResponse[]) => {
-        // Si el usuario ya abrió otra partida mientras esta respuesta
-        // viajaba, se descarta: no debe pisar el estado de la nueva.
         if (token !== this.cargaEvidenciaToken) {
           return;
         }
-        // La activa es la más reciente sin resolver; si ya no hay
-        // ninguna, alguien ya la cerró.
-        const activa = disputas.find((d) => d.estado === 'PENDIENTE' || d.estado === 'EN_REVISION');
-        if (!activa) {
-          this.cargandoEvidencia.set(false);
-          this.errorEvidencia.set('Esta disputa ya no está activa.');
+        const ultima = disputas.length ? disputas[disputas.length - 1] : null;
+        this.disputaActual.set(ultima);
+        this.cargandoEvidencia.set(false);
+        if (!ultima) {
           return;
         }
-        this.disputaActivaId.set(activa.id);
-        this.disputesService.listarEvidencias(activa.id).subscribe({
+        this.disputesService.listarEvidencias(ultima.id).subscribe({
           next: (lista) => {
             if (token !== this.cargaEvidenciaToken) {
               return;
             }
             this.evidencias.set(lista);
-            this.cargandoEvidencia.set(false);
           },
           error: (err) => {
             if (token !== this.cargaEvidenciaToken) {
               return;
             }
-            this.cargandoEvidencia.set(false);
             this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la evidencia.');
           }
         });
+
+        if (ultima.estado === 'EN_APELACION' || ultima.estado === 'RESUELTA') {
+          this.cargarApelacion(ultima.id);
+        }
       },
       error: (err) => {
         if (token !== this.cargaEvidenciaToken) {
@@ -694,7 +706,18 @@ export class TournamentBracketComponent {
     });
   }
 
-  /** Organizador o árbitro, sobre una partida con ambos rivales ya definidos. */
+  private cargarApelacion(disputaId: number): void {
+    this.disputesService.listarApelaciones(disputaId).subscribe({
+      next: (lista) => {
+        const activa = lista.find((a) => a.estado === 'PENDIENTE') ?? lista[lista.length - 1] ?? null;
+        this.apelacionActual.set(activa);
+      },
+      error: (err) => this.errorApelacion.set(err?.error?.message ?? 'No se pudo cargar la apelación.')
+    });
+  }
+
+  // ---------- RF-28: descansos, avances y abandonos ----------
+
   puedeRegistrarCaso(p: Partida): boolean {
     return this.enCurso() && this.puedeCasoEspecial() && !p.bye
       && p.equipoAId !== null && p.equipoBId !== null
@@ -718,8 +741,6 @@ export class TournamentBracketComponent {
     const tipo = this.tipoCaso();
     const justificacion = this.justificacionCaso().trim();
 
-    // El backend ya exige justificación solo para abandono; lo repetimos
-    // aquí para no hacerle perder el viaje al usuario con un 400.
     if (tipo === 'ABANDONO' && !justificacion) {
       this.errorCaso.set('El abandono necesita una justificación.');
       return;
@@ -736,9 +757,6 @@ export class TournamentBracketComponent {
       equipoGanadorId: tipo === 'DESCANSO' ? null : this.equipoGanadorCaso()
     };
 
-    // El formulario se queda abierto (con "Enviando…") hasta saber si el
-    // backend aceptó. Si falla, la justificación tecleada no se pierde y
-    // el error aparece aquí mismo, no arriba del bracket.
     this.errorCaso.set(null);
     this.enviandoCaso.set(true);
     this.tournamentsService.registrarCasoEspecial(p.id, request).subscribe({
@@ -754,7 +772,6 @@ export class TournamentBracketComponent {
     });
   }
 
-  /** Sube el archivo elegido y deja la URL lista para guardarla como evidencia. */
   elegirArchivoEvidencia(evento: Event): void {
     const entrada = evento.target as HTMLInputElement;
     const archivo = entrada.files?.[0];
@@ -781,7 +798,7 @@ export class TournamentBracketComponent {
   }
 
   enviarEvidencia(): void {
-    const disputaId = this.disputaActivaId();
+    const disputaId = this.disputaActual()?.id;
     const url = this.nuevaEvidenciaUrl().trim();
     if (!disputaId || !url) {
       this.errorEvidencia.set('Subí una imagen o pegá un enlace antes de guardar.');
@@ -802,6 +819,142 @@ export class TournamentBracketComponent {
       error: (err) => {
         this.enviandoEvidencia.set(false);
         this.errorEvidencia.set(err?.error?.message ?? 'No se pudo guardar la evidencia.');
+      }
+    });
+  }
+
+  // ---------- RF-32: resolver la disputa ----------
+
+  puedeResolverDisputa(): boolean {
+    return this.puedeCasoEspecial();
+  }
+
+  abrirResolverDisputa(): void {
+    this.resolviendoDisputa.set(true);
+    this.decisionResolver.set('MANTENER');
+    this.justificacionResolver.set('');
+    this.sancionResolver.set('');
+    this.equipoGanadorResolver.set(null);
+    this.errorResolucion.set(null);
+  }
+
+  cerrarResolverDisputa(): void {
+    this.resolviendoDisputa.set(false);
+  }
+
+  enviarResolucion(): void {
+    const disputa = this.disputaActual();
+    const justificacion = this.justificacionResolver().trim();
+    if (!disputa || !justificacion) {
+      this.errorResolucion.set('La justificación es obligatoria.');
+      return;
+    }
+    const decision = this.decisionResolver();
+    if (decision === 'REVERTIR' && this.equipoGanadorResolver() === null) {
+      this.errorResolucion.set('Elegí cuál equipo gana al revertir.');
+      return;
+    }
+    this.enviandoResolucion.set(true);
+    this.errorResolucion.set(null);
+    const request: ResolverDisputaRequest = {
+      decision,
+      justificacion,
+      sancion: this.sancionResolver().trim() || null,
+      equipoGanadorId: decision === 'REVERTIR' ? this.equipoGanadorResolver() : null
+    };
+    this.disputesService.resolverDisputa(disputa.id, request).subscribe({
+      next: (actualizada) => {
+        this.enviandoResolucion.set(false);
+        this.disputaActual.set(actualizada);
+        this.resolviendoDisputa.set(false);
+        this.disputaResuelta.emit();
+      },
+      error: (err) => {
+        this.enviandoResolucion.set(false);
+        this.errorResolucion.set(err?.error?.message ?? 'No se pudo resolver la disputa.');
+      }
+    });
+  }
+
+  // ---------- RF-32: apelar ----------
+
+  puedeApelar(p: Partida): boolean {
+    return this.soyCapitanDe(p.equipoAId) || this.soyCapitanDe(p.equipoBId) || this.esGestor();
+  }
+
+  abrirApelar(): void {
+    this.apelando.set(true);
+    this.motivoApelar.set('');
+    this.errorApelacion.set(null);
+  }
+
+  cerrarApelar(): void {
+    this.apelando.set(false);
+  }
+
+  enviarApelacion(): void {
+    const disputa = this.disputaActual();
+    const motivo = this.motivoApelar().trim();
+    if (!disputa || !motivo) {
+      this.errorApelacion.set('El motivo de la apelación es obligatorio.');
+      return;
+    }
+    this.enviandoApelacion.set(true);
+    this.errorApelacion.set(null);
+    this.disputesService.apelar(disputa.id, { motivo }).subscribe({
+      next: (apelacion) => {
+        this.enviandoApelacion.set(false);
+        this.apelacionActual.set(apelacion);
+        this.apelando.set(false);
+        this.disputaActual.update((d) => d ? { ...d, estado: 'EN_APELACION' } : d);
+        this.disputaResuelta.emit();
+      },
+      error: (err) => {
+        this.enviandoApelacion.set(false);
+        this.errorApelacion.set(err?.error?.message ?? 'No se pudo registrar la apelación.');
+      }
+    });
+  }
+
+  // ---------- RF-32: el comisionado resuelve la apelación ----------
+
+  puedeResolverApelacion(): boolean {
+    return this.esGestor();
+  }
+
+  abrirResolverApelacion(): void {
+    this.resolviendoApelacion.set(true);
+    this.decisionFinalApelacion.set('');
+    this.equipoGanadorApelacion.set(null);
+    this.errorResolucionApelacion.set(null);
+  }
+
+  cerrarResolverApelacion(): void {
+    this.resolviendoApelacion.set(false);
+  }
+
+  enviarResolucionApelacion(): void {
+    const apelacion = this.apelacionActual();
+    if (!apelacion) {
+      return;
+    }
+    this.enviandoResolucionApelacion.set(true);
+    this.errorResolucionApelacion.set(null);
+    const request: ResolverApelacionRequest = {
+      decisionFinal: this.decisionFinalApelacion().trim() || null,
+      equipoGanadorId: this.equipoGanadorApelacion()
+    };
+    this.disputesService.resolverApelacion(apelacion.id, request).subscribe({
+      next: (actualizada) => {
+        this.enviandoResolucionApelacion.set(false);
+        this.apelacionActual.set(actualizada);
+        this.resolviendoApelacion.set(false);
+        this.disputaActual.update((d) => d ? { ...d, estado: 'RESUELTA' } : d);
+        this.disputaResuelta.emit();
+      },
+      error: (err) => {
+        this.enviandoResolucionApelacion.set(false);
+        this.errorResolucionApelacion.set(err?.error?.message ?? 'No se pudo resolver la apelación.');
       }
     });
   }

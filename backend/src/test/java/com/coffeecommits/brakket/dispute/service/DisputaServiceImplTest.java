@@ -45,6 +45,8 @@ class DisputaServiceImplTest {
     private InscripcionRepository inscripcionRepository;
     @Mock
     private ArbitroTorneoRepository arbitroTorneoRepository;
+    @Mock
+    private com.coffeecommits.brakket.tournament.service.PartidaService partidaService;
 
     private DisputaServiceImpl service;
 
@@ -61,7 +63,8 @@ class DisputaServiceImplTest {
     @BeforeEach
     void setUp() {
         DisputaGuard guard = new DisputaGuard(inscripcionRepository, arbitroTorneoRepository);
-        service = new DisputaServiceImpl(disputaRepository, partidaRepository, usuarioRepository, guard);
+        service = new DisputaServiceImpl(disputaRepository, partidaRepository, usuarioRepository, guard,
+                arbitroTorneoRepository, partidaService);
 
         // EN_CURSO: impugnar exige que el torneo siga abierto, porque
         // resolver la disputa pasa por el motor de partidas, que lo exige.

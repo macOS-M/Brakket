@@ -149,12 +149,12 @@ export class TournamentDetailComponent {
   readonly esModeracion = computed(() => this.puedeEliminar() && !this.esOrganizador());
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
-
-  // RF-28: quién puede reportar descansos/avances/abandonos.
+// RF-28: quién puede reportar descansos/avances/abandonos.
   readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
 
   /** Iniciar exige gestor, etapa de inscripción y al menos 2 equipos. */
   readonly puedeIniciar = computed(() => {
+
     const t = this.torneo();
     return !!t && this.esGestor() && t.estado === 'INSCRIPCION_ABIERTA' && t.inscritos >= 2;
   });

@@ -13,6 +13,8 @@ import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
+import com.coffeecommits.brakket.tournament.repository.CasoEspecialPartidaRepository;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
@@ -34,8 +36,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
-import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
-import com.coffeecommits.brakket.tournament.repository.CasoEspecialPartidaRepository;
 import com.coffeecommits.brakket.tournament.dto.CasoEspecialResponse;
 import com.coffeecommits.brakket.tournament.dto.RegistrarCasoEspecialRequest;
 import com.coffeecommits.brakket.tournament.model.ArbitroTorneo;
@@ -76,6 +76,7 @@ class PartidaServiceImplTest {
         service = new PartidaServiceImpl(
                 torneoRepository, partidaRepository, inscripcionRepository, usuarioRepository,
                 arbitroTorneoRepository, casoEspecialPartidaRepository);
+
         torneo = Torneo.builder()
                 .id(7L)
                 .juego(Juego.builder().id(3L).nombre("Rocket League").build())
@@ -115,7 +116,7 @@ class PartidaServiceImplTest {
             return guardadas.stream()
                     .filter(g -> (g.getSiguiente() != null && id.equals(g.getSiguiente().getId()))
                             || (g.getPerdedorSiguiente() != null
-                                    && id.equals(g.getPerdedorSiguiente().getId())))
+                            && id.equals(g.getPerdedorSiguiente().getId())))
                     .toList();
         });
     }
