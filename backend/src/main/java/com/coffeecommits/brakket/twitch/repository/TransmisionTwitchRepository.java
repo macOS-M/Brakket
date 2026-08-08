@@ -21,4 +21,7 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
             select t from TransmisionTwitch t left join fetch t.canal
             where t.activa = true and t.finalizadaEn is null""")
     List<TransmisionTwitch> findAbiertasParaMuestreo();
+
+    /** Transmisiones activas: métrica del panel global (RF-49). */
+    long countByActivaTrue();
 }
