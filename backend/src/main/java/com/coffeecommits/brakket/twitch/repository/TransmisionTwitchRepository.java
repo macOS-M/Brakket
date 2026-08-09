@@ -1,8 +1,12 @@
 package com.coffeecommits.brakket.twitch.repository;
+
 import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.List;
+import java.util.Optional;
+
 public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTwitch, Long> {
 
     /**
@@ -21,4 +25,8 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
             select t from TransmisionTwitch t left join fetch t.canal
             where t.activa = true and t.finalizadaEn is null""")
     List<TransmisionTwitch> findAbiertasParaMuestreo();
+
+    // RF-44: resolver la transmision de un torneo para agregar sus metricas
+    // en el panel comercial del patrocinador.
+    Optional<TransmisionTwitch> findByTorneoId(Long torneoId);
 }

@@ -16,6 +16,9 @@ public interface PatrocinioRepository extends JpaRepository<Patrocinio, Long> {
 
     List<Patrocinio> findByTemporadaId(Long temporadaId);
 
+    // RF-44: patrocinios de una marca, para el panel comercial del patrocinador.
+    List<Patrocinio> findByPatrocinadorId(Long patrocinadorId);
+
     // Solo uno de ligaId/temporadaId/torneoId llega no-nulo (validado antes de llamar
     // este método), por eso el OR funciona: solo compara contra el alcance real enviado.
     @Query("""
