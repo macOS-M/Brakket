@@ -1,0 +1,233 @@
+.page {
+  width: min(100%, var(--content-max, 1280px));
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: flex-end;
+  padding: 1.1rem;
+  background: var(--surface, #10151c);
+  border: 1px solid var(--border, #232a35);
+  border-radius: var(--radius-md, 12px);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label,
+  .etiqueta-grupo {
+    font-size: 0.8rem;
+    color: var(--text-muted, #9aa4b2);
+  }
+
+  input,
+  select {
+    padding: 0.5rem 0.7rem;
+    background: var(--surface-2, #161b22);
+    border: 1px solid var(--border, #232a35);
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text, #e6edf3);
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--brand-cyan, #22d3ee);
+    }
+  }
+
+  select {
+    min-width: 16rem;
+  }
+}
+
+.segmentado {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2, #161b22);
+  border: 1px solid var(--border, #232a35);
+  border-radius: var(--radius-pill, 999px);
+
+  button {
+    padding: 0.4rem 0.9rem;
+    border: none;
+    border-radius: var(--radius-pill, 999px);
+    background: transparent;
+    color: var(--text-muted, #9aa4b2);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &.activo {
+      background: var(--accent, #ff5500);
+      color: var(--accent-ink, #10151c);
+      font-weight: 600;
+    }
+  }
+}
+
+.btn-buscar,
+.btn-limpiar,
+.btn-exportar {
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid var(--border, #232a35);
+  background: var(--surface-2, #161b22);
+  color: var(--text, #e6edf3);
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent, #ff5500);
+  }
+}
+
+.btn-buscar {
+  background: var(--accent, #ff5500);
+  border-color: var(--accent, #ff5500);
+  color: var(--accent-ink, #10151c);
+  font-weight: 600;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.chip-aviso {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--warning-bg, #3a2c12);
+  color: var(--warning-text, #f5c66b);
+  font-size: 0.85rem;
+}
+
+.aviso-error {
+  margin: 0;
+  color: var(--danger-text, #f87171);
+  font-size: 0.9rem;
+}
+
+.panel {
+  padding: 1.1rem;
+  background: var(--surface, #10151c);
+  border: 1px solid var(--border-soft, #232a35);
+  border-radius: var(--radius-md, 12px);
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+}
+
+.leyenda {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted, #9aa4b2);
+}
+
+.swatch {
+  width: 0.8rem;
+  height: 0.2rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--serie, var(--accent, #ff5500));
+
+  &:not(:first-child) {
+    margin-left: 0.6rem;
+  }
+}
+
+.pendiente {
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--neutral-bg, #1c222c);
+  font-size: 0.75rem;
+}
+
+// Reserva la altura del gráfico para que la página no se reacomode el día que
+// la serie empiece a traer datos.
+.sin-serie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+// Altura cero a propósito: el cuadro flota y no desplaza los gráficos.
+.tooltip-capa {
+  position: relative;
+  height: 0;
+  z-index: 5;
+}
+
+.tooltip {
+  position: absolute;
+  top: 0.25rem;
+  right: 0;
+  // Sin esto el propio cuadro se roba el hover del gráfico que lo alimenta.
+  pointer-events: none;
+  min-width: 12rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--surface-3, #1c222c);
+  border: 1px solid var(--border, #232a35);
+  border-radius: var(--radius-sm, 8px);
+  box-shadow: var(--shadow-card, 0 6px 20px rgb(0 0 0 / 35%));
+
+  .hora {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-data, 'Barlow Condensed', sans-serif);
+    color: var(--text-muted, #9aa4b2);
+  }
+
+  .fila {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin: 0.15rem 0;
+    font-size: 0.9rem;
+
+    strong {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+.serie-espectadores {
+  --serie: var(--brand-cyan, #22d3ee);
+}
+
+.serie-mensajes {
+  --serie: var(--accent, #ff5500);
+}
+
+.serie-usuarios {
+  --serie: var(--accent-purple, #8b5cf6);
+}
+
+.serie-sentimiento {
+  --serie: var(--success, #22c55e);
+}

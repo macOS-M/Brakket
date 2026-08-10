@@ -168,9 +168,9 @@ export class SidebarComponent {
         },
 
         {
-          // RF-37: consulta de métricas por período. El "Panel comercial" del
-          // patrocinador sigue pendiente porque necesita el vínculo de RF-44.
-          ruta: '/analytics',
+          // RF-37: consulta de métricas por período. Ruta propia porque
+          // /analytics queda para el panel comercial del patrocinador (RF-44).
+          ruta: '/metricas',
           etiqueta: 'Analítica',
           icono: 'pulse',
           exact: false,
