@@ -122,7 +122,8 @@ public class TrazabilidadServiceImpl implements TrazabilidadService {
                 if (apelacion.getComisionado() != null && apelacion.getFechaResolucion() != null) {
                     eventos.add(new EventoTrazabilidadResponse(
                             "RESOLUCION_APELACION",
-                            apelacion.getDecisionFinal(),
+                            apelacion.getDecisionFinal() != null && !apelacion.getDecisionFinal().isBlank()
+                                    ? apelacion.getDecisionFinal() : "Apelación resuelta",
                             apelacion.getComisionado().getNombre(),
                             apelacion.getFechaResolucion()));
                 }
