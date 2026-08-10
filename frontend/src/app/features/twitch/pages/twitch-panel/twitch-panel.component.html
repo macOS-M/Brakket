@@ -41,7 +41,29 @@
     <button (click)="asociar()" [disabled]="cargando || !canal?.activo">
       Asociar y consultar estado en vivo
     </button>
-    @if (transmision) { <p class="result">Estado: {{ transmision.estado }}</p> }
+    @if (transmision) {
+    <p class="result">Estado: {{ transmision.estado }}</p>
+
+    @if (transmision.estado !== 'FINALIZADA') {
+      @if (confirmandoFinalizar) {
+        <div class="confirmar">
+          <p>
+            Se cierra el período de captura: deja de guardar espectadores y actividad de chat.
+            Las métricas ya capturadas se conservan. Para volver a capturar hay que asociar
+            una transmisión nueva.
+          </p>
+          <button class="peligro" (click)="finalizar()" [disabled]="cargando">
+            Sí, finalizar
+          </button>
+          <button (click)="cancelarFinalizar()" [disabled]="cargando">Cancelar</button>
+        </div>
+      } @else {
+        <button (click)="pedirConfirmacion()" [disabled]="cargando">
+          Finalizar transmisión
+        </button>
+      }
+    }
+    }
   </article>
 
   @if (transmision) {
