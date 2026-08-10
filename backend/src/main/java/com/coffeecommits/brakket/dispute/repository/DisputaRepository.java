@@ -8,4 +8,6 @@ import java.util.List;
 public interface DisputaRepository extends JpaRepository<Disputa, Long> {
 
     List<Disputa> findByEstado(String estado);
+
+    List<Disputa> findByPartidaId(Long partidaId);
 }

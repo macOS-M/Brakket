@@ -4,8 +4,7 @@ import com.coffeecommits.brakket.auth.model.Usuario;
 import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
-import com.coffeecommits.brakket.notification.model.Notificacion;
-import com.coffeecommits.brakket.notification.repository.NotificacionRepository;
+import com.coffeecommits.brakket.notification.service.NotificationService;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 import com.coffeecommits.brakket.team.repository.EquipoRepository;
@@ -47,7 +46,7 @@ class TransferRequestServiceImplTest {
     @Mock
     private UsuarioRepository usuarioRepository;
     @Mock
-    private NotificacionRepository notificacionRepository;
+    private NotificationService notificationService;
     @InjectMocks
     private TransferRequestServiceImpl service;
 
@@ -109,10 +108,10 @@ class TransferRequestServiceImplTest {
         assertThat(resp.aprobacionCapitanOrigen()).isEqualTo("PENDIENTE");
         assertThat(resp.rolPropuesto()).isEqualTo("TITULAR");
 
-        ArgumentCaptor<Notificacion> notif = ArgumentCaptor.forClass(Notificacion.class);
-        verify(notificacionRepository, times(2)).save(notif.capture());
+        ArgumentCaptor<Usuario> notif = ArgumentCaptor.forClass(Usuario.class);
+        verify(notificationService, times(2)).notificar(notif.capture(), any(), any(), any(), any(), any());
         assertThat(notif.getAllValues())
-                .extracting(n -> n.getUsuario().getId())
+                .extracting(Usuario::getId)
                 .containsExactlyInAnyOrder(3L, 2L); // jugador y capitán de origen
     }
 

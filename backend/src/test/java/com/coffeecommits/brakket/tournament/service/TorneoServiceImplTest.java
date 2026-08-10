@@ -19,6 +19,7 @@ import com.coffeecommits.brakket.tournament.dto.TorneoResponse;
 import com.coffeecommits.brakket.tournament.model.Inscripcion;
 import com.coffeecommits.brakket.tournament.model.EstadoTorneo;
 import com.coffeecommits.brakket.tournament.model.Torneo;
+import com.coffeecommits.brakket.tournament.repository.ArbitroTorneoRepository;
 import com.coffeecommits.brakket.tournament.repository.InscripcionRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,8 @@ class TorneoServiceImplTest {
     private UsuarioRepository usuarioRepository;
     @Mock
     private PerfilCompetitivoRepository perfilCompetitivoRepository;
+    @Mock
+    private ArbitroTorneoRepository arbitroTorneoRepository;
     @InjectMocks
     private TorneoServiceImpl torneoService;
 
