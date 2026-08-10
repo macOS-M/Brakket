@@ -1,4 +1,88 @@
-<app-coming-soon
-  titulo="Analítica de audiencia"
-  descripcion="Métricas de audiencia y participación por torneo, para vos y tus patrocinadores."
-/>
+<section class="page">
+  <h1>Panel comercial</h1>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando tu panel comercial...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else {
+
+  <p class="subtitulo">{{ patrocinadorNombre() }}</p>
+
+  @if (patrocinios().length === 0) {
+  <p class="placeholder">Todavía no tenés patrocinios asociados.</p>
+  } @else {
+
+  <div class="layout">
+    <aside class="lista-patrocinios">
+      @for (p of patrocinios(); track p.patrocinioId) {
+      <button
+        class="item-patrocinio"
+        [class.activo]="p.patrocinioId === patrocinioSeleccionadoId()"
+        [class.vencido]="p.vencido"
+        (click)="seleccionarPatrocinio(p.patrocinioId)"
+      >
+        <span class="nivel">{{ p.nivel }}</span>
+        <span class="alcance">{{ alcanceTexto(p) }}</span>
+        @if (p.vencido) {
+        <span class="badge-vencido">Vencido</span>
+        }
+      </button>
+      }
+    </aside>
+
+    <div class="detalle">
+      @if (patrocinioSeleccionado(); as patrocinio) {
+      <div class="ficha">
+        <h2>{{ alcanceTexto(patrocinio) }}</h2>
+        <p class="linea">Nivel: <strong>{{ patrocinio.nivel }}</strong></p>
+        <p class="linea">Estado: <strong>{{ patrocinio.estado }}</strong></p>
+        <p class="linea">Vigencia: {{ patrocinio.fechaInicio }} — {{ patrocinio.fechaFin }}</p>
+        <p class="linea">Espacios publicitarios activos: {{ patrocinio.cantidadEspacios }}</p>
+      </div>
+
+      <div class="metricas">
+        <h3>Métricas de audiencia</h3>
+
+        @if (metricas(); as m) {
+
+        @if (cargandoMetricas()) {
+        <p class="placeholder">Cargando métricas...</p>
+        } @else if (m.transmisionId === null) {
+        <p class="placeholder">No hay métricas disponibles para esta asociación todavía.</p>
+        } @else {
+        <div class="grid-metricas">
+          <div class="metrica-card">
+            <span class="etiqueta">Espectadores promedio</span>
+            <span class="valor">{{ m.espectadoresPromedio ?? '—' }}</span>
+          </div>
+          <div class="metrica-card">
+            <span class="etiqueta">Pico de espectadores</span>
+            <span class="valor">{{ m.picoEspectadores ?? '—' }}</span>
+          </div>
+          <div class="metrica-card">
+            <span class="etiqueta">Mensajes por minuto (prom.)</span>
+            <span class="valor">{{ m.mensajesPorMinutoPromedio ?? '—' }}</span>
+          </div>
+          <div class="metrica-card">
+            <span class="etiqueta">Sentimiento del chat</span>
+            <span class="valor">
+              @if (m.sentimientoPendiente) {
+              <span class="pendiente">Análisis pendiente</span>
+              } @else {
+              {{ m.sentimientoPredominante }}
+              }
+            </span>
+          </div>
+        </div>
+        }
+        } @else if (cargandoMetricas()) {
+        <p class="placeholder">Cargando métricas...</p>
+        }
+      </div>
+      }
+    </div>
+  </div>
+  }
+  }
+</section>
