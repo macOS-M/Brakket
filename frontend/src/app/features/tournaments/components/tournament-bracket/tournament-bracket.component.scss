@@ -171,6 +171,7 @@
 .tentativa .lado { background: transparent; }
 
 .partida-estado {
+  &.en-disputa { color: var(--warning-text); }
   margin: 8px 0 0;
   font-size: 0.78rem;
   &.reportada { color: var(--info-text); }
@@ -236,6 +237,25 @@
 }
 
 .marcador-form { margin-top: 10px; }
+
+.impugnar-campo,
+.caso-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+
+  select, textarea, input {
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font: inherit;
+  }
+}
 
 .marcador-campo {
   display: flex;
@@ -378,4 +398,60 @@
   margin: 8px 0 0;
   font-size: 0.75rem;
   color: var(--text-subtle);
+}
+
+// ---------- RF-31: evidencia de una disputa ----------
+
+.evidencia-panel {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.evidencia-vacia {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.evidencia-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+
+  a { color: var(--accent); word-break: break-all; }
+}
+
+.evidencia-descripcion {
+  margin: 4px 0 0;
+  color: var(--text);
+}
+
+.evidencia-meta {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.evidencia-form {
+  margin-top: 10px;
+}
+.caso-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+
+  select, textarea, input {
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font: inherit;
+  }
 }

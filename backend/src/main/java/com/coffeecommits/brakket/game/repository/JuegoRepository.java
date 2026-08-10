@@ -14,6 +14,9 @@ public interface JuegoRepository extends JpaRepository<Juego, Long> {
 
     List<Juego> findByActivoTrue();
 
+    /** Juegos activos del catálogo: métrica del panel global (RF-49). */
+    long countByActivoTrue();
+
     /** Valida el filtro de disciplina de la búsqueda de equipos (RF-05). */
     boolean existsByGeneroIgnoreCase(String genero);
 }

@@ -44,4 +44,29 @@ public class Notificacion {
 
     @Column(name = "fecha", nullable = false)
     private LocalDateTime fecha;
+
+    @Column(name = "estado_entrega", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private EstadoEntrega estadoEntrega = EstadoEntrega.DISPONIBLE;
+
+    @Column(name = "origen", nullable = false, length = 120)
+    private String origen;
+
+    @Column(name = "eliminada_bandeja", nullable = false)
+    @Builder.Default
+    private Boolean eliminadaBandeja = false;
+
+    @PrePersist
+    void completarDatosDeEntrega() {
+        if (estadoEntrega == null) {
+            estadoEntrega = EstadoEntrega.DISPONIBLE;
+        }
+        if (eliminadaBandeja == null) {
+            eliminadaBandeja = false;
+        }
+        if (origen == null || origen.isBlank()) {
+            origen = entidad == null || entidad.isBlank() ? "Sistema" : entidad;
+        }
+    }
 }

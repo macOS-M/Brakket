@@ -40,6 +40,9 @@ public interface TorneoRepository extends JpaRepository<Torneo, Long> {
 
     List<Torneo> findByOrganizadorIdOrderByFechaInicioAsc(Long organizadorId);
 
+    /** Conteo de torneos por estado: métrica del panel global (RF-49). */
+    long countByEstado(EstadoTorneo estado);
+
     boolean existsByJuegoIdAndEstadoNotIn(Long juegoId, Collection<EstadoTorneo> estadosCerrados);
 
     boolean existsByTemporadaIdAndEstadoNotIn(

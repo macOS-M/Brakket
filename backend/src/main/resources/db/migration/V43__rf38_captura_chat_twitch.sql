@@ -1,0 +1,1 @@
+ALTER TABLE metrica_chat ALTER COLUMN cuenta_twitch_id DROP NOT NULL;
