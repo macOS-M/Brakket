@@ -71,8 +71,8 @@
           <img [src]="equipo.bannerUrl" alt="" loading="lazy" (error)="equipo.bannerUrl = null" />
           }
         </div>
-        @if (!equipo.bannerUrl && equipo.juegoNombre) {
-        <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
+        @if (!equipo.bannerUrl && (equipo.juegoNombre || equipo.juegoNombres?.length)) {
+        <span class="banda-marca" aria-hidden="true">{{ nombresJuegos(equipo) }}</span>
         }
         <app-status-badge class="estado-flotante" [estado]="equipo.estado" />
       </div>
@@ -89,8 +89,8 @@
           }
           <div class="identidad">
             <h2 class="nombre">{{ equipo.nombre }}</h2>
-            @if (equipo.juegoNombre) {
-            <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+            @if (equipo.juegoNombre || equipo.juegoNombres?.length) {
+            <p class="juego">{{ nombresJuegos(equipo) }} · {{ equipo.disciplina }}</p>
             }
           </div>
         </div>
@@ -163,8 +163,8 @@
           <img [src]="equipo.bannerUrl" alt="" loading="lazy" (error)="equipo.bannerUrl = null" />
           }
         </div>
-        @if (!equipo.bannerUrl && equipo.juegoNombre) {
-        <span class="banda-marca" aria-hidden="true">{{ equipo.juegoNombre }}</span>
+        @if (!equipo.bannerUrl && (equipo.juegoNombre || equipo.juegoNombres?.length)) {
+        <span class="banda-marca" aria-hidden="true">{{ nombresJuegos(equipo) }}</span>
         }
         <app-status-badge class="estado-flotante" [estado]="equipo.estado" />
       </div>
@@ -181,8 +181,8 @@
           }
           <div class="identidad">
             <h2 class="nombre">{{ equipo.nombre }}</h2>
-            @if (equipo.juegoNombre) {
-            <p class="juego">{{ equipo.juegoNombre }} · {{ equipo.disciplina }}</p>
+            @if (equipo.juegoNombre || equipo.juegoNombres?.length) {
+            <p class="juego">{{ nombresJuegos(equipo) }} · {{ equipo.disciplina }}</p>
             }
           </div>
         </div>

@@ -33,6 +33,9 @@ export interface PerfilEquipoPublico {
   capitanId: number;
   juegoId: number | null;
   juegoNombre: string | null;
+  /** Opcionales mientras el frontend convive con backends anteriores a V39. */
+  juegoIds?: number[];
+  juegoNombres?: string[];
   redesSociales: string[];
   plantilla: IntegrantePublico[];
   torneos: TorneoRelacionado[];
@@ -45,5 +48,6 @@ export interface EquipoResumenPublico {
   nombre: string;
   logo: string | null;
   juegoNombre: string | null;
+  juegoNombres?: string[];
   integrantesActivos: number;
 }

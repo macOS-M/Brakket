@@ -75,6 +75,7 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
                         equipo.getNombre(),
                         equipo.getLogo(),
                         equipo.getJuego() == null ? null : equipo.getJuego().getNombre(),
+                        equipo.getJuegos().stream().map(j -> j.getNombre()).toList(),
                         activosPorEquipo.getOrDefault(equipo.getId(), 0L)))
                 .toList();
     }
@@ -126,6 +127,8 @@ public class TeamPublicProfileServiceImpl implements TeamPublicProfileService {
                 equipo.getBannerUrl(), equipo.getDescripcion(), equipo.getSitioWeb(),
                 equipo.getVideoUrl(), equipo.getEstado(), equipo.getCapitan().getId(), juegoSeleccionado,
                 equipo.getJuego() == null ? null : equipo.getJuego().getNombre(),
+                equipo.getJuegos().stream().map(j -> j.getId()).toList(),
+                equipo.getJuegos().stream().map(j -> j.getNombre()).toList(),
                 redSocialRepository.findByEquipoId(equipo.getId()).stream().map(r -> r.getUrl()).toList(),
                 plantilla, torneos, resumen);
     }

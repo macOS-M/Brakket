@@ -1,4 +1,35 @@
-<app-coming-soon
-  titulo="Estadísticas"
-  descripcion="Tu historial competitivo por juego: partidas, winrate, rachas y evolución por temporada."
-/>
+<main class="stats-page">
+  <header class="page-header"><span class="eyebrow">RF-47 · HISTORIAL COMPETITIVO</span><h1>Estadísticas históricas</h1><p>Rendimiento oficial segmentado por juego y evolución a través de torneos.</p></header>
+  <form class="filters" [formGroup]="form" (ngSubmit)="consultar()">
+    <label>Consultar por<select formControlName="tipo"><option value="JUGADOR">Jugador</option><option value="EQUIPO">Equipo</option></select></label>
+    <label class="subject-search">{{ form.controls.tipo.value === 'JUGADOR' ? 'Jugador' : 'Equipo' }}
+      <input #subjectInput type="search" formControlName="busqueda" autocomplete="off" placeholder="Escribe al menos 2 caracteres…" (input)="buscarSujeto($event)" (focus)="abrirDropdown()" (blur)="cerrarDropdown()">
+      @if (buscandoSujetos()) { <span class="search-status">Buscando…</span> }
+      @if (dropdownAbierto()) { <div class="suggestions" role="listbox">
+        @for (opcion of sugerencias(); track opcion.id) { <button type="button" role="option" (mousedown)="seleccionarSujeto(opcion, subjectInput)">{{ opcion.nombre }}</button> }
+        @if (!buscandoSujetos() && busquedaRealizada() && sugerencias().length === 0) { <span class="no-results">No se encontraron coincidencias</span> }
+      </div> }
+    </label>
+    <label>Juego<select formControlName="juegoId"><option [ngValue]="null">Todos los juegos</option>@for (juego of juegos(); track juego.id) { <option [ngValue]="juego.id">{{ juego.nombre }}</option> }</select></label>
+    <label>Liga<select formControlName="ligaId"><option [ngValue]="null">Todas las ligas</option>@for (liga of catalogo().ligas; track liga.id) { <option [ngValue]="liga.id">{{ liga.nombre }}</option> }</select></label>
+    <label>Temporada<select formControlName="temporadaId"><option [ngValue]="null">Todas las temporadas</option>@for (temporada of catalogo().temporadas; track temporada.id) { <option [ngValue]="temporada.id">{{ temporada.nombre }}</option> }</select></label>
+    <label>Desde<input type="date" formControlName="desde"></label><label>Hasta<input type="date" formControlName="hasta"></label>
+    <div class="actions"><button type="button" class="secondary" (click)="limpiar()">Limpiar</button><button type="submit" [disabled]="cargando()">{{ cargando() ? 'Calculando…' : 'Consultar' }}</button></div>
+  </form>
+  @if (error()) { <div class="notice error" role="alert">{{ error() }}</div> }
+  @if (resultado(); as data) {
+    <section class="result-heading"><div><span class="eyebrow">{{ data.tipoSujeto }}</span><h2>{{ data.sujetoNombre }}</h2></div><span class="official">● Solo resultados oficiales</span></section>
+    @if (data.resultadosNoDefinitivos > 0) { <div class="notice warning">{{ data.resultadosNoDefinitivos }} resultado(s) reportado(s) o en disputa no se incluyen en el cálculo.</div> }
+    @if (data.juegos.length === 0) { <section class="empty"><span>—</span><h3>Sin estadísticas para este filtro</h3><p>No existe participación con resultados confirmados en el período y juego seleccionados.</p></section> }
+    @for (juego of data.juegos; track juego.juegoId) {
+      <section class="game-section">
+        <div class="game-title"><div><span class="eyebrow">JUEGO</span><h3>{{ juego.juegoNombre }}</h3></div><strong>{{ juego.porcentajeVictorias }}% WR</strong></div>
+        <div class="kpis"><article><span>Partidas</span><b>{{ juego.partidas }}</b></article><article><span>Victorias</span><b class="win">{{ juego.victorias }}</b></article><article><span>Derrotas</span><b>{{ juego.derrotas }}</b></article><article><span>Torneos</span><b>{{ juego.torneos }}</b></article></div>
+        <div class="bar" aria-label="Porcentaje de victorias"><i [style.width.%]="juego.porcentajeVictorias"></i></div><h4>Progresión y participación</h4>
+        <div class="timeline">@for (item of juego.lineaTiempo; track item.torneoId) {
+          <article class="timeline-item"><div class="dot"></div><time>{{ item.fecha | date:'dd MMM yyyy' }}</time><div class="event"><div><b>{{ item.torneoNombre }}</b><small>{{ item.ligaNombre || 'Torneo comunitario' }} <span>·</span> {{ item.equipoNombre }}</small></div><div class="record"><strong>{{ item.victorias }}–{{ item.derrotas }}</strong><span>{{ item.porcentajeVictorias }}% WR</span></div></div></article>
+        }</div>
+      </section>
+    }
+  } @else if (!cargando() && !error()) { <section class="empty intro"><span>↗</span><h3>Explora la progresión competitiva</h3><p>Selecciona un jugador o equipo y aplica los filtros que necesites.</p></section> }
+</main>

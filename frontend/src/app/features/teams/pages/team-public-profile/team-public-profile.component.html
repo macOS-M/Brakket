@@ -27,7 +27,11 @@
       <h1>{{ equipo.nombre }}</h1>
       <p class="sub">
         {{ equipo.plantilla.length }} {{ equipo.plantilla.length === 1 ? 'integrante' : 'integrantes' }}
-        @if (equipo.juegoNombre) { · {{ equipo.juegoNombre }} }
+        @if (equipo.juegoNombres?.length) {
+          · {{ equipo.juegoNombres?.join(' · ') }}
+        } @else if (equipo.juegoNombre) {
+          · {{ equipo.juegoNombre }}
+        }
       </p>
     </div>
 

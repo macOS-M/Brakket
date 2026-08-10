@@ -28,8 +28,9 @@ public record CrearEquipoRequest(
         @URL(message = "El video debe ser una URL valida")
         String videoUrl,
 
-        @NotNull(message = "El juego principal es obligatorio")
         Long juegoId,
+
+        List<Long> juegoIds,
 
         List<@URL(message = "El enlace debe tener formato de URL valido") String> redesSociales,
 

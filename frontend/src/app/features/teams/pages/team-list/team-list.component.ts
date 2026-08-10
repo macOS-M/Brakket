@@ -218,6 +218,12 @@ export class TeamListComponent implements OnInit, OnDestroy {
     return portadaGradiente(equipo.juegoNombre ?? equipo.nombre);
   }
 
+  nombresJuegos(equipo: EquipoBusqueda): string {
+    return equipo.juegoNombres?.length
+      ? equipo.juegoNombres.join(' · ')
+      : (equipo.juegoNombre ?? 'Sin juego');
+  }
+
   /** Color estable para el monograma de equipos sin logo. */
   colorDe(nombre: string): string {
     return colorDeNombre(nombre);

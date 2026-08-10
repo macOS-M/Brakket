@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -82,12 +83,8 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                     "Ya existe un equipo con el nombre '%s'".formatted(request.nombre()));
         });
 
-        Juego juego = juegoRepository.findById(request.juegoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Juego", request.juegoId()));
-
-        if (!Boolean.TRUE.equals(juego.getActivo())) {
-            throw new BusinessException("El juego seleccionado no esta activo");
-        }
+        List<Juego> juegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
+        Juego juego = juegoPrincipal(juegos, request.juegoId());
 
         Equipo equipoNuevo = Equipo.builder()
                 .nombre(request.nombre())
@@ -98,6 +95,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                 .videoUrl(request.videoUrl())
                 .capitan(capitan)
                 .juego(juego)
+                .juegos(new LinkedHashSet<>(juegos))
                 .build();
 
         final Equipo equipoGuardado;
@@ -224,22 +222,11 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
             equipo.setEstadoPrivacidad(request.estadoPrivacidad());
         }
 
-        if (request.juegoId() != null
-                && (equipo.getJuego() == null || !request.juegoId().equals(equipo.getJuego().getId()))) {
-
-            Juego nuevoJuego = juegoRepository.findById(request.juegoId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Juego", request.juegoId()));
-
-            if (!Boolean.TRUE.equals(nuevoJuego.getActivo())) {
-                throw new BusinessException("El juego seleccionado no está activo.");
-            }
-
-            if (participaEnTorneoActivo(equipoId)) {
-                throw new BusinessException(
-                        "No se puede cambiar la disciplina: el equipo participa en un torneo activo.");
-            }
-
-            equipo.setJuego(nuevoJuego);
+        if (request.juegoIds() != null || request.juegoId() != null) {
+            List<Juego> nuevosJuegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
+            equipo.setJuego(juegoPrincipal(nuevosJuegos, request.juegoId()));
+            equipo.getJuegos().clear();
+            equipo.getJuegos().addAll(nuevosJuegos);
         }
 
         if (request.redesSociales() != null) {
@@ -267,6 +254,30 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                 .toList();
 
         return EquipoResponse.fromEntity(equipoActualizado, redesActuales);
+    }
+
+    private List<Juego> buscarJuegosActivos(List<Long> juegoIds, Long juegoIdCompatibilidad) {
+        LinkedHashSet<Long> ids = new LinkedHashSet<>();
+        if (juegoIdCompatibilidad != null) ids.add(juegoIdCompatibilidad);
+        if (juegoIds != null) ids.addAll(juegoIds);
+        if (ids.isEmpty()) throw new BusinessException("Debés seleccionar al menos un juego.");
+
+        List<Juego> encontrados = juegoRepository.findAllById(ids);
+        if (encontrados.size() != ids.size()) {
+            throw new ResourceNotFoundException("Juego", "uno o más juegos seleccionados");
+        }
+        if (encontrados.stream().anyMatch(j -> !Boolean.TRUE.equals(j.getActivo()))) {
+            throw new BusinessException("Todos los juegos seleccionados deben estar activos.");
+        }
+        return ids.stream().map(id -> encontrados.stream()
+                .filter(j -> j.getId().equals(id)).findFirst().orElseThrow()).toList();
+    }
+
+    private Juego juegoPrincipal(List<Juego> juegos, Long juegoIdPrincipal) {
+        if (juegoIdPrincipal == null) return juegos.get(0);
+        return juegos.stream().filter(j -> j.getId().equals(juegoIdPrincipal)).findFirst()
+                .orElseThrow(() -> new BusinessException(
+                        "El juego principal debe formar parte de los juegos del equipo."));
     }
 
     /**
