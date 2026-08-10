@@ -9,7 +9,13 @@ export interface SentimientoResultado {
   clasificacion: ClasificacionSentimiento;
   /** Puntaje en el rango [-100, 100]. */
   puntaje: number;
-  mensajesAnalizados: number;
+  /**
+   * Mensajes que entraron al motor. Solo viene en la respuesta del análisis:
+   * los textos no se persisten, así que al releer la serie llega null.
+   */
+  mensajesAnalizados: number | null;
+  /** Tasa guardada en la métrica de chat; la misma columna que escribe RF-38. */
+  mensajesPorMinuto: number;
   usuariosActivos: number;
 }
 
@@ -33,4 +39,9 @@ export interface SerieSentimiento {
 export interface AnalizarChatRequest {
   mensajes: string[];
   usuariosActivos?: number | null;
+  /** Segundos que cubre el lote; si no se informa se asume un minuto. */
+  ventanaSegundos?: number | null;
 }
+
+/** Tope de mensajes por lote; refleja el @Size del DTO del backend. */
+export const MAX_MENSAJES_POR_LOTE = 2000;

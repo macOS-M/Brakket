@@ -49,9 +49,7 @@ public class SentimientoService {
     public SentimientoResponse analizar(Long transmisionId, AnalizarChatRequest request) {
         TransmisionTwitch transmision = buscarTransmision(transmisionId);
 
-        List<String> mensajes = request.mensajes().stream()
-                .filter(m -> m != null && !m.isBlank())
-                .toList();
+        List<String> mensajes = conContenido(request.mensajes());
         if (mensajes.isEmpty()) {
             throw new BusinessException("No hay mensajes de chat con contenido para analizar.");
         }
@@ -64,20 +62,59 @@ public class SentimientoService {
         MetricaChat metrica = metricaChatRepository.save(MetricaChat.builder()
                 .transmisionTwitch(transmision)
                 .fechaHora(ahora)
-                .mensajesPorMinuto(mensajes.size())
+                .mensajesPorMinuto(porMinuto(mensajes.size(), request.ventanaSegundos()))
                 .usuariosActivos(usuariosActivos)
                 .build());
 
-        AnalizadorSentimiento.Resultado resultado = analizador.analizar(mensajes);
+        AnalisisSentimiento analisis = guardarAnalisis(metrica, mensajes, ahora);
+        return SentimientoResponse.from(analisis, mensajes.size());
+    }
 
-        AnalisisSentimiento analisis = analisisRepository.save(AnalisisSentimiento.builder()
+    /**
+     * Analiza la ventana que acaba de capturar el muestreo de RF-38 y le cuelga
+     * el resultado a su muestra. Es el camino automático del RF: el manual
+     * ({@link #analizar}) queda como herramienta de administración y demo.
+     *
+     * <p>Los textos llegan por parámetro y no se persisten: de la ventana solo
+     * queda el agregado, igual que en RF-38.</p>
+     */
+    @Transactional
+    public void analizarMuestra(Long metricaChatId, List<String> mensajes) {
+        List<String> utiles = conContenido(mensajes);
+        if (utiles.isEmpty()) {
+            return; // ventana muda: no hay señal que clasificar
+        }
+        // La muestra podría haber desaparecido entre el commit del muestreo y
+        // este análisis (borrado de la transmisión en cascada); no es un error.
+        metricaChatRepository.findById(metricaChatId)
+                .ifPresent(metrica -> guardarAnalisis(metrica, utiles, metrica.getFechaHora()));
+    }
+
+    private AnalisisSentimiento guardarAnalisis(MetricaChat metrica, List<String> mensajes,
+                                                LocalDateTime fechaHora) {
+        AnalizadorSentimiento.Resultado resultado = analizador.analizar(mensajes);
+        return analisisRepository.save(AnalisisSentimiento.builder()
                 .metricaChat(metrica)
-                .fechaHora(ahora)
+                .fechaHora(fechaHora)
                 .clasificacion(resultado.clasificacion().name())
                 .puntaje(resultado.puntaje())
                 .build());
+    }
 
-        return SentimientoResponse.from(analisis);
+    private static List<String> conContenido(List<String> mensajes) {
+        return mensajes.stream().filter(m -> m != null && !m.isBlank()).toList();
+    }
+
+    /**
+     * Convierte el conteo del lote a la tasa por minuto que guarda
+     * {@code metrica_chat}, para que las muestras manuales sean comparables con
+     * las que escribe el muestreo automático de RF-38 en esa misma columna.
+     */
+    private static int porMinuto(int mensajes, Integer ventanaSegundos) {
+        int ventana = ventanaSegundos != null && ventanaSegundos > 0
+                ? ventanaSegundos
+                : AnalizarChatRequest.VENTANA_POR_DEFECTO_SEGUNDOS;
+        return (int) Math.round(mensajes * 60.0 / ventana);
     }
 
     @Transactional(readOnly = true)

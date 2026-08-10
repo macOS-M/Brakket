@@ -11,21 +11,48 @@
       <h2>Analizar chat</h2>
 
       <label class="field">
-        <span class="label">ID de la transmisión</span>
-        <input type="number" name="transmisionId" min="1" [(ngModel)]="transmisionId"
-               placeholder="Ej. 1" />
+        <span class="label">Transmisión</span>
+        @if (cargandoTransmisiones()) {
+          <select name="transmisionId" disabled>
+            <option>Cargando transmisiones…</option>
+          </select>
+        } @else if (transmisiones().length === 0) {
+          <select name="transmisionId" disabled>
+            <option>No hay transmisiones con captura abierta</option>
+          </select>
+          <small class="ayuda">
+            Asociá una transmisión desde el panel de Twitch para poder analizar su chat.
+          </small>
+        } @else {
+          <select name="transmisionId" [(ngModel)]="transmisionId">
+            <option [ngValue]="null">Elegí una transmisión…</option>
+            @for (t of transmisiones(); track t.id) {
+              <option [ngValue]="t.id">{{ etiqueta(t) }}</option>
+            }
+          </select>
+        }
       </label>
 
       <label class="field">
         <span class="label">Mensajes del chat (uno por línea)</span>
         <textarea name="mensajes" rows="7" [(ngModel)]="mensajesTexto"
                   placeholder="GG jugada increíble!&#10;pog pog vamos&#10;esto es puro lag, aburrido"></textarea>
+        <small class="ayuda">Hasta {{ maxMensajes }} mensajes por lote.</small>
       </label>
 
       <label class="field">
         <span class="label">Usuarios activos (opcional)</span>
         <input type="number" name="usuariosActivos" min="1" [(ngModel)]="usuariosActivos"
                placeholder="Se aproxima con la cantidad de mensajes" />
+      </label>
+
+      <label class="field">
+        <span class="label">Segundos que cubre el lote (opcional)</span>
+        <input type="number" name="ventanaSegundos" min="1" [(ngModel)]="ventanaSegundos"
+               placeholder="Si se omite, se asume un minuto" />
+        <small class="ayuda">
+          Se usa para guardar una tasa por minuto comparable con la del muestreo automático.
+        </small>
       </label>
 
       @if (error()) {
@@ -45,7 +72,10 @@
           <span class="badge" [class]="'badge-' + tono(r.clasificacion)">{{ r.clasificacion }}</span>
           <p class="puntaje">{{ r.puntaje | number: '1.0-2' }}<span class="escala"> / 100</span></p>
           <dl class="detalle">
-            <div><dt>Mensajes analizados</dt><dd>{{ r.mensajesAnalizados }}</dd></div>
+            @if (r.mensajesAnalizados !== null) {
+              <div><dt>Mensajes analizados</dt><dd>{{ r.mensajesAnalizados }}</dd></div>
+            }
+            <div><dt>Mensajes por minuto</dt><dd>{{ r.mensajesPorMinuto }}</dd></div>
             <div><dt>Usuarios activos</dt><dd>{{ r.usuariosActivos }}</dd></div>
             <div><dt>Fecha</dt><dd>{{ r.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
           </dl>

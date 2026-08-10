@@ -34,6 +34,7 @@
   }
 
   input,
+  select,
   textarea {
     padding: 0.55rem 0.7rem;
     border: 1px solid var(--border, #334155);
@@ -51,11 +52,21 @@
       outline: none;
       border-color: var(--accent, #ff5500);
     }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 
   textarea {
     resize: vertical;
     line-height: 1.5;
+  }
+
+  .ayuda {
+    color: var(--text-subtle, #8496ad);
+    font-size: 0.75rem;
   }
 }
 

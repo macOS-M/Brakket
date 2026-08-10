@@ -15,6 +15,7 @@ import com.coffeecommits.brakket.twitch.repository.TransmisionTwitchRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -70,7 +71,7 @@ class SentimientoServiceTest {
         });
 
         SentimientoResponse resp = service.analizar(TRANSMISION_ID,
-                new AnalizarChatRequest(List.of("GG jugada increíble", "pog vamos", "clutch 🔥"), null));
+                new AnalizarChatRequest(List.of("GG jugada increíble", "pog vamos", "clutch 🔥"), null, null));
 
         assertThat(resp.id()).isEqualTo(90L);
         assertThat(resp.transmisionId()).isEqualTo(TRANSMISION_ID);
@@ -89,7 +90,7 @@ class SentimientoServiceTest {
         when(analisisRepository.save(any(AnalisisSentimiento.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SentimientoResponse resp = service.analizar(TRANSMISION_ID,
-                new AnalizarChatRequest(List.of("gg", "gg"), 15));
+                new AnalizarChatRequest(List.of("gg", "gg"), 15, null));
 
         assertThat(resp.usuariosActivos()).isEqualTo(15);
         assertThat(resp.mensajesAnalizados()).isEqualTo(2);
@@ -99,7 +100,7 @@ class SentimientoServiceTest {
     void analizar_ignora_mensajes_vacios_y_falla_si_no_queda_ninguno() {
         when(transmisionRepository.findById(TRANSMISION_ID)).thenReturn(Optional.of(transmision()));
 
-        AnalizarChatRequest request = new AnalizarChatRequest(java.util.Arrays.asList("", "   ", null), null);
+        AnalizarChatRequest request = new AnalizarChatRequest(java.util.Arrays.asList("", "   ", null), null, null);
 
         assertThatThrownBy(() -> service.analizar(TRANSMISION_ID, request))
                 .isInstanceOf(BusinessException.class);
@@ -112,7 +113,7 @@ class SentimientoServiceTest {
         when(transmisionRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.analizar(99L,
-                new AnalizarChatRequest(List.of("gg"), null)))
+                new AnalizarChatRequest(List.of("gg"), null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -141,6 +142,70 @@ class SentimientoServiceTest {
         assertThat(serie.ultimo()).isNull();
         assertThat(serie.promedioPuntaje()).isNull();
         assertThat(serie.puntos()).isEmpty();
+    }
+
+    @Test
+    void guarda_una_tasa_por_minuto_no_el_tamano_del_lote() {
+        when(transmisionRepository.findById(TRANSMISION_ID)).thenReturn(Optional.of(transmision()));
+        when(metricaChatRepository.save(any(MetricaChat.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(analisisRepository.save(any(AnalisisSentimiento.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // 30 mensajes capturados en 15 s son 120 por minuto, no 30. La columna
+        // la comparte con el muestreo de RF-38, que escribe tasas.
+        List<String> lote = java.util.Collections.nCopies(30, "gg");
+        SentimientoResponse resp = service.analizar(TRANSMISION_ID,
+                new AnalizarChatRequest(lote, null, 15));
+
+        assertThat(resp.mensajesPorMinuto()).isEqualTo(120);
+        assertThat(resp.mensajesAnalizados()).isEqualTo(30);
+    }
+
+    @Test
+    void sin_ventana_informada_el_lote_se_toma_como_un_minuto() {
+        when(transmisionRepository.findById(TRANSMISION_ID)).thenReturn(Optional.of(transmision()));
+        when(metricaChatRepository.save(any(MetricaChat.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(analisisRepository.save(any(AnalisisSentimiento.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        SentimientoResponse resp = service.analizar(TRANSMISION_ID,
+                new AnalizarChatRequest(List.of("gg", "gg", "gg"), null, null));
+
+        assertThat(resp.mensajesPorMinuto()).isEqualTo(3);
+    }
+
+    @Test
+    void analizar_muestra_cuelga_el_analisis_de_la_muestra_del_muestreo() {
+        // Camino automático (RF-38 ⇒ RF-39): la muestra ya existe y solo se le
+        // agrega la clasificación, sin crear otra métrica de chat.
+        MetricaChat metrica = MetricaChat.builder()
+                .id(55L).transmisionTwitch(transmision())
+                .fechaHora(LocalDateTime.now()).mensajesPorMinuto(402).usuariosActivos(122).build();
+        when(metricaChatRepository.findById(55L)).thenReturn(Optional.of(metrica));
+        when(analisisRepository.save(any(AnalisisSentimiento.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.analizarMuestra(55L, List.of("gg vamos", "clutch"));
+
+        ArgumentCaptor<AnalisisSentimiento> guardado = ArgumentCaptor.forClass(AnalisisSentimiento.class);
+        verify(analisisRepository).save(guardado.capture());
+        assertThat(guardado.getValue().getMetricaChat().getId()).isEqualTo(55L);
+        assertThat(guardado.getValue().getClasificacion())
+                .isEqualTo(ClasificacionSentimiento.POSITIVO.name());
+        verify(metricaChatRepository, never()).save(any());
+    }
+
+    @Test
+    void analizar_muestra_ignora_una_ventana_sin_texto_util() {
+        service.analizarMuestra(55L, java.util.Arrays.asList("", "   ", null));
+
+        verify(analisisRepository, never()).save(any());
+    }
+
+    @Test
+    void analizar_muestra_no_falla_si_la_muestra_ya_no_existe() {
+        when(metricaChatRepository.findById(55L)).thenReturn(Optional.empty());
+
+        service.analizarMuestra(55L, List.of("gg"));
+
+        verify(analisisRepository, never()).save(any());
     }
 
     private AnalisisSentimiento analisis(Long id, String puntaje) {
