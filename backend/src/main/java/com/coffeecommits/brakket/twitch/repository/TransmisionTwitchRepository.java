@@ -23,10 +23,14 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
      */
     @Query("""
             select t from TransmisionTwitch t left join fetch t.canal
-            where t.activa = true and t.finalizadaEn is null""")
+            where t.activa = true and t.finalizadaEn is null
+            order by t.id""")
     List<TransmisionTwitch> findAbiertasParaMuestreo();
 
     // RF-44: resolver la transmision de un torneo para agregar sus metricas
     // en el panel comercial del patrocinador.
     Optional<TransmisionTwitch> findByTorneoId(Long torneoId);
+
+    /** Transmisiones activas: métrica del panel global (RF-49). */
+    long countByActivaTrue();
 }

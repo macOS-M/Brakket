@@ -103,6 +103,10 @@ public class Partida {
     @Column(name = "perdedor_slot", length = 1)
     private String perdedorSlot;
 
+    /** Cuándo se cerró la partida; RF-30 la usa para calcular el plazo de impugnación. */
+    @Column(name = "fecha_finalizacion")
+    private java.time.LocalDateTime fechaFinalizacion;
+
     /** Bye: falta al menos un rival y aun así la partida quedó cerrada. */
     public boolean esBye() {
         return (equipoA == null || equipoB == null) && estado == EstadoPartida.FINALIZADA;

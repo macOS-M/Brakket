@@ -1,0 +1,51 @@
+<section class="page">
+  <app-page-header
+    eyebrow="EPIC-14 · Administración"
+    titulo="Panel global"
+    subtitulo="Estado de la plataforma y actividad administrativa reciente.">
+    <a class="btn btn-ghost" routerLink="/admin/roles">Gestión de roles</a>
+  </app-page-header>
+
+  @if (cargando()) {
+    <app-empty-state modo="cargando" mensaje="Cargando panel…" />
+  } @else if (error()) {
+    <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()">
+      <button class="btn btn-primary" (click)="cargar()">Reintentar</button>
+    </app-empty-state>
+  } @else if (panel()) {
+    @if (panel(); as p) {
+    <div class="stats">
+      <app-stat-card etiqueta="Usuarios" [valor]="p.resumen.usuarios"
+                     [nota]="p.resumen.usuariosBloqueados + ' bloqueados'" tono="azul" />
+      <app-stat-card etiqueta="Equipos" [valor]="p.resumen.equipos" tono="cyan" />
+      <app-stat-card etiqueta="Juegos" [valor]="p.resumen.juegos"
+                     [nota]="p.resumen.juegosActivos + ' activos'" tono="verde" />
+      <app-stat-card etiqueta="Ligas" [valor]="p.resumen.ligas" tono="morado" />
+      <app-stat-card etiqueta="Torneos" [valor]="p.resumen.torneos"
+                     [nota]="p.resumen.torneosEnCurso + ' en curso'" tono="ambar" />
+      <app-stat-card etiqueta="Transmisiones activas" [valor]="p.resumen.transmisionesActivas"
+                     nota="en vivo" tono="morado" />
+      <app-stat-card etiqueta="Disputas" [valor]="p.resumen.disputas" tono="rojo" />
+    </div>
+
+    <div class="actividad">
+      <h2>Actividad reciente</h2>
+      @if (p.actividadReciente.length === 0) {
+        <app-empty-state titulo="Sin actividad"
+                         mensaje="Todavía no hay eventos de auditoría registrados." />
+      } @else {
+        <ul class="log">
+          @for (entrada of p.actividadReciente; track entrada.id) {
+            <li class="log-item">
+              <span class="log-accion">{{ entrada.accion }}</span>
+              <span class="log-entidad">{{ entrada.entidad }} #{{ entrada.entidadId }}</span>
+              <span class="log-actor">{{ actor(entrada) }}</span>
+              <span class="log-fecha">{{ entrada.fecha | date: 'dd/MM/yyyy HH:mm' }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+    }
+  }
+</section>

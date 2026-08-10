@@ -1,9 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TwitchService } from '../../services/twitch.service';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CanalTwitch, MetricasTransmision, TransmisionTwitch } from '../../../../models/twitch.model';
+import { TwitchService } from '../../services/twitch.service';
 
 @Component({
   selector: 'app-twitch-panel',
@@ -34,6 +34,25 @@ export class TwitchPanelComponent implements OnInit {
         this.canal = data;
         if (!this.canalEntrada) {
           this.canalEntrada = data.urlCanal ?? '';
+        }
+      },
+      error: err => this.error = this.mensajeError(err)
+    });
+    this.cargarTransmisionAbierta();
+  }
+
+  /**
+   * Recupera la transmisión abierta al entrar a la pantalla. Sin esto el panel
+   * solo conocía la que acababa de asociar, y al refrescar el navegador perdía
+   * el estado: la única acción posible era volver a asociar, que choca contra
+   * el índice único del stream de Twitch.
+   */
+  cargarTransmisionAbierta(): void {
+    this.twitch.abiertas().subscribe({
+      next: lista => {
+        if (lista.length > 0) {
+          this.transmision = lista[0];
+          this.cargarMetricas();
         }
       },
       error: err => this.error = this.mensajeError(err)
