@@ -13,9 +13,9 @@ public interface AnalisisSentimientoRepository extends JpaRepository<AnalisisSen
     List<AnalisisSentimiento> findByMetricaChatId(Long metricaChatId);
 
     /**
-     * RF-37: sentimiento de una transmisión. La entidad no la referencia directamente,
-     * así que se ancla vía metricaChat. El join es INNER: descarta el análisis colgado
-     * de métricas de chat sin transmisión asociada.
+     * RF-37: sentimiento de una transmisión dentro de un rango. La entidad no la
+     * referencia directamente, así que se ancla vía metricaChat. El join es INNER:
+     * descarta el análisis colgado de métricas de chat sin transmisión asociada.
      */
     @Query("""
             select a from AnalisisSentimiento a
@@ -25,4 +25,15 @@ public interface AnalisisSentimientoRepository extends JpaRepository<AnalisisSen
     List<AnalisisSentimiento> buscarPorTransmisionYRango(@Param("transmisionId") Long transmisionId,
                                                          @Param("desde") LocalDateTime desde,
                                                          @Param("hasta") LocalDateTime hasta);
+
+    /**
+     * Serie de análisis de una transmisión, del más antiguo al más reciente
+     * (RF-40). Navega analisis_sentimiento → metrica_chat → transmision_twitch.
+     */
+    @Query("""
+            select a from AnalisisSentimiento a
+            join a.metricaChat m
+            where m.transmisionTwitch.id = :transmisionId
+            order by a.fechaHora asc, a.id asc""")
+    List<AnalisisSentimiento> findSerieByTransmision(@Param("transmisionId") Long transmisionId);
 }
