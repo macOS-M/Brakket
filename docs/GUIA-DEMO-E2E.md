@@ -34,9 +34,10 @@ Verificado contra el código en la rama de esta iteración (no contra el ERS).
 | Estadísticas (página propia) | 🔜 Próximamente | **NO demostrable** (las stats del perfil de equipo SÍ) |
 | Progresión | 🔜 Próximamente | NO demostrable |
 | Notificaciones (página) | 🔜 Próximamente | NO demostrable (los "pendientes" del dashboard SÍ) |
-| Analítica / Panel comercial del patrocinador | 🔜 Próximamente | NO demostrable |
-| Chat de Twitch, sentimiento IA, termómetro (RF-38/39/40) | ❌ No implementado | NO demostrable |
-| Consulta de métricas por período/rango (RF-37) | ❌ No implementado | NO demostrable (los indicadores básicos de RF-36 SÍ) |
+| Analítica (`/analytics`, RF-37) | ✅ Funcional | Se muestra (ADMIN y COMISIONADO) |
+| Panel comercial del patrocinador | 🔜 Próximamente | NO demostrable (necesita el vínculo usuario↔patrocinador de RF-44) |
+| Sentimiento IA y termómetro (RF-39/40) | ❌ No implementado | NO demostrable (la captura de chat de RF-38 SÍ) |
+| Consulta de métricas por período/rango (RF-37) | ✅ Funcional | Series de audiencia y chat, crudas o por hora |
 
 Otros límites honestos: el rol ÁRBITRO existe pero no participa del flujo de
 resultados (reporta capitán, confirma rival, resuelve organizador/admin); no hay
@@ -188,6 +189,8 @@ El momento estrella. Narrar: "esto que sigue no está pregrabado".
 | 8.1 🖥️ | (público) | `/transmisiones` (sirve sin sesión) | Vitrina estilo Twitch: hero con el canal oficial, estado real consultado a Helix. Offline = tarjeta digna con placeholder "Próximamente"; si el canal está EN VIVO: player, badge, espectadores en ~1 min |
 | 8.2 🖥️ | **Admin** (login en V1) | `/twitch` ("Canal de Twitch" en el menú) | Canal validado (RF-34), transmisión asociada al Torneo B |
 | 8.3 🖥️ | Admin | Bloque **Métricas de audiencia (RF-36)** | Muestras/pico/promedio/duración. Si el canal no transmitió: "Todavía no hay muestras" — narrar que el muestreo corre cada 60 s automáticamente |
+| 8.4 🖥️ | Admin | `/analytics` ("Analítica" en el menú) — **RF-37** | Elegir la transmisión del Torneo B: tarjetas de resumen y la curva de audiencia. Alternar **Por hora / Muestras crudas** (el resumen no cambia, la densidad sí) y acotar el rango a una hora del directo |
+| 8.5 🖥️ | Admin | Panel **Actividad de chat** (RF-38) | Mensajes por minuto y usuarios activos capturados del chat real. El panel de **Sentimiento** muestra su estado vacío: es RF-39, todavía sin mergear |
 
 ### Sección 9 — Patrocinios y administración (3 min) — Ventana 1 (Admin)
 
@@ -201,9 +204,9 @@ El momento estrella. Narrar: "esto que sigue no está pregrabado".
 
 Mostrar el menú con los badges "Pronto" y ser explícitos: disputas como módulo,
 estadísticas globales, progresión, notificaciones, panel comercial del
-patrocinador, chat de Twitch + análisis de sentimiento (RF-38/39/40) y la
-consulta de métricas por período (RF-37) son la **siguiente iteración**. Lo
-mostrado hoy es funcional de punta a punta sobre datos reales.
+patrocinador y el análisis de sentimiento + termómetro (RF-39/40) son la
+**siguiente iteración**. Lo mostrado hoy es funcional de punta a punta sobre
+datos reales.
 
 ### Tiempos
 
