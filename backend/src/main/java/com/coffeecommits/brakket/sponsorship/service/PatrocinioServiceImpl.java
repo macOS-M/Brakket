@@ -89,13 +89,18 @@ public class PatrocinioServiceImpl implements PatrocinioService {
                     torneo.getFechaFin() != null ? torneo.getFechaFin().toLocalDate() : null);
         }
 
+        // El recurso escaso es (competencia, nivel), no la competencia entera:
+        // dos patrocinios de niveles distintos (ej. ORO y PLATA) pueden coexistir
+        // en la misma competencia y periodo. Lo que no puede repetirse es el
+        // mismo nivel dos veces para la misma competencia en fechas solapadas.
         boolean solapa = patrocinioRepository.existeSolapamiento(
                 request.ligaId(), request.temporadaId(), request.torneoId(),
-                request.fechaInicio(), request.fechaFin());
+                request.nivel(), request.fechaInicio(), request.fechaFin());
 
         if (solapa) {
             throw new BusinessException(
-                    "Ya existe un patrocinio activo para esta competencia en el período seleccionado");
+                    "Ya existe un patrocinio de nivel %s activo para esta competencia en el período seleccionado"
+                            .formatted(request.nivel()));
         }
 
         Patrocinio patrocinio = Patrocinio.builder()

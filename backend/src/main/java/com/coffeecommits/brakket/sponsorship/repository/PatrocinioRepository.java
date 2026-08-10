@@ -16,11 +16,19 @@ public interface PatrocinioRepository extends JpaRepository<Patrocinio, Long> {
 
     List<Patrocinio> findByTemporadaId(Long temporadaId);
 
-    // Solo uno de ligaId/temporadaId/torneoId llega no-nulo (validado antes de llamar
-    // este método), por eso el OR funciona: solo compara contra el alcance real enviado.
+    List<Patrocinio> findByPatrocinadorId(Long patrocinadorId);
+
+    // El recurso escaso es (competencia, nivel): dos patrocinios de niveles
+    // distintos SI pueden coexistir en la misma competencia y periodo (ej.
+    // un ORO y un PLATA simultaneos). Lo que no puede repetirse es el mismo
+    // nivel dos veces para la misma competencia en fechas solapadas.
+    // Solo uno de ligaId/temporadaId/torneoId llega no-nulo (validado antes
+    // de llamar este metodo), por eso el OR funciona: solo compara contra
+    // el alcance real enviado.
     @Query("""
             SELECT COUNT(p) > 0 FROM Patrocinio p
             WHERE p.estado = 'ACTIVO'
+            AND p.nivel = :nivel
             AND (
                 (:ligaId IS NOT NULL AND p.liga.id = :ligaId)
                 OR (:temporadaId IS NOT NULL AND p.temporada.id = :temporadaId)
@@ -32,6 +40,7 @@ public interface PatrocinioRepository extends JpaRepository<Patrocinio, Long> {
     boolean existeSolapamiento(@Param("ligaId") Long ligaId,
                                @Param("temporadaId") Long temporadaId,
                                @Param("torneoId") Long torneoId,
+                               @Param("nivel") String nivel,
                                @Param("fechaInicio") LocalDate fechaInicio,
                                @Param("fechaFin") LocalDate fechaFin);
 }
