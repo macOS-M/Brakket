@@ -90,6 +90,11 @@ Google OAuth (`GOOGLE_CLIENT_ID/SECRET`), **JWT** (`JWT_SECRET`), Twitch (`TWITC
 e IA (`AI_*`). Las integraciones externas están encapsuladas en `config/TwitchProperties`
 y `config/AiProperties` (RNF-23).
 
+Sin `AI_API_KEY` el análisis de sentimiento del chat (RF-39) **igual funciona**: cae
+al analizador léxico, que es determinista y no sale a la red. Con la llave, cada
+ventana de chat que captura RF-38 se clasifica con el modelo, y si el proveedor
+falla se vuelve al léxico sin perder la muestra.
+
 ## Comandos útiles
 
 ```bash

@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.coffeecommits.brakket.twitch.event.MuestraChatCapturadaEvent;
 import com.coffeecommits.brakket.twitch.model.MetricaChat;
 import com.coffeecommits.brakket.twitch.model.PlataformaTransmision;
 import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
@@ -31,6 +33,7 @@ public class MuestreoChatService {
     private final ChatTwitchListener listener;
     private final TransmisionTwitchRepository transmisionRepository;
     private final MetricaChatRepository metricaChatRepository;
+    private final ApplicationEventPublisher eventos;
 
     /** Se necesita para convertir el conteo de la ventana a tasa por minuto. */
     private final long intervaloMs;
@@ -38,10 +41,12 @@ public class MuestreoChatService {
     public MuestreoChatService(ChatTwitchListener listener,
                                TransmisionTwitchRepository transmisionRepository,
                                MetricaChatRepository metricaChatRepository,
+                               ApplicationEventPublisher eventos,
                                @Value("${brakket.streams.muestreo-intervalo-ms:60000}") long intervaloMs) {
         this.listener = listener;
         this.transmisionRepository = transmisionRepository;
         this.metricaChatRepository = metricaChatRepository;
+        this.eventos = eventos;
         this.intervaloMs = intervaloMs;
     }
 
@@ -87,12 +92,20 @@ public class MuestreoChatService {
         // La ventana puede no durar un minuto (el intervalo es configurable)
         int porMinuto = (int) Math.round(ventana.mensajes() * 60000.0 / intervaloMs);
 
-        metricaChatRepository.save(MetricaChat.builder()
+        MetricaChat muestra = metricaChatRepository.save(MetricaChat.builder()
                 .transmisionTwitch(transmision)
                 .fechaHora(LocalDateTime.now())
                 .mensajesPorMinuto(porMinuto)
                 .usuariosActivos(ventana.autoresDistintos())
                 .build());
+
+        // RF-39 clasifica el sentimiento de esta misma ventana. Va por evento
+        // para no acoplar el muestreo al modulo de analytics, y se consume
+        // despues del commit: un fallo del analisis no puede tirar la muestra.
+        // Los textos viajan en memoria hasta el analizador y no se persisten.
+        if (!ventana.textos().isEmpty()) {
+            eventos.publishEvent(new MuestraChatCapturadaEvent(muestra.getId(), ventana.textos()));
+        }
 
         log.info("Chat de #{}: {} mensajes en la ventana -> {}/min, {} autores",
                 canal, ventana.mensajes(), porMinuto, ventana.autoresDistintos());

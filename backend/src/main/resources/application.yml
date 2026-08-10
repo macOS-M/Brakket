@@ -68,8 +68,11 @@ brakket:
     # 60s mantiene el desfase bajo el minuto de RNF-02 sin gastar cuota).
     muestreo-intervalo-ms: ${STREAMS_MUESTREO_INTERVALO_MS:60000}
   ai:
+    # RF-39: sin llave el análisis NO se cae, usa el analizador léxico. La demo
+    # y el CI corren así a propósito (no salen a la red).
     api-key: ${AI_API_KEY:}
-    api-base-url: ${AI_API_BASE_URL:}
+    api-base-url: ${AI_API_BASE_URL:https://api.anthropic.com/v1}
+    model: ${AI_MODEL:claude-sonnet-5}
   rawg:
     api-key: ${RAWG_API_KEY:}
     base-url: https://api.rawg.io/api
