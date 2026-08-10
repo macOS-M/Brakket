@@ -91,6 +91,7 @@ public class SecurityConfig {
                         // depender de una sola capa.
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/partidas/*/casos-especiales").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/partidas/*/disputas").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tournaments/partidas/*/trazabilidad").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // RF-35: ver los directos no exige sesión, como el catálogo.
                         .requestMatchers(HttpMethod.GET, "/api/transmisiones").permitAll()
