@@ -23,9 +23,6 @@ import java.util.regex.Pattern;
 @Component
 public class AnalizadorLexico implements AnalizadorSentimiento {
 
-    /** A partir de |puntaje| ≥ este umbral el sentimiento deja de ser NEUTRO. */
-    private static final BigDecimal UMBRAL = new BigDecimal("20");
-
     /** Extrae palabras respetando acentos/ñ (letras y dígitos Unicode). */
     private static final Pattern TOKEN = Pattern.compile("[\\p{L}\\p{N}]+");
 
@@ -105,7 +102,7 @@ public class AnalizadorLexico implements AnalizadorSentimiento {
                 : BigDecimal.valueOf(100L * (positivos - negativos))
                         .divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
 
-        return new Resultado(clasificar(puntaje), puntaje);
+        return new Resultado(ClasificacionSentimiento.desdePuntaje(puntaje), puntaje);
     }
 
     /** Ocurrencias no solapadas de {@code aguja} en {@code texto}. */
@@ -118,15 +115,5 @@ public class AnalizadorLexico implements AnalizadorSentimiento {
             desde = i + aguja.length();
         }
         return total;
-    }
-
-    private ClasificacionSentimiento clasificar(BigDecimal puntaje) {
-        if (puntaje.compareTo(UMBRAL) >= 0) {
-            return ClasificacionSentimiento.POSITIVO;
-        }
-        if (puntaje.compareTo(UMBRAL.negate()) <= 0) {
-            return ClasificacionSentimiento.NEGATIVO;
-        }
-        return ClasificacionSentimiento.NEUTRO;
     }
 }
