@@ -25,4 +25,18 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
 
     /** Transmisiones activas: métrica del panel global (RF-49). */
     long countByActivaTrue();
+
+    /**
+     * RF-37: catálogo del panel analítico. Trae también el torneo de la partida
+     * porque una transmisión puede colgar de la partida y no del torneo, y de ahí
+     * sale tanto la etiqueta como el criterio de acceso del comisionado.
+     */
+    @Query("""
+            select t from TransmisionTwitch t
+            left join fetch t.torneo
+            left join fetch t.partida p
+            left join fetch p.torneo
+            where t.activa = true
+            order by t.iniciadaEn desc nulls last, t.id desc""")
+    List<TransmisionTwitch> findParaAnalitica();
 }
