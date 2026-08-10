@@ -1,5 +1,6 @@
 package com.coffeecommits.brakket.twitch.service;
 
+import com.coffeecommits.brakket.twitch.event.MuestraChatCapturadaEvent;
 import com.coffeecommits.brakket.twitch.model.MetricaChat;
 import com.coffeecommits.brakket.twitch.model.PlataformaTransmision;
 import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 
@@ -39,12 +41,24 @@ class MuestreoChatServiceTest {
     @Mock
     private MetricaChatRepository metricaChatRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventos;
+
     private MuestreoChatService service;
 
     @BeforeEach
     void setUp() {
         service = new MuestreoChatService(listener, transmisionRepository,
-                metricaChatRepository, INTERVALO_MS);
+                metricaChatRepository, eventos, INTERVALO_MS);
+    }
+
+    /** La muestra persistida vuelve con id: el evento viaja por id, no por entidad. */
+    private void alGuardarDevolverConId(long id) {
+        when(metricaChatRepository.save(any(MetricaChat.class))).thenAnswer(invocacion -> {
+            MetricaChat guardada = invocacion.getArgument(0);
+            guardada.setId(id);
+            return guardada;
+        });
     }
 
     private TransmisionTwitch transmisionAbierta() {
@@ -98,6 +112,7 @@ class MuestreoChatServiceTest {
 
         service.muestrear(); // primer tick: conecta
 
+        alGuardarDevolverConId(500L);
         when(listener.estaConectado()).thenReturn(true);
         when(listener.tomarYReiniciar())
                 .thenReturn(new ChatTwitchListener.Ventana(134, 122, List.of("hola", "gg")));
@@ -114,5 +129,48 @@ class MuestreoChatServiceTest {
         assertThat(metrica.getTransmisionTwitch().getId()).isEqualTo(7L);
         // Las muestras cuelgan de la transmision, no del modelo por equipo de V1.
         assertThat(metrica.getCuentaTwitch()).isNull();
+    }
+
+    @Test
+    void publica_la_ventana_para_el_analisis_de_sentimiento() {
+        when(transmisionRepository.findAbiertasParaMuestreo())
+                .thenReturn(List.of(transmisionAbierta()));
+
+        service.muestrear(); // primer tick: conecta
+
+        alGuardarDevolverConId(500L);
+        when(listener.estaConectado()).thenReturn(true);
+        when(listener.tomarYReiniciar())
+                .thenReturn(new ChatTwitchListener.Ventana(3, 2, List.of("gg", "que lag", "vamos")));
+
+        service.muestrear();
+
+        ArgumentCaptor<MuestraChatCapturadaEvent> publicado =
+                ArgumentCaptor.forClass(MuestraChatCapturadaEvent.class);
+        verify(eventos).publishEvent(publicado.capture());
+
+        // El evento viaja con el id de la muestra recien guardada: el listener
+        // corre en otra transaccion y necesita releerla, no la instancia.
+        assertThat(publicado.getValue().metricaChatId()).isEqualTo(500L);
+        assertThat(publicado.getValue().mensajes()).containsExactly("gg", "que lag", "vamos");
+    }
+
+    @Test
+    void una_ventana_sin_texto_guarda_la_muestra_pero_no_publica_evento() {
+        when(transmisionRepository.findAbiertasParaMuestreo())
+                .thenReturn(List.of(transmisionAbierta()));
+
+        service.muestrear(); // primer tick: conecta
+
+        alGuardarDevolverConId(501L);
+        when(listener.estaConectado()).thenReturn(true);
+        // Chat mudo: la tasa de cero es un dato valido, pero no hay nada que analizar.
+        when(listener.tomarYReiniciar())
+                .thenReturn(new ChatTwitchListener.Ventana(0, 0, List.of()));
+
+        service.muestrear();
+
+        verify(metricaChatRepository).save(any(MetricaChat.class));
+        verify(eventos, never()).publishEvent(any(MuestraChatCapturadaEvent.class));
     }
 }

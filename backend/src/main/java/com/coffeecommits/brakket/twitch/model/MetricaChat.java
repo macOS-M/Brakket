@@ -30,8 +30,8 @@ public class MetricaChat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Nullable desde V37 (RF-39): las muestras de chat del análisis de
-    // sentimiento cuelgan de la transmisión, no de una cuenta_twitch de equipo.
+    // Nullable desde V43 (RF-38): las muestras que toma el muestreo del chat
+    // cuelgan de la transmisión, no de una cuenta_twitch de equipo.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cuenta_twitch_id")
     private CuentaTwitch cuentaTwitch;
