@@ -205,7 +205,7 @@ public class TorneoServiceImpl implements TorneoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
 
         // La inscripción debe usar una de las disciplinas declaradas por el equipo.
-        if (equipo.getJuegos().stream().noneMatch(j -> j.getId().equals(torneo.getJuego().getId()))) {
+        if (!compiteEnJuego(equipo, torneo.getJuego().getId())) {
             throw new BusinessException("El equipo no compite en el juego de este torneo");
         }
         long plantilla = inscripcionRepository.countMiembrosActivos(equipoId);
@@ -233,12 +233,22 @@ public class TorneoServiceImpl implements TorneoService {
 
 
         return inscripcionRepository.equiposCapitaneadosPor(usuario.getId()).stream()
-                .filter(equipo -> equipo.getJuegos().stream()
-                        .anyMatch(j -> j.getId().equals(torneo.getJuego().getId())))
+                .filter(equipo -> compiteEnJuego(equipo, torneo.getJuego().getId()))
                 .filter(equipo -> !inscripcionRepository
                         .existsByTorneoIdAndEquipoId(torneoId, equipo.getId()))
                 .map(EquipoElegibleResponse::from)
                 .toList();
+    }
+
+    /** Compatibilidad con equipos previos a V39 y fixtures unitarios heredados. */
+    private boolean compiteEnJuego(Equipo equipo, Long juegoId) {
+        if (equipo.getJuegos() != null && equipo.getJuegos().stream()
+                .anyMatch(j -> j.getId().equals(juegoId))) {
+            return true;
+        }
+        return (equipo.getJuegos() == null || equipo.getJuegos().isEmpty())
+                && equipo.getJuego() != null
+                && equipo.getJuego().getId().equals(juegoId);
     }
 
     @Override

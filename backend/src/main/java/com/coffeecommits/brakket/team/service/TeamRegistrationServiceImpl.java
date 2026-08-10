@@ -224,6 +224,15 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
         if (request.juegoIds() != null || request.juegoId() != null) {
             List<Juego> nuevosJuegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
+            Set<Long> juegosActuales = equipo.getJuegos().isEmpty()
+                    ? Set.of(equipo.getJuego().getId())
+                    : equipo.getJuegos().stream().map(Juego::getId).collect(java.util.stream.Collectors.toSet());
+            Set<Long> juegosSolicitados = nuevosJuegos.stream().map(Juego::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+            if (!juegosActuales.equals(juegosSolicitados) && participaEnTorneoActivo(equipoId)) {
+                throw new BusinessException(
+                        "No se pueden cambiar los juegos mientras el equipo participa en un torneo activo.");
+            }
             equipo.setJuego(juegoPrincipal(nuevosJuegos, request.juegoId()));
             equipo.getJuegos().clear();
             equipo.getJuegos().addAll(nuevosJuegos);
@@ -262,10 +271,10 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         if (juegoIds != null) ids.addAll(juegoIds);
         if (ids.isEmpty()) throw new BusinessException("Debés seleccionar al menos un juego.");
 
-        List<Juego> encontrados = juegoRepository.findAllById(ids);
-        if (encontrados.size() != ids.size()) {
-            throw new ResourceNotFoundException("Juego", "uno o más juegos seleccionados");
-        }
+        List<Juego> encontrados = ids.stream()
+                .map(id -> juegoRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Juego", id)))
+                .toList();
         if (encontrados.stream().anyMatch(j -> !Boolean.TRUE.equals(j.getActivo()))) {
             throw new BusinessException("Todos los juegos seleccionados deben estar activos.");
         }
