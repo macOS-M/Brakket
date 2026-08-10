@@ -30,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -153,7 +154,7 @@ class TorneoServiceImplTest {
     @Test
     void inscribir_valida_capitania_cupo_y_duplicados() {
         Torneo torneo = torneoAbierto();
-        Equipo equipo = Equipo.builder().id(20L).nombre("Nébula").juego(juego()).build();
+        Equipo equipo = Equipo.builder().id(20L).nombre("Nébula").juego(juego()).juegos(Set.of(juego())).build();
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(usuario()));
         when(torneoRepository.findById(7L)).thenReturn(Optional.of(torneo));
         lenient().when(inscripcionRepository.countVigentesPorTorneo(7L)).thenReturn(0L);
@@ -194,7 +195,7 @@ class TorneoServiceImplTest {
         when(inscripcionRepository.esCapitanActivo(1L, 20L)).thenReturn(true);
         when(inscripcionRepository.existsByTorneoIdAndEquipoId(7L, 20L)).thenReturn(false);
         when(inscripcionRepository.equiposCapitaneadosPor(1L)).thenReturn(List.of(
-                Equipo.builder().id(20L).nombre("Nébula").juego(juego()).build()));
+                Equipo.builder().id(20L).nombre("Nébula").juego(juego()).juegos(Set.of(juego())).build()));
         when(inscripcionRepository.countMiembrosActivos(20L)).thenReturn(2L);
         assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL"))
                 .isInstanceOf(BusinessException.class)

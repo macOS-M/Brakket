@@ -160,7 +160,7 @@ class TeamRegistrationServiceImplTest {
         when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipo()));
         actorEsCapitanActivo();
         Juego fifa = Juego.builder().id(7L).nombre("FIFA").genero("Deportes").activo(true).build();
-        when(juegoRepository.findById(7L)).thenReturn(Optional.of(fifa));
+        when(juegoRepository.findAllById(any())).thenReturn(List.of(fifa));
         Torneo futuro = Torneo.builder()
                 .fechaInicio(LocalDate.now().plusDays(1).atStartOfDay())
                 .fechaFin(LocalDate.now().plusDays(10).atStartOfDay())
@@ -179,7 +179,7 @@ class TeamRegistrationServiceImplTest {
         when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipo));
         actorEsCapitanActivo();
         Juego fifa = Juego.builder().id(7L).nombre("FIFA").genero("Deportes").activo(true).build();
-        when(juegoRepository.findById(7L)).thenReturn(Optional.of(fifa));
+        when(juegoRepository.findAllById(any())).thenReturn(List.of(fifa));
         Torneo futuro = Torneo.builder()
                 .fechaInicio(LocalDate.now().plusDays(1).atStartOfDay())
                 .fechaFin(LocalDate.now().plusDays(10).atStartOfDay())
