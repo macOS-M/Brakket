@@ -1,0 +1,34 @@
+<section class="page">
+  <a class="volver" routerLink="/sponsorships">← Volver a patrocinadores</a>
+
+  <div class="header">
+    <h1>Asociaciones de patrocinio</h1>
+    @if (puedeGestionar()) {
+    <a class="btn-primary" routerLink="/sponsorships/asociaciones/nuevo">+ Nueva asociación</a>
+    }
+  </div>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando asociaciones...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (patrocinios().length === 0) {
+  <p class="placeholder">Todavía no hay asociaciones registradas.</p>
+  } @else {
+  <div class="grid">
+    @for (p of patrocinios(); track p.id) {
+    <div class="patrocinador-card">
+      <div class="info">
+        <p class="nombre">{{ p.patrocinadorNombre }}</p>
+        <span class="badge" [class.inactivo]="p.estado !== 'ACTIVO'">{{ p.estado }}</span>
+        <p class="descripcion">{{ alcanceTexto(p) }} · {{ p.nivel }}</p>
+        <p class="contacto">{{ p.fechaInicio }} — {{ p.fechaFin }}</p>
+        @if (p.condiciones) {
+        <p class="descripcion">{{ p.condiciones }}</p>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+</section>

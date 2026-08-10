@@ -10,17 +10,6 @@
     h1 {
       margin: 0;
     }
-
-    .header-acciones {
-      display: flex;
-      gap: 0.75rem;
-
-      // Anula el flex:1 que .btn-secondary trae por defecto
-      // (pensado para las cards, no para este contexto).
-      .btn-secondary {
-        flex: none;
-      }
-    }
   }
 
   .placeholder {
@@ -51,24 +40,8 @@
   border-radius: 12px;
   overflow: hidden;
 
-  .logo {
-    width: 100%;
-    height: 100px;
-    object-fit: contain;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 0.5rem;
-
-    &.placeholder-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted, #94a3b8);
-      font-size: 0.85rem;
-    }
-  }
-
   .info {
-    padding: 1rem 1.1rem 0.5rem;
+    padding: 1rem 1.1rem;
     flex: 1;
 
     .nombre {
@@ -91,12 +64,6 @@
       color: var(--brand-cyan, #22d3ee);
     }
   }
-
-  .acciones {
-    display: flex;
-    gap: 0.6rem;
-    padding: 0.9rem 1.1rem 1.1rem;
-  }
 }
 
 .badge {
@@ -114,9 +81,7 @@
   }
 }
 
-.btn-primary,
-.btn-secondary,
-.btn-toggle {
+.btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -127,34 +92,18 @@
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.btn-primary {
   background: var(--brand-blue, #2563eb);
   color: #fff;
 }
 
-.btn-secondary {
-  background: transparent;
-  border-color: var(--border, #334155);
-  color: var(--text, #e2e8f0);
-  flex: 1;
-  text-align: center;
-}
+.volver {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #94a3b8);
+  text-decoration: none;
 
-.btn-toggle {
-  background: transparent;
-  border-color: #f87171;
-  color: #f87171;
-  flex: 1;
-
-  &.activar {
-    border-color: var(--brand-cyan, #22d3ee);
-    color: var(--brand-cyan, #22d3ee);
+  &:hover {
+    color: #ff6a1f;
   }
 }
