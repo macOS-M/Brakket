@@ -5,8 +5,8 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
-import com.coffeecommits.brakket.notification.model.Notificacion;
-import com.coffeecommits.brakket.notification.repository.NotificacionRepository;
+import com.coffeecommits.brakket.notification.model.TipoNotificacion;
+import com.coffeecommits.brakket.notification.service.NotificationService;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.team.model.MiembroEquipo;
 import com.coffeecommits.brakket.team.repository.MiembroEquipoRepository;
@@ -35,18 +35,18 @@ public class TransferResponseServiceImpl implements TransferResponseService {
     private final SolicitudTransferenciaRepository transferenciaRepository;
     private final MiembroEquipoRepository miembroEquipoRepository;
     private final UsuarioRepository usuarioRepository;
-    private final NotificacionRepository notificacionRepository;
+    private final NotificationService notificationService;
     private final HistorialTransferenciaService historialTransferenciaService; // RF-14
 
     public TransferResponseServiceImpl(SolicitudTransferenciaRepository transferenciaRepository,
                                        MiembroEquipoRepository miembroEquipoRepository,
                                        UsuarioRepository usuarioRepository,
-                                       NotificacionRepository notificacionRepository,
+                                       NotificationService notificationService,
                                        HistorialTransferenciaService historialTransferenciaService) { // RF-14
         this.transferenciaRepository = transferenciaRepository;
         this.miembroEquipoRepository = miembroEquipoRepository;
         this.usuarioRepository = usuarioRepository;
-        this.notificacionRepository = notificacionRepository;
+        this.notificationService = notificationService;
         this.historialTransferenciaService = historialTransferenciaService; // RF-14
     }
 
@@ -196,14 +196,7 @@ public class TransferResponseServiceImpl implements TransferResponseService {
 
     private void notificar(Usuario destinatario, SolicitudTransferencia solicitud,
                            String tipo, String mensaje) {
-        notificacionRepository.save(Notificacion.builder()
-                .usuario(destinatario)
-                .tipo(tipo)
-                .mensaje(mensaje)
-                .entidad("solicitud_transferencia")
-                .entidadId(solicitud.getId())
-                .leida(false)
-                .fecha(LocalDateTime.now())
-                .build());
+        notificationService.notificar(destinatario, TipoNotificacion.valueOf(tipo), mensaje,
+                "Transferencias", "solicitud_transferencia", solicitud.getId());
     }
 }

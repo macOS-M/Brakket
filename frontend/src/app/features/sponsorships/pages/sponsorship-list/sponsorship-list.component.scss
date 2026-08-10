@@ -10,6 +10,17 @@
     h1 {
       margin: 0;
     }
+
+    .header-acciones {
+      display: flex;
+      gap: 0.75rem;
+
+      // Anula el flex:1 que .btn-secondary trae por defecto
+      // (pensado para las cards, no para este contexto).
+      .btn-secondary {
+        flex: none;
+      }
+    }
   }
 
   .placeholder {

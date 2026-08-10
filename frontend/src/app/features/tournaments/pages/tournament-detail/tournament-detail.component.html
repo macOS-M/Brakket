@@ -313,11 +313,15 @@
       [campeonEquipoId]="torneo.campeonEquipoId"
       [misEquipos]="misEquipos()"
       [esGestor]="esGestor()"
+      [puedeCasoEspecial]="puedeCasoEspecial()"
       [enCurso]="enCurso()"
       [ocupado]="enviandoResultado()"
       (enviarMarcador)="onMarcador($event)"
       (confirmar)="onConfirmar($event)"
       (rechazar)="onRechazar($event)"
+      (impugnar)="onImpugnar($event)"
+      (disputaResuelta)="refrescarLlaves()"
+      (casoEspecialRegistrado)="refrescarLlaves()"
     />
   </div>
   }

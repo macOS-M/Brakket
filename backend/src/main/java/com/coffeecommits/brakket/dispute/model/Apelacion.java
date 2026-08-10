@@ -34,4 +34,18 @@ public class Apelacion {
 
     @Column(name = "decision_final", length = 1000)
     private String decisionFinal;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "apelada_por_id")
+    private Usuario apeladaPor;
+
+    /** 'PENDIENTE' o 'RESUELTA'. */
+    @Column(name = "estado", nullable = false, length = 20)
+    private String estado;
+
+    @Column(name = "fecha_creacion", nullable = false)
+    private java.time.LocalDateTime fechaCreacion;
+
+    @Column(name = "fecha_resolucion")
+    private java.time.LocalDateTime fechaResolucion;
 }

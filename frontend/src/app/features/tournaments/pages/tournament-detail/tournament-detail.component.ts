@@ -17,6 +17,7 @@ import { TournamentsService } from '../../services/tournaments.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import {
+  ImpugnarEvent,
   MarcadorEvent,
   TournamentBracketComponent
 } from '../../components/tournament-bracket/tournament-bracket.component';
@@ -135,6 +136,11 @@ export class TournamentDetailComponent {
     return !!t && !!usuario?.id && Number(usuario.id) === t.organizadorId;
   });
 
+// Árbitro asignado a este torneo puntual (no es un rol global). Ya
+// viene calculado del backend, así no exponemos la lista completa de
+// árbitros del torneo a cualquier visitante.
+  readonly esArbitro = computed(() => this.detalle()?.esArbitro ?? false);
+
   readonly puedeEliminar = computed(
     () => this.esOrganizador() || this.auth.hasRole('ADMIN')
   );
@@ -143,9 +149,12 @@ export class TournamentDetailComponent {
   readonly esModeracion = computed(() => this.puedeEliminar() && !this.esOrganizador());
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
+// RF-28: quién puede reportar descansos/avances/abandonos.
+  readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
 
   /** Iniciar exige gestor, etapa de inscripción y al menos 2 equipos. */
   readonly puedeIniciar = computed(() => {
+
     const t = this.torneo();
     return !!t && this.esGestor() && t.estado === 'INSCRIPCION_ABIERTA' && t.inscritos >= 2;
   });
@@ -509,7 +518,7 @@ export class TournamentDetailComponent {
   }
 
   /** Tras cada resultado el avance puede tocar otras partidas y el torneo. */
-  private refrescarLlaves(): void {
+  protected refrescarLlaves(): void {
     forkJoin({
       detalle: this.tournamentsService.obtener(this.torneoId).pipe(catchError(() => of(null))),
       partidas: this.tournamentsService.bracket(this.torneoId).pipe(catchError(() => of([] as Partida[])))
@@ -555,7 +564,6 @@ export class TournamentDetailComponent {
       }
     });
   }
-
   onRechazar(p: Partida): void {
     this.enviandoResultado.set(true);
     this.errorLlaves.set(null);
@@ -564,6 +572,18 @@ export class TournamentDetailComponent {
       error: (err) => {
         this.enviandoResultado.set(false);
         this.errorLlaves.set(err?.error?.message ?? 'No se pudo rechazar el resultado.');
+      }
+    });
+  }
+
+  onImpugnar(evento: ImpugnarEvent): void {
+    this.enviandoResultado.set(true);
+    this.errorLlaves.set(null);
+    this.tournamentsService.impugnar(evento.partida.id, evento.request).subscribe({
+      next: () => this.refrescarLlaves(),
+      error: (err) => {
+        this.enviandoResultado.set(false);
+        this.errorLlaves.set(err?.error?.message ?? 'No se pudo registrar la impugnación.');
       }
     });
   }
