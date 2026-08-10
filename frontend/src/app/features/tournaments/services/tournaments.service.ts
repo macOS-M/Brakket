@@ -10,6 +10,7 @@ import {
   TorneoDetalle
 } from '../../../models/tournament.model';
 import { DisputaResponse, ImpugnarResultadoRequest } from '../../../models/disputa.model';
+import { EventoTrazabilidad } from '../../../models/evento-trazabilidad.model';
 import { RegistrarCasoEspecialRequest } from '../../../models/caso-especial.model';
 
 /**
@@ -92,6 +93,10 @@ export class TournamentsService {
     return this.api.post<DisputaResponse>(`/tournaments/partidas/${partidaId}/disputas`, request);
   }
 
+  /** RF-33: línea de tiempo completa de una partida. */
+  trazabilidad(partidaId: number): Observable<EventoTrazabilidad[]> {
+    return this.api.get<EventoTrazabilidad[]>(`/tournaments/partidas/${partidaId}/trazabilidad`);
+  }
   /** RF-31: para saber el ID de la disputa activa antes de pedir su evidencia. */
   disputasDePartida(partidaId: number): Observable<DisputaResponse[]> {
     return this.api.get<DisputaResponse[]>(`/tournaments/partidas/${partidaId}/disputas`);

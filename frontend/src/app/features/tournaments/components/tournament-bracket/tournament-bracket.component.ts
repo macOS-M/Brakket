@@ -23,6 +23,7 @@ import {
 } from '../../../../models/disputa.model';
 import { RegistrarCasoEspecialRequest, TipoCasoEspecial } from '../../../../models/caso-especial.model';
 import { EvidenciaResponse } from '../../../../models/evidencia.model';
+import { EventoTrazabilidad } from '../../../../models/evento-trazabilidad.model';
 import { TournamentsService } from '../../services/tournaments.service';
 import { DisputesService } from '../../../disputes/services/disputes.service';
 import { UploadsService } from '../../../../shared/services/uploads.service';
@@ -197,6 +198,14 @@ export class TournamentBracketComponent {
   readonly equipoGanadorCaso = signal<number | null>(null);
   readonly errorCaso = signal<string | null>(null);
   readonly enviandoCaso = signal(false);
+
+  // ---------- RF-33: línea de tiempo completa ----------
+
+  /** Partida cuyo historial está desplegado (null = ninguno). */
+  readonly verTrazabilidad = signal<number | null>(null);
+  readonly cargandoTrazabilidad = signal(false);
+  readonly eventosTrazabilidad = signal<EventoTrazabilidad[]>([]);
+  readonly errorTrazabilidad = signal<string | null>(null);
 
   /** Rieles SVG calculados midiendo las tarjetas ya pintadas. */
   readonly rieles = signal<Riel[]>([]);
@@ -704,6 +713,43 @@ export class TournamentBracketComponent {
         this.errorEvidencia.set(err?.error?.message ?? 'No se pudo cargar la disputa.');
       }
     });
+  }
+
+  toggleTrazabilidad(p: Partida): void {
+    if (this.verTrazabilidad() === p.id) {
+      this.verTrazabilidad.set(null);
+      return;
+    }
+    this.verTrazabilidad.set(p.id);
+    this.eventosTrazabilidad.set([]);
+    this.errorTrazabilidad.set(null);
+    this.cargandoTrazabilidad.set(true);
+    this.tournamentsService.trazabilidad(p.id).subscribe({
+      next: (eventos) => {
+        this.cargandoTrazabilidad.set(false);
+        this.eventosTrazabilidad.set(eventos);
+      },
+      error: (err) => {
+        this.cargandoTrazabilidad.set(false);
+        this.errorTrazabilidad.set(err?.error?.message ?? 'No se pudo cargar el historial.');
+      }
+    });
+  }
+
+  /** Nombre corto y legible para cada tipo de evento de la línea de tiempo. */
+  etiquetaEvento(tipo: string): string {
+    const etiquetas: Record<string, string> = {
+      RESULTADO: 'Resultado',
+      IMPUGNACION: 'Impugnación',
+      EVIDENCIA: 'Evidencia',
+      RESOLUCION_DISPUTA: 'Disputa resuelta',
+      APELACION: 'Apelación',
+      RESOLUCION_APELACION: 'Apelación resuelta',
+      CASO_ESPECIAL_DESCANSO: 'Descanso',
+      CASO_ESPECIAL_AVANCE_AUTOMATICO: 'Avance automático',
+      CASO_ESPECIAL_ABANDONO: 'Abandono'
+    };
+    return etiquetas[tipo] ?? tipo;
   }
 
   private cargarApelacion(disputaId: number): void {
