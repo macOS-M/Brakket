@@ -224,14 +224,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
         if (request.juegoIds() != null || request.juegoId() != null) {
             List<Juego> nuevosJuegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
-            Juego nuevoJuegoPrincipal = juegoPrincipal(nuevosJuegos, request.juegoId());
-            boolean cambiaDisciplina = equipo.getJuego() == null
-                    || !equipo.getJuego().getId().equals(nuevoJuegoPrincipal.getId());
-            if (cambiaDisciplina && participaEnTorneoActivo(equipoId)) {
-                throw new BusinessException(
-                        "No podés cambiar la disciplina del equipo con torneos vigentes o próximos.");
-            }
-            equipo.setJuego(nuevoJuegoPrincipal);
+            equipo.setJuego(juegoPrincipal(nuevosJuegos, request.juegoId()));
             equipo.getJuegos().clear();
             equipo.getJuegos().addAll(nuevosJuegos);
         }
