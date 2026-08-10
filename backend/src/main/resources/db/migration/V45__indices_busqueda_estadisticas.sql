@@ -19,4 +19,3 @@ CREATE INDEX IF NOT EXISTS idx_partida_oficial_equipo_b
 
 CREATE INDEX IF NOT EXISTS idx_torneo_juego_fecha
     ON torneo (juego_id, fecha_inicio);
-
