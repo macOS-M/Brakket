@@ -95,6 +95,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // RF-35: ver los directos no exige sesión, como el catálogo.
                         .requestMatchers(HttpMethod.GET, "/api/transmisiones").permitAll()
+                        // RF-37: el panel analítico no es información pública; se exige
+                        // sesión aparte del @PreAuthorize, para no depender de una sola capa.
+                        .requestMatchers(HttpMethod.GET, "/api/analytics/**").authenticated()
                         // Todo lo demás requiere JWT válido.
                         .anyRequest().authenticated()
                 )

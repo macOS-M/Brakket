@@ -41,4 +41,18 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
      * error entendible antes de chocar contra el índice único.
      */
     Optional<TransmisionTwitch> findByTwitchStreamIdAndFinalizadaEnIsNull(String twitchStreamId);
+
+    /**
+     * RF-37: catálogo del panel analítico. Trae también el torneo de la partida
+     * porque una transmisión puede colgar de la partida y no del torneo, y de ahí
+     * sale tanto la etiqueta como el criterio de acceso del comisionado.
+     */
+    @Query("""
+            select t from TransmisionTwitch t
+            left join fetch t.torneo
+            left join fetch t.partida p
+            left join fetch p.torneo
+            where t.activa = true
+            order by t.iniciadaEn desc nulls last, t.id desc""")
+    List<TransmisionTwitch> findParaAnalitica();
 }

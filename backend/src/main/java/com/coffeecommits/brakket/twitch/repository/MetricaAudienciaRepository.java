@@ -29,4 +29,25 @@ public interface MetricaAudienciaRepository extends JpaRepository<MetricaAudienc
         Double getPromedio();
         LocalDateTime getUltimaMuestra();
     }
+
+    /**
+     * RF-37: muestras de una transmisión dentro del rango, con ambos extremos inclusivos.
+     * El rango llega siempre acotado desde el servicio: un "(:desde is null or ...)" deja
+     * un parámetro sin tipo que Postgres no puede inferir cuando se pasa null.
+     */
+    @Query("""
+            select m from MetricaAudiencia m
+            where m.transmisionTwitch.id = :transmisionId
+              and m.fechaHora >= :desde and m.fechaHora <= :hasta
+            order by m.fechaHora asc""")
+    List<MetricaAudiencia> buscarPorTransmisionYRango(@Param("transmisionId") Long transmisionId,
+                                                      @Param("desde") LocalDateTime desde,
+                                                      @Param("hasta") LocalDateTime hasta);
+
+    /** RF-37: cuántas muestras tiene cada transmisión, para el catálogo del panel. */
+    @Query("""
+            select m.transmisionTwitch.id, count(m) from MetricaAudiencia m
+            where m.transmisionTwitch.id in :transmisionIds
+            group by m.transmisionTwitch.id""")
+    List<Object[]> contarMuestrasPorTransmision(@Param("transmisionIds") List<Long> transmisionIds);
 }

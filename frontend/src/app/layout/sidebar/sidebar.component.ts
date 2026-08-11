@@ -178,6 +178,15 @@ export class SidebarComponent {
         },
 
         {
+          // RF-37: consulta de métricas de transmisión por período. Ruta propia
+          // porque /analytics quedó para el sentimiento y el termómetro.
+          ruta: '/metricas',
+          etiqueta: 'Analítica',
+          icono: 'chart',
+          exact: false,
+          roles: ['ADMIN', 'COMISIONADO']
+        },
+        {
           // RF-40. El panel de análisis manual de RF-39 vive en /analytics y es
           // solo de administración; el termómetro lo consultan tambien los
           // comisionados, asi que es este el que va al menu.
