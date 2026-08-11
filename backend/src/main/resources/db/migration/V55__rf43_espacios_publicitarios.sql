@@ -14,6 +14,9 @@ CREATE TABLE espacio_publicitario (
                                       CONSTRAINT espacio_publicitario_patrocinio_id_fkey
                                           FOREIGN KEY (patrocinio_id) REFERENCES patrocinio(id) ON DELETE CASCADE,
 
+                                    -- IMPORTANTE: esta lista se duplica en UBICACIONES_VALIDAS de
+                                    -- EspacioPublicitarioServiceImpl.java. Si se agrega o quita una
+                                    -- ubicacion, hay que actualizar AMBOS lugares.
                                       CONSTRAINT ck_espacio_publicitario_ubicacion
                                           CHECK (ubicacion IN (
                                                                'TRANSMISION_INFERIOR',
