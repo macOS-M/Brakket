@@ -1,10 +1,10 @@
 package com.coffeecommits.brakket.sponsorship.service;
 
-import com.coffeecommits.brakket.analytics.model.AnalisisSentimiento;
 import com.coffeecommits.brakket.analytics.repository.AnalisisSentimientoRepository;
 import com.coffeecommits.brakket.auth.dto.UsuarioResponse;
 import com.coffeecommits.brakket.auth.service.AuthService;
 import com.coffeecommits.brakket.common.exception.BusinessException;
+import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.sponsorship.dto.MetricasPatrocinioResponse;
 import com.coffeecommits.brakket.sponsorship.dto.PanelComercialResponse;
@@ -13,7 +13,7 @@ import com.coffeecommits.brakket.sponsorship.model.Patrocinio;
 import com.coffeecommits.brakket.sponsorship.repository.EspacioPublicitarioRepository;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinadorRepository;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinioRepository;
-import com.coffeecommits.brakket.twitch.model.MetricaChat;
+import com.coffeecommits.brakket.tournament.model.Torneo;
 import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
 import com.coffeecommits.brakket.twitch.repository.MetricaAudienciaRepository;
 import com.coffeecommits.brakket.twitch.repository.MetricaChatRepository;
@@ -23,10 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class PanelComercialServiceImpl implements PanelComercialService {
@@ -61,7 +60,7 @@ public class PanelComercialServiceImpl implements PanelComercialService {
     private Patrocinador resolverPatrocinadorAutenticado(Authentication authentication) {
         UsuarioResponse usuario = authService.getCurrentUser(authentication.getName());
         return patrocinadorRepository.findByUsuarioId(usuario.id())
-                .orElseThrow(() -> new BusinessException(
+                .orElseThrow(() -> new ForbiddenException(
                         "Tu cuenta no está vinculada a ningún perfil de patrocinador."));
     }
 
@@ -83,7 +82,7 @@ public class PanelComercialServiceImpl implements PanelComercialService {
                         p.getTorneo() != null ? p.getTorneo().getId() : null,
                         p.getFechaInicio(),
                         p.getFechaFin(),
-                        espacioRepository.findByPatrocinioId(p.getId()).size()
+                        (int) espacioRepository.countByPatrocinioId(p.getId())
                 ))
                 .toList();
 
@@ -99,7 +98,7 @@ public class PanelComercialServiceImpl implements PanelComercialService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patrocinio", patrocinioId));
 
         if (!patrocinio.getPatrocinador().getId().equals(patrocinador.getId())) {
-            throw new BusinessException("No tenés permiso para consultar métricas de este patrocinio.");
+            throw new ForbiddenException("No tenés permiso para consultar métricas de este patrocinio.");
         }
 
         if (patrocinio.getTorneo() == null) {
@@ -153,23 +152,20 @@ public class PanelComercialServiceImpl implements PanelComercialService {
                 .or(() -> transmisiones.stream().findFirst());
     }
 
+    // RF-44 review: antes hacia N consultas (una por cada MetricaChat de la
+    // transmision) para traer su AnalisisSentimiento por separado. Ahora es
+    // una sola consulta agrupada por clasificacion en base de datos.
     private String calcularSentimientoPredominante(Long transmisionId) {
-        List<MetricaChat> muestrasChat = metricaChatRepository.findByTransmisionTwitchId(transmisionId);
+        List<AnalisisSentimientoRepository.ConteoClasificacion> conteos =
+                sentimientoRepository.contarPorClasificacionDeTransmision(transmisionId);
 
-        List<AnalisisSentimiento> clasificaciones = muestrasChat.stream()
-                .flatMap(m -> sentimientoRepository.findByMetricaChatId(m.getId()).stream())
-                .toList();
-
-        if (clasificaciones.isEmpty()) {
+        if (conteos.isEmpty()) {
             return null; // sin analisis todavia -> "pendiente" (RF-40, comportamiento valido)
         }
 
-        Map<String, Long> conteoPorClasificacion = clasificaciones.stream()
-                .collect(Collectors.groupingBy(AnalisisSentimiento::getClasificacion, Collectors.counting()));
-
-        return conteoPorClasificacion.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
+        return conteos.stream()
+                .max(Comparator.comparingLong(AnalisisSentimientoRepository.ConteoClasificacion::getCantidad))
+                .map(AnalisisSentimientoRepository.ConteoClasificacion::getClasificacion)
                 .orElse(null);
     }
 }

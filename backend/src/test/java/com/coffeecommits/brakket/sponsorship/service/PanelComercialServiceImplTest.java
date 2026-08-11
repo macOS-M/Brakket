@@ -1,14 +1,10 @@
 package com.coffeecommits.brakket.sponsorship.service;
 
-import com.coffeecommits.brakket.analytics.model.AnalisisSentimiento;
 import com.coffeecommits.brakket.analytics.repository.AnalisisSentimientoRepository;
 import com.coffeecommits.brakket.auth.dto.UsuarioResponse;
 import com.coffeecommits.brakket.auth.service.AuthService;
-import com.coffeecommits.brakket.common.exception.BusinessException;
+import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
-import com.coffeecommits.brakket.league.model.Temporada;
-import com.coffeecommits.brakket.league.repository.LigaRepository;
-import com.coffeecommits.brakket.league.repository.TemporadaRepository;
 import com.coffeecommits.brakket.sponsorship.dto.MetricasPatrocinioResponse;
 import com.coffeecommits.brakket.sponsorship.dto.PanelComercialResponse;
 import com.coffeecommits.brakket.sponsorship.model.Patrocinador;
@@ -17,7 +13,6 @@ import com.coffeecommits.brakket.sponsorship.repository.EspacioPublicitarioRepos
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinadorRepository;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinioRepository;
 import com.coffeecommits.brakket.tournament.model.Torneo;
-import com.coffeecommits.brakket.twitch.model.MetricaChat;
 import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
 import com.coffeecommits.brakket.twitch.repository.MetricaAudienciaRepository;
 import com.coffeecommits.brakket.twitch.repository.MetricaChatRepository;
@@ -29,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
+import static org.mockito.Mockito.lenient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,6 +34,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,6 +83,14 @@ class PanelComercialServiceImplTest {
         when(authService.getCurrentUser("mcalvoe@ucenfotec.ac.cr")).thenReturn(usuarioResponse);
     }
 
+    private AnalisisSentimientoRepository.ConteoClasificacion conteoDe(String clasificacion, long cantidad) {
+        AnalisisSentimientoRepository.ConteoClasificacion conteo =
+                mock(AnalisisSentimientoRepository.ConteoClasificacion.class);
+        lenient().when(conteo.getClasificacion()).thenReturn(clasificacion);
+        lenient().when(conteo.getCantidad()).thenReturn(Long.valueOf(cantidad));
+        return conteo;
+    }
+
     @Test
     void obtenerResumen_devuelve_los_patrocinios_de_la_marca() {
         when(patrocinadorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(patrocinador));
@@ -102,7 +107,7 @@ class PanelComercialServiceImplTest {
                 .build();
 
         when(patrocinioRepository.findByPatrocinadorId(11L)).thenReturn(List.of(patrocinio));
-        when(espacioRepository.findByPatrocinioId(2L)).thenReturn(Collections.emptyList());
+        when(espacioRepository.countByPatrocinioId(2L)).thenReturn(0L);
 
         PanelComercialResponse response = service.obtenerResumen(authentication);
 
@@ -128,7 +133,7 @@ class PanelComercialServiceImplTest {
                 .build();
 
         when(patrocinioRepository.findByPatrocinadorId(11L)).thenReturn(List.of(patrocinioVencido));
-        when(espacioRepository.findByPatrocinioId(3L)).thenReturn(Collections.emptyList());
+        when(espacioRepository.countByPatrocinioId(3L)).thenReturn(0L);
 
         PanelComercialResponse response = service.obtenerResumen(authentication);
 
@@ -140,7 +145,7 @@ class PanelComercialServiceImplTest {
         when(patrocinadorRepository.findByUsuarioId(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.obtenerResumen(authentication))
-                .isInstanceOf(BusinessException.class)
+                .isInstanceOf(ForbiddenException.class)
                 .hasMessageContaining("no está vinculada");
     }
 
@@ -165,7 +170,7 @@ class PanelComercialServiceImplTest {
         when(patrocinioRepository.findById(5L)).thenReturn(Optional.of(patrocinioAjeno));
 
         assertThatThrownBy(() -> service.obtenerMetricas(authentication, 5L))
-                .isInstanceOf(BusinessException.class)
+                .isInstanceOf(ForbiddenException.class)
                 .hasMessageContaining("No tenés permiso");
     }
 
@@ -222,7 +227,7 @@ class PanelComercialServiceImplTest {
 
         when(metricaAudienciaRepository.resumenPorTransmision(20L)).thenReturn(null);
         when(metricaChatRepository.resumenPorTransmision(20L)).thenReturn(null);
-        when(metricaChatRepository.findByTransmisionTwitchId(20L)).thenReturn(Collections.emptyList());
+        when(sentimientoRepository.contarPorClasificacionDeTransmision(20L)).thenReturn(Collections.emptyList());
 
         MetricasPatrocinioResponse response = service.obtenerMetricas(authentication, 2L);
 
@@ -246,16 +251,12 @@ class PanelComercialServiceImplTest {
         TransmisionTwitch transmision = TransmisionTwitch.builder().id(20L).finalizadaEn(null).build();
         when(transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(12L)).thenReturn(List.of(transmision));
 
-        MetricaChat muestra1 = MetricaChat.builder().id(100L).build();
-        MetricaChat muestra2 = MetricaChat.builder().id(101L).build();
-        when(metricaChatRepository.findByTransmisionTwitchId(20L)).thenReturn(List.of(muestra1, muestra2));
-
-        AnalisisSentimiento positivo1 = AnalisisSentimiento.builder().clasificacion("POSITIVO").build();
-        AnalisisSentimiento positivo2 = AnalisisSentimiento.builder().clasificacion("POSITIVO").build();
-        AnalisisSentimiento negativo = AnalisisSentimiento.builder().clasificacion("NEGATIVO").build();
-
-        when(sentimientoRepository.findByMetricaChatId(100L)).thenReturn(List.of(positivo1, negativo));
-        when(sentimientoRepository.findByMetricaChatId(101L)).thenReturn(List.of(positivo2));
+        // Se arma la lista ANTES del when(...), para no anidar mock()/when()
+        // dentro de un thenReturn() todavia abierto (confunde el estado interno
+        // de Mockito y dispara "UnfinishedStubbing").
+        List<AnalisisSentimientoRepository.ConteoClasificacion> conteos =
+                List.of(conteoDe("POSITIVO", 2L), conteoDe("NEGATIVO", 1L));
+        when(sentimientoRepository.contarPorClasificacionDeTransmision(20L)).thenReturn(conteos);
 
         when(metricaAudienciaRepository.resumenPorTransmision(20L)).thenReturn(null);
         when(metricaChatRepository.resumenPorTransmision(20L)).thenReturn(null);
@@ -278,9 +279,6 @@ class PanelComercialServiceImplTest {
                 .build();
         when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioConTorneo));
 
-        // Dos transmisiones del mismo torneo: una finalizada (jornada anterior)
-        // y otra en vivo (jornada actual). Debe elegir la que sigue en vivo,
-        // sin importar el orden en que llegue la lista.
         TransmisionTwitch finalizada = TransmisionTwitch.builder()
                 .id(21L)
                 .finalizadaEn(LocalDateTime.of(2026, 8, 1, 20, 0))
@@ -294,7 +292,7 @@ class PanelComercialServiceImplTest {
                 .thenReturn(List.of(finalizada, enVivo));
         when(metricaAudienciaRepository.resumenPorTransmision(22L)).thenReturn(null);
         when(metricaChatRepository.resumenPorTransmision(22L)).thenReturn(null);
-        when(metricaChatRepository.findByTransmisionTwitchId(22L)).thenReturn(Collections.emptyList());
+        when(sentimientoRepository.contarPorClasificacionDeTransmision(22L)).thenReturn(Collections.emptyList());
 
         MetricasPatrocinioResponse response = service.obtenerMetricas(authentication, 2L);
 
@@ -313,8 +311,6 @@ class PanelComercialServiceImplTest {
                 .build();
         when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioConTorneo));
 
-        // Ninguna esta en vivo: el repositorio ya las devuelve ordenadas por
-        // iniciadaEn desc, asi que la primera de la lista es la mas reciente.
         TransmisionTwitch masReciente = TransmisionTwitch.builder()
                 .id(23L)
                 .finalizadaEn(LocalDateTime.of(2026, 8, 8, 20, 0))
@@ -328,7 +324,7 @@ class PanelComercialServiceImplTest {
                 .thenReturn(List.of(masReciente, masVieja));
         when(metricaAudienciaRepository.resumenPorTransmision(23L)).thenReturn(null);
         when(metricaChatRepository.resumenPorTransmision(23L)).thenReturn(null);
-        when(metricaChatRepository.findByTransmisionTwitchId(23L)).thenReturn(Collections.emptyList());
+        when(sentimientoRepository.contarPorClasificacionDeTransmision(23L)).thenReturn(Collections.emptyList());
 
         MetricasPatrocinioResponse response = service.obtenerMetricas(authentication, 2L);
 
