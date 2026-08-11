@@ -47,6 +47,13 @@ public class EvidenciaController {
         return disputaService.resolver(disputaId, authentication.getName(), esAdmin(authentication), request);
     }
 
+    /** Vista panorámica de todas las disputas relevantes para el usuario logueado. */
+    @GetMapping("/mias")
+    @PreAuthorize("isAuthenticated()")
+    public List<com.coffeecommits.brakket.dispute.dto.MiDisputaResponse> misDisputas(Authentication authentication) {
+        return disputaService.misDisputas(authentication.getName(), esAdmin(authentication));
+    }
+
     private static boolean esAdmin(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));

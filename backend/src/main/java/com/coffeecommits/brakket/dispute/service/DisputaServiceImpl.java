@@ -165,7 +165,27 @@ public class DisputaServiceImpl implements DisputaService {
         return DisputaResponse.fromEntity(disputa);
     }
 
-    
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.coffeecommits.brakket.dispute.dto.MiDisputaResponse> misDisputas(String correo, boolean esAdmin) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
+        // Un admin ve todo; el resto solo lo relacionado con sus torneos
+        // (organizador, árbitro asignado, o comisionado de la liga).
+        List<Disputa> disputas = esAdmin
+                ? disputaRepository.findAll()
+                : disputaRepository.findRelevantesParaUsuario(usuario.getId());
+        return disputas.stream()
+                .sorted(java.util.Comparator.comparing(Disputa::getFechaCreacion).reversed())
+                .map(com.coffeecommits.brakket.dispute.dto.MiDisputaResponse::fromEntity)
+                .toList();
+    }
+
+    /**
+     * A propósito NO incluye al organizador: RF-32 exige que resuelva
+     * alguien ajeno al torneo (árbitro, comisionado de la liga, o admin).
+     */
     private void exigirArbitroOComisionado(Torneo torneo, Usuario usuario, boolean esAdmin) {
         if (esAdmin) {
             return;
