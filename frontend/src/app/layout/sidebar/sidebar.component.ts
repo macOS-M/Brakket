@@ -139,16 +139,17 @@ export class SidebarComponent {
       ]
     },
     {
-      // Portal del patrocinador (ACT-06): su panel comercial de métricas
-      // de audiencia y sentimiento (RF-44). Llega con EPIC-11 (sprint 6).
+      // Portal del patrocinador (ACT-06). El panel comercial completo es RF-44
+      // y llega con EPIC-11; el termómetro de sentimiento (RF-40) ya está, y es
+      // la primera métrica de audiencia que el patrocinador puede consultar.
       titulo: 'Mi marca',
       enlaces: [
         {
-          ruta: '/analytics',
-          etiqueta: 'Panel comercial',
-          icono: 'briefcase',
+          ruta: '/analytics/termometro',
+          etiqueta: 'Termómetro del chat',
+          icono: 'pulse',
           exact: false,
-          proximamente: true,
+          proximamente: false,
           roles: ['PATROCINADOR']
         }
       ]
@@ -168,11 +169,14 @@ export class SidebarComponent {
         },
 
         {
-          ruta: '/analytics',
-          etiqueta: 'Analítica',
+          // RF-40. El panel de análisis manual de RF-39 vive en /analytics y es
+          // solo de administración; el termómetro lo consultan tambien los
+          // comisionados, asi que es este el que va al menu.
+          ruta: '/analytics/termometro',
+          etiqueta: 'Termómetro del chat',
           icono: 'pulse',
           exact: false,
-          proximamente: true,
+          proximamente: false,
           roles: ['ADMIN', 'COMISIONADO']
         },
         {
