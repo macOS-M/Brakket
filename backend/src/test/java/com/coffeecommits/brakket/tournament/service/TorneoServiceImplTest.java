@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -199,6 +200,25 @@ class TorneoServiceImplTest {
         assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL"))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("2 jugador");
+    }
+
+    @Test
+    void inscribir_rechaza_un_juego_no_declarado_por_el_equipo() {
+        Torneo torneo = torneoAbierto();
+        Juego rocket = Juego.builder().id(8L).nombre("Rocket League").activo(true).build();
+        Equipo equipo = Equipo.builder().id(20L).nombre("Nébula").juego(rocket)
+                .juegos(new LinkedHashSet<>(List.of(rocket))).build();
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(usuario()));
+        when(torneoRepository.findById(7L)).thenReturn(Optional.of(torneo));
+        when(inscripcionRepository.countVigentesPorTorneo(7L)).thenReturn(0L);
+        when(inscripcionRepository.esCapitanActivo(1L, 20L)).thenReturn(true);
+        when(inscripcionRepository.existsByTorneoIdAndEquipoId(7L, 20L)).thenReturn(false);
+        when(inscripcionRepository.equiposCapitaneadosPor(1L)).thenReturn(List.of(equipo));
+
+        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no compite");
+        verify(inscripcionRepository, never()).save(any());
     }
 
     @Test

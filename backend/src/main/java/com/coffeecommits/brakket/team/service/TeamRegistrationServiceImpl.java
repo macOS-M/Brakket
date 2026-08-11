@@ -224,9 +224,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
 
         if (request.juegoIds() != null || request.juegoId() != null) {
             List<Juego> nuevosJuegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
-            Set<Long> juegosActuales = equipo.getJuegos().isEmpty()
-                    ? Set.of(equipo.getJuego().getId())
-                    : equipo.getJuegos().stream().map(Juego::getId).collect(java.util.stream.Collectors.toSet());
+            Set<Long> juegosActuales = juegosActuales(equipo);
             Set<Long> juegosSolicitados = nuevosJuegos.stream().map(Juego::getId)
                     .collect(java.util.stream.Collectors.toSet());
             if (!juegosActuales.equals(juegosSolicitados) && participaEnTorneoActivo(equipoId)) {
@@ -287,6 +285,15 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         return juegos.stream().filter(j -> j.getId().equals(juegoIdPrincipal)).findFirst()
                 .orElseThrow(() -> new BusinessException(
                         "El juego principal debe formar parte de los juegos del equipo."));
+    }
+
+    /** Tolera equipos legacy sin filas en equipo_juego y sin juego principal. */
+    private Set<Long> juegosActuales(Equipo equipo) {
+        if (equipo.getJuegos() != null && !equipo.getJuegos().isEmpty()) {
+            return equipo.getJuegos().stream().map(Juego::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+        }
+        return equipo.getJuego() == null ? Set.of() : Set.of(equipo.getJuego().getId());
     }
 
     /**
