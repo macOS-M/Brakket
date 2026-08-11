@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "equipo")
@@ -51,6 +53,13 @@ public class Equipo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "juego_id")
     private Juego juego;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "equipo_juego",
+            joinColumns = @JoinColumn(name = "equipo_id"),
+            inverseJoinColumns = @JoinColumn(name = "juego_id"))
+    @Builder.Default
+    private Set<Juego> juegos = new LinkedHashSet<>();
 
     /**
      * Ciclo de vida del equipo (RF-02/RF-03): ACTIVO, BLOQUEADO (disputa o

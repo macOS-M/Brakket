@@ -33,6 +33,8 @@ public record EditarEquipoRequest(
 
         Long juegoId,
 
+        List<Long> juegoIds,
+
         List<@URL(message = "El enlace debe tener formato de URL valido") String> redesSociales,
 
         @Pattern(regexp = "PUBLIC|PRIVATE", message = "El estado de privacidad debe ser PUBLIC o PRIVATE")
@@ -46,4 +48,10 @@ public record EditarEquipoRequest(
          */
         Long version
 ) {
+    public EditarEquipoRequest(String nombre, String logo, String bannerUrl, String descripcion,
+                               String sitioWeb, String videoUrl, Long juegoId,
+                               List<String> redesSociales, String estadoPrivacidad, Long version) {
+        this(nombre, logo, bannerUrl, descripcion, sitioWeb, videoUrl, juegoId, null,
+                redesSociales, estadoPrivacidad, version);
+    }
 }

@@ -16,7 +16,9 @@
       <div class="punto" [class.activo]="item.estado === 'ACTIVO'"></div>
       <div class="contenido">
         <p class="equipo">{{ item.equipoNombre }}</p>
-        @if (item.juegoNombre) {
+        @if (item.juegoNombres?.length) {
+        <p class="juego">{{ item.juegoNombres?.join(' · ') }}</p>
+        } @else if (item.juegoNombre) {
         <p class="juego">{{ item.juegoNombre }}</p>
         }
         <p class="rol">Rol: {{ item.rol }}</p>

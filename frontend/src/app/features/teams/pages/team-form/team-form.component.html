@@ -127,6 +127,21 @@
           </div>
 
           <div class="field">
+            <span class="label">Juegos en los que compite *</span>
+            <span class="field-pista">El juego principal también se incluirá automáticamente.</span>
+            @for (juego of juegos(); track juego.id) {
+            <label>
+              <input
+                type="checkbox"
+                [checked]="juegoSeleccionado(juego.id)"
+                (change)="toggleJuego(juego.id, $any($event.target).checked)"
+              />
+              {{ juego.nombre }}
+            </label>
+            }
+          </div>
+
+          <div class="field">
             <label class="label" for="descripcion">Descripción</label>
             <textarea
               id="descripcion"
