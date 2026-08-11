@@ -4,8 +4,11 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import {
   AnalizarChatRequest,
+  FiltrosTermometro,
   SentimientoResultado,
-  SerieSentimiento
+  SerieSentimiento,
+  Termometro,
+  TransmisionAnalizada
 } from '../../../models/sentiment.model';
 
 /**
@@ -27,5 +30,22 @@ export class AnalyticsService {
   /** Serie de sentimiento de la transmisión (para el termómetro de RF-40). */
   serie(transmisionId: number): Observable<SerieSentimiento> {
     return this.api.get<SerieSentimiento>(`/analytics/transmisiones/${transmisionId}/sentimiento`);
+  }
+
+  /** Transmisiones que ya tienen análisis, para el selector del termómetro (RF-40). */
+  transmisionesAnalizadas(): Observable<TransmisionAnalizada[]> {
+    return this.api.get<TransmisionAnalizada[]>('/analytics/transmisiones');
+  }
+
+  /** Termómetro de sentimiento de la transmisión, acotado al período (RF-40). */
+  termometro(transmisionId: number, filtros: FiltrosTermometro = {}): Observable<Termometro> {
+    const params = new URLSearchParams();
+    if (filtros.desde) params.set('desde', filtros.desde);
+    if (filtros.hasta) params.set('hasta', filtros.hasta);
+    if (filtros.intervaloMinutos) params.set('intervaloMinutos', String(filtros.intervaloMinutos));
+    const query = params.toString();
+    return this.api.get<Termometro>(
+      `/analytics/transmisiones/${transmisionId}/sentimiento/termometro${query ? '?' + query : ''}`
+    );
   }
 }
