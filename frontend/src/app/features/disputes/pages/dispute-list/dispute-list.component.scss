@@ -1,15 +1,80 @@
-.page {
-  padding: 1.5rem 0;
+.disputas-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.disputas-header {
+  margin-bottom: 24px;
 
   h1 {
-    margin: 0 0 0.75rem;
+    margin: 0 0 6px;
+    font-size: 1.6rem;
   }
+}
 
-  .placeholder {
-    display: inline-block;
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--accent-text, #ff6a1f);
-    border-radius: 8px;
-    color: var(--text-muted, #94a3b8);
+.disputas-subtitulo {
+  color: var(--text-muted, #8a93a3);
+  margin: 0;
+}
+
+.disputas-mensaje {
+  color: var(--text-muted, #8a93a3);
+  text-align: center;
+  padding: 40px 0;
+}
+
+.disputas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.disputa-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  padding: 16px;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--border, #2a2f3a);
+  background: var(--surface, #171b24);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent, #ff5a1f);
+    transform: translateY(-1px);
   }
+}
+
+.disputa-item-principal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.disputa-torneo {
+  font-weight: 600;
+}
+
+.disputa-equipos {
+  color: var(--text-muted, #8a93a3);
+  font-size: 0.9rem;
+}
+
+.disputa-motivo {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.disputa-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #8a93a3);
 }
