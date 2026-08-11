@@ -30,7 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -206,22 +205,24 @@ class TorneoServiceImplTest {
     }
 
     @Test
-    void inscribir_rechaza_un_juego_no_declarado_por_el_equipo() {
+    void inscribir_permite_un_juego_no_declarado_por_el_equipo() {
         Torneo torneo = torneoAbierto();
         Juego rocket = Juego.builder().id(8L).nombre("Rocket League").activo(true).build();
-        Equipo equipo = Equipo.builder().id(20L).nombre("Nébula").juego(rocket)
-                .juegos(new LinkedHashSet<>(List.of(rocket))).build();
+        Equipo equipo = Equipo.builder().id(20L).nombre("Nébula").juego(rocket).build();
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(usuario()));
         when(torneoRepository.findById(7L)).thenReturn(Optional.of(torneo));
         when(inscripcionRepository.countVigentesPorTorneo(7L)).thenReturn(0L);
         when(inscripcionRepository.esCapitanActivo(1L, 20L)).thenReturn(true);
         when(inscripcionRepository.existsByTorneoIdAndEquipoId(7L, 20L)).thenReturn(false);
         when(inscripcionRepository.equiposCapitaneadosPor(1L)).thenReturn(List.of(equipo));
+        when(inscripcionRepository.countMiembrosActivos(20L)).thenReturn(5L);
+        when(inscripcionRepository.save(any(Inscripcion.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(inscripcionRepository.findByTorneoId(7L)).thenReturn(List.of());
 
-        assertThatThrownBy(() -> torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL"))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("no compite");
-        verify(inscripcionRepository, never()).save(any());
+        TorneoDetalleResponse detalle = torneoService.inscribirEquipo(7L, CORREO, 20L, "AnaRL");
+
+        assertThat(detalle.torneo().id()).isEqualTo(7L);
+        verify(inscripcionRepository).save(any(Inscripcion.class));
     }
 
     @Test
