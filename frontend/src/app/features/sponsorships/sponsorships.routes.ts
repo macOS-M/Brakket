@@ -15,5 +15,15 @@ export const routes: Routes = [
     path: ':id/editar',
     loadComponent: () =>
       import('./pages/sponsorship-form/sponsorship-form.component').then((m) => m.SponsorshipFormComponent)
+  },
+  {
+    path: 'asociaciones',
+    loadComponent: () =>
+      import('./pages/association-list/association-list.component').then((m) => m.AssociationListComponent)
+  },
+  {
+    path: 'asociaciones/nuevo',
+    loadComponent: () =>
+      import('./pages/association-form/association-form.component').then((m) => m.AssociationFormComponent)
   }
 ];

@@ -1,0 +1,114 @@
+<section class="page">
+  <h1>Nueva asociación de patrocinio</h1>
+
+  @if (error()) {
+  <p class="mensaje-error">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+    <div class="campo">
+      <label for="patrocinadorId">Patrocinador *</label>
+      <select id="patrocinadorId" formControlName="patrocinadorId">
+        <option [ngValue]="null">Selecciona un patrocinador</option>
+        @for (p of patrocinadores(); track p.id) {
+        <option [ngValue]="p.id">{{ p.nombre }}</option>
+        }
+      </select>
+      @if (form.controls.patrocinadorId.invalid && form.controls.patrocinadorId.touched) {
+      <span class="error-campo">Debes seleccionar un patrocinador.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="alcance">Asociar a *</label>
+      <select id="alcance" formControlName="alcance">
+        <option value="LIGA">Liga</option>
+        <option value="TEMPORADA">Temporada</option>
+        <option value="TORNEO">Torneo</option>
+      </select>
+    </div>
+
+    @if (form.controls.alcance.value === 'LIGA') {
+    <div class="campo">
+      <label for="ligaId">Liga *</label>
+      <select id="ligaId" formControlName="ligaId">
+        <option [ngValue]="null">Selecciona una liga</option>
+        @for (l of ligas(); track l.id) {
+        <option [ngValue]="l.id">{{ l.nombre }}</option>
+        }
+      </select>
+    </div>
+    }
+
+    @if (form.controls.alcance.value === 'TEMPORADA') {
+    <div class="campo">
+      <label for="temporadaLigaId">Liga *</label>
+      <select id="temporadaLigaId" formControlName="temporadaLigaId">
+        <option [ngValue]="null">Selecciona una liga</option>
+        @for (l of ligas(); track l.id) {
+        <option [ngValue]="l.id">{{ l.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="temporadaId">Temporada *</label>
+      <select id="temporadaId" formControlName="temporadaId">
+        <option [ngValue]="null">Selecciona una temporada</option>
+        @for (t of temporadas(); track t.id) {
+        <option [ngValue]="t.id">{{ t.nombre }}</option>
+        }
+      </select>
+    </div>
+    }
+
+    @if (form.controls.alcance.value === 'TORNEO') {
+    <div class="campo">
+      <label for="torneoId">Torneo *</label>
+      <select id="torneoId" formControlName="torneoId">
+        <option [ngValue]="null">Selecciona un torneo</option>
+        @for (t of torneos(); track t.id) {
+        <option [ngValue]="t.id">{{ t.nombre }}</option>
+        }
+      </select>
+    </div>
+    }
+
+    <div class="campo">
+      <label for="nivel">Nivel *</label>
+      <select id="nivel" formControlName="nivel">
+        @for (n of niveles; track n) {
+        <option [value]="n">{{ n }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="condiciones">Condiciones</label>
+      <textarea id="condiciones" formControlName="condiciones" rows="3"></textarea>
+    </div>
+
+    <div class="campo">
+      <label for="fechaInicio">Fecha de inicio *</label>
+      <input id="fechaInicio" type="date" formControlName="fechaInicio" />
+      @if (form.controls.fechaInicio.invalid && form.controls.fechaInicio.touched) {
+      <span class="error-campo">La fecha de inicio es obligatoria.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="fechaFin">Fecha de fin *</label>
+      <input id="fechaFin" type="date" formControlName="fechaFin" />
+      @if (form.controls.fechaFin.invalid && form.controls.fechaFin.touched) {
+      <span class="error-campo">La fecha de fin es obligatoria.</span>
+      }
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</section>
