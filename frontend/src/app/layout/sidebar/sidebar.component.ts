@@ -140,15 +140,16 @@ export class SidebarComponent {
     },
     {
       // Portal del patrocinador (ACT-06): su panel comercial de métricas
-      // de audiencia y sentimiento (RF-44). Llega con EPIC-11 (sprint 6).
+      // de audiencia y sentimiento (RF-44). Ruta propia en la raiz (no bajo
+      // /sponsorships) para no compartir prefijo con "Gestion > Patrocinios"
+      // y evitar que ambos enlaces se marquen activos a la vez.
       titulo: 'Mi marca',
       enlaces: [
         {
-          ruta: '/analytics',
+          ruta: '/panel-comercial',
           etiqueta: 'Panel comercial',
           icono: 'briefcase',
           exact: false,
-          proximamente: true,
           roles: ['PATROCINADOR']
         }
       ]
