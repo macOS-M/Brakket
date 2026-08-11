@@ -1,9 +1,9 @@
 package com.coffeecommits.brakket.sponsorship.service;
 
-import com.coffeecommits.brakket.auth.dto.UsuarioResponse;
-import com.coffeecommits.brakket.auth.service.AuthService;
 import com.coffeecommits.brakket.analytics.model.AnalisisSentimiento;
 import com.coffeecommits.brakket.analytics.repository.AnalisisSentimientoRepository;
+import com.coffeecommits.brakket.auth.dto.UsuarioResponse;
+import com.coffeecommits.brakket.auth.service.AuthService;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.sponsorship.dto.MetricasPatrocinioResponse;
@@ -109,14 +109,21 @@ public class PanelComercialServiceImpl implements PanelComercialService {
             return new MetricasPatrocinioResponse(patrocinioId, null, null, null, null, null, true);
         }
 
-        Optional<TransmisionTwitch> transmisionOpt =
-                transmisionRepository.findByTorneoId(patrocinio.getTorneo().getId());
+        // RF-44 review: un torneo puede tener varias transmisiones (varias
+        // jornadas), asi que findByTorneoId no puede devolver Optional/uno solo
+        // sin arriesgar IncorrectResultSizeDataAccessException. Se trae la lista
+        // completa y se elige la mas relevante: la que sigue en vivo, o si
+        // ninguna esta en vivo, la mas reciente.
+        List<TransmisionTwitch> transmisiones =
+                transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(patrocinio.getTorneo().getId());
 
-        if (transmisionOpt.isEmpty()) {
+        Optional<TransmisionTwitch> transmisionRelevante = seleccionarTransmisionRelevante(transmisiones);
+
+        if (transmisionRelevante.isEmpty()) {
             return new MetricasPatrocinioResponse(patrocinioId, null, null, null, null, null, true);
         }
 
-        Long transmisionId = transmisionOpt.get().getId();
+        Long transmisionId = transmisionRelevante.get().getId();
 
         MetricaAudienciaRepository.ResumenAudiencia audiencia =
                 metricaAudienciaRepository.resumenPorTransmision(transmisionId);
@@ -135,6 +142,15 @@ public class PanelComercialServiceImpl implements PanelComercialService {
                 sentimientoPredominante,
                 sentimientoPredominante == null
         );
+    }
+
+    // Prioriza la transmision actualmente en vivo; si ninguna esta en vivo,
+    // toma la mas reciente (la lista ya llega ordenada por iniciadaEn desc).
+    private Optional<TransmisionTwitch> seleccionarTransmisionRelevante(List<TransmisionTwitch> transmisiones) {
+        return transmisiones.stream()
+                .filter(t -> t.getFinalizadaEn() == null)
+                .findFirst()
+                .or(() -> transmisiones.stream().findFirst());
     }
 
     private String calcularSentimientoPredominante(Long transmisionId) {

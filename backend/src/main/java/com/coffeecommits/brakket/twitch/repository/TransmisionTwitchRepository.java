@@ -27,9 +27,11 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
             order by t.id""")
     List<TransmisionTwitch> findAbiertasParaMuestreo();
 
-    // RF-44: resolver la transmision de un torneo para agregar sus metricas
-    // en el panel comercial del patrocinador.
-    Optional<TransmisionTwitch> findByTorneoId(Long torneoId);
+    // RF-44: transmisiones de un torneo para agregar sus metricas en el panel
+    // comercial del patrocinador. Un torneo puede tener varias transmisiones
+    // (varias jornadas); se devuelven ordenadas por fecha de inicio descendente
+    // para que el servicio elija la mas relevante (en vivo, o la mas reciente).
+    List<TransmisionTwitch> findByTorneoIdOrderByIniciadaEnDesc(Long torneoId);
 
     /** Transmisiones activas: métrica del panel global (RF-49). */
     long countByActivaTrue();

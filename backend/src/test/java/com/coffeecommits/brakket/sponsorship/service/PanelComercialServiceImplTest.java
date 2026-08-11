@@ -6,6 +6,9 @@ import com.coffeecommits.brakket.auth.dto.UsuarioResponse;
 import com.coffeecommits.brakket.auth.service.AuthService;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
+import com.coffeecommits.brakket.league.model.Temporada;
+import com.coffeecommits.brakket.league.repository.LigaRepository;
+import com.coffeecommits.brakket.league.repository.TemporadaRepository;
 import com.coffeecommits.brakket.sponsorship.dto.MetricasPatrocinioResponse;
 import com.coffeecommits.brakket.sponsorship.dto.PanelComercialResponse;
 import com.coffeecommits.brakket.sponsorship.model.Patrocinador;
@@ -28,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -193,7 +197,7 @@ class PanelComercialServiceImplTest {
                 .torneo(torneo)
                 .build();
         when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioConTorneo));
-        when(transmisionRepository.findByTorneoId(12L)).thenReturn(Optional.empty());
+        when(transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(12L)).thenReturn(Collections.emptyList());
 
         MetricasPatrocinioResponse response = service.obtenerMetricas(authentication, 2L);
 
@@ -213,8 +217,8 @@ class PanelComercialServiceImplTest {
                 .build();
         when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioConTorneo));
 
-        TransmisionTwitch transmision = TransmisionTwitch.builder().id(20L).build();
-        when(transmisionRepository.findByTorneoId(12L)).thenReturn(Optional.of(transmision));
+        TransmisionTwitch transmision = TransmisionTwitch.builder().id(20L).finalizadaEn(null).build();
+        when(transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(12L)).thenReturn(List.of(transmision));
 
         when(metricaAudienciaRepository.resumenPorTransmision(20L)).thenReturn(null);
         when(metricaChatRepository.resumenPorTransmision(20L)).thenReturn(null);
@@ -239,8 +243,8 @@ class PanelComercialServiceImplTest {
                 .build();
         when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioConTorneo));
 
-        TransmisionTwitch transmision = TransmisionTwitch.builder().id(20L).build();
-        when(transmisionRepository.findByTorneoId(12L)).thenReturn(Optional.of(transmision));
+        TransmisionTwitch transmision = TransmisionTwitch.builder().id(20L).finalizadaEn(null).build();
+        when(transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(12L)).thenReturn(List.of(transmision));
 
         MetricaChat muestra1 = MetricaChat.builder().id(100L).build();
         MetricaChat muestra2 = MetricaChat.builder().id(101L).build();
@@ -260,5 +264,74 @@ class PanelComercialServiceImplTest {
 
         assertThat(response.sentimientoPendiente()).isFalse();
         assertThat(response.sentimientoPredominante()).isEqualTo("POSITIVO");
+    }
+
+    @Test
+    void obtenerMetricas_elige_la_transmision_en_vivo_cuando_hay_varias() {
+        when(patrocinadorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(patrocinador));
+
+        Torneo torneo = Torneo.builder().id(27L).build();
+        Patrocinio patrocinioConTorneo = Patrocinio.builder()
+                .id(2L)
+                .patrocinador(patrocinador)
+                .torneo(torneo)
+                .build();
+        when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioConTorneo));
+
+        // Dos transmisiones del mismo torneo: una finalizada (jornada anterior)
+        // y otra en vivo (jornada actual). Debe elegir la que sigue en vivo,
+        // sin importar el orden en que llegue la lista.
+        TransmisionTwitch finalizada = TransmisionTwitch.builder()
+                .id(21L)
+                .finalizadaEn(LocalDateTime.of(2026, 8, 1, 20, 0))
+                .build();
+        TransmisionTwitch enVivo = TransmisionTwitch.builder()
+                .id(22L)
+                .finalizadaEn(null)
+                .build();
+
+        when(transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(27L))
+                .thenReturn(List.of(finalizada, enVivo));
+        when(metricaAudienciaRepository.resumenPorTransmision(22L)).thenReturn(null);
+        when(metricaChatRepository.resumenPorTransmision(22L)).thenReturn(null);
+        when(metricaChatRepository.findByTransmisionTwitchId(22L)).thenReturn(Collections.emptyList());
+
+        MetricasPatrocinioResponse response = service.obtenerMetricas(authentication, 2L);
+
+        assertThat(response.transmisionId()).isEqualTo(22L);
+    }
+
+    @Test
+    void obtenerMetricas_elige_la_mas_reciente_cuando_ninguna_esta_en_vivo() {
+        when(patrocinadorRepository.findByUsuarioId(1L)).thenReturn(Optional.of(patrocinador));
+
+        Torneo torneo = Torneo.builder().id(27L).build();
+        Patrocinio patrocinioConTorneo = Patrocinio.builder()
+                .id(2L)
+                .patrocinador(patrocinador)
+                .torneo(torneo)
+                .build();
+        when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioConTorneo));
+
+        // Ninguna esta en vivo: el repositorio ya las devuelve ordenadas por
+        // iniciadaEn desc, asi que la primera de la lista es la mas reciente.
+        TransmisionTwitch masReciente = TransmisionTwitch.builder()
+                .id(23L)
+                .finalizadaEn(LocalDateTime.of(2026, 8, 8, 20, 0))
+                .build();
+        TransmisionTwitch masVieja = TransmisionTwitch.builder()
+                .id(21L)
+                .finalizadaEn(LocalDateTime.of(2026, 8, 1, 20, 0))
+                .build();
+
+        when(transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(27L))
+                .thenReturn(List.of(masReciente, masVieja));
+        when(metricaAudienciaRepository.resumenPorTransmision(23L)).thenReturn(null);
+        when(metricaChatRepository.resumenPorTransmision(23L)).thenReturn(null);
+        when(metricaChatRepository.findByTransmisionTwitchId(23L)).thenReturn(Collections.emptyList());
+
+        MetricasPatrocinioResponse response = service.obtenerMetricas(authentication, 2L);
+
+        assertThat(response.transmisionId()).isEqualTo(23L);
     }
 }
