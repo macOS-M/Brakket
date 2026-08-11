@@ -11,6 +11,7 @@ import { TorneoCardComponent } from '../../../tournaments/components/torneo-card
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
 import { TournamentWizardComponent } from '../../../tournaments/components/tournament-wizard/tournament-wizard.component';
 import { portadaGradiente } from '../../../../shared/utils/cover';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 
 function rangoFechasValido(control: AbstractControl): ValidationErrors | null {
   const inicio = control.get('fechaInicio')?.value;
@@ -21,7 +22,7 @@ function rangoFechasValido(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-league-detail',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, TorneoCardComponent, TournamentWizardComponent, FormatoTorneoPipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, TorneoCardComponent, TournamentWizardComponent, FormatoTorneoPipe, AdSlotComponent],
   templateUrl: './league-detail.component.html',
   styleUrl: './league-detail.component.scss'
 })

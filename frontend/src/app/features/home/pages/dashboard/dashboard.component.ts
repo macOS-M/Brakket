@@ -18,6 +18,7 @@ import { Torneo } from '../../../../models/tournament.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 
 /**
@@ -28,7 +29,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe, AdSlotComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

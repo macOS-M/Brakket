@@ -6,11 +6,12 @@ import { League } from '../../../../models/league.model';
 import { CalendarService } from '../../services/calendar.service';
 import { GamesService } from '../../../games/services/games.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [],
+  imports: [AdSlotComponent],
   templateUrl: './calendar-view.component.html',
   styleUrl: './calendar-view.component.scss'
 })

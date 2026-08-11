@@ -40,6 +40,8 @@
     <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
   </div>
 
+  <app-ad-slot ubicacion="CALENDARIO_FRANJA" />
+
   @if (cargando()) {
   <p class="placeholder">Cargando eventos...</p>
   } @else if (error()) {
