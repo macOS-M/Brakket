@@ -99,7 +99,7 @@ export class SidebarComponent {
           etiqueta: 'Disputas',
           icono: 'shield',
           exact: false,
-          proximamente: true,
+          proximamente: false,
           ocultarPara: ['PATROCINADOR']
         }
       ]
