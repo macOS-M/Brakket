@@ -1,5 +1,5 @@
 <main class="stats-page">
-  <header class="page-header"><span class="eyebrow">RF-47 · HISTORIAL COMPETITIVO</span><h1>Estadísticas históricas</h1><p>Rendimiento oficial segmentado por juego y evolución a través de torneos.</p></header>
+  <header class="page-header"><span class="eyebrow"></span><h1>Estadísticas históricas</h1><p>Rendimiento oficial segmentado por juego y evolución a través de torneos.</p></header>
   <form class="filters" [formGroup]="form" (ngSubmit)="consultar()">
     <label>Consultar por<select formControlName="tipo"><option value="JUGADOR">Jugador</option><option value="EQUIPO">Equipo</option></select></label>
     <label class="subject-search">{{ form.controls.tipo.value === 'JUGADOR' ? 'Jugador' : 'Equipo' }}
