@@ -23,6 +23,7 @@ import {
 } from '../../components/tournament-bracket/tournament-bracket.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 
 type TabDetalle = 'resumen' | 'llaves' | 'matches' | 'jugadores' | 'resultados';
 type FiltroMatch = 'todos' | 'pendientes' | 'finalizadas';
@@ -52,7 +53,7 @@ interface EventoTimeline {
 @Component({
   selector: 'app-tournament-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent, FormatoTorneoPipe],
+  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent, FormatoTorneoPipe, AdSlotComponent],
   templateUrl: './tournament-detail.component.html',
   styleUrl: './tournament-detail.component.scss'
 })

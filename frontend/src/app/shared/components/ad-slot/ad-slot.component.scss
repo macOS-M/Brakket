@@ -1,0 +1,15 @@
+.ad-slot {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+
+  img {
+    width: 100%;
+    height: auto;
+    max-height: 80px;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+    margin: 0 auto;
+  }
+}

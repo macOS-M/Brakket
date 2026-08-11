@@ -95,6 +95,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // RF-35: ver los directos no exige sesión, como el catálogo.
                         .requestMatchers(HttpMethod.GET, "/api/transmisiones").permitAll()
+                        // RF-43/44: el espacio publicitario vigente es contenido público — cualquier
+                        // visitante debe poder ver el anuncio en una pantalla publica (torneo, liga,
+                        // transmision), sin necesitar sesion.
+                        .requestMatchers(HttpMethod.GET, "/api/espacios/vigente").permitAll()
                         // Todo lo demás requiere JWT válido.
                         .anyRequest().authenticated()
                 )

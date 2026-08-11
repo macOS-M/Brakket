@@ -53,6 +53,10 @@
 
     <app-destacado-hero [transmisiones]="destacadas()" />
 
+    @if (destacadas()[0]?.torneoId; as torneoId) {
+    <app-ad-slot ubicacion="TRANSMISION_INFERIOR" [torneoId]="torneoId" />
+    }
+
     <section class="seccion" [attr.aria-label]="seccionCanales().titulo">
       <h2>{{ seccionCanales().titulo }}</h2>
       <div class="grid">

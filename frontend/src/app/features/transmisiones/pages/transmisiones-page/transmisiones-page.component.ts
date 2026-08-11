@@ -13,6 +13,7 @@ import { DestacadoHeroComponent } from '../../components/destacado-hero/destacad
 import { StreamCardComponent } from '../../components/stream-card/stream-card.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 
 /** Cada cuánto se refresca el estado en vivo. Con el caché backend de 25s el
  *  peor caso de desfase queda en ~55s, dentro del minuto de RNF-02. */
@@ -34,7 +35,7 @@ interface SeccionGrid {
 @Component({
   selector: 'app-transmisiones-page',
   standalone: true,
-  imports: [DatePipe, DestacadoHeroComponent, StreamCardComponent, PageHeaderComponent, EmptyStateComponent],
+  imports: [DatePipe, DestacadoHeroComponent, StreamCardComponent, PageHeaderComponent, EmptyStateComponent, AdSlotComponent],
   templateUrl: './transmisiones-page.component.html',
   styleUrl: './transmisiones-page.component.scss'
 })
