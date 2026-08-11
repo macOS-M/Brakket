@@ -13,10 +13,10 @@ public interface EspacioPublicitarioRepository extends JpaRepository<EspacioPubl
 
     List<EspacioPublicitario> findByPatrocinioId(Long patrocinioId);
 
-    // "Ocupado" = misma competencia (via patrocinio) + misma ubicacion + activo
-    // + fechas del patrocinio dueno se cruzan con el rango dado.
-    // excluyendoEspacioId permite reusar esta query en ediciones (no implementadas
-    // aun, pero se deja preparada) sin que un espacio choque consigo mismo.
+    // RF-44 review: cuenta espacios sin traer las entidades completas a Java,
+    // evita cargar filas enteras solo para contar (usado en el resumen del panel).
+    long countByPatrocinioId(Long patrocinioId);
+
     @Query("""
             SELECT COUNT(e) > 0 FROM EspacioPublicitario e
             JOIN e.patrocinio p
@@ -39,9 +39,6 @@ public interface EspacioPublicitarioRepository extends JpaRepository<EspacioPubl
                                  @Param("fechaFin") LocalDate fechaFin,
                                  @Param("excluyendoEspacioId") Long excluyendoEspacioId);
 
-    // Espacio vigente para una ubicacion + alcance especifico, usado por el
-    // componente publico <app-ad-slot>. "Vigente" = ACTIVO y la fecha de hoy
-    // cae dentro del rango heredado del patrocinio dueno.
     @Query("""
             SELECT e FROM EspacioPublicitario e
             JOIN e.patrocinio p

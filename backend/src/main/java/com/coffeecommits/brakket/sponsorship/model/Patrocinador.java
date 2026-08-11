@@ -34,4 +34,11 @@ public class Patrocinador {
 
     @Column(name = "estado", nullable = false, length = 20)
     private String estado;
+
+    // RF-44 (V53): vincula el patrocinador con la cuenta que inicia sesion
+    // como PATROCINADOR, para resolver "mi" panel comercial sin recibir
+    // el id por parametro. Nullable: un patrocinador puede existir antes
+    // de que se le asocie una cuenta real (ver migracion V53).
+    @Column(name = "usuario_id")
+    private Long usuarioId;
 }

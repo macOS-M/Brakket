@@ -13,6 +13,22 @@ public interface AnalisisSentimientoRepository extends JpaRepository<AnalisisSen
 
     List<AnalisisSentimiento> findByMetricaChatId(Long metricaChatId);
 
+    // RF-44 review: reemplaza el N+1 de calcularSentimientoPredominante
+    // (una consulta por cada MetricaChat de la transmision). Agrupa por
+    // clasificacion en una sola query, anclado en metricaChat.transmisionTwitch.
+    @Query("""
+            SELECT a.clasificacion as clasificacion, COUNT(a) as cantidad
+            FROM AnalisisSentimiento a
+            WHERE a.metricaChat.transmisionTwitch.id = :transmisionId
+            GROUP BY a.clasificacion
+            """)
+    List<ConteoClasificacion> contarPorClasificacionDeTransmision(@Param("transmisionId") Long transmisionId);
+
+    interface ConteoClasificacion {
+        String getClasificacion();
+        Long getCantidad();
+    }
+
     /**
      * Serie de análisis de una transmisión, del más antiguo al más reciente
      * (RF-40). Navega analisis_sentimiento → metrica_chat → transmision_twitch.
