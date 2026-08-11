@@ -1,0 +1,36 @@
+<section class="page">
+  <a class="volver" routerLink="/sponsorships/asociaciones">← Volver a asociaciones</a>
+
+  <div class="header">
+    <h1>Espacios publicitarios</h1>
+    @if (puedeGestionar()) {
+    <a class="btn-primary" [routerLink]="['/sponsorships/asociaciones', patrocinioId, 'espacios', 'nuevo']">
+      + Nuevo espacio
+    </a>
+    }
+  </div>
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando espacios...</p>
+  } @else if (error()) {
+  <p class="placeholder error">{{ error() }}</p>
+  } @else if (espacios().length === 0) {
+  <p class="placeholder">Todavía no hay espacios publicitarios para esta asociación.</p>
+  } @else {
+  <div class="grid">
+    @for (e of espacios(); track e.id) {
+    <div class="patrocinador-card">
+      <img class="logo" [src]="e.imagenUrl" [alt]="e.ubicacion" />
+      <div class="info">
+        <p class="nombre">{{ e.ubicacion }}</p>
+        <span class="badge" [class.inactivo]="e.estado !== 'ACTIVO'">{{ e.estado }}</span>
+        <p class="descripcion">{{ e.fechaInicio }} — {{ e.fechaFin }}</p>
+        @if (e.enlaceUrl) {
+        <p class="contacto">{{ e.enlaceUrl }}</p>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+</section>
