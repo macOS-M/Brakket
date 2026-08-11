@@ -70,6 +70,22 @@ class MuestreoChatServiceTest {
                 .build();
     }
 
+    /**
+     * RF-34: al finalizar la ultima transmision abierta el socket quedaba vivo
+     * escuchando un canal que ya nadie mira.
+     */
+    @Test
+    void al_cerrarse_la_ultima_transmision_se_suelta_la_conexion() {
+        when(transmisionRepository.findAbiertasParaMuestreo())
+                .thenReturn(List.of(transmisionAbierta()));
+        service.muestrear(); // conecta
+
+        when(transmisionRepository.findAbiertasParaMuestreo()).thenReturn(List.of());
+        service.muestrear();
+
+        verify(listener).desconectar();
+    }
+
     @Test
     void sin_transmision_abierta_no_conecta_ni_guarda() {
         when(transmisionRepository.findAbiertasParaMuestreo()).thenReturn(List.of());

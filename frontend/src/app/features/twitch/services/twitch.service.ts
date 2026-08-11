@@ -36,4 +36,9 @@ export class TwitchService {
   abiertas(): Observable<TransmisionTwitch[]> {
     return this.api.get<TransmisionTwitch[]>('/twitch/transmisiones');
   }
+
+  /** RF-34: cierra el periodo de captura sin esperar a que termine el directo. */
+  finalizar(transmisionId: number): Observable<TransmisionTwitch> {
+    return this.api.post<TransmisionTwitch>(`/twitch/transmisiones/${transmisionId}/finalizar`, {});
+  }
 }

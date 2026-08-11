@@ -94,6 +94,15 @@ public class CanalTwitchService {
         if (partida != null && torneo != null && !partida.getTorneo().getId().equals(torneo.getId()))
             throw new BusinessException("La partida no pertenece al torneo indicado.");
         TwitchGateway.StreamInfo live = twitchGateway.findLiveStream(canal.getLoginCanal());
+        if (live != null) {
+            // Sin esto el choque contra el índice único salía como un error de
+            // integridad genérico, imposible de interpretar desde el panel.
+            transmisionRepository.findByTwitchStreamIdAndFinalizadaEnIsNull(live.id())
+                    .ifPresent(abierta -> {
+                        throw new BusinessException("Ya hay una transmisión abierta siguiendo este directo"
+                                + " (#" + abierta.getId() + "). Finalizala antes de asociar otra.");
+                    });
+        }
         TransmisionTwitch entity = transmisionRepository.save(TransmisionTwitch.builder()
                 .canal(canal).torneo(torneo).partida(partida)
                 .loginCanal(canal.getLoginCanal())
@@ -145,6 +154,29 @@ public class CanalTwitchService {
                         t.getPartida() == null ? null : t.getPartida().getId(),
                         t.getEstado(), t.getIniciadaEn()))
                 .toList();
+    }
+
+    /**
+     * Cierra el período de captura a mano. Hasta ahora solo se cerraba solo,
+     * cuando el muestreo detectaba que el directo había terminado, así que una
+     * transmisión asociada por error seguía consumiendo Helix y chat sin forma
+     * de detenerla. Cerrarla no borra nada: las métricas capturadas se siguen
+     * consultando.
+     */
+    @Transactional
+    public TransmisionTwitchResponse finalizar(Long transmisionId) {
+        TransmisionTwitch transmision = transmisionRepository.findById(transmisionId)
+                .orElseThrow(() -> new ResourceNotFoundException("La transmisión no existe."));
+        if (transmision.getFinalizadaEn() != null) {
+            throw new BusinessException("La transmisión ya está finalizada.");
+        }
+        transmision.setFinalizadaEn(LocalDateTime.now());
+        transmision.setEstado("FINALIZADA");
+        transmisionRepository.save(transmision);
+        return new TransmisionTwitchResponse(transmision.getId(), transmision.getTwitchStreamId(),
+                transmision.getTorneo() == null ? null : transmision.getTorneo().getId(),
+                transmision.getPartida() == null ? null : transmision.getPartida().getId(),
+                transmision.getEstado(), transmision.getIniciadaEn());
     }
 
     /**

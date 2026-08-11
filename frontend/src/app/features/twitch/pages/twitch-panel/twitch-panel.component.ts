@@ -23,6 +23,7 @@ export class TwitchPanelComponent implements OnInit {
   transmision: TransmisionTwitch | null = null;
   metricas: MetricasTransmision | null = null;
   cargando = false;
+  confirmandoFinalizar = false;
   mensaje = '';
   error = '';
 
@@ -84,6 +85,42 @@ export class TwitchPanelComponent implements OnInit {
         this.cargarMetricas();
       },
       error: err => { this.error = this.mensajeError(err); this.cargando = false; }
+    });
+  }
+
+  /**
+   * RF-34: cierra el período de captura. Se pide confirmación en dos pasos
+   * porque no hay vuelta atrás: una vez cerrada, el muestreo deja de escribir
+   * y para volver a capturar hay que asociar una transmisión nueva.
+   */
+  pedirConfirmacion(): void {
+    this.limpiar();
+    this.confirmandoFinalizar = true;
+  }
+
+  cancelarFinalizar(): void {
+    this.confirmandoFinalizar = false;
+  }
+
+  finalizar(): void {
+    if (!this.transmision) {
+      return;
+    }
+    this.limpiar();
+    this.cargando = true;
+    this.twitch.finalizar(this.transmision.id).subscribe({
+      next: data => {
+        this.transmision = data;
+        this.confirmandoFinalizar = false;
+        this.mensaje = 'Transmisión finalizada. Las métricas capturadas se conservan.';
+        this.cargando = false;
+        this.cargarMetricas();
+      },
+      error: err => {
+        this.error = this.mensajeError(err);
+        this.confirmandoFinalizar = false;
+        this.cargando = false;
+      }
     });
   }
 

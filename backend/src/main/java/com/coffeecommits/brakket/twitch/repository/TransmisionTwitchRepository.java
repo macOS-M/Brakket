@@ -3,6 +3,7 @@ import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
+import java.util.Optional;
 public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTwitch, Long> {
 
     /**
@@ -25,4 +26,10 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
 
     /** Transmisiones activas: métrica del panel global (RF-49). */
     long countByActivaTrue();
+
+    /**
+     * RF-34: transmisión abierta que ya sigue este directo. Sirve para dar un
+     * error entendible antes de chocar contra el índice único.
+     */
+    Optional<TransmisionTwitch> findByTwitchStreamIdAndFinalizadaEnIsNull(String twitchStreamId);
 }
