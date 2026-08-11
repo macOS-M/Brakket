@@ -207,8 +207,6 @@ public class TorneoServiceImpl implements TorneoService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Equipo", equipoId));
 
-        // El juego del equipo es su disciplina favorita, no una restricción:
-        // cualquier equipo puede competir en torneos de otros juegos.
         long plantilla = inscripcionRepository.countMiembrosActivos(equipoId);
         if (plantilla < torneo.getTamanoEquipo()) {
             throw new BusinessException(
@@ -228,11 +226,9 @@ public class TorneoServiceImpl implements TorneoService {
     @Transactional(readOnly = true)
     public List<EquipoElegibleResponse> equiposElegibles(Long torneoId, String correo) {
         Usuario usuario = buscarUsuario(correo);
-        buscarVisible(torneoId, correo, false); // 404 si es privado y ajeno
+        Torneo torneo = buscarVisible(torneoId, correo, false); // 404 si es privado y ajeno
 
 
-        // Sin filtro por juego: la disciplina del equipo es preferencia,
-        // no requisito (cualquier equipo compite donde quiera).
         return inscripcionRepository.equiposCapitaneadosPor(usuario.getId()).stream()
                 .filter(equipo -> !inscripcionRepository
                         .existsByTorneoIdAndEquipoId(torneoId, equipo.getId()))
@@ -296,13 +292,32 @@ public class TorneoServiceImpl implements TorneoService {
                                         m.getRol()))
                                 .toList()))
                 .toList();
-        // RF-28/RF-30: ya calculado en el backend (no se manda la lista completa
-        // de árbitros a cualquier visitante del torneo, solo el booleano).
-        boolean esArbitro = correoOpcional != null && usuarioRepository.findByCorreo(correoOpcional)
-                .map(u -> arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
-                        .anyMatch(a -> a.getUsuario().getId().equals(u.getId())))
-                .orElse(false);
-        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos, esArbitro);
+        // RF-28/RF-30/RF-32: ya calculado en el backend (no se manda la lista
+        // completa de árbitros ni el comisionado a cualquier visitante, solo
+        // los booleanos).
+        Usuario usuario = correoOpcional == null ? null
+                : usuarioRepository.findByCorreo(correoOpcional).orElse(null);
+
+        boolean hayArbitros = !arbitroTorneoRepository.findByTorneoId(torneo.getId()).isEmpty();
+        boolean esArbitro = usuario != null && arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
+                .anyMatch(a -> a.getUsuario().getId().equals(usuario.getId()));
+
+        boolean hayComisionado = torneo.getTemporada() != null;
+        boolean esComisionado = usuario != null && hayComisionado
+                && torneo.getTemporada().getLiga().getComisionado().getId().equals(usuario.getId());
+
+        boolean esOrganizador = usuario != null
+                && torneo.getOrganizador().getId().equals(usuario.getId());
+        // El organizador solo entra como ultimo recurso: sin arbitros ni
+        // comisionado no hay nadie mas que pueda cerrar el caso.
+        boolean esUltimoRecurso = esOrganizador && !hayArbitros && !hayComisionado;
+
+        boolean puedeResolverDisputa = esArbitro || esComisionado || esUltimoRecurso;
+        // La apelacion escala por encima del arbitro, asi que este no la resuelve.
+        boolean puedeResolverApelacion = esComisionado || (esOrganizador && !hayComisionado);
+
+        return new TorneoDetalleResponse(TorneoResponse.from(torneo, equipos.size()), equipos,
+                esArbitro, esComisionado, puedeResolverDisputa, puedeResolverApelacion);
     }
     private Usuario buscarUsuario(String correo) {
         return usuarioRepository.findByCorreo(correo)

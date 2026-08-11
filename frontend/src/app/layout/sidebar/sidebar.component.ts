@@ -139,10 +139,11 @@ export class SidebarComponent {
       ]
     },
     {
-      // Portal del patrocinador (ACT-06): su panel comercial de métricas
-      // de audiencia y sentimiento (RF-44). Ruta propia en la raiz (no bajo
-      // /sponsorships) para no compartir prefijo con "Gestion > Patrocinios"
-      // y evitar que ambos enlaces se marquen activos a la vez.
+      // Portal del patrocinador (ACT-06): el panel comercial de RF-44 y el
+      // termómetro de sentimiento de RF-40, que son las dos vistas que puede
+      // consultar. El panel vive en la raíz y no bajo /sponsorships para no
+      // compartir prefijo con "Gestión > Patrocinios", que marcaría los dos
+      // enlaces como activos a la vez.
       titulo: 'Mi marca',
       enlaces: [
         {
@@ -150,6 +151,14 @@ export class SidebarComponent {
           etiqueta: 'Panel comercial',
           icono: 'briefcase',
           exact: false,
+          roles: ['PATROCINADOR']
+        },
+        {
+          ruta: '/analytics/termometro',
+          etiqueta: 'Termómetro del chat',
+          icono: 'pulse',
+          exact: false,
+          proximamente: false,
           roles: ['PATROCINADOR']
         }
       ]
@@ -169,11 +178,14 @@ export class SidebarComponent {
         },
 
         {
-          ruta: '/analytics',
-          etiqueta: 'Analítica',
+          // RF-40. El panel de análisis manual de RF-39 vive en /analytics y es
+          // solo de administración; el termómetro lo consultan tambien los
+          // comisionados, asi que es este el que va al menu.
+          ruta: '/analytics/termometro',
+          etiqueta: 'Termómetro del chat',
           icono: 'pulse',
           exact: false,
-          proximamente: true,
+          proximamente: false,
           roles: ['ADMIN', 'COMISIONADO']
         },
         {

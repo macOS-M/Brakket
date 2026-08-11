@@ -35,4 +35,10 @@ public interface TransmisionTwitchRepository extends JpaRepository<TransmisionTw
 
     /** Transmisiones activas: métrica del panel global (RF-49). */
     long countByActivaTrue();
+
+    /**
+     * RF-34: transmisión abierta que ya sigue este directo. Sirve para dar un
+     * error entendible antes de chocar contra el índice único.
+     */
+    Optional<TransmisionTwitch> findByTwitchStreamIdAndFinalizadaEnIsNull(String twitchStreamId);
 }

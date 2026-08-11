@@ -21,7 +21,10 @@ public class EspacioPublicitarioServiceImpl implements EspacioPublicitarioServic
 
     private static final String ESTADO_ACTIVO = "ACTIVO";
 
-    // Debe coincidir exactamente con ck_espacio_publicitario_ubicacion (V55).
+    // IMPORTANTE: esta lista es la fuente de la app, pero se duplica en el
+    // CHECK ck_espacio_publicitario_ubicacion de la migracion V55. Si se agrega
+    // o quita una ubicacion, hay que actualizar AMBOS lugares o la validacion
+    // de aplicacion y la de base de datos quedan desincronizadas.
     private static final Set<String> UBICACIONES_VALIDAS = Set.of(
             "TRANSMISION_INFERIOR",
             "TORNEO_CABECERA",

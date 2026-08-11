@@ -67,7 +67,15 @@ public class MuestreoChatService {
                 .findFirst()
                 .orElse(null);
         if (transmision == null) {
-            return; // sin transmision abierta no hay chat que capturar
+            // Sin transmision abierta no hay chat que capturar. Se suelta la
+            // conexion: al cerrar la ultima transmision el socket quedaba vivo
+            // escuchando un canal que ya nadie mira.
+            if (canalConectado != null) {
+                listener.desconectar();
+                canalConectado = null;
+                log.info("Sin transmisiones abiertas: se cierra la conexion con el chat.");
+            }
+            return;
         }
         String canal = login(transmision);
 
