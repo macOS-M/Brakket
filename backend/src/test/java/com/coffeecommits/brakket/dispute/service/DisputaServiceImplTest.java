@@ -6,6 +6,8 @@ import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ForbiddenException;
 import com.coffeecommits.brakket.dispute.dto.DisputaResponse;
 import com.coffeecommits.brakket.dispute.dto.ImpugnarResultadoRequest;
+import com.coffeecommits.brakket.dispute.dto.ResolverDisputaRequest;
+import com.coffeecommits.brakket.dispute.model.Disputa;
 import com.coffeecommits.brakket.dispute.repository.DisputaRepository;
 import com.coffeecommits.brakket.team.model.Equipo;
 import com.coffeecommits.brakket.tournament.model.ArbitroTorneo;
@@ -219,5 +221,50 @@ class DisputaServiceImplTest {
         assertThatThrownBy(() -> service.impugnar(200L, CAPITAN_A, false, request()))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("en curso");
+    }
+
+    // ---------- resolver: ultimo recurso del organizador (RF-32, A3) ----------
+
+    /** Disputa PENDIENTE sobre una partida en disputa, lista para resolverse. */
+    private void disputaPendiente() {
+        Partida p = Partida.builder().id(200L).torneo(torneo)
+                .equipoA(equipoA).equipoB(equipoB)
+                .estado(EstadoPartida.EN_DISPUTA)
+                .build();
+        Disputa d = Disputa.builder().id(300L).partida(p)
+                .levantadaPor(Usuario.builder().id(10L).correo(CAPITAN_A).build())
+                .estado("PENDIENTE")
+                .fechaCreacion(LocalDateTime.now())
+                .build();
+        lenient().when(disputaRepository.findById(300L)).thenReturn(Optional.of(d));
+        lenient().when(disputaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    private ResolverDisputaRequest resolucion() {
+        return new ResolverDisputaRequest("MANTENER", "El reporte original es correcto", null, null);
+    }
+
+    @Test
+    void sin_arbitros_ni_comisionado_el_organizador_resuelve_como_ultimo_recurso() {
+        // Torneo suelto: sin liga (no hay comisionado) y sin arbitros asignados.
+        // Sin esta salida la disputa quedaba trabada para siempre.
+        disputaPendiente();
+        when(arbitroTorneoRepository.findByTorneoId(7L)).thenReturn(List.of());
+
+        assertThat(service.resolver(300L, ORGANIZADOR, false, resolucion()).estado())
+                .isEqualTo("RESUELTA");
+    }
+
+    @Test
+    void con_arbitros_asignados_el_organizador_no_resuelve() {
+        // Habiendo quien arbitre, el RF excluye al organizador a proposito:
+        // no debe fallar sus propios casos.
+        disputaPendiente();
+        when(arbitroTorneoRepository.findByTorneoId(7L)).thenReturn(List.of(
+                ArbitroTorneo.builder().id(1L).torneo(torneo)
+                        .usuario(Usuario.builder().id(50L).correo(ARBITRO).build()).build()));
+
+        assertThatThrownBy(() -> service.resolver(300L, ORGANIZADOR, false, resolucion()))
+                .isInstanceOf(ForbiddenException.class);
     }
 }
