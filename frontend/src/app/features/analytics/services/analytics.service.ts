@@ -34,7 +34,7 @@ export class AnalyticsService {
 
   /** Transmisiones que ya tienen análisis, para el selector del termómetro (RF-40). */
   transmisionesAnalizadas(): Observable<TransmisionAnalizada[]> {
-    return this.api.get<TransmisionAnalizada[]>('/analytics/transmisiones');
+    return this.api.get<TransmisionAnalizada[]>('/analytics/transmisiones/analizadas');
   }
 
   /** Termómetro de sentimiento de la transmisión, acotado al período (RF-40). */

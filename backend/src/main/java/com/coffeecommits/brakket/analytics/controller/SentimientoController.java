@@ -64,7 +64,9 @@ public class SentimientoController {
      * termómetro. Mismo permiso que el termómetro: quien no puede ver el
      * indicador tampoco necesita la lista.
      */
-    @GetMapping
+    // /analizadas y no la ruta base: el catalogo general de transmisiones para
+    // analitica es de RF-37, y dos mapeos identicos impiden que Spring arranque.
+    @GetMapping("/analizadas")
     @PreAuthorize("hasAuthority('VER_METRICAS_AUDIENCIA')")
     public List<TransmisionAnalizadaResponse> transmisionesAnalizadas() {
         return termometroService.transmisionesAnalizadas();

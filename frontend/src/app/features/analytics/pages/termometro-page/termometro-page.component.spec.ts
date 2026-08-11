@@ -38,7 +38,7 @@ describe('TermometroPageComponent', () => {
 
   /** Responde el listado que dispara ngOnInit. */
   const responderListado = (ts: TransmisionAnalizada[]) => {
-    http.expectOne((r) => r.url.endsWith('/analytics/transmisiones')).flush(ts);
+    http.expectOne((r) => r.url.endsWith('/analytics/transmisiones/analizadas')).flush(ts);
   };
 
   beforeEach(async () => {
