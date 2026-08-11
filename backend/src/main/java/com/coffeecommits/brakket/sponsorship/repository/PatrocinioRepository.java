@@ -16,6 +16,7 @@ public interface PatrocinioRepository extends JpaRepository<Patrocinio, Long> {
 
     List<Patrocinio> findByTemporadaId(Long temporadaId);
 
+    // RF-44: patrocinios de una marca, para el panel comercial del patrocinador.
     List<Patrocinio> findByPatrocinadorId(Long patrocinadorId);
 
     // El recurso escaso es (competencia, nivel): dos patrocinios de niveles

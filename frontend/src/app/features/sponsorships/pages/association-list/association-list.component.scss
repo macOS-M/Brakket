@@ -107,3 +107,31 @@
     color: #ff6a1f;
   }
 }
+
+.acciones {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.8rem 1.1rem 1rem;
+  border-top: 1px solid var(--border, #334155);
+  margin-top: 0.6rem;
+}
+
+.btn-icono {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--border, #334155);
+  cursor: pointer;
+  text-decoration: none;
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+
+  &:hover {
+    border-color: var(--brand-cyan, #22d3ee);
+    color: var(--brand-cyan, #22d3ee);
+  }
+}

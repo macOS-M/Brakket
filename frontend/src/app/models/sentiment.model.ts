@@ -45,3 +45,64 @@ export interface AnalizarChatRequest {
 
 /** Tope de mensajes por lote; refleja el @Size del DTO del backend. */
 export const MAX_MENSAJES_POR_LOTE = 2000;
+
+// ---------- Termómetro de sentimiento (RF-40) ----------
+
+/**
+ * Estado del termómetro. PENDIENTE es "todavía no hay análisis";
+ * INSUFICIENTE es "hay, pero muy poco para mostrar un indicador".
+ */
+export type EstadoTermometro = 'PENDIENTE' | 'INSUFICIENTE' | 'DISPONIBLE';
+
+/** Reparto de las muestras entre las tres clasificaciones. */
+export interface DistribucionSentimiento {
+  positivo: number;
+  neutro: number;
+  negativo: number;
+  porcentajePositivo: number;
+  porcentajeNeutro: number;
+  porcentajeNegativo: number;
+}
+
+/** Tramo de la evolución del sentimiento. */
+export interface IntervaloSentimiento {
+  inicio: string;
+  fin: string;
+  muestras: number;
+  puntajePromedio: number;
+  clasificacion: ClasificacionSentimiento;
+}
+
+/** Lectura completa del termómetro de una transmisión. */
+export interface Termometro {
+  transmisionId: number;
+  estado: EstadoTermometro;
+  /** Texto corto que explica el indicador; siempre viene. */
+  resumen: string;
+  desde: string | null;
+  hasta: string | null;
+  intervaloMinutos: number;
+  /** Null salvo que el estado sea DISPONIBLE: no hay que pintarlo. */
+  puntajeGeneral: number | null;
+  clasificacion: ClasificacionSentimiento | null;
+  totalMuestras: number;
+  minimoMuestras: number;
+  distribucion: DistribucionSentimiento;
+  intervalos: IntervaloSentimiento[];
+}
+
+/** Transmisión con análisis disponible, para el selector del termómetro. */
+export interface TransmisionAnalizada {
+  id: number;
+  estado: string;
+  iniciadaEn: string | null;
+  torneoId: number | null;
+  totalMuestras: number;
+}
+
+/** Filtros del termómetro; todos opcionales. */
+export interface FiltrosTermometro {
+  desde?: string | null;
+  hasta?: string | null;
+  intervaloMinutos?: number | null;
+}

@@ -1,0 +1,145 @@
+.page {
+  padding: 1.5rem 0;
+
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+
+  .subtitulo {
+    margin: 0 0 1.25rem;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.95rem;
+  }
+
+  .placeholder {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    border: 1px dashed var(--accent-text, #ff6a1f);
+    border-radius: 8px;
+    color: var(--text-muted, #94a3b8);
+
+    &.error {
+      border-color: #f87171;
+      color: #f87171;
+    }
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.5rem;
+}
+
+.lista-patrocinios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.item-patrocinio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+
+  .nivel {
+    font-weight: 600;
+    color: var(--text, #e2e8f0);
+    font-size: 0.9rem;
+  }
+
+  .alcance {
+    font-size: 0.78rem;
+    color: var(--text-muted, #94a3b8);
+  }
+
+  .badge-vencido {
+    margin-top: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #f87171;
+  }
+
+  &.activo {
+    border-color: var(--brand-cyan, #22d3ee);
+  }
+
+  &.vencido {
+    opacity: 0.75;
+  }
+}
+
+.detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ficha {
+  padding: 1.1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 12px;
+
+  h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.1rem;
+  }
+
+  .linea {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+    color: var(--text-muted, #94a3b8);
+
+    strong {
+      color: var(--text, #e2e8f0);
+    }
+  }
+}
+
+.metricas {
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+.grid-metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.metrica-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: 10px;
+
+  .etiqueta {
+    font-size: 0.78rem;
+    color: var(--text-muted, #94a3b8);
+  }
+
+  .valor {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--brand-cyan, #22d3ee);
+
+    .pendiente {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fbbf24;
+    }
+  }
+}

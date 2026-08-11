@@ -59,5 +59,12 @@ public class CanalTwitchController {
     public ResponseEntity<List<TransmisionTwitchResponse>> abiertas() {
         return ResponseEntity.ok(service.listarAbiertas());
     }
+
+    /** RF-34: cerrar el período de captura sin esperar a que el directo termine. */
+    @PostMapping("/transmisiones/{id}/finalizar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TransmisionTwitchResponse> finalizar(@PathVariable Long id) {
+        return ResponseEntity.ok(service.finalizar(id));
+    }
 }
 

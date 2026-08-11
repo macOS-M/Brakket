@@ -149,6 +149,15 @@ export class TournamentDetailComponent {
   readonly esModeracion = computed(() => this.puedeEliminar() && !this.esOrganizador());
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
+
+  // RF-32: quién puede cerrar una disputa o una apelación. No se deduce en el
+  // frontend porque la regla es del backend (el organizador queda fuera salvo
+  // que no haya árbitros ni comisionado); mostrar el botón a quien luego recibe
+  // un 403 es peor que no mostrarlo.
+  readonly puedeResolverDisputa = computed(
+    () => this.detalle()?.puedeResolverDisputa ?? this.auth.hasRole('ADMIN'));
+  readonly puedeResolverApelacion = computed(
+    () => this.detalle()?.puedeResolverApelacion ?? this.auth.hasRole('ADMIN'));
 // RF-28: quién puede reportar descansos/avances/abandonos.
   readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
 

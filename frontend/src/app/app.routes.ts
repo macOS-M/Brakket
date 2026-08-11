@@ -105,12 +105,23 @@ export const routes: Routes = [
       },
       {
         // RF-37: consulta de métricas de una transmisión por período. Va aparte
-        // de /analytics, que queda para el panel comercial del patrocinador
-        // (RF-44): son dos pantallas distintas con públicos distintos.
+        // de /analytics, que quedó para el sentimiento y el termómetro (RF-39/40):
+        // son pantallas distintas con públicos distintos.
         path: 'metricas',
         canActivate: [authGuard, roleGuard],
         data: { roles: ['ADMIN', 'COMISIONADO'] },
         loadChildren: () => import('./features/metricas/metricas.routes').then((m) => m.routes)
+      },
+      {
+        // Panel comercial del patrocinador (RF-44): ruta propia, separada de
+        // /sponsorships (que solo permite ADMIN/COMISIONADO) para que un
+        // PATROCINADOR real pueda acceder.
+        path: 'panel-comercial',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['PATROCINADOR'] },
+        loadComponent: () =>
+          import('./features/sponsorships/pages/panel-comercial/panel-comercial.component')
+            .then((m) => m.PanelComercialComponent)
       },
       {
         // Gestión de patrocinios: administrador o comisionado (RF-42/RF-43).

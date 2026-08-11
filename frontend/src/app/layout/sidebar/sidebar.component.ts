@@ -99,7 +99,7 @@ export class SidebarComponent {
           etiqueta: 'Disputas',
           icono: 'shield',
           exact: false,
-          proximamente: true,
+          proximamente: false,
           ocultarPara: ['PATROCINADOR']
         }
       ]
@@ -139,16 +139,26 @@ export class SidebarComponent {
       ]
     },
     {
-      // Portal del patrocinador (ACT-06): su panel comercial de métricas
-      // de audiencia y sentimiento (RF-44). Llega con EPIC-11 (sprint 6).
+      // Portal del patrocinador (ACT-06): el panel comercial de RF-44 y el
+      // termómetro de sentimiento de RF-40, que son las dos vistas que puede
+      // consultar. El panel vive en la raíz y no bajo /sponsorships para no
+      // compartir prefijo con "Gestión > Patrocinios", que marcaría los dos
+      // enlaces como activos a la vez.
       titulo: 'Mi marca',
       enlaces: [
         {
-          ruta: '/analytics',
+          ruta: '/panel-comercial',
           etiqueta: 'Panel comercial',
           icono: 'briefcase',
           exact: false,
-          proximamente: true,
+          roles: ['PATROCINADOR']
+        },
+        {
+          ruta: '/analytics/termometro',
+          etiqueta: 'Termómetro del chat',
+          icono: 'pulse',
+          exact: false,
+          proximamente: false,
           roles: ['PATROCINADOR']
         }
       ]
@@ -168,12 +178,23 @@ export class SidebarComponent {
         },
 
         {
-          // RF-37: consulta de métricas por período. Ruta propia porque
-          // /analytics queda para el panel comercial del patrocinador (RF-44).
+          // RF-37: consulta de métricas de transmisión por período. Ruta propia
+          // porque /analytics quedó para el sentimiento y el termómetro.
           ruta: '/metricas',
           etiqueta: 'Analítica',
+          icono: 'chart',
+          exact: false,
+          roles: ['ADMIN', 'COMISIONADO']
+        },
+        {
+          // RF-40. El panel de análisis manual de RF-39 vive en /analytics y es
+          // solo de administración; el termómetro lo consultan tambien los
+          // comisionados, asi que es este el que va al menu.
+          ruta: '/analytics/termometro',
+          etiqueta: 'Termómetro del chat',
           icono: 'pulse',
           exact: false,
+          proximamente: false,
           roles: ['ADMIN', 'COMISIONADO']
         },
         {

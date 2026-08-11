@@ -51,3 +51,16 @@ export interface ApelacionResponse {
   fechaCreacion: string;
   fechaResolucion: string | null;
 }
+/** Una fila de la vista panorámica "Mis disputas" (todas mis disputas, de cualquier torneo). */
+export interface MiDisputa {
+  disputaId: number;
+  torneoId: number;
+  torneoNombre: string;
+  partidaId: number;
+  equipoANombre: string | null;
+  equipoBNombre: string | null;
+  motivo: string;
+  estado: string;
+  levantadaPorNombre: string;
+  fechaCreacion: string;
+}

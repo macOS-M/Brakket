@@ -86,12 +86,16 @@ public class TeamSearchServiceImpl implements TeamSearchService {
                     cb.like(cb.lower(root.get("nombre")), patron, '\\'));
         }
         if (juegoId != null) {
-            condiciones.add((root, query, cb) ->
-                    cb.equal(root.join("juego", JoinType.LEFT).get("id"), juegoId));
+            condiciones.add((root, query, cb) -> {
+                if (query != null) query.distinct(true);
+                return cb.equal(root.join("juegos", JoinType.LEFT).get("id"), juegoId);
+            });
         }
         if (disciplina != null) {
-            condiciones.add((root, query, cb) ->
-                    cb.equal(cb.lower(root.join("juego", JoinType.LEFT).get("genero")), disciplina));
+            condiciones.add((root, query, cb) -> {
+                if (query != null) query.distinct(true);
+                return cb.equal(cb.lower(root.join("juegos", JoinType.LEFT).get("genero")), disciplina);
+            });
         }
         if (estado != null) {
             condiciones.add((root, query, cb) -> cb.equal(root.get("estado"), estado));

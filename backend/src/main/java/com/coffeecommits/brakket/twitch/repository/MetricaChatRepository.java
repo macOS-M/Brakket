@@ -21,4 +21,19 @@ public interface MetricaChatRepository extends JpaRepository<MetricaChat, Long> 
     List<MetricaChat> buscarPorTransmisionYRango(@Param("transmisionId") Long transmisionId,
                                                  @Param("desde") LocalDateTime desde,
                                                  @Param("hasta") LocalDateTime hasta);
+
+    // RF-44: filas de metrica_chat de una transmision especifica, usadas para
+    // recorrer y agregar el sentimiento predominante via analisis_sentimiento.
+    List<MetricaChat> findByTransmisionTwitchId(Long transmisionTwitchId);
+
+    // RF-44: promedio de interaccion del chat para el panel comercial.
+    @Query("""
+            select count(m) as muestras, avg(m.mensajesPorMinuto) as mensajesPorMinutoPromedio
+            from MetricaChat m where m.transmisionTwitch.id = :transmisionId""")
+    ResumenChat resumenPorTransmision(@Param("transmisionId") Long transmisionId);
+
+    interface ResumenChat {
+        Long getMuestras();
+        Double getMensajesPorMinutoPromedio();
+    }
 }

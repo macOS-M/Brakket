@@ -17,6 +17,8 @@ public record PerfilEquipoPublicoResponse(
         Long capitanId,
         Long juegoId,
         String juegoNombre,
+        List<Long> juegoIds,
+        List<String> juegoNombres,
         List<String> redesSociales,
         List<IntegrantePublico> plantilla,
         List<TorneoRelacionado> torneos,

@@ -67,6 +67,11 @@ brakket:
     # RF-36: cadencia del muestreo de audiencia (1 request batcheada por tick;
     # 60s mantiene el desfase bajo el minuto de RNF-02 sin gastar cuota).
     muestreo-intervalo-ms: ${STREAMS_MUESTREO_INTERVALO_MS:60000}
+  analytics:
+    # RF-40: por debajo de este número de muestras el termómetro no se muestra
+    # y se avisa que los datos no alcanzan.
+    minimo-muestras: ${ANALYTICS_MINIMO_MUESTRAS:3}
+    intervalo-por-defecto-minutos: ${ANALYTICS_INTERVALO_MINUTOS:5}
   ai:
     # RF-39: sin llave el análisis NO se cae, usa el analizador léxico. La demo
     # y el CI corren así a propósito (no salen a la red).
