@@ -26,4 +26,15 @@ public interface AnalisisSentimientoRepository extends JpaRepository<AnalisisSen
         String getClasificacion();
         Long getCantidad();
     }
+
+    /**
+     * Serie de análisis de una transmisión, del más antiguo al más reciente
+     * (RF-40). Navega analisis_sentimiento → metrica_chat → transmision_twitch.
+     */
+    @Query("""
+            select a from AnalisisSentimiento a
+            join a.metricaChat m
+            where m.transmisionTwitch.id = :transmisionId
+            order by a.fechaHora asc, a.id asc""")
+    List<AnalisisSentimiento> findSerieByTransmision(@Param("transmisionId") Long transmisionId);
 }

@@ -1,88 +1,121 @@
 <section class="page">
-  <h1>Panel comercial</h1>
+  <app-page-header
+    eyebrow="EPIC-10 · Twitch/IA"
+    titulo="Análisis de sentimiento del chat"
+    subtitulo="Clasificá el ánimo del chat de una transmisión a partir de sus mensajes."
+  />
 
-  @if (cargando()) {
-  <p class="placeholder">Cargando tu panel comercial...</p>
-  } @else if (error()) {
-  <p class="placeholder error">{{ error() }}</p>
-  } @else {
+  <div class="grid">
+    <!-- Entrada del análisis -->
+    <form class="card" (ngSubmit)="analizar()">
+      <h2>Analizar chat</h2>
 
-  <p class="subtitulo">{{ patrocinadorNombre() }}</p>
-
-  @if (patrocinios().length === 0) {
-  <p class="placeholder">Todavía no tenés patrocinios asociados.</p>
-  } @else {
-
-  <div class="layout">
-    <aside class="lista-patrocinios">
-      @for (p of patrocinios(); track p.patrocinioId) {
-      <button
-        class="item-patrocinio"
-        [class.activo]="p.patrocinioId === patrocinioSeleccionadoId()"
-        [class.vencido]="p.vencido"
-        (click)="seleccionarPatrocinio(p.patrocinioId)"
-      >
-        <span class="nivel">{{ p.nivel }}</span>
-        <span class="alcance">{{ alcanceTexto(p) }}</span>
-        @if (p.vencido) {
-        <span class="badge-vencido">Vencido</span>
-        }
-      </button>
-      }
-    </aside>
-
-    <div class="detalle">
-      @if (patrocinioSeleccionado(); as patrocinio) {
-      <div class="ficha">
-        <h2>{{ alcanceTexto(patrocinio) }}</h2>
-        <p class="linea">Nivel: <strong>{{ patrocinio.nivel }}</strong></p>
-        <p class="linea">Estado: <strong>{{ patrocinio.estado }}</strong></p>
-        <p class="linea">Vigencia: {{ patrocinio.fechaInicio }} — {{ patrocinio.fechaFin }}</p>
-        <p class="linea">Espacios publicitarios activos: {{ patrocinio.cantidadEspacios }}</p>
-      </div>
-
-      <div class="metricas">
-        <h3>Métricas de audiencia</h3>
-
-        @if (metricas(); as m) {
-
-        @if (cargandoMetricas()) {
-        <p class="placeholder">Cargando métricas...</p>
-        } @else if (m.transmisionId === null) {
-        <p class="placeholder">No hay métricas disponibles para esta asociación todavía.</p>
+      <label class="field">
+        <span class="label">Transmisión</span>
+        @if (cargandoTransmisiones()) {
+          <select name="transmisionId" disabled>
+            <option>Cargando transmisiones…</option>
+          </select>
+        } @else if (transmisiones().length === 0) {
+          <select name="transmisionId" disabled>
+            <option>No hay transmisiones con captura abierta</option>
+          </select>
+          <small class="ayuda">
+            Asociá una transmisión desde el panel de Twitch para poder analizar su chat.
+          </small>
         } @else {
-        <div class="grid-metricas">
-          <div class="metrica-card">
-            <span class="etiqueta">Espectadores promedio</span>
-            <span class="valor">{{ m.espectadoresPromedio ?? '—' }}</span>
-          </div>
-          <div class="metrica-card">
-            <span class="etiqueta">Pico de espectadores</span>
-            <span class="valor">{{ m.picoEspectadores ?? '—' }}</span>
-          </div>
-          <div class="metrica-card">
-            <span class="etiqueta">Mensajes por minuto (prom.)</span>
-            <span class="valor">{{ m.mensajesPorMinutoPromedio ?? '—' }}</span>
-          </div>
-          <div class="metrica-card">
-            <span class="etiqueta">Sentimiento del chat</span>
-            <span class="valor">
-              @if (m.sentimientoPendiente) {
-              <span class="pendiente">Análisis pendiente</span>
-              } @else {
-              {{ m.sentimientoPredominante }}
-              }
-            </span>
-          </div>
+          <select name="transmisionId" [(ngModel)]="transmisionId">
+            <option [ngValue]="null">Elegí una transmisión…</option>
+            @for (t of transmisiones(); track t.id) {
+              <option [ngValue]="t.id">{{ etiqueta(t) }}</option>
+            }
+          </select>
+        }
+      </label>
+
+      <label class="field">
+        <span class="label">Mensajes del chat (uno por línea)</span>
+        <textarea name="mensajes" rows="7" [(ngModel)]="mensajesTexto"
+                  placeholder="GG jugada increíble!&#10;pog pog vamos&#10;esto es puro lag, aburrido"></textarea>
+        <small class="ayuda">Hasta {{ maxMensajes }} mensajes por lote.</small>
+      </label>
+
+      <label class="field">
+        <span class="label">Usuarios activos (opcional)</span>
+        <input type="number" name="usuariosActivos" min="1" [(ngModel)]="usuariosActivos"
+               placeholder="Se aproxima con la cantidad de mensajes" />
+      </label>
+
+      <label class="field">
+        <span class="label">Segundos que cubre el lote (opcional)</span>
+        <input type="number" name="ventanaSegundos" min="1" [(ngModel)]="ventanaSegundos"
+               placeholder="Si se omite, se asume un minuto" />
+        <small class="ayuda">
+          Se usa para guardar una tasa por minuto comparable con la del muestreo automático.
+        </small>
+      </label>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <button type="submit" class="btn btn-primary" [disabled]="analizando()">
+        {{ analizando() ? 'Analizando…' : 'Analizar sentimiento' }}
+      </button>
+    </form>
+
+    <!-- Resultado del último análisis -->
+    <div class="card">
+      <h2>Resultado</h2>
+      @if (resultado(); as r) {
+        <div class="resultado">
+          <span class="badge" [class]="'badge-' + tono(r.clasificacion)">{{ r.clasificacion }}</span>
+          <p class="puntaje">{{ r.puntaje | number: '1.0-2' }}<span class="escala"> / 100</span></p>
+          <dl class="detalle">
+            @if (r.mensajesAnalizados !== null) {
+              <div><dt>Mensajes analizados</dt><dd>{{ r.mensajesAnalizados }}</dd></div>
+            }
+            <div><dt>Mensajes por minuto</dt><dd>{{ r.mensajesPorMinuto }}</dd></div>
+            <div><dt>Usuarios activos</dt><dd>{{ r.usuariosActivos }}</dd></div>
+            <div><dt>Fecha</dt><dd>{{ r.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+          </dl>
         </div>
-        }
-        } @else if (cargandoMetricas()) {
-        <p class="placeholder">Cargando métricas...</p>
-        }
-      </div>
+      } @else {
+        <app-empty-state titulo="Sin análisis todavía"
+                         mensaje="Ejecutá un análisis para ver la clasificación del chat." />
       }
     </div>
   </div>
-  }
-  }
+
+  <!-- Serie histórica -->
+  <div class="card serie">
+    <h2>Historial de la transmisión</h2>
+    @if (cargandoSerie()) {
+      <app-empty-state modo="cargando" />
+    } @else if (serie()) {
+      @if (serie(); as s) {
+        @if (s.totalMuestras === 0) {
+          <app-empty-state titulo="Sin muestras" mensaje="Esta transmisión aún no tiene análisis." />
+        } @else {
+          <p class="resumen">
+            {{ s.totalMuestras }} muestra(s) · promedio
+            <strong>{{ s.promedioPuntaje | number: '1.0-2' }}</strong> / 100
+          </p>
+          <ul class="puntos">
+            @for (p of s.puntos; track $index) {
+              <li class="punto">
+                <span class="dot" [class]="'badge-' + tono(p.clasificacion)"></span>
+                <span class="p-clasif">{{ p.clasificacion }}</span>
+                <span class="p-puntaje">{{ p.puntaje | number: '1.0-2' }}</span>
+                <span class="p-fecha">{{ p.fechaHora | date: 'dd/MM HH:mm' }}</span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    } @else {
+      <app-empty-state titulo="Sin datos"
+                       mensaje="Analizá una transmisión para ver su historial de sentimiento." />
+    }
+  </div>
 </section>

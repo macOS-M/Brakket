@@ -1,124 +1,86 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { AnalyticsDashboardComponent } from './analytics-dashboard.component';
-import { PanelComercialService } from '../../services/panel-comercial.service';
-import { MetricasPatrocinio, PanelComercial } from '../../../../models/panel-comercial.model';
+import { TransmisionTwitch } from '../../../../models/twitch.model';
 
 describe('AnalyticsDashboardComponent', () => {
   let component: AnalyticsDashboardComponent;
   let fixture: ComponentFixture<AnalyticsDashboardComponent>;
-  let panelServiceSpy: jasmine.SpyObj<PanelComercialService>;
+  let http: HttpTestingController;
 
-  const panelMock: PanelComercial = {
-    patrocinadorId: 11,
-    patrocinadorNombre: 'AAAAAAA',
-    patrocinios: [
-      {
-        patrocinioId: 1,
-        nivel: 'ORO',
-        estado: 'ACTIVO',
-        vencido: false,
-        ligaId: 8,
-        temporadaId: null,
-        torneoId: null,
-        fechaInicio: '2014-01-05',
-        fechaFin: '2026-09-03',
-        cantidadEspacios: 2
-      },
-      {
-        patrocinioId: 3,
-        nivel: 'ORO',
-        estado: 'ACTIVO',
-        vencido: true,
-        ligaId: null,
-        temporadaId: null,
-        torneoId: 11,
-        fechaInicio: '2026-07-24',
-        fechaFin: '2026-07-24',
-        cantidadEspacios: 0
-      }
-    ]
-  };
+  const transmision = (id: number): TransmisionTwitch => ({
+    id,
+    twitchStreamId: `stream-${id}`,
+    torneoId: 3,
+    partidaId: null,
+    estado: 'EN_VIVO',
+    iniciadaEn: '2026-08-07T18:00:00'
+  });
 
-  const metricasMock: MetricasPatrocinio = {
-    patrocinioId: 1,
-    transmisionId: null,
-    espectadoresPromedio: null,
-    picoEspectadores: null,
-    mensajesPorMinutoPromedio: null,
-    sentimientoPredominante: null,
-    sentimientoPendiente: true
+  /** Responde la carga de transmisiones que dispara ngOnInit. */
+  const responderTransmisiones = (ts: TransmisionTwitch[]) => {
+    http.expectOne((r) => r.url.endsWith('/twitch/transmisiones')).flush(ts);
   };
 
   beforeEach(async () => {
-    panelServiceSpy = jasmine.createSpyObj('PanelComercialService', ['obtenerResumen', 'obtenerMetricas']);
-
     await TestBed.configureTestingModule({
       imports: [AnalyticsDashboardComponent],
-      providers: [{ provide: PanelComercialService, useValue: panelServiceSpy }]
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
-  });
-
-  it('should create', () => {
-    panelServiceSpy.obtenerResumen.and.returnValue(of(panelMock));
-    panelServiceSpy.obtenerMetricas.and.returnValue(of(metricasMock));
 
     fixture = TestBed.createComponent(AnalyticsDashboardComponent);
     component = fixture.componentInstance;
+    http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
+  });
 
+  afterEach(() => http.verify());
+
+  it('should create', () => {
+    responderTransmisiones([]);
     expect(component).toBeTruthy();
   });
 
-  it('carga el resumen y selecciona automaticamente el primer patrocinio', () => {
-    panelServiceSpy.obtenerResumen.and.returnValue(of(panelMock));
-    panelServiceSpy.obtenerMetricas.and.returnValue(of(metricasMock));
-
-    fixture = TestBed.createComponent(AnalyticsDashboardComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    expect(component.patrocinadorNombre()).toBe('AAAAAAA');
-    expect(component.patrocinios().length).toBe(2);
-    expect(component.patrocinioSeleccionadoId()).toBe(1);
-    expect(panelServiceSpy.obtenerMetricas).toHaveBeenCalledWith(1);
+  it('carga las transmisiones abiertas al iniciar', () => {
+    responderTransmisiones([transmision(4), transmision(9)]);
+    expect(component.transmisiones().length).toBe(2);
+    // Con varias abiertas no se elige ninguna: la decisión es del admin.
+    expect(component.transmisionId).toBeNull();
   });
 
-  it('muestra un mensaje de error si falla la carga del resumen', () => {
-    panelServiceSpy.obtenerResumen.and.returnValue(throwError(() => ({ error: { message: 'Error de prueba' } })));
-
-    fixture = TestBed.createComponent(AnalyticsDashboardComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    expect(component.error()).toBe('Error de prueba');
-    expect(component.cargando()).toBeFalse();
+  it('preselecciona la transmisión cuando hay una sola', () => {
+    responderTransmisiones([transmision(12)]);
+    expect(component.transmisionId).toBe(12);
   });
 
-  it('cambia el patrocinio seleccionado y recarga sus metricas al hacer clic', () => {
-    panelServiceSpy.obtenerResumen.and.returnValue(of(panelMock));
-    panelServiceSpy.obtenerMetricas.and.returnValue(of(metricasMock));
-
-    fixture = TestBed.createComponent(AnalyticsDashboardComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    component.seleccionarPatrocinio(3);
-
-    expect(component.patrocinioSeleccionadoId()).toBe(3);
-    expect(panelServiceSpy.obtenerMetricas).toHaveBeenCalledWith(3);
+  it('exige elegir la transmisión antes de analizar', () => {
+    responderTransmisiones([]);
+    component.transmisionId = null;
+    component.mensajesTexto = 'gg';
+    component.analizar();
+    expect(component.error()).toContain('transmisión');
   });
 
-  it('calcula el texto de alcance correctamente segun el tipo', () => {
-    panelServiceSpy.obtenerResumen.and.returnValue(of(panelMock));
-    panelServiceSpy.obtenerMetricas.and.returnValue(of(metricasMock));
+  it('exige al menos un mensaje de chat', () => {
+    responderTransmisiones([]);
+    component.transmisionId = 1;
+    component.mensajesTexto = '   ';
+    component.analizar();
+    expect(component.error()).toContain('mensaje');
+  });
 
-    fixture = TestBed.createComponent(AnalyticsDashboardComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+  it('rechaza en el cliente un lote por encima del tope del backend', () => {
+    responderTransmisiones([]);
+    component.transmisionId = 1;
+    component.mensajesTexto = Array(component.maxMensajes + 1).fill('gg').join('\n');
+    component.analizar();
+    expect(component.error()).toContain(`${component.maxMensajes}`);
+  });
 
-    expect(component.alcanceTexto(panelMock.patrocinios[0])).toBe('Liga #8');
-    expect(component.alcanceTexto(panelMock.patrocinios[1])).toBe('Torneo #11');
+  it('arma una etiqueta legible para el desplegable', () => {
+    responderTransmisiones([]);
+    expect(component.etiqueta(transmision(7))).toBe('#7 · EN_VIVO · torneo 3');
   });
 });
