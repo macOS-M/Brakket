@@ -28,7 +28,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,16 +69,18 @@ class PatrocinioServiceImplTest {
                 .build();
     }
 
-    private CrearPatrocinioRequest requestParaTorneo(Long torneoId, LocalDate fechaInicio, LocalDate fechaFin) {
+    private CrearPatrocinioRequest requestParaTorneo(Long torneoId, String nivel,
+                                                     LocalDate fechaInicio, LocalDate fechaFin) {
         return new CrearPatrocinioRequest(
-                11L, null, null, torneoId, "ORO", "Condiciones de prueba", fechaInicio, fechaFin);
+                11L, null, null, torneoId, nivel, "Condiciones de prueba", fechaInicio, fechaFin);
     }
 
     @Test
     void crear_asocia_patrocinio_a_torneo_correctamente() {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
         when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
-        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), any(), any())).thenReturn(false);
+        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), anyString(), any(), any()))
+                .thenReturn(false);
         when(patrocinioRepository.save(any(Patrocinio.class))).thenAnswer(inv -> {
             Patrocinio p = inv.getArgument(0);
             p.setId(1L);
@@ -86,7 +88,7 @@ class PatrocinioServiceImplTest {
         });
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+                12L, "ORO", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         PatrocinioResponse response = service.crear(request);
 
@@ -103,12 +105,34 @@ class PatrocinioServiceImplTest {
     }
 
     @Test
+    void crear_permite_dos_niveles_distintos_en_la_misma_competencia_y_periodo() {
+        // Caso que estaba roto: ORO y PLATA deben poder coexistir en el mismo
+        // torneo y periodo. existeSolapamiento debe filtrar tambien por nivel,
+        // asi que devolver false aqui (nadie mas tiene nivel PLATA en ese
+        // torneo) confirma que la creacion no se bloquea.
+        when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
+        when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
+        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), anyString(), any(), any()))
+                .thenReturn(false);
+        when(patrocinioRepository.save(any(Patrocinio.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CrearPatrocinioRequest requestPlata = requestParaTorneo(
+                12L, "PLATA", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+
+        PatrocinioResponse response = service.crear(requestPlata);
+
+        assertThat(response.nivel()).isEqualTo("PLATA");
+        verify(patrocinioRepository).existeSolapamiento(
+                any(), any(), any(), org.mockito.ArgumentMatchers.eq("PLATA"), any(), any());
+    }
+
+    @Test
     void crear_falla_si_el_patrocinador_esta_inactivo() {
         Patrocinador inactivo = Patrocinador.builder().id(11L).nombre("Nike Demo").estado("INACTIVO").build();
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(inactivo));
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+                12L, "ORO", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
@@ -121,7 +145,7 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.empty());
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+                12L, "ORO", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -161,7 +185,7 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, LocalDate.of(2026, 12, 31), LocalDate.of(2026, 8, 5));
+                12L, "ORO", LocalDate.of(2026, 12, 31), LocalDate.of(2026, 8, 5));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
@@ -174,9 +198,8 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
         when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
 
-        // El torneo empieza el 2026-07-26; pedimos un patrocinio desde antes de esa fecha.
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
+                12L, "ORO", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
@@ -205,18 +228,18 @@ class PatrocinioServiceImplTest {
     }
 
     @Test
-    void crear_falla_si_existe_solapamiento_con_otro_patrocinio_activo() {
+    void crear_falla_si_existe_solapamiento_con_el_mismo_nivel_en_la_misma_competencia() {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
         when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
-        when(patrocinioRepository.existeSolapamiento(
-                any(), any(), anyLong(), any(), any())).thenReturn(true);
+        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), anyString(), any(), any()))
+                .thenReturn(true);
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 10, 1));
+                12L, "ORO", LocalDate.of(2026, 9, 1), LocalDate.of(2026, 10, 1));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Ya existe un patrocinio activo");
+                .hasMessageContaining("Ya existe un patrocinio de nivel ORO");
         verify(patrocinioRepository, never()).save(any());
     }
 }

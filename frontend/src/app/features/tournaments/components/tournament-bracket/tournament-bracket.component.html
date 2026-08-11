@@ -35,6 +35,34 @@
     <button type="button" class="btn-secondary" (click)="toggleEvidencia(p)">
       {{ verEvidencia() === p.id ? 'Ocultar disputa' : 'Ver disputa' }}
     </button>
+    <button type="button" class="btn-secondary" (click)="toggleTrazabilidad(p)">
+      {{ verTrazabilidad() === p.id ? 'Ocultar historial' : 'Ver historial completo' }}
+    </button>
+    }
+
+    @if (verTrazabilidad() === p.id) {
+    <div class="evidencia-panel">
+      @if (cargandoTrazabilidad()) {
+      <p class="evidencia-vacia">Cargando…</p>
+      } @else if (errorTrazabilidad()) {
+      <p class="mensaje-error" role="alert">{{ errorTrazabilidad() }}</p>
+      } @else if (eventosTrazabilidad().length === 0) {
+      <p class="evidencia-vacia">Todavía no hay historial para esta partida.</p>
+      } @else {
+      @for (evento of eventosTrazabilidad(); track $index) {
+      <div class="evidencia-item">
+        <p class="evidencia-meta">
+          <strong>{{ etiquetaEvento(evento.tipo) }}</strong>
+          @if (evento.autorNombre) {
+          · {{ evento.autorNombre }}
+          }
+          · {{ formatearFecha(evento.fecha) }}
+        </p>
+        <p class="evidencia-descripcion">{{ evento.descripcion }}</p>
+      </div>
+      }
+      }
+    </div>
     }
 
     @if (verEvidencia() === p.id) {
