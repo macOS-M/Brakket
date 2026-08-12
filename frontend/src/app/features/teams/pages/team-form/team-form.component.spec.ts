@@ -13,6 +13,8 @@ describe('TeamFormComponent', () => {
   let fixture: ComponentFixture<TeamFormComponent>;
 
   beforeEach(async () => {
+    // El selector de juegos sigue existiendo (elegirlos es opcional, no
+    // imposible), así que el componente carga el catálogo al iniciar.
     const gamesServiceMock = { listActivos: () => of([]) };
     const teamsServiceMock = { crear: () => of({ id: 1 }) };
     const routerMock = { navigate: () => Promise.resolve(true) };
@@ -41,8 +43,14 @@ describe('TeamFormComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should be invalid when nombre and juegoId are empty', () => {
+  it('should be invalid when nombre is empty', () => {
     expect(component.form.invalid).toBeTrue();
+  });
+
+  it('should not require a game to create a team', () => {
+    component.form.controls.nombre.setValue('Equipo universal');
+
+    expect(component.form.valid).toBeTrue();
   });
 
   it('should add and remove a red social control', () => {
