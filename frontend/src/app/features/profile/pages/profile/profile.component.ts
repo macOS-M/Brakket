@@ -8,6 +8,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
+import { ElementoProgresion, ProgressionService } from '../../../progression/services/progression.service';
 
 interface GameOption {
   id: number;
@@ -45,7 +47,13 @@ const EDAD_MINIMA = 13;
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
+  imports: [
+    ReactiveFormsModule,
+    PageHeaderComponent,
+    EmptyStateComponent,
+    StatusBadgeComponent,
+    FotoInputComponent
+  ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
@@ -53,6 +61,7 @@ export class ProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly api = inject(ApiService);
+  private readonly progressionService = inject(ProgressionService);
 
   readonly usuario = this.authService.usuario;
   readonly perfilCompleto = this.authService.perfilCompleto;
@@ -101,6 +110,8 @@ export class ProfileComponent implements OnInit {
   protected saveError = '';
   protected saveSuccess = '';
   protected games: GameOption[] = [];
+  protected tituloAplicado: ElementoProgresion | null = null;
+  protected insigniasAplicadas: ElementoProgresion[] = [];
 
   readonly profileForm = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
@@ -152,6 +163,12 @@ export class ProfileComponent implements OnInit {
     this.api.get<GameOption[]>('/games').subscribe({
       next: (games) => (this.games = games),
       error: () => (this.games = [])
+    });
+    this.progressionService.get().subscribe({
+      next: data => {
+        this.tituloAplicado = data.elementos.find(e => e.tipo === 'TITULO' && e.aplicado) ?? null;
+        this.insigniasAplicadas = data.elementos.filter(e => e.tipo === 'INSIGNIA' && e.aplicado);
+      }
     });
   }
 

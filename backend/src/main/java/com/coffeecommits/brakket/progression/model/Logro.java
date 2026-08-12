@@ -28,4 +28,11 @@ public class Logro {
 
     @Column(name = "puntos_valor", nullable = false)
     private Integer puntosValor;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
+
+    @Column(nullable = false, length = 180)
+    private String origen;
 }

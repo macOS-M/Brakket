@@ -32,15 +32,7 @@
         [attr.aria-label]="'Subir ' + etiqueta().toLowerCase() + ' desde tu equipo'"
       />
     </label>
-    <input
-      class="url"
-      type="url"
-      placeholder="…o pegá una URL"
-      [value]="valor()"
-      [disabled]="deshabilitado()"
-      (input)="alEscribirUrl($any($event.target).value)"
-      [attr.aria-label]="'URL de ' + etiqueta().toLowerCase()"
-    />
+    <span class="pista-archivo">PNG, JPG, WebP o GIF · máximo 5 MB</span>
   </div>
 
   @if (errorSubida()) {
@@ -98,7 +90,7 @@
 
       <div class="recorte-acciones">
         <button type="button" class="recorte-usar" [disabled]="subiendo()" (click)="confirmarRecorte()">
-          {{ subiendo() ? 'Subiendo…' : 'Usar recorte' }}
+          {{ subiendo() ? 'Subiendo…' : 'Aplicar' }}
         </button>
         <button type="button" class="recorte-cancelar" [disabled]="subiendo()" (click)="cancelarRecorte()">
           Cancelar
