@@ -306,14 +306,13 @@
 // ----- Contenido -----
 
 .descripcion {
-  max-width: 70ch;
+  max-width: 100%;
   margin: 0 0 1.5rem;
   color: var(--text-muted);
   font-size: 0.875rem;
   line-height: 1.65;
   text-wrap: pretty;
 }
-
 .bloque-titulo {
   display: flex;
   align-items: baseline;
@@ -657,8 +656,10 @@
     color: var(--text-muted);
   }
 }
-
-.ficha-plataformas { max-width: 420px; .ficha-valor { font-size: 0.85rem; font-weight: 600; } }
+.ficha-plataformas {
+  flex: 1 1 260px;
+  .ficha-valor { font-size: 0.85rem; font-weight: 600; }
+}
 
 .tags-juego {
   display: flex;
