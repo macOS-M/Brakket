@@ -9,7 +9,7 @@
     @if (t.estado === 'EN_VIVO' && t.thumbnailUrl) {
     <img [src]="t.thumbnailUrl" [alt]="'Vista previa del directo de ' + t.nombreCanal" />
     } @else if (t.vod?.thumbnailUrl) {
-    <img [src]="t.vod!.thumbnailUrl" [alt]="'Miniatura del último VOD de ' + t.nombreCanal" />
+    <img [src]="t.vod!.thumbnailUrl" [alt]="'Miniatura de la última grabación de ' + t.nombreCanal" />
     } @else if (t.thumbnailUrl) {
     <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
     } @else {
@@ -26,9 +26,9 @@
         }
       }
       @case ('OFFLINE') {
-        <span class="badge badge-offline">OFFLINE</span>
+        <span class="badge badge-offline">FUERA DE LÍNEA</span>
         @if (t.vod) {
-        <span class="badge badge-espectadores">Último VOD</span>
+        <span class="badge badge-espectadores">Última grabación</span>
         }
       }
       @case ('DESCONOCIDO') {

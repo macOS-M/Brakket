@@ -31,7 +31,10 @@ form { display: grid; gap: 1rem; }
 .size-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: .75rem; margin-top: 1rem; }
 .size-grid label { display: flex; flex-direction: column; gap: .4rem; font-size: 0.8125rem; font-weight: 600; }
 .size-grid input { padding: .65rem .75rem; background: rgba(15,23,42,.55); color: var(--text, #e2e8f0); border: 1px solid var(--border, #334155); border-radius: 8px; }
-.check-card { align-items: center; gap: .65rem; padding: .8rem .9rem; font-size: 0.8125rem; font-weight: 650; text-transform: capitalize; }
+// Sin `text-transform: capitalize`: el nombre del formato ya llega escrito
+// como corresponde desde formatoTorneo, y capitalizar cada palabra daba
+// "Todos Contra Todos" en vez de "Todos contra todos".
+.check-card { align-items: center; gap: .65rem; padding: .8rem .9rem; font-size: 0.8125rem; font-weight: 650; }
 .check-card input { accent-color: var(--accent-text, #ff6a1f); }
 .check-card small { margin-left: auto; color: #fbbf24; font-size: 0.6875rem; text-transform: none; }
 .actions { display: flex; justify-content: flex-end; gap: .75rem; padding-top: .35rem; }

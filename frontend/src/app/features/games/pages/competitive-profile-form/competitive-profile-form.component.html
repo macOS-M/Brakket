@@ -64,7 +64,7 @@
             <label class="check-card" [class.selected]="estaSeleccionado('formatosIds', formato.id)">
               <input type="checkbox" [checked]="estaSeleccionado('formatosIds', formato.id)"
                 (change)="alternar('formatosIds', formato.id, $any($event.target).checked)" />
-              <span>{{ formato.nombre.replaceAll('_', ' ') }}</span>
+              <span>{{ formato.nombre | formatoTorneo }}</span>
             </label>
           }
         </div>

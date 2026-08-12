@@ -145,7 +145,7 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
   readonly formatos = signal<string[]>([
     'Eliminación directa',
     'Doble eliminación',
-    'Round robin',
+    'Todos contra todos',
     'Fase de grupos y eliminación',
     'Suizo'
   ]);
@@ -164,7 +164,9 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
   // grupo/robin/suizo antes que doble, por los nombres compuestos.
   private static readonly DESCRIPCIONES: [RegExp, string][] = [
     [/grupo/i, 'Fase de grupos y los mejores avanzan a una llave eliminatoria.'],
-    [/robin/i, 'Todos contra todos: cada equipo enfrenta al resto de su grupo.'],
+    // "robin" sigue contemplado: los torneos creados antes de traducir el
+    // nombre guardaron "Round robin" como texto.
+    [/robin|todos contra/i, 'Cada equipo enfrenta al resto de su grupo.'],
     [/suizo/i, 'Sin eliminación: cada ronda empareja rivales con marcas similares.'],
     [/doble/i, 'Los perdedores siguen en la llave inferior; se queda fuera quien pierde dos veces.'],
     [/elim/i, 'El formato clásico: quien pierde queda eliminado, hasta coronar al campeón.']
@@ -188,7 +190,9 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
    */
   soportado(formato: string): boolean {
     const plano = formato.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase();
-    return /DOBLE|GRUPO|ROBIN|SUIZO|SWISS|ELIMINACION|DIRECTA/.test(plano);
+    // Mismas claves que FormatoTorneo.interpretar en el backend: si acá no
+    // coincide, el formato se marcaría "Pronto" aunque el motor sí lo genere.
+    return /DOBLE|GRUPO|ROBIN|TODOS CONTRA TODOS|SUIZO|SWISS|ELIMINACION|DIRECTA/.test(plano);
   }
 
   /** La fase de grupos necesita cupo para armar grupos y llave (≥ 4). */
