@@ -110,12 +110,17 @@
 }
 
 // Controles: mismo alto, mismo radio, mismo foco en toda la app.
+//
+// `background-color` y no el atajo `background`: el atajo también resetea
+// background-image, que es donde _theme.scss le dibuja el chevron a todos los
+// <select>. Con el atajo, los selectores de los formularios se veían como
+// cajas de texto planas.
 .form-brakket input:not([type='checkbox']):not([type='radio']),
 .form-brakket select,
 .form-brakket textarea {
   width: 100%;
   padding: 0.55rem 0.75rem;
-  background: var(--surface-2, #1f2937);
+  background-color: var(--surface-2, #1f2937);
   border: 1px solid var(--border, #334155);
   border-radius: var(--radius-sm, 8px);
   color: var(--text, #e2e8f0);
