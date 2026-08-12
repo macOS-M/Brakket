@@ -8,4 +8,6 @@ import java.util.List;
 public interface LogroJugadorRepository extends JpaRepository<LogroJugador, Long> {
 
     List<LogroJugador> findByUsuarioId(Long usuarioId);
+    List<LogroJugador> findByUsuarioIdAndActivoTrue(Long usuarioId);
+    boolean existsByUsuarioIdAndLogroIdAndActivoTrue(Long usuarioId, Long logroId);
 }

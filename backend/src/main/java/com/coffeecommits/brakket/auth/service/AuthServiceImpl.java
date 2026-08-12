@@ -120,7 +120,11 @@ public class AuthServiceImpl implements AuthService {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
 
-        usuario.setNombre(request.nombre().trim());
+        String nuevoNombre = request.nombre().trim();
+        if (!nuevoNombre.equals(usuario.getNombre())) {
+            usuario.setNombreVisibleCambiado(true);
+        }
+        usuario.setNombre(nuevoNombre);
         usuario.setFotoUrl(normalizar(request.foto()));
         usuario.setBiografia(normalizar(request.biografia()));
         usuario.setRedesSociales(normalizar(request.redesSociales()));

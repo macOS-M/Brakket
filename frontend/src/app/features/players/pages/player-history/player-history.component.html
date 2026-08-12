@@ -1,5 +1,19 @@
 <section class="page">
-  <h1>Historial del jugador</h1>
+  @if (perfil(); as perfilJugador) {
+    <header class="player-card">
+      <div class="avatar" aria-hidden="true">{{ perfilJugador.nombre.charAt(0).toUpperCase() }}</div>
+      <div><p class="kicker">Perfil de jugador</p><h1>{{ perfilJugador.nombre }}</h1>
+        @if (perfilJugador.titulo) { <span class="player-title">{{ perfilJugador.titulo.nombre }}</span> }
+      </div>
+      @if (perfilJugador.insignia; as badge) {
+        <div class="badges" aria-label="Insignia equipada">
+          <span class="badge" [title]="badge.descripcion"><b>★</b>{{ badge.nombre }}</span>
+        </div>
+      }
+    </header>
+  } @else { <h1>Historial del jugador</h1> }
+
+  <h2 class="history-title">Historial de equipos</h2>
 
   @if (cargando()) {
   <p class="placeholder">Cargando historial...</p>

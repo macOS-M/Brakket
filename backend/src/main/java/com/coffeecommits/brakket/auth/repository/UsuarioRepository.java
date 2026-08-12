@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +18,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByGoogleId(String googleId);
 
     Optional<Usuario> findByCorreo(String correo);
+
+    /** Serializa canjes concurrentes para que un mismo saldo no pueda gastarse dos veces. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from Usuario u where u.correo = :correo")
+    Optional<Usuario> findLockedByCorreo(@Param("correo") String correo);
 
     /** Cuentas bloqueadas: métrica de moderación del panel global (RF-49). */
     long countByBloqueadoTrue();
