@@ -83,8 +83,8 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                     "Ya existe un equipo con el nombre '%s'".formatted(request.nombre()));
         });
 
-        List<Juego> juegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
-        Juego juego = juegoPrincipal(juegos, request.juegoId());
+        List<Juego> juegos = buscarJuegosActivosOpcionales(request.juegoIds(), request.juegoId());
+        Juego juego = juegos.isEmpty() ? null : juegoPrincipal(juegos, request.juegoId());
 
         Equipo equipoNuevo = Equipo.builder()
                 .nombre(request.nombre())
@@ -285,6 +285,18 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         return juegos.stream().filter(j -> j.getId().equals(juegoIdPrincipal)).findFirst()
                 .orElseThrow(() -> new BusinessException(
                         "El juego principal debe formar parte de los juegos del equipo."));
+    }
+
+    /**
+     * Los equipos nuevos son universales: no declarar juegos significa que
+     * pueden competir en cualquier torneo. Se conserva el soporte de juegos
+     * explícitos para clientes y equipos anteriores.
+     */
+    private List<Juego> buscarJuegosActivosOpcionales(List<Long> juegoIds, Long juegoIdCompatibilidad) {
+        if (juegoIdCompatibilidad == null && (juegoIds == null || juegoIds.isEmpty())) {
+            return List.of();
+        }
+        return buscarJuegosActivos(juegoIds, juegoIdCompatibilidad);
     }
 
     /** Tolera equipos legacy sin filas en equipo_juego y sin juego principal. */

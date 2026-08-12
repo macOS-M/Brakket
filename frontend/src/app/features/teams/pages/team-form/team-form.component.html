@@ -2,7 +2,7 @@
   @if (!esEdicion) {
   <app-page-header
     titulo="Nuevo equipo"
-    subtitulo="Definí el nombre, la disciplina y la identidad del equipo."
+    subtitulo="Definí el nombre y la identidad del equipo. Podrá competir en cualquier torneo."
   />
   }
 
@@ -106,40 +106,6 @@
             }
           </div>
           }
-
-          <div class="field">
-            <label class="label" for="juegoId">Disciplina / juego principal *</label>
-            <select
-              id="juegoId"
-              formControlName="juegoId"
-              [class.invalido]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
-              [attr.aria-invalid]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
-              [attr.aria-describedby]="form.controls.juegoId.invalid && form.controls.juegoId.touched ? 'juego-error' : null"
-            >
-              <option [ngValue]="null">Seleccioná un juego…</option>
-              @for (juego of juegos(); track juego.id) {
-              <option [ngValue]="juego.id">{{ juego.nombre }}</option>
-              }
-            </select>
-            @if (form.controls.juegoId.invalid && form.controls.juegoId.touched) {
-            <span id="juego-error" class="field-error">Debés seleccionar un juego.</span>
-            }
-          </div>
-
-          <div class="field">
-            <span class="label">Juegos en los que compite *</span>
-            <span class="field-pista">El juego principal también se incluirá automáticamente.</span>
-            @for (juego of juegos(); track juego.id) {
-            <label>
-              <input
-                type="checkbox"
-                [checked]="juegoSeleccionado(juego.id)"
-                (change)="toggleJuego(juego.id, $any($event.target).checked)"
-              />
-              {{ juego.nombre }}
-            </label>
-            }
-          </div>
 
           <div class="field">
             <label class="label" for="descripcion">Descripción</label>

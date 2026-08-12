@@ -6,14 +6,12 @@ import { of } from 'rxjs';
 
 import { TeamFormComponent } from './team-form.component';
 import { TeamsService } from '../../services/teams.service';
-import { GamesService } from '../../../games/services/games.service';
 
 describe('TeamFormComponent', () => {
   let component: TeamFormComponent;
   let fixture: ComponentFixture<TeamFormComponent>;
 
   beforeEach(async () => {
-    const gamesServiceMock = { listActivos: () => of([]) };
     const teamsServiceMock = { crear: () => of({ id: 1 }) };
     const routerMock = { navigate: () => Promise.resolve(true) };
     // Sin equipoId en la ruta: el form arranca en modo "crear".
@@ -25,7 +23,6 @@ describe('TeamFormComponent', () => {
         // El foto-input del formulario inyecta UploadsService -> HttpClient.
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: GamesService, useValue: gamesServiceMock },
         { provide: TeamsService, useValue: teamsServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: routeMock }
@@ -41,8 +38,14 @@ describe('TeamFormComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should be invalid when nombre and juegoId are empty', () => {
+  it('should be invalid when nombre is empty', () => {
     expect(component.form.invalid).toBeTrue();
+  });
+
+  it('should not require a game to create a team', () => {
+    component.form.controls.nombre.setValue('Equipo universal');
+
+    expect(component.form.valid).toBeTrue();
   });
 
   it('should add and remove a red social control', () => {

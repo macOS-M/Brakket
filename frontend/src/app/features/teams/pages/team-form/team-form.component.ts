@@ -2,8 +2,6 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { Juego } from '../../../../models/juego.model';
-import { GamesService } from '../../../games/services/games.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
 import { TeamsService } from '../../services/teams.service';
@@ -18,7 +16,6 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class TeamFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly gamesService = inject(GamesService);
   private readonly teamsService = inject(TeamsService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -30,7 +27,6 @@ export class TeamFormComponent implements OnInit {
    */
   readonly esAdmin = computed(() => this.auth.hasRole('ADMIN'));
 
-  readonly juegos = signal<Juego[]>([]);
   readonly guardando = signal(false);
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
@@ -52,8 +48,6 @@ export class TeamFormComponent implements OnInit {
     descripcion: ['', [Validators.maxLength(500)]],
     sitioWeb: [''],
     videoUrl: [''],
-    juegoId: [null as number | null, [Validators.required]],
-    juegoIds: this.fb.nonNullable.control<number[]>([], [Validators.required]),
     estadoPrivacidad: ['PUBLIC'],
     redesSociales: this.fb.nonNullable.array<string>([]),
     /** Solo lo usa (y lo exige el backend a) un ADMIN al crear. */
@@ -69,11 +63,6 @@ export class TeamFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.gamesService.listActivos().subscribe({
-      next: (juegos) => this.juegos.set(juegos),
-      error: () => this.error.set('No se pudo cargar el catalogo de juegos.')
-    });
-
     const idParam = this.route.snapshot.paramMap.get('equipoId');
     if (idParam) {
       const id = Number(idParam);
@@ -94,8 +83,6 @@ export class TeamFormComponent implements OnInit {
           descripcion: equipo.descripcion ?? '',
           sitioWeb: equipo.sitioWeb ?? '',
           videoUrl: equipo.videoUrl ?? '',
-          juegoId: equipo.juegoId,
-          juegoIds: equipo.juegoIds?.length ? equipo.juegoIds : [equipo.juegoId],
           estadoPrivacidad: equipo.estadoPrivacidad
         });
         this.redesSociales.clear();
@@ -144,8 +131,6 @@ export class TeamFormComponent implements OnInit {
         descripcion: valores.descripcion.trim(),
         sitioWeb: valores.sitioWeb.trim(),
         videoUrl: valores.videoUrl.trim(),
-        juegoId: valores.juegoId,
-        juegoIds: this.juegosSeleccionados(valores.juegoId, valores.juegoIds),
         estadoPrivacidad: valores.estadoPrivacidad,
         redesSociales: valores.redesSociales,
         version: this.version() ?? undefined
@@ -170,8 +155,8 @@ export class TeamFormComponent implements OnInit {
       descripcion: valores.descripcion || null,
       sitioWeb: valores.sitioWeb || null,
       videoUrl: valores.videoUrl || null,
-      juegoId: valores.juegoId!,
-      juegoIds: this.juegosSeleccionados(valores.juegoId, valores.juegoIds),
+      juegoId: null,
+      juegoIds: [],
       redesSociales: valores.redesSociales,
       capitanCorreo: this.esAdmin() ? valores.capitanCorreo.trim() : null
     }).subscribe({
@@ -187,18 +172,4 @@ export class TeamFormComponent implements OnInit {
     this.router.navigate(['/teams']);
   }
 
-  toggleJuego(juegoId: number, seleccionado: boolean): void {
-    const ids = new Set(this.form.controls.juegoIds.value);
-    seleccionado ? ids.add(juegoId) : ids.delete(juegoId);
-    this.form.controls.juegoIds.setValue([...ids]);
-    this.form.controls.juegoIds.markAsDirty();
-  }
-
-  juegoSeleccionado(juegoId: number): boolean {
-    return this.form.controls.juegoIds.value.includes(juegoId);
-  }
-
-  private juegosSeleccionados(principal: number | null, seleccionados: number[]): number[] {
-    return [...new Set([...(principal ? [principal] : []), ...seleccionados])];
-  }
 }
