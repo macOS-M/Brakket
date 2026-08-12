@@ -77,6 +77,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private heroAncho = 1;
   private heroPointerId: number | null = null;
   private heroFueArrastre = false;
+  private heroElemento: HTMLElement | null = null;
 
   readonly heroJuegos = computed(() =>
     [...this.juegos()]
@@ -124,24 +125,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
   
-    iniciarDragHero(evento: PointerEvent): void {
+  iniciarDragHero(evento: PointerEvent): void {
     if (evento.pointerType === 'mouse' && evento.button !== 0) return;
-    // Evita que el navegador inicie el drag nativo del enlace o de la imagen.
-    evento.preventDefault();
     const elemento = evento.currentTarget as HTMLElement;
     this.heroPointerId = evento.pointerId;
     this.heroInicioX = evento.clientX;
     this.heroAncho = elemento.clientWidth || 1;
     this.heroFueArrastre = false;
+    this.heroElemento = elemento;
     this.heroPausado.set(true);
     this.heroArrastrando.set(true);
-    elemento.setPointerCapture(evento.pointerId);
   }
 
   moverDragHero(evento: PointerEvent): void {
     if (this.heroPointerId !== evento.pointerId) return;
     const delta = evento.clientX - this.heroInicioX;
-    if (Math.abs(delta) > 6) this.heroFueArrastre = true;
+    if (Math.abs(delta) > 6 && !this.heroFueArrastre) {
+      this.heroFueArrastre = true;
+      this.heroElemento?.setPointerCapture(evento.pointerId);
+    }
     this.heroDesplazamiento.set(delta);
   }
 
@@ -158,6 +160,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.heroDesplazamiento.set(0);
     this.heroArrastrando.set(false);
     this.heroPointerId = null;
+    this.heroElemento = null;
   }
 
   cancelarClickHero(evento: MouseEvent): void {
