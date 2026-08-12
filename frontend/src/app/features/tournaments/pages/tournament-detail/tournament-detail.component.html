@@ -48,6 +48,8 @@
     </div>
   </header>
 
+  <app-ad-slot ubicacion="TORNEO_CABECERA" [torneoId]="torneo.id" />
+
   @if (errorEliminar()) {
   <p class="mensaje-error" role="alert">{{ errorEliminar() }}</p>
   }

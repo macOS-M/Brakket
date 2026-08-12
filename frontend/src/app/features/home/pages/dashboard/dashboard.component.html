@@ -142,7 +142,7 @@
           titulo="Panel comercial en camino"
           mensaje="Acá vas a auditar la audiencia, la interacción y el sentimiento del público de las competencias que patrocinás."
         >
-          <a class="btn-secondary" routerLink="/analytics">Ver panel</a>
+          <a class="btn-secondary" routerLink="/panel-comercial">Ver panel</a>
         </app-empty-state>
       </section>
       } @else if (!auth.isAuthenticated()) {
@@ -218,6 +218,8 @@
 
     <!-- Rail derecho: próximos torneos (referencia "Upcoming Tournaments"). -->
     <aside class="rail" aria-label="Próximos torneos">
+      <app-ad-slot ubicacion="DASHBOARD_CARD" />
+
       <div class="rail-titulo">
         <h2>Próximos torneos</h2>
         <a routerLink="/tournaments">Ver más →</a>

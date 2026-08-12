@@ -1,5 +1,4 @@
 package com.coffeecommits.brakket.config;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,7 +15,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
-
 /**
  * Configuración de seguridad de Brakket (EPIC-01, RNF-03 / RNF-12).
  *
@@ -32,12 +30,10 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
     private final CorsConfigurationSource corsConfigurationSource;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
-
     public SecurityConfig(CorsConfigurationSource corsConfigurationSource,
                           JwtAuthenticationFilter jwtAuthenticationFilter,
                           OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
@@ -47,7 +43,6 @@ public class SecurityConfig {
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.oAuth2LoginFailureHandler = oAuth2LoginFailureHandler;
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    ClientRegistrationRepository clientRegistrationRepository)
@@ -95,6 +90,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/tournaments/**").permitAll()
                         // RF-35: ver los directos no exige sesión, como el catálogo.
                         .requestMatchers(HttpMethod.GET, "/api/transmisiones").permitAll()
+                        // RF-43/44: el espacio publicitario vigente es contenido público — cualquier
+                        // visitante debe poder ver el anuncio en una pantalla publica (torneo, liga,
+                        // transmision), sin necesitar sesion.
+                        .requestMatchers(HttpMethod.GET, "/api/espacios/vigente").permitAll()
                         // RF-37: el panel analítico no es información pública; se exige
                         // sesión aparte del @PreAuthorize, para no depender de una sola capa.
                         .requestMatchers(HttpMethod.GET, "/api/analytics/**").authenticated()
@@ -118,10 +117,8 @@ public class SecurityConfig {
                         .failureHandler(oAuth2LoginFailureHandler))
                 // Valida el JWT en cada request antes de la autenticación por usuario/clave.
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
-
     private static OAuth2AuthorizationRequestResolver conSelectorDeCuentas(
             ClientRegistrationRepository clientRegistrationRepository) {
         DefaultOAuth2AuthorizationRequestResolver resolver = new DefaultOAuth2AuthorizationRequestResolver(

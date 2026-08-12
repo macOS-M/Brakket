@@ -18,6 +18,7 @@ import { Torneo } from '../../../../models/tournament.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
@@ -30,7 +31,7 @@ import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe, RolEquipoPipe],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe, AdSlotComponent, RolEquipoPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

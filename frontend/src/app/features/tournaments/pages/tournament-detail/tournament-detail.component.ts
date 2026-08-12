@@ -23,6 +23,7 @@ import {
 } from '../../components/tournament-bracket/tournament-bracket.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 type TabDetalle = 'resumen' | 'llaves' | 'matches' | 'jugadores' | 'resultados';
@@ -53,7 +54,7 @@ interface EventoTimeline {
 @Component({
   selector: 'app-tournament-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent, FormatoTorneoPipe],
+  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent, FormatoTorneoPipe, AdSlotComponent],
   templateUrl: './tournament-detail.component.html',
   styleUrl: './tournament-detail.component.scss'
 })

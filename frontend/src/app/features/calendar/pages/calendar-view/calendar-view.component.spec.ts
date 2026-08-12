@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 
 import { CalendarViewComponent } from './calendar-view.component';
@@ -18,6 +19,7 @@ describe('CalendarViewComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CalendarViewComponent],
       providers: [
+        provideHttpClient(),
         { provide: CalendarService, useValue: calendarServiceMock },
         { provide: GamesService, useValue: gamesServiceMock },
         { provide: LeaguesService, useValue: leaguesServiceMock }
