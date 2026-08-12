@@ -6,12 +6,16 @@ import { of } from 'rxjs';
 
 import { TeamFormComponent } from './team-form.component';
 import { TeamsService } from '../../services/teams.service';
+import { GamesService } from '../../../games/services/games.service';
 
 describe('TeamFormComponent', () => {
   let component: TeamFormComponent;
   let fixture: ComponentFixture<TeamFormComponent>;
 
   beforeEach(async () => {
+    // El selector de juegos sigue existiendo (elegirlos es opcional, no
+    // imposible), así que el componente carga el catálogo al iniciar.
+    const gamesServiceMock = { listActivos: () => of([]) };
     const teamsServiceMock = { crear: () => of({ id: 1 }) };
     const routerMock = { navigate: () => Promise.resolve(true) };
     // Sin equipoId en la ruta: el form arranca en modo "crear".
@@ -23,6 +27,7 @@ describe('TeamFormComponent', () => {
         // El foto-input del formulario inyecta UploadsService -> HttpClient.
         provideHttpClient(),
         provideHttpClientTesting(),
+        { provide: GamesService, useValue: gamesServiceMock },
         { provide: TeamsService, useValue: teamsServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: routeMock }

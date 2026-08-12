@@ -2,7 +2,7 @@
   @if (!esEdicion) {
   <app-page-header
     titulo="Nuevo equipo"
-    subtitulo="Definí el nombre y la identidad del equipo. Podrá competir en cualquier torneo."
+    subtitulo="Definí el nombre, la disciplina y la identidad del equipo."
   />
   }
 
@@ -108,6 +108,32 @@
           }
 
           <div class="field">
+            <label class="label" for="juegoId">Disciplina / juego principal</label>
+            <select id="juegoId" formControlName="juegoId">
+              <option [ngValue]="null">Sin juego por ahora</option>
+              @for (juego of juegos(); track juego.id) {
+              <option [ngValue]="juego.id">{{ juego.nombre }}</option>
+              }
+            </select>
+            <span class="field-pista">Opcional: podés dejarlo sin definir y elegirlo más adelante.</span>
+          </div>
+
+          <div class="field">
+            <span class="label">Juegos en los que compite</span>
+            <span class="field-pista">El juego principal también se incluirá automáticamente.</span>
+            @for (juego of juegos(); track juego.id) {
+            <label>
+              <input
+                type="checkbox"
+                [checked]="juegoSeleccionado(juego.id)"
+                (change)="toggleJuego(juego.id, $any($event.target).checked)"
+              />
+              {{ juego.nombre }}
+            </label>
+            }
+          </div>
+
+          <div class="field">
             <label class="label" for="descripcion">Descripción</label>
             <textarea
               id="descripcion"
@@ -124,7 +150,7 @@
           </div>
 
           <div class="field">
-            <label class="label" for="videoUrl">URL de canal</label>
+            <label class="label" for="videoUrl">URL de video</label>
             <input id="videoUrl" type="url" formControlName="videoUrl" placeholder="Insertá el enlace del video" />
             <span class="field-pista">Un enlace a YouTube o Twitch que presente al equipo.</span>
           </div>
