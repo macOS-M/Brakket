@@ -20,13 +20,13 @@ CREATE TABLE elemento_personalizacion (
 
 CREATE TABLE canje_personalizacion (
     id BIGSERIAL PRIMARY KEY,
-    jugador_id BIGINT NOT NULL,
+    usuario_id BIGINT NOT NULL,
     elemento_id BIGINT NOT NULL,
-    puntos_gastados INTEGER NOT NULL CHECK (puntos_gastados >= 0),
+    costo_puntos INTEGER NOT NULL CHECK (costo_puntos >= 0),
     fecha_canje TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_canje_jugador FOREIGN KEY (jugador_id) REFERENCES usuario(id),
+    CONSTRAINT fk_canje_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id),
     CONSTRAINT fk_canje_elemento FOREIGN KEY (elemento_id) REFERENCES elemento_personalizacion(id),
-    CONSTRAINT uq_canje_jugador_elemento UNIQUE (jugador_id, elemento_id)
+    CONSTRAINT uq_canje_usuario_elemento UNIQUE (usuario_id, elemento_id)
 );
 
 CREATE TABLE personalizacion_perfil (
@@ -43,7 +43,7 @@ CREATE TABLE personalizacion_perfil (
 
 CREATE INDEX idx_logro_jugador_usuario_activo ON logro_jugador(usuario_id, activo);
 CREATE INDEX idx_elemento_personalizacion_tipo_activo ON elemento_personalizacion(tipo, activo);
-CREATE INDEX idx_canje_personalizacion_jugador ON canje_personalizacion(jugador_id);
+CREATE INDEX idx_canje_personalizacion_usuario ON canje_personalizacion(usuario_id);
 
 INSERT INTO logro (nombre, descripcion, puntos_valor, activo, origen)
 VALUES

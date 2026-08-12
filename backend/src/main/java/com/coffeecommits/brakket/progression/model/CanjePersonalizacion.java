@@ -6,7 +6,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "canje_personalizacion", uniqueConstraints = @UniqueConstraint(columnNames={"usuario_id","elemento_id"}))
+@Table(name = "canje_personalizacion",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"usuario_id", "elemento_id"}))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class CanjePersonalizacion {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
