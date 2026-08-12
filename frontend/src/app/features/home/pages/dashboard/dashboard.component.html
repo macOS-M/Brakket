@@ -19,25 +19,33 @@
   @if (heroJuegos().length > 0) {
   <div
     class="hero-carrusel"
+    [class.arrastrando]="heroArrastrando()"
     (mouseenter)="heroPausado.set(true)"
     (mouseleave)="heroPausado.set(false)"
     (focusin)="heroPausado.set(true)"
     (focusout)="heroPausado.set(false)"
+    (pointerdown)="iniciarDragHero($event)"
+    (pointermove)="moverDragHero($event)"
+    (pointerup)="terminarDragHero($event)"
+    (pointercancel)="terminarDragHero($event)"
+    (dragstart)="bloquearDragNativo($event)"
   >
     <div
       class="hero-pista"
-      [style.transform]="'translateX(-' + heroVisible() * 100 + '%)'"
+      [style.transform]="'translateX(calc(-' + heroVisible() * 100 + '% + ' + heroDesplazamiento() + 'px))'"
     >
       @for (hero of heroJuegos(); track hero.id) {
       <a
         class="hero-slide"
+        draggable="false"
         [routerLink]="['/games', hero.id]"
         [attr.tabindex]="heroVisible() === $index ? null : -1"
         [attr.aria-hidden]="heroVisible() === $index ? null : true"
-        [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+        [style.background]="fotoHero(hero) ? undefined : gradiente(hero.nombre)"
+        (click)="cancelarClickHero($event)"
       >
-        @if (foto(hero)) {
-        <img [src]="foto(hero)" alt="" />
+        @if (fotoHero(hero)) {
+        <img [src]="fotoHero(hero)" alt="" draggable="false" />
         }
         <div class="hero-velo" aria-hidden="true"></div>
         <div class="hero-texto">

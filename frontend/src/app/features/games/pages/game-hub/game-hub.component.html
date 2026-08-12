@@ -8,18 +8,18 @@
   } @else { @if (juego(); as juego) {
 
   <!-- Banner con el arte del juego (referencia Challenger Mode). -->
-  <header class="banner" [style.background]="foto() ? undefined : gradiente()">
-    @if (foto()) {
-    <img class="banner-arte" [src]="foto()" alt="" />
+  <header class="banner" [style.background]="arteBanner() ? undefined : gradiente()">
+    @if (arteBanner()) {
+    <img class="banner-arte" [src]="arteBanner()" alt="" />
     }
     <div class="banner-velo" aria-hidden="true"></div>
 
     <a class="volver" routerLink="/games">← Catálogo</a>
 
     <div class="banner-contenido">
-      <div class="cartel" [style.background]="foto() ? undefined : gradiente()">
-        @if (foto()) {
-        <img [src]="foto()" alt="" loading="lazy" />
+      <div class="cartel" [style.background]="portada() ? undefined : gradiente()">
+        @if (portada()) {
+        <img [src]="portada()" alt="" loading="lazy" />
         } @else {
         <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
         }
@@ -158,8 +158,13 @@
     @if (juego.capturas && juego.capturas.length > 0) {
     <!-- Galería de capturas reales (RAWG), con scroll horizontal propio. -->
     <div class="galeria" role="list" aria-label="Capturas del juego">
-      @for (captura of juego.capturas; track captura) {
-      <img class="galeria-item" role="listitem" [src]="captura" [alt]="'Captura de ' + juego.nombre" loading="lazy" />
+      @for (captura of juego.capturas; track captura; let i = $index) {
+      <button type="button" class="galeria-item" role="listitem"
+        [attr.aria-label]="'Ampliar captura ' + (i + 1) + ' de ' + juego.nombre"
+        (click)="abrirVisor(i)">
+        <img [src]="captura" [alt]="'Captura de ' + juego.nombre" loading="lazy" />
+        <span aria-hidden="true" class="icono-ampliar">⛶</span>
+      </button>
       }
     </div>
     }
@@ -299,3 +304,22 @@
   }
   } }
 </section>
+
+@if (capturaVisible(); as captura) {
+<div class="visor-fondo" role="dialog" aria-modal="true"
+  [attr.aria-label]="'Captura ampliada de ' + juego()!.nombre" (click)="cerrarVisor()">
+  <div class="visor" (click)="$event.stopPropagation()">
+    <img [src]="captura" [alt]="'Captura ampliada de ' + juego()!.nombre" />
+    <button type="button" class="visor-cerrar" aria-label="Cerrar visor" (click)="cerrarVisor()">×</button>
+    @if ((juego()?.capturas?.length ?? 0) > 1) {
+    <button type="button" class="visor-anterior" aria-label="Captura anterior" (click)="cambiarCaptura(-1)">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
+    </button>
+    <button type="button" class="visor-siguiente" aria-label="Captura siguiente" (click)="cambiarCaptura(1)">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+    </button>
+    <span class="visor-contador">{{ capturaAbierta()! + 1 }} / {{ juego()!.capturas!.length }}</span>
+    }
+  </div>
+</div>
+}

@@ -74,11 +74,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Carousel del héroe: los juegos más jugados (rating RAWG), rotando. */
   readonly heroIndex = signal(0);
   readonly heroPausado = signal(false);
+  readonly heroArrastrando = signal(false);
+  readonly heroDesplazamiento = signal(0);
   private heroTimer: ReturnType<typeof setInterval> | null = null;
+  private heroInicioX = 0;
+  private heroAncho = 1;
+  private heroPointerId: number | null = null;
+  private heroFueArrastre = false;
+  private heroElemento: HTMLElement | null = null;
 
   readonly heroJuegos = computed(() =>
     [...this.juegos()]
-      .filter((j) => j.imagenUrl)
+      .filter((j) => j.capturas?.some(Boolean))
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
       .slice(0, 5));
 
@@ -97,16 +104,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Estable a propósito (sin carrusel). Si un top ya está en el catálogo,
   // el póster navega a su página; si no, al catálogo para importarlo.
   readonly topJuegos = computed(() => {
-    const porNombre = new Map(this.juegos().map((j) => [j.nombre.toLowerCase(), j.id]));
+    const porNombre = new Map(
+      this.juegos().map((j) => [j.nombre.toLowerCase(), j.id])
+    );
     const lista = this.topRawg().length > 0
       ? this.topRawg().map((t) => ({
           nombre: t.nombre,
-          imagenUrl: t.imagenUrl,
+          imagenUrl: this.imagenAltaResolucion(t.imagenUrl),
           idCatalogo: porNombre.get(t.nombre.toLowerCase()) ?? null
         }))
       : [...this.juegos()]
           .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-          .map((j) => ({ nombre: j.nombre, imagenUrl: j.imagenUrl, idCatalogo: j.id }));
+          .map((j) => ({
+            nombre: j.nombre,
+            imagenUrl: this.imagenAltaResolucion(j.imagenUrl),
+            idCatalogo: j.id
+          }));
     return lista.slice(0, this.mostrandoMas() ? 18 : 6);
   });
 
@@ -114,6 +127,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.heroTimer) {
       clearInterval(this.heroTimer);
     }
+  }
+  
+  iniciarDragHero(evento: PointerEvent): void {
+    if (evento.pointerType === 'mouse' && evento.button !== 0) return;
+    const elemento = evento.currentTarget as HTMLElement;
+    this.heroPointerId = evento.pointerId;
+    this.heroInicioX = evento.clientX;
+    this.heroAncho = elemento.clientWidth || 1;
+    this.heroFueArrastre = false;
+    this.heroElemento = elemento;
+    this.heroPausado.set(true);
+    this.heroArrastrando.set(true);
+  }
+
+  moverDragHero(evento: PointerEvent): void {
+    if (this.heroPointerId !== evento.pointerId) return;
+    const delta = evento.clientX - this.heroInicioX;
+    if (Math.abs(delta) > 6 && !this.heroFueArrastre) {
+      this.heroFueArrastre = true;
+      this.heroElemento?.setPointerCapture(evento.pointerId);
+    }
+    this.heroDesplazamiento.set(delta);
+  }
+
+  terminarDragHero(evento: PointerEvent): void {
+    if (this.heroPointerId !== evento.pointerId) return;
+    const delta = this.heroDesplazamiento();
+    const umbral = Math.min(90, this.heroAncho * 0.15);
+    const total = this.heroJuegos().length;
+    if (total > 1 && Math.abs(delta) >= umbral) {
+      this.heroIndex.update((indice) =>
+        delta < 0 ? (indice + 1) % total : (indice - 1 + total) % total
+      );
+    }
+    this.heroDesplazamiento.set(0);
+    this.heroArrastrando.set(false);
+    this.heroPointerId = null;
+    this.heroElemento = null;
+  }
+
+  cancelarClickHero(evento: MouseEvent): void {
+    if (this.heroFueArrastre) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      this.heroFueArrastre = false;
+    }
+  }
+
+  bloquearDragNativo(evento: DragEvent): void {
+    evento.preventDefault();
   }
 
   /** Rail de próximos torneos (referencia "Upcoming Tournaments"): solo
@@ -216,7 +279,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   foto(juego: Juego): string | null {
-    return juego.imagenUrl || portadaFoto(juego.nombre);
+    return this.imagenAltaResolucion(juego.imagenUrl) || portadaFoto(juego.nombre);
+  }
+
+  fotoHero(juego: Juego): string | null {
+    const captura = juego.capturas?.find(Boolean);
+    if (!captura) {
+      return null;
+    }
+    // Los registros importados antes del cambio conservan t_screenshot_big.
+    // IGDB permite pedir el mismo image_id como screenshot_huge (1280x720).
+    return captura.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_screenshot_big(\/)/,
+      '$1t_screenshot_huge$2'
+    );
   }
 
   gradiente(nombre: string): string {
@@ -224,6 +300,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   fotoTorneo(torneo: Torneo): string | null {
-    return torneo.juegoImagenUrl || portadaFoto(torneo.juegoNombre);
+    return this.imagenAltaResolucion(torneo.juegoImagenUrl) || portadaFoto(torneo.juegoNombre);
   }
+
+  imagenAltaResolucion(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+    return url.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_cover_big(\/)/,
+      '$1t_cover_big_2x$2'
+    );
+  }
+
 }
