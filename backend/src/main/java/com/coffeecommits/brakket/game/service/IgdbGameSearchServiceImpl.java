@@ -238,7 +238,8 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
                             .limit(8)
                             .toList(),
                     juego.capturas() == null ? List.of() : juego.capturas().stream()
-                            .map(imagen -> urlImagen(imagen, "t_screenshot_big"))
+                            // El dashboard consume estas capturas como hero 16:9.
+                            .map(imagen -> urlImagen(imagen, "t_screenshot_huge"))
                             .filter(u -> u != null && !u.isBlank())
                             .limit(6)
                             .toList());
@@ -300,7 +301,7 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
                 juego.slug(),
                 juego.nombre(),
                 traducirGenero(juego),
-                urlImagen(juego.portada(), "t_cover_big"));
+                urlImagen(juego.portada(), "t_cover_big_2x"));
     }
 
     /**

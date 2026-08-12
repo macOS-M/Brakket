@@ -77,7 +77,7 @@ class IgdbGameSearchServiceImplTest {
         assertThat(resultados.get(0).slug()).isEqualTo("valorant");
         assertThat(resultados.get(0).genero()).isEqualTo("Shooter");
         assertThat(resultados.get(0).imagenUrl())
-                .isEqualTo("https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvx.jpg");
+                .isEqualTo("https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co2mvx.jpg");
         servidor.verify();
     }
 
@@ -144,7 +144,7 @@ class IgdbGameSearchServiceImplTest {
         assertThat(detalle.plataformas()).containsExactly("PC (Microsoft Windows)");
         assertThat(detalle.etiquetas()).containsExactly("Action");
         assertThat(detalle.capturas())
-                .containsExactly("https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc8xyz.jpg");
+                .containsExactly("https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc8xyz.jpg");
         servidor.verify();
     }
 

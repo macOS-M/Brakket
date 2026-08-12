@@ -70,11 +70,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Carousel del héroe: los juegos más jugados (rating RAWG), rotando. */
   readonly heroIndex = signal(0);
   readonly heroPausado = signal(false);
+  readonly heroArrastrando = signal(false);
+  readonly heroDesplazamiento = signal(0);
   private heroTimer: ReturnType<typeof setInterval> | null = null;
+  private heroInicioX = 0;
+  private heroAncho = 1;
+  private heroPointerId: number | null = null;
+  private heroFueArrastre = false;
 
   readonly heroJuegos = computed(() =>
     [...this.juegos()]
-      .filter((j) => j.imagenUrl)
+      .filter((j) => j.capturas?.some(Boolean))
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
       .slice(0, 5));
 
@@ -93,16 +99,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Estable a propósito (sin carrusel). Si un top ya está en el catálogo,
   // el póster navega a su página; si no, al catálogo para importarlo.
   readonly topJuegos = computed(() => {
-    const porNombre = new Map(this.juegos().map((j) => [j.nombre.toLowerCase(), j.id]));
+    const porSlug = new Map(
+      this.juegos()
+        .filter((j) => j.slug)
+        .map((j) => [j.slug!.toLowerCase(), j.id])
+    );
+    const porNombre = new Map(
+      this.juegos().map((j) => [this.claveNombre(j.nombre), j.id])
+    );
     const lista = this.topRawg().length > 0
       ? this.topRawg().map((t) => ({
           nombre: t.nombre,
-          imagenUrl: t.imagenUrl,
-          idCatalogo: porNombre.get(t.nombre.toLowerCase()) ?? null
+          imagenUrl: this.imagenAltaResolucion(t.imagenUrl),
+          idCatalogo: (t.slug ? porSlug.get(t.slug.toLowerCase()) : undefined)
+            ?? porNombre.get(this.claveNombre(t.nombre))
+            ?? null
         }))
       : [...this.juegos()]
           .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-          .map((j) => ({ nombre: j.nombre, imagenUrl: j.imagenUrl, idCatalogo: j.id }));
+          .map((j) => ({
+            nombre: j.nombre,
+            imagenUrl: this.imagenAltaResolucion(j.imagenUrl),
+            idCatalogo: j.id
+          }));
     return lista.slice(0, this.mostrandoMas() ? 18 : 6);
   });
 
@@ -110,6 +129,54 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.heroTimer) {
       clearInterval(this.heroTimer);
     }
+  }
+
+  iniciarDragHero(evento: PointerEvent): void {
+    if (evento.pointerType === 'mouse' && evento.button !== 0) return;
+    // Evita que el navegador inicie el drag nativo del enlace o de la imagen.
+    evento.preventDefault();
+    const elemento = evento.currentTarget as HTMLElement;
+    this.heroPointerId = evento.pointerId;
+    this.heroInicioX = evento.clientX;
+    this.heroAncho = elemento.clientWidth || 1;
+    this.heroFueArrastre = false;
+    this.heroPausado.set(true);
+    this.heroArrastrando.set(true);
+    elemento.setPointerCapture(evento.pointerId);
+  }
+
+  moverDragHero(evento: PointerEvent): void {
+    if (this.heroPointerId !== evento.pointerId) return;
+    const delta = evento.clientX - this.heroInicioX;
+    if (Math.abs(delta) > 6) this.heroFueArrastre = true;
+    this.heroDesplazamiento.set(delta);
+  }
+
+  terminarDragHero(evento: PointerEvent): void {
+    if (this.heroPointerId !== evento.pointerId) return;
+    const delta = this.heroDesplazamiento();
+    const umbral = Math.min(90, this.heroAncho * 0.15);
+    const total = this.heroJuegos().length;
+    if (total > 1 && Math.abs(delta) >= umbral) {
+      this.heroIndex.update((indice) =>
+        delta < 0 ? (indice + 1) % total : (indice - 1 + total) % total
+      );
+    }
+    this.heroDesplazamiento.set(0);
+    this.heroArrastrando.set(false);
+    this.heroPointerId = null;
+  }
+
+  cancelarClickHero(evento: MouseEvent): void {
+    if (this.heroFueArrastre) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      this.heroFueArrastre = false;
+    }
+  }
+
+  bloquearDragNativo(evento: DragEvent): void {
+    evento.preventDefault();
   }
 
   /** Rail de próximos torneos (referencia "Upcoming Tournaments"): solo
@@ -163,7 +230,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cargar();
     // Rotación del héroe cada 3 s; se pausa con el cursor encima.
     this.heroTimer = setInterval(() => {
-      if (!this.heroPausado() && this.heroJuegos().length > 1) {
+      if (!this.heroPausado() && !this.heroArrastrando() && this.heroJuegos().length > 1) {
         this.heroIndex.update((i) => (i + 1) % this.heroJuegos().length);
       }
     }, 3000);
@@ -212,7 +279,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   foto(juego: Juego): string | null {
-    return juego.imagenUrl || portadaFoto(juego.nombre);
+    return this.imagenAltaResolucion(juego.imagenUrl) || portadaFoto(juego.nombre);
+  }
+
+  fotoHero(juego: Juego): string | null {
+    const captura = juego.capturas?.find(Boolean);
+    if (!captura) {
+      return null;
+    }
+    // Los registros importados antes del cambio conservan t_screenshot_big.
+    // IGDB permite pedir el mismo image_id como screenshot_huge (1280x720).
+    return captura.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_screenshot_big(\/)/,
+      '$1t_screenshot_huge$2'
+    );
   }
 
   gradiente(nombre: string): string {
@@ -220,6 +300,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   fotoTorneo(torneo: Torneo): string | null {
-    return torneo.juegoImagenUrl || portadaFoto(torneo.juegoNombre);
+    return this.imagenAltaResolucion(torneo.juegoImagenUrl) || portadaFoto(torneo.juegoNombre);
+  }
+
+  /** Mejora también las URLs IGDB ya persistidas, sin reimportar los juegos. */
+  imagenAltaResolucion(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+    return url.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_cover_big(\/)/,
+      '$1t_cover_big_2x$2'
+    );
+  }
+
+  private claveNombre(nombre: string): string {
+    return nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toLowerCase();
   }
 }
