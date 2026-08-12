@@ -5,7 +5,7 @@ import { ApiService } from '../../../core/services/api.service';
 import { HistorialEquipoJugador } from '../../../models/historial-jugador.model';
 
 export interface ElementoPerfil { id:number; nombre:string; descripcion:string; }
-export interface PerfilPersonalizado { jugadorId:number; nombre:string; titulo:ElementoPerfil|null; insignias:ElementoPerfil[]; }
+export interface PerfilPersonalizado { jugadorId:number; nombre:string; titulo:ElementoPerfil|null; insignia:ElementoPerfil|null; }
 
 @Injectable({ providedIn: 'root' })
 export class PlayersService {

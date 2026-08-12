@@ -5,11 +5,9 @@
       <div><p class="kicker">Perfil de jugador</p><h1>{{ perfilJugador.nombre }}</h1>
         @if (perfilJugador.titulo) { <span class="player-title">{{ perfilJugador.titulo.nombre }}</span> }
       </div>
-      @if (perfilJugador.insignias.length) {
-        <div class="badges" aria-label="Insignias equipadas">
-          @for (badge of perfilJugador.insignias; track badge.id) {
-            <span class="badge" [title]="badge.descripcion"><b>★</b>{{ badge.nombre }}</span>
-          }
+      @if (perfilJugador.insignia; as badge) {
+        <div class="badges" aria-label="Insignia equipada">
+          <span class="badge" [title]="badge.descripcion"><b>★</b>{{ badge.nombre }}</span>
         </div>
       }
     </header>
