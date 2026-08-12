@@ -1,6 +1,6 @@
+// El ancho y la rejilla los pone `.form-page` / `.form-brakket` (global).
 .page {
   padding: 0 0 1.5rem;
-  max-width: 560px;
 }
 
 .volver {
@@ -16,59 +16,12 @@
 }
 
 // ----- Formulario -----
+//
+// Campos, etiquetas, controles, errores y acciones vienen de `_forms.scss`.
+// Acá queda solo lo propio de esta pantalla.
 
 .form {
-  display: grid;
-  gap: 1.25rem;
   margin-top: 1.25rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-muted, #94a3b8);
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 0.55rem 0.75rem;
-  background: var(--surface, #111827);
-  border: 1px solid var(--border, #334155);
-  border-radius: var(--radius-sm, 8px);
-  color: var(--text, #e2e8f0);
-  font-family: inherit;
-  font-size: 0.875rem;
-
-  &::placeholder {
-    color: var(--text-subtle, #8496ad);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent, #ff5500);
-  }
-
-  &.invalido {
-    border-color: var(--danger-text, #f87171);
-  }
-}
-
-textarea {
-  resize: vertical;
-  line-height: 1.55;
-}
-
-.field-hint {
-  color: var(--text-subtle, #8496ad);
-  font-size: 0.75rem;
 }
 
 .foto-preview {
@@ -79,12 +32,6 @@ textarea {
   object-fit: cover;
   border-radius: var(--radius-md, 12px);
   border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
-}
-
-.field-error {
-  color: var(--danger-text, #f87171);
-  font-size: 0.8125rem;
-  font-weight: 600;
 }
 
 .aviso-error {
@@ -98,12 +45,7 @@ textarea {
 }
 
 // ----- Acciones -----
-
-.actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
+// La fila (alineación, separador superior) la pone `_forms.scss`.
 
 .btn-primary,
 .btn-secondary {

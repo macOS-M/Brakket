@@ -241,7 +241,10 @@ export class TournamentBracketComponent {
     if (/GRUPO/.test(plano)) {
       return 'GRUPOS';
     }
-    if (/ROBIN|SUIZO|SWISS/.test(plano)) {
+    // TODOS CONTRA TODOS es el nombre que muestra la interfaz desde que se
+    // tradujo; ROBIN queda por los torneos creados antes. Sin el nombre nuevo
+    // un todos-contra-todos caía en 'ARBOL' y se dibujaba como eliminación.
+    if (/ROBIN|TODOS CONTRA TODOS|SUIZO|SWISS/.test(plano)) {
       return 'LIGA';
     }
     if (/DOBLE/.test(plano)) {
@@ -250,9 +253,9 @@ export class TournamentBracketComponent {
     return 'ARBOL';
   });
 
-  /** Las jornadas de una liga se llaman así solo en round robin. */
+  /** Las jornadas de una liga se llaman así solo en todos contra todos. */
   readonly nombreJornada = computed(() =>
-    /ROBIN/i.test(this.formato()) ? 'Jornada' : 'Ronda');
+    /ROBIN|TODOS CONTRA TODOS/i.test(this.formato()) ? 'Jornada' : 'Ronda');
 
   // ---------- agrupaciones por vista ----------
 

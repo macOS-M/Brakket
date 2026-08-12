@@ -34,7 +34,10 @@ public enum FormatoTorneo {
         if (plano.contains("GRUPO")) {
             return Optional.of(FASE_GRUPOS_Y_ELIMINACION);
         }
-        if (plano.contains("ROBIN")) {
+        // "TODOS CONTRA TODOS" es el nombre que muestra y envía la interfaz
+        // desde que se tradujo del inglés; "ROBIN" se mantiene porque los
+        // torneos creados antes guardaron "Round robin" en texto plano.
+        if (plano.contains("ROBIN") || plano.contains("TODOS CONTRA TODOS")) {
             return Optional.of(ROUND_ROBIN);
         }
         if (plano.contains("SUIZO") || plano.contains("SWISS")) {

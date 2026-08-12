@@ -19,6 +19,8 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 /**
  * Panel principal (referencia: dashboard de jugador): héroe con el juego
@@ -28,7 +30,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe, RolEquipoPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -51,7 +53,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Si todas las peticiones fallan mostramos un error, no un panel en ceros. */
   readonly errorGeneral = signal(false);
 
-  readonly hoy = new Date();
+  /** Fecha del saludo: la de Costa Rica, no la del dispositivo de quien mira. */
+  readonly hoy = ahoraCostaRica();
 
   readonly nombreCorto = computed(() => {
     const nombre = this.auth.usuario()?.nombre?.trim();

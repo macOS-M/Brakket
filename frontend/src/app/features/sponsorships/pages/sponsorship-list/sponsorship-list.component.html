@@ -27,7 +27,7 @@
       <div class="info">
         <p class="nombre">{{ patrocinador.nombre }}</p>
         <span class="badge" [class.inactivo]="patrocinador.estado !== 'ACTIVO'">
-              {{ patrocinador.estado }}
+              {{ patrocinador.estado | etiqueta }}
             </span>
         @if (patrocinador.descripcion) {
         <p class="descripcion">{{ patrocinador.descripcion }}</p>

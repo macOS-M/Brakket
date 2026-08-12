@@ -109,7 +109,7 @@
       </td>
       <td>
               <span class="badge" [class.inactivo]="miembro.estado !== 'ACTIVO'">
-                {{ miembro.estado }}
+                {{ miembro.estado | etiqueta }}
               </span>
       </td>
       <td>{{ miembro.fechaUnion ? (miembro.fechaUnion | date: 'dd/MM/yyyy') : '—' }}</td>
@@ -370,7 +370,7 @@
       la plataforma. Consecuencias:
     </p>
     <ul class="consecuencias">
-      <li>El equipo pasa a estado <strong>DISUELTO</strong> y deja de aparecer en búsquedas de equipos activos.</li>
+      <li>El equipo pasa a estado <strong>Disuelto</strong> y deja de aparecer en búsquedas de equipos activos.</li>
       <li>Su historial y su plantilla se conservan para consultas históricas.</li>
       <li>No podrá inscribirse en ligas ni torneos.</li>
       <li>Se registran la fecha y el responsable de la disolución.</li>

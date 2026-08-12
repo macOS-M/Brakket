@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Torneo } from '../../../../models/tournament.model';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 /**
  * Tarjeta de torneo con la anatomía de la referencia Challenger Mode:
@@ -29,7 +30,12 @@ export class TorneoCardComponent {
 
   readonly cupoLleno = computed(() => this.torneo().inscritos >= this.torneo().maxEquipos);
 
-  readonly comenzo = computed(() => new Date(this.torneo().fechaInicio) <= new Date());
+  // Contra la hora de Costa Rica, no la del navegador: la fecha del torneo es
+  // reloj de pared costarricense y compararla con un `new Date()` marcaba como
+  // empezados torneos que allá todavía no arrancaban.
+  readonly comenzo = computed(
+    () => new Date(this.torneo().fechaInicio) <= ahoraCostaRica()
+  );
 
   readonly badge = computed(() => {
     const t = this.torneo();

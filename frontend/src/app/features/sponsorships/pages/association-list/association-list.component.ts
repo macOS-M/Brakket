@@ -1,14 +1,16 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { Patrocinio } from '../../../../models/patrocinio.model';
 import { PatrociniosService } from '../../services/patrocinios.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 @Component({
   selector: 'app-association-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe, EtiquetaPipe],
   templateUrl: './association-list.component.html',
   styleUrl: './association-list.component.scss'
 })

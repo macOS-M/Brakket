@@ -19,11 +19,14 @@
   }
 }
 
+// Sigue siendo una sola columna a propósito: la línea vertical que conecta los
+// hitos es la metáfora de la pantalla y repartirla en columnas la rompe. Lo que
+// sí se corrige es el ancho, que a 480px quedaba innecesariamente apretado.
 .timeline {
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-width: 480px;
+  max-width: 820px;
 }
 
 .timeline-item {

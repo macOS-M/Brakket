@@ -11,7 +11,7 @@
         <p class="puntaje" [class]="'texto-' + tono(t.clasificacion)">
           {{ t.puntajeGeneral | number: '1.0-1' }}<span class="escala"> / 100</span>
         </p>
-        <span class="badge" [class]="'badge-' + tono(t.clasificacion)">{{ t.clasificacion }}</span>
+        <span class="badge" [class]="'badge-' + tono(t.clasificacion)">{{ t.clasificacion | etiqueta }}</span>
       </div>
 
       <div class="barra" role="img"

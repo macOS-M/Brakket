@@ -112,7 +112,6 @@ export class SidebarComponent {
           etiqueta: 'Estadísticas',
           icono: 'chart',
           exact: false,
-          proximamente: true,
           ocultarPara: ['PATROCINADOR']
         },
         {
@@ -127,8 +126,7 @@ export class SidebarComponent {
           ruta: '/notifications',
           etiqueta: 'Notificaciones',
           icono: 'bell',
-          exact: false,
-          proximamente: true
+          exact: false
         },
         {
           ruta: '/transmisiones',

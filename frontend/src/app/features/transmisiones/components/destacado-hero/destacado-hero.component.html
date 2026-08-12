@@ -14,13 +14,13 @@
       }
       @case ('OFFLINE') {
         @if (t.vod) {
-        <app-twitch-player [videoId]="t.vod.id" [titulo]="'Último VOD de ' + t.nombreCanal" />
+        <app-twitch-player [videoId]="t.vod.id" [titulo]="'Última grabación de ' + t.nombreCanal" />
         } @else {
         <div class="pantalla-offline">
           @if (t.thumbnailUrl) {
           <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
           }
-          <p>El canal está offline. Seguilo en Twitch para no perderte la próxima transmisión.</p>
+          <p>El canal no está transmitiendo. Seguilo en Twitch para no perderte la próxima transmisión.</p>
         </div>
         }
       }
@@ -46,7 +46,7 @@
         <h2>{{ t.nombreCanal }}</h2>
         @switch (t.estado) {
           @case ('EN_VIVO') { <span class="chip chip-vivo">EN VIVO</span> }
-          @case ('OFFLINE') { <span class="chip chip-offline">Offline</span> }
+          @case ('OFFLINE') { <span class="chip chip-offline">Fuera de línea</span> }
           @case ('DESCONOCIDO') { <span class="chip chip-desconocido">Estado desconocido</span> }
         }
       </div>
@@ -68,7 +68,7 @@
       }
       @case ('OFFLINE') {
         @if (t.vod) {
-        <p class="titulo">Reproduciendo el último VOD: {{ t.vod.titulo }}</p>
+        <p class="titulo">Reproduciendo la última grabación: {{ t.vod.titulo }}</p>
         @if (t.vod.duracion) {
         <p class="dato">Duración: {{ t.vod.duracion }}</p>
         }

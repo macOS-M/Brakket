@@ -172,12 +172,17 @@
     </div>
     } @case (3) {
     <div class="campo">
-      <label for="w-fecha">Fecha y hora de inicio *</label>
-      <input
-        id="w-fecha"
-        type="datetime-local"
-        [value]="fechaInicio()"
-        (input)="fechaInicio.set($any($event.target).value)"
+      <span class="etiqueta-fecha" id="w-fecha">Fecha y hora de inicio *</span>
+      <!-- Incrustado y no desplegable: el modal recorta cualquier panel
+           flotante (overflow-y + transform). -->
+      <app-fecha-input
+        etiqueta="Fecha y hora de inicio"
+        marcador="Todavía sin fecha"
+        [conHora]="true"
+        [incrustado]="true"
+        [ngModel]="fechaInicio()"
+        (ngModelChange)="fechaInicio.set($event)"
+        [ngModelOptions]="{ standalone: true }"
       />
       @if (fechaInicio() && !pasoValido()) {
       <span class="error-campo">La fecha debe ser futura.</span>

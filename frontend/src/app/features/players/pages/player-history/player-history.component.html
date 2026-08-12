@@ -21,13 +21,13 @@
         } @else if (item.juegoNombre) {
         <p class="juego">{{ item.juegoNombre }}</p>
         }
-        <p class="rol">Rol: {{ item.rol }}</p>
+        <p class="rol">Rol: {{ item.rol | rolEquipo }}</p>
         <p class="fechas">
-          {{ item.fechaIngreso }} —
+          {{ item.fechaIngreso | date: 'dd/MM/yyyy' }} —
           @if (item.estado === 'ACTIVO') {
           presente
           } @else if (item.fechaSalida) {
-          {{ item.fechaSalida.substring(0, 10) }}
+          {{ item.fechaSalida | date: 'dd/MM/yyyy' }}
           } @else {
           {{ item.estado.toLowerCase() }}
           }

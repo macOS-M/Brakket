@@ -151,7 +151,10 @@
   flex-direction: column;
   gap: 0.5rem;
 
-  label {
+  // El calendario incrustado no es un control único al que apuntar con
+  // <label for>, así que su título es un <span> con el mismo aspecto.
+  label,
+  .etiqueta-fecha {
     color: var(--text-muted, #94a3b8);
     font-size: 0.75rem;
     font-weight: 600;

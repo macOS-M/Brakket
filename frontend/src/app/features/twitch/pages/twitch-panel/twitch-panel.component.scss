@@ -1,9 +1,41 @@
+// Antes: una columna de 960px con las cuatro tarjetas apiladas, muy alta y con
+// la mitad derecha de la pantalla vacía. Ahora las dos tarjetas de formulario
+// (configurar canal / asociar transmisión) comparten fila; el encabezado, el
+// estado del canal y las métricas ocupan el ancho completo porque su contenido
+// sí lo aprovecha.
+// `align-items` se deja en el `stretch` por defecto: con `start`, la tarjeta
+// más corta de la fila (configurar canal) terminaba mucho antes que su vecina
+// y abría un hueco muerto hasta la fila de métricas.
 .page {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
-  width: min(100%, 960px);
-  margin: 0 auto;
   padding: 1.5rem 0;
+}
+
+.page-header,
+.card-ancha,
+.feedback {
+  grid-column: 1 / -1;
+}
+
+// Columna izquierda: estado del canal + configuración, apiladas.
+.columna {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  // La última tarjeta absorbe el alto sobrante para que la columna termine
+  // a ras de "Asociar transmisión" y no quede un escalón entre ambas.
+  > .card:last-child {
+    flex: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
 }
 
 .page-header {
@@ -19,7 +51,12 @@
   font-weight: 700;
 }
 
+// Columna flex para que la fila de acciones pueda anclarse abajo: las dos
+// tarjetas de la fila miden lo mismo y sus botones quedan a la misma altura,
+// en vez de dejar el aire sobrante al pie de la más corta.
 .card {
+  display: flex;
+  flex-direction: column;
   padding: 1.4rem 1.5rem;
   border: 1px solid var(--border, #334155);
   border-radius: 16px;
@@ -59,6 +96,9 @@ dd { margin: 0 0 .6rem; }
 label { display: grid; gap: .4rem; color: var(--text, #e2e8f0); }
 
 input {
+  // El input del canal cuelga directo de la tarjeta (no de un <label> grid),
+  // así que sin esto se quedaba con el ancho por defecto del navegador.
+  width: 100%;
   padding: .78rem;
   color: var(--text, #e2e8f0);
   background: var(--surface-raised, #0f172a);
@@ -73,7 +113,15 @@ input {
   margin-bottom: 1rem;
 }
 
-.actions { display: flex; gap: .75rem; margin-top: 1rem; }
+// `margin-top: auto` empuja la fila al pie de la tarjeta; el padding-top
+// mantiene la separación mínima cuando el contenido sí llena el alto.
+.actions { display: flex; gap: .75rem; margin-top: auto; padding-top: 1rem; }
+
+// Los botones sueltos cuelgan directo de la tarjeta, que ahora es una columna
+// flex: sin `align-self` se estirarían de lado a lado.
+.card > button {
+  align-self: flex-start;
+}
 
 button {
   padding: .75rem 1rem;
@@ -89,12 +137,18 @@ button {
 }
 
 .metricas {
+  // 140px no alcanzaba para el valor más largo (SIN_DATOS_EN_VIVO), que se
+  // salía de su celda y se montaba sobre la siguiente.
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
   gap: .75rem;
   margin-bottom: 1rem;
 
-  dd { font-weight: 700; font-size: 1.0625rem; }
+  dd {
+    font-weight: 700;
+    font-size: 1.0625rem;
+    overflow-wrap: anywhere;
+  }
 }
 
 .notice-info {

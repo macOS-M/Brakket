@@ -25,7 +25,7 @@
           <app-status-badge [estado]="inv.estado" />
         </div>
         <p class="item-detalle">
-          Rol propuesto: <strong>{{ inv.rolPropuesto }}</strong> · invitó
+          Rol propuesto: <strong>{{ inv.rolPropuesto | rolEquipo }}</strong> · invitó
           {{ inv.creadoPorNombre }}
         </p>
         @if (inv.mensaje) {

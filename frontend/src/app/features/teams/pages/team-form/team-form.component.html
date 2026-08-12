@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page form-page">
   @if (!esEdicion) {
   <app-page-header
     titulo="Nuevo equipo"
@@ -68,8 +68,8 @@
       </header>
       }
 
-      <form [formGroup]="form" (ngSubmit)="guardar()" class="form" novalidate>
-        <div [hidden]="esEdicion && seccion() !== 'acerca'">
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="form form-brakket form-card" novalidate>
+        <div class="campo-ancho form-brakket" [hidden]="esEdicion && seccion() !== 'acerca'">
           <div class="field">
             <label class="label" for="nombre">Nombre *</label>
             <input
@@ -99,7 +99,7 @@
             />
             <span class="field-pista">
               Como administrador, el equipo se crea para otros jugadores: indicá
-              el correo del jugador que será su capitán. Vos no formás parte del roster.
+              el correo del jugador que será su capitán. Vos no formás parte de la plantilla.
             </span>
             @if (form.controls.capitanCorreo.invalid && form.controls.capitanCorreo.touched) {
             <span class="field-error">Debe ser un correo válido.</span>
@@ -118,22 +118,24 @@
             <span class="field-pista">Opcional: podés dejarlo sin definir y elegirlo más adelante.</span>
           </div>
 
-          <div class="field">
-            <span class="label">Juegos en los que compite</span>
+          <div class="field campo-ancho">
+            <span class="label">Juegos en los que compite *</span>
             <span class="field-pista">El juego principal también se incluirá automáticamente.</span>
-            @for (juego of juegos(); track juego.id) {
-            <label>
-              <input
-                type="checkbox"
-                [checked]="juegoSeleccionado(juego.id)"
-                (change)="toggleJuego(juego.id, $any($event.target).checked)"
-              />
-              {{ juego.nombre }}
-            </label>
-            }
+            <div class="lista-juegos">
+              @for (juego of juegos(); track juego.id) {
+              <label>
+                <input
+                  type="checkbox"
+                  [checked]="juegoSeleccionado(juego.id)"
+                  (change)="toggleJuego(juego.id, $any($event.target).checked)"
+                />
+                {{ juego.nombre }}
+              </label>
+              }
+            </div>
           </div>
 
-          <div class="field">
+          <div class="field campo-ancho">
             <label class="label" for="descripcion">Descripción</label>
             <textarea
               id="descripcion"
@@ -160,7 +162,7 @@
             <input id="sitioWeb" type="url" formControlName="sitioWeb" placeholder="URL del sitio web" />
           </div>
 
-          <div class="field">
+          <div class="field campo-ancho">
             <label class="label">Redes sociales</label>
             @for (control of redesSociales.controls; track $index) {
             <div class="red-social-item">
@@ -187,9 +189,9 @@
           }
         </div>
 
-        <div [hidden]="esEdicion && seccion() !== 'apariencia'">
+        <div class="campo-ancho form-brakket" [hidden]="esEdicion && seccion() !== 'apariencia'">
           @if (!esEdicion) {
-          <h2 class="seccion-form">Apariencia</h2>
+          <h2 class="seccion-form campo-ancho">Apariencia</h2>
           }
 
           <div class="field">
