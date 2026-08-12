@@ -10,6 +10,8 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
+import { ahoraCostaRica, isoDeFechaLocal } from '../../utils/hora-costa-rica';
+
 /** Una celda de la cuadrícula del mes. */
 interface Celda {
   /** Valor ISO local (YYYY-MM-DD) que representa la celda. */
@@ -144,7 +146,7 @@ export class FechaInputComponent implements ControlValueAccessor {
    */
   readonly celdas = computed<Celda[]>(() => {
     const { anio, mes } = this.vista();
-    const hoy = this.isoDe(new Date());
+    const hoy = this.isoDe(ahoraCostaRica());
     const primero = new Date(anio, mes, 1);
     // getDay() devuelve 0 para domingo; con la semana en lunes, domingo es 6.
     const desplazamiento = (primero.getDay() + 6) % 7;
@@ -236,19 +238,19 @@ export class FechaInputComponent implements ControlValueAccessor {
   }
 
   cambiarHora(hora: string): void {
-    const fecha = this.fechaSeleccionada() || this.isoDe(new Date());
+    const fecha = this.fechaSeleccionada() || this.isoDe(ahoraCostaRica());
     const minuto = this.minutoActual() || '00';
     this.emitir(`${fecha}T${hora}:${minuto}`);
   }
 
   cambiarMinuto(minuto: string): void {
-    const fecha = this.fechaSeleccionada() || this.isoDe(new Date());
+    const fecha = this.fechaSeleccionada() || this.isoDe(ahoraCostaRica());
     const hora = this.horaActual() || '12';
     this.emitir(`${fecha}T${hora}:${minuto}`);
   }
 
   hoy(): void {
-    const iso = this.isoDe(new Date());
+    const iso = this.isoDe(ahoraCostaRica());
     if (this.fueraDeRango(iso)) {
       return;
     }
@@ -293,17 +295,13 @@ export class FechaInputComponent implements ControlValueAccessor {
   }
 
   private mesDeHoy(): { anio: number; mes: number } {
-    const hoy = new Date();
+    const hoy = ahoraCostaRica();
     return { anio: hoy.getFullYear(), mes: hoy.getMonth() };
   }
 
   /** Fecha local a YYYY-MM-DD, sin pasar por UTC. */
   private isoDe(fecha: Date): string {
-    return [
-      fecha.getFullYear(),
-      this.dosDigitos(fecha.getMonth() + 1),
-      this.dosDigitos(fecha.getDate())
-    ].join('-');
+    return isoDeFechaLocal(fecha);
   }
 
   private fueraDeRango(iso: string): boolean {

@@ -19,6 +19,7 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 /**
  * Panel principal (referencia: dashboard de jugador): héroe con el juego
@@ -51,7 +52,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Si todas las peticiones fallan mostramos un error, no un panel en ceros. */
   readonly errorGeneral = signal(false);
 
-  readonly hoy = new Date();
+  /** Fecha del saludo: la de Costa Rica, no la del dispositivo de quien mira. */
+  readonly hoy = ahoraCostaRica();
 
   readonly nombreCorto = computed(() => {
     const nombre = this.auth.usuario()?.nombre?.trim();

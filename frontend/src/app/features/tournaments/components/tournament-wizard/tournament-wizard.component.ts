@@ -23,6 +23,7 @@ import { GamesService } from '../../../games/services/games.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
 import { CompetitiveProfileService } from '../../../../core/services/competitive-profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 /**
  * Wizard de creación de torneo (RF-24), 3 pasos como la referencia
@@ -205,7 +206,9 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
         return !!this.formato() && this.tamano() > 0 && this.cupo() >= 2
           && (!this.esFormatoGrupos() || this.cupo() >= 4);
       case 3:
-        return !!this.fechaInicio() && new Date(this.fechaInicio()) > new Date();
+        // "Futura" respecto a Costa Rica: si no, desde otro huso el wizard
+        // rechazaba horas válidas o aceptaba horas ya pasadas allá.
+        return !!this.fechaInicio() && new Date(this.fechaInicio()) > ahoraCostaRica();
     }
   });
 
