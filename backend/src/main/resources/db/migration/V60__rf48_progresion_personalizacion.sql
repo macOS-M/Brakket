@@ -30,15 +30,12 @@ CREATE TABLE canje_personalizacion (
 );
 
 CREATE TABLE personalizacion_perfil (
-    jugador_id BIGINT PRIMARY KEY,
-    titulo_id BIGINT,
-    marco_id BIGINT,
-    insignia_id BIGINT,
-    actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_perfil_personalizacion_jugador FOREIGN KEY (jugador_id) REFERENCES usuario(id),
-    CONSTRAINT fk_perfil_titulo FOREIGN KEY (titulo_id) REFERENCES elemento_personalizacion(id),
-    CONSTRAINT fk_perfil_marco FOREIGN KEY (marco_id) REFERENCES elemento_personalizacion(id),
-    CONSTRAINT fk_perfil_insignia FOREIGN KEY (insignia_id) REFERENCES elemento_personalizacion(id)
+    usuario_id BIGINT NOT NULL,
+    tipo VARCHAR(20) NOT NULL,
+    elemento_id BIGINT NOT NULL,
+    CONSTRAINT pk_personalizacion_perfil PRIMARY KEY (usuario_id, tipo),
+    CONSTRAINT fk_perfil_personalizacion_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+    CONSTRAINT fk_perfil_personalizacion_elemento FOREIGN KEY (elemento_id) REFERENCES elemento_personalizacion(id)
 );
 
 CREATE INDEX idx_logro_jugador_usuario_activo ON logro_jugador(usuario_id, activo);
