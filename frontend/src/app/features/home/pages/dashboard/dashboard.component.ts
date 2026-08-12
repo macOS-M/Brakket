@@ -99,21 +99,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Estable a propósito (sin carrusel). Si un top ya está en el catálogo,
   // el póster navega a su página; si no, al catálogo para importarlo.
   readonly topJuegos = computed(() => {
-    const porSlug = new Map(
-      this.juegos()
-        .filter((j) => j.slug)
-        .map((j) => [j.slug!.toLowerCase(), j.id])
-    );
     const porNombre = new Map(
-      this.juegos().map((j) => [this.claveNombre(j.nombre), j.id])
+      this.juegos().map((j) => [j.nombre.toLowerCase(), j.id])
     );
     const lista = this.topRawg().length > 0
       ? this.topRawg().map((t) => ({
           nombre: t.nombre,
           imagenUrl: this.imagenAltaResolucion(t.imagenUrl),
-          idCatalogo: (t.slug ? porSlug.get(t.slug.toLowerCase()) : undefined)
-            ?? porNombre.get(this.claveNombre(t.nombre))
-            ?? null
+          idCatalogo: porNombre.get(t.nombre.toLowerCase()) ?? null
         }))
       : [...this.juegos()]
           .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
@@ -130,8 +123,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       clearInterval(this.heroTimer);
     }
   }
-
-  iniciarDragHero(evento: PointerEvent): void {
+  
+    iniciarDragHero(evento: PointerEvent): void {
     if (evento.pointerType === 'mouse' && evento.button !== 0) return;
     // Evita que el navegador inicie el drag nativo del enlace o de la imagen.
     evento.preventDefault();
@@ -230,7 +223,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cargar();
     // Rotación del héroe cada 3 s; se pausa con el cursor encima.
     this.heroTimer = setInterval(() => {
-      if (!this.heroPausado() && !this.heroArrastrando() && this.heroJuegos().length > 1) {
+      if (!this.heroPausado() && this.heroJuegos().length > 1) {
         this.heroIndex.update((i) => (i + 1) % this.heroJuegos().length);
       }
     }, 3000);
@@ -303,7 +296,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.imagenAltaResolucion(torneo.juegoImagenUrl) || portadaFoto(torneo.juegoNombre);
   }
 
-  /** Mejora también las URLs IGDB ya persistidas, sin reimportar los juegos. */
   imagenAltaResolucion(url: string | null | undefined): string | null {
     if (!url) {
       return null;
@@ -314,11 +306,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  private claveNombre(nombre: string): string {
-    return nombre
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .toLowerCase();
-  }
 }
