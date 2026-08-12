@@ -148,7 +148,7 @@
       <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
       <span class="datos">
         <span class="nombre">{{ usuario()?.nombre || 'Mi perfil' }}</span>
-        <span class="rol">{{ rolPrincipal() }}</span>
+        <span class="rol">{{ rolPrincipal() | etiqueta }}</span>
       </span>
     </a>
     <button type="button" class="btn-salir" (click)="logout()">

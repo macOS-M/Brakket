@@ -8,6 +8,7 @@ import { LogAuditoriaEntry, PanelGlobal } from '../../../../models/admin-panel.m
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { StatCardComponent } from '../../../../shared/components/stat-card/stat-card.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 /**
  * Panel global de administración (RF-49, EPIC-14): tablero de supervisión de
@@ -17,7 +18,14 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 @Component({
   selector: 'app-global-panel',
   standalone: true,
-  imports: [DatePipe, RouterLink, PageHeaderComponent, StatCardComponent, EmptyStateComponent],
+  imports: [
+    DatePipe,
+    RouterLink,
+    PageHeaderComponent,
+    StatCardComponent,
+    EmptyStateComponent,
+    EtiquetaPipe
+  ],
   templateUrl: './global-panel.component.html',
   styleUrl: './global-panel.component.scss'
 })

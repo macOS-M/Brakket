@@ -2,14 +2,15 @@
   padding: 0 0 1.5rem;
 }
 
+// Era una columna de 640px. Cada invitación es una fila compacta (equipo +
+// botones), así que caben varias por fila sin apretarse.
 .lista {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: 0.55rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  max-width: 640px;
 }
 
 .item {

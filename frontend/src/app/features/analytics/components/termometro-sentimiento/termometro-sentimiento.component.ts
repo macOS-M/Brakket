@@ -2,6 +2,7 @@ import { Component, Input, computed, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 
 import { ClasificacionSentimiento, Termometro } from '../../../../models/sentiment.model';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 /**
  * Termómetro de sentimiento del chat de una transmisión (RF-40).
@@ -13,7 +14,7 @@ import { ClasificacionSentimiento, Termometro } from '../../../../models/sentime
 @Component({
   selector: 'app-termometro-sentimiento',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, EtiquetaPipe],
   templateUrl: './termometro-sentimiento.component.html',
   styleUrl: './termometro-sentimiento.component.scss'
 })

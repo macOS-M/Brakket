@@ -7,8 +7,8 @@ export interface Equipo {
   descripcion: string | null;
   sitioWeb: string | null;
   videoUrl: string | null;
-  juegoId: number;
-  juegoNombre: string;
+  juegoId: number | null;
+  juegoNombre: string | null;
   juegoIds: number[];
   juegoNombres: string[];
   capitanId: number;
@@ -63,7 +63,7 @@ export interface CrearEquipoRequest {
   descripcion: string | null;
   sitioWeb: string | null;
   videoUrl: string | null;
-  juegoId: number;
+  juegoId: number | null;
   juegoIds: number[];
   redesSociales: string[];
   /**

@@ -1,11 +1,11 @@
-<section class="page">
+<section class="page form-page">
   <h1>Nuevo espacio publicitario</h1>
 
   @if (error()) {
   <p class="mensaje-error">{{ error() }}</p>
   }
 
-  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form form-brakket form-card">
     <div class="campo">
       <label for="ubicacion">Ubicación *</label>
       <select id="ubicacion" formControlName="ubicacion">
@@ -15,7 +15,7 @@
       </select>
     </div>
 
-    <div class="campo">
+    <div class="campo campo-ancho">
       <label>Imagen *</label>
       <input
         #inputArchivo

@@ -23,8 +23,8 @@
       <img class="logo" [src]="e.imagenUrl" [alt]="e.ubicacion" />
       <div class="info">
         <p class="nombre">{{ e.ubicacion }}</p>
-        <span class="badge" [class.inactivo]="e.estado !== 'ACTIVO'">{{ e.estado }}</span>
-        <p class="descripcion">{{ e.fechaInicio }} — {{ e.fechaFin }}</p>
+        <span class="badge" [class.inactivo]="e.estado !== 'ACTIVO'">{{ e.estado | etiqueta }}</span>
+        <p class="descripcion">{{ e.fechaInicio | date: 'dd/MM/yyyy' }} — {{ e.fechaFin | date: 'dd/MM/yyyy' }}</p>
         @if (e.enlaceUrl) {
         <p class="contacto">{{ e.enlaceUrl }}</p>
         }

@@ -1,14 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 import { HistorialEquipoJugador } from '../../../../models/historial-jugador.model';
 import { PerfilPersonalizado, PlayersService } from '../../services/players.service';
 import { catchError, forkJoin, of } from 'rxjs';
+import { PlayersService } from '../../services/players.service';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 @Component({
   selector: 'app-player-history',
   standalone: true,
-  imports: [],
+  imports: [DatePipe, RolEquipoPipe],
   templateUrl: './player-history.component.html',
   styleUrl: './player-history.component.scss'
 })

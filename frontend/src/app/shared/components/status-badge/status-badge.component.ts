@@ -1,4 +1,5 @@
 import { Component, Input, computed, signal } from '@angular/core';
+import { etiquetaDeCodigo } from '../../utils/etiquetas';
 
 export type TonoBadge = 'neutral' | 'info' | 'exito' | 'aviso' | 'peligro' | 'morado' | 'oro';
 
@@ -32,18 +33,10 @@ export class StatusBadgeComponent {
   /** Texto a mostrar; por defecto el estado capitalizado. */
   @Input() texto?: string;
 
-  readonly etiqueta = computed(() => {
-    if (this.texto) {
-      return this.texto;
-    }
-    const estado = this._estado();
-    if (!estado) {
-      return '';
-    }
-    // ACTIVO → Activo, INSCRIPCION_ABIERTA → Inscripcion abierta
-    const limpio = estado.replace(/_/g, ' ').toLowerCase();
-    return limpio.charAt(0).toUpperCase() + limpio.slice(1);
-  });
+  // ACTIVO → Activo, INSCRIPCION_ABIERTA → Inscripción abierta. La traducción
+  // es la compartida (`etiquetas.ts`): la que tenía acá era la misma regla
+  // genérica pero sin el diccionario, así que perdía las tildes.
+  readonly etiqueta = computed(() => this.texto || etiquetaDeCodigo(this._estado()));
 
   readonly tonoFinal = computed<TonoBadge>(() => this._tono() ?? this.deducirTono(this._estado()));
 

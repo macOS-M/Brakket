@@ -20,7 +20,7 @@
             [class.status-planned]="temporada.estado === 'PLANIFICADA'"
             [class.status-active]="temporada.estado === 'ACTIVA'"
             [class.status-finished]="temporada.estado === 'FINALIZADA'"
-            [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado }}</span></div>
+            [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado | etiqueta }}</span></div>
             <p>{{ temporada.fechaInicio | date:'dd/MM/yyyy' }} — {{ temporada.fechaFin | date:'dd/MM/yyyy' }}</p>
             <div class="chips"><span>{{ temporada.formatoNombre | formatoTorneo }}</span><span>Cupo: {{ temporada.cupoEquipos }}</span><span>{{ temporada.juegoNombre }}</span></div>
             <details><summary>Ver reglas</summary><p class="rules">{{ temporada.reglas }}</p></details></div>
@@ -34,8 +34,8 @@
         @if (!liga.activo) { <p class="error">La liga está inactiva. No se pueden crear ni modificar temporadas.</p> }
         <div class="form-grid">
           <label class="field wide"><span>Nombre</span><input formControlName="nombre" placeholder="Ej. Apertura 2026"></label>
-          <label class="field"><span>Fecha de inicio</span><input type="date" formControlName="fechaInicio"></label>
-          <label class="field"><span>Fecha de fin</span><input type="date" formControlName="fechaFin"></label>
+          <label class="field"><span>Fecha de inicio</span><app-fecha-input etiqueta="Fecha de inicio" formControlName="fechaInicio" /></label>
+          <label class="field"><span>Fecha de fin</span><app-fecha-input etiqueta="Fecha de fin" formControlName="fechaFin" /></label>
           <label class="field"><span>Estado</span><select formControlName="estado"><option value="PLANIFICADA">Planificada</option><option value="ACTIVA">Activa</option><option value="FINALIZADA">Finalizada</option><option value="CANCELADA">Cancelada</option></select></label>
           <label class="field"><span>Cupo de equipos</span><input type="number" min="2" max="1024" formControlName="cupoEquipos"></label>
           <label class="field wide"><span>Formato competitivo activo</span><select formControlName="formatoId"><option [ngValue]="null">Seleccionar formato</option>@for (formato of formats(); track formato.id) { <option [ngValue]="formato.id">{{ formato.nombre | formatoTorneo }}</option> }</select></label>
@@ -59,7 +59,7 @@
         <span class="mas" aria-hidden="true">+</span>
         <span class="crear-texto">
           <strong>Crear torneo en esta liga</strong>
-          <span>El wizard llega con {{ liga.nombre }} preseleccionada; elegí la temporada.</span>
+          <span>El asistente llega con {{ liga.nombre }} preseleccionada; elegí la temporada.</span>
         </span>
       </button>
       }

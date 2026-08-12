@@ -14,6 +14,7 @@ import { TwitchService } from '../../../twitch/services/twitch.service';
 import { TransmisionTwitch } from '../../../../models/twitch.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 /**
  * Análisis de sentimiento del chat de una transmisión (RF-39).
@@ -26,7 +27,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 @Component({
   selector: 'app-analytics-dashboard',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe, PageHeaderComponent, EmptyStateComponent],
+  imports: [FormsModule, DatePipe, DecimalPipe, PageHeaderComponent, EmptyStateComponent, EtiquetaPipe],
   templateUrl: './analytics-dashboard.component.html',
   styleUrl: './analytics-dashboard.component.scss'
 })

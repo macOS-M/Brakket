@@ -7,11 +7,12 @@ import { catchError } from 'rxjs/operators';
 import { CompetitiveProfileService } from '../../../../core/services/competitive-profile.service';
 import { CatalogoCompetitivo, PerfilCompetitivoRequest } from '../../../../models/perfil-competitivo.model';
 import { GamesService } from '../../services/games.service';
+import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
 
 @Component({
   selector: 'app-competitive-profile-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, FormatoTorneoPipe],
   templateUrl: './competitive-profile-form.component.html',
   styleUrl: './competitive-profile-form.component.scss'
 })

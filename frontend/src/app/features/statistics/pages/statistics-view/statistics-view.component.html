@@ -1,5 +1,5 @@
 <main class="stats-page">
-  <header class="page-header"><span class="eyebrow"></span><h1>Estadísticas históricas</h1><p>Rendimiento oficial segmentado por juego y evolución a través de torneos.</p></header>
+  <header class="page-header"><span class="eyebrow">Seguimiento</span><h1>Estadísticas históricas</h1><p>Rendimiento oficial segmentado por juego y evolución a través de torneos.</p></header>
   <form class="filters" [formGroup]="form" (ngSubmit)="consultar()">
     <label>Consultar por<select formControlName="tipo"><option value="JUGADOR">Jugador</option><option value="EQUIPO">Equipo</option></select></label>
     <label class="subject-search">{{ form.controls.tipo.value === 'JUGADOR' ? 'Jugador' : 'Equipo' }}
@@ -13,12 +13,12 @@
     <label>Juego<select formControlName="juegoId"><option [ngValue]="null">Todos los juegos</option>@for (juego of juegos(); track juego.id) { <option [ngValue]="juego.id">{{ juego.nombre }}</option> }</select></label>
     <label>Liga<select formControlName="ligaId"><option [ngValue]="null">Todas las ligas</option>@for (liga of catalogo().ligas; track liga.id) { <option [ngValue]="liga.id">{{ liga.nombre }}</option> }</select></label>
     <label>Temporada<select formControlName="temporadaId"><option [ngValue]="null">Todas las temporadas</option>@for (temporada of catalogo().temporadas; track temporada.id) { <option [ngValue]="temporada.id">{{ temporada.nombre }}</option> }</select></label>
-    <label>Desde<input type="date" formControlName="desde"></label><label>Hasta<input type="date" formControlName="hasta"></label>
+    <label>Desde<app-fecha-input etiqueta="Desde" marcador="Sin límite" formControlName="desde" /></label><label>Hasta<app-fecha-input etiqueta="Hasta" marcador="Sin límite" formControlName="hasta" /></label>
     <div class="actions"><button type="button" class="secondary" (click)="limpiar()">Limpiar</button><button type="submit" [disabled]="cargando()">{{ cargando() ? 'Calculando…' : 'Consultar' }}</button></div>
   </form>
   @if (error()) { <div class="notice error" role="alert">{{ error() }}</div> }
   @if (resultado(); as data) {
-    <section class="result-heading"><div><span class="eyebrow">{{ data.tipoSujeto }}</span><h2>{{ data.sujetoNombre }}</h2></div><span class="official">● Solo resultados oficiales</span></section>
+    <section class="result-heading"><div><span class="eyebrow">{{ data.tipoSujeto | etiqueta }}</span><h2>{{ data.sujetoNombre }}</h2></div><span class="official">● Solo resultados oficiales</span></section>
     @if (data.resultadosNoDefinitivos > 0) { <div class="notice warning">{{ data.resultadosNoDefinitivos }} resultado(s) reportado(s) o en disputa no se incluyen en el cálculo.</div> }
     @if (data.juegos.length === 0) { <section class="empty"><span>—</span><h3>Sin estadísticas para este filtro</h3><p>No existe participación con resultados confirmados en el período y juego seleccionados.</p></section> }
     @for (juego of data.juegos; track juego.juegoId) {

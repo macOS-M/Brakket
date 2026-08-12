@@ -23,6 +23,7 @@ import {
 } from '../../components/tournament-bracket/tournament-bracket.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 type TabDetalle = 'resumen' | 'llaves' | 'matches' | 'jugadores' | 'resultados';
 type FiltroMatch = 'todos' | 'pendientes' | 'finalizadas';
@@ -117,9 +118,10 @@ export class TournamentDetailComponent {
     return !!t && t.inscritos >= t.maxEquipos;
   });
 
+  // Contra la hora de Costa Rica, no la del navegador (ver hora-costa-rica.ts).
   readonly comenzo = computed(() => {
     const t = this.torneo();
-    return !!t && new Date(t.fechaInicio) <= new Date();
+    return !!t && new Date(t.fechaInicio) <= ahoraCostaRica();
   });
 
   readonly abierto = computed(() => {

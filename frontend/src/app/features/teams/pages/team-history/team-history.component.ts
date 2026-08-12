@@ -6,11 +6,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HistorialEquipo, MovimientoPlantilla } from '../../../../models/historial-equipo.model';
 import { TeamsService } from '../../services/teams.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 @Component({
   selector: 'app-team-history',
   standalone: true,
-  imports: [DatePipe, RouterLink, FormsModule, EmptyStateComponent],
+  imports: [DatePipe, RouterLink, FormsModule, EmptyStateComponent, FechaInputComponent, RolEquipoPipe],
   templateUrl: './team-history.component.html',
   styleUrl: './team-history.component.scss'
 })

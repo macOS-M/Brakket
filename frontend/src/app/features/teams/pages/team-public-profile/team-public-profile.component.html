@@ -98,7 +98,7 @@
             </div>
             <div class="torneo-estados">
               <app-status-badge [estado]="torneo.estado" />
-              <span class="inscripcion">Inscripción: {{ torneo.estadoInscripcion }}</span>
+              <span class="inscripcion">Inscripción: {{ torneo.estadoInscripcion | etiqueta }}</span>
             </div>
           </li>
           }

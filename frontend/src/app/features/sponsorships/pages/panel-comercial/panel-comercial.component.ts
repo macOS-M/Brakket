@@ -1,12 +1,14 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 
 import { PanelComercialService } from '../../services/panel-comercial.service';
 import { MetricasPatrocinio, PatrocinioResumen } from '../../../../models/panel-comercial.model';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 @Component({
   selector: 'app-panel-comercial',
   standalone: true,
-  imports: [],
+  imports: [DatePipe, EtiquetaPipe],
   templateUrl: './panel-comercial.component.html',
   styleUrl: './panel-comercial.component.scss'
 })

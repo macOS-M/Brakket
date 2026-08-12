@@ -92,6 +92,26 @@ class TeamRegistrationServiceImplTest {
     }
 
     @Test
+    void crear_sin_juegos_crea_un_equipo_universal() {
+        Usuario creador = capitan();
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(creador));
+        when(equipoRepository.findByNombre("Universal")).thenReturn(Optional.empty());
+        when(equipoRepository.save(any(Equipo.class))).thenAnswer(inv -> {
+            Equipo guardado = inv.getArgument(0);
+            guardado.setId(10L);
+            return guardado;
+        });
+
+        EquipoResponse respuesta = service.crear(new CrearEquipoRequest(
+                "Universal", null, null, null, null, null,
+                null, List.of(), List.of(), null), CORREO, false);
+
+        assertThat(respuesta.juegoId()).isNull();
+        assertThat(respuesta.juegoIds()).isEmpty();
+        verify(juegoRepository, never()).findById(any());
+    }
+
+    @Test
     void crear_con_varios_juegos_conserva_el_principal_solicitado() {
         Usuario creador = capitan();
         Juego valorant = Juego.builder().id(3L).nombre("Valorant").activo(true).build();

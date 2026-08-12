@@ -1,7 +1,8 @@
+// Ancho, rejilla, campos y botones vienen de `_forms.scss`. El ancho común
+// además le viene bien a la grilla de resultados del catálogo externo, que
+// antes entraba a 3 columnas y ahora respira.
 .page {
-  // Más ancho que un formulario simple: la grilla de resultados del
-  // catálogo externo necesita aire para 3 columnas de arte.
-  max-width: 620px;
+  padding: 0 0 1.5rem;
 }
 
 // ----- Buscador contra el catálogo externo (RAWG) -----
@@ -158,102 +159,6 @@
   border-radius: var(--radius-sm, 8px);
   color: var(--danger-text, #f87171);
   font-size: 0.875rem;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.0625rem;
-}
-
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-
-  label {
-    color: var(--text-muted, #94a3b8);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-
-  input,
-  textarea {
-    padding: 0.55rem 0.75rem;
-    background: var(--surface, #111827);
-    border: 1px solid var(--border, #334155);
-    border-radius: var(--radius-sm, 8px);
-    color: var(--text, #e2e8f0);
-    font-family: inherit;
-    font-size: 0.875rem;
-
-    &::placeholder {
-      color: var(--text-subtle, #64748b);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-text, #ff6a1f);
-    }
-  }
-
-  textarea {
-    resize: vertical;
-    line-height: 1.55;
-  }
-
-  .error-campo {
-    color: var(--danger-text, #f87171);
-    font-size: 0.8125rem;
-  }
-}
-
-.acciones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.btn-primary,
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.55rem 1.1rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm, 8px);
-  font-family: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.btn-primary {
-  background: var(--accent, #ff5500);
-  color: var(--accent-ink, #0b1120);
-
-  &:hover:not(:disabled) {
-    background: var(--accent-hover, #ff6a1f);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-}
-
-.btn-secondary {
-  background: transparent;
-  border-color: var(--border, #334155);
-  color: var(--text, #e2e8f0);
-
-  &:hover {
-    background: var(--surface-2, #1f2937);
-  }
 }
 
 .label-portada {
