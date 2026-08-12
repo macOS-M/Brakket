@@ -1,5 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
@@ -27,7 +30,7 @@ interface FilaTooltip {
 @Component({
   selector: 'app-metricas-transmision',
   standalone: true,
-  imports: [PageHeaderComponent, StatCardComponent, EmptyStateComponent, GraficoSerieComponent],
+  imports: [FormsModule, PageHeaderComponent, StatCardComponent, EmptyStateComponent, GraficoSerieComponent, FechaInputComponent],
   templateUrl: './metricas-transmision.component.html',
   styleUrl: './metricas-transmision.component.scss',
 })

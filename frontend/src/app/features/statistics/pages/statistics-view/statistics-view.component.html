@@ -13,7 +13,7 @@
     <label>Juego<select formControlName="juegoId"><option [ngValue]="null">Todos los juegos</option>@for (juego of juegos(); track juego.id) { <option [ngValue]="juego.id">{{ juego.nombre }}</option> }</select></label>
     <label>Liga<select formControlName="ligaId"><option [ngValue]="null">Todas las ligas</option>@for (liga of catalogo().ligas; track liga.id) { <option [ngValue]="liga.id">{{ liga.nombre }}</option> }</select></label>
     <label>Temporada<select formControlName="temporadaId"><option [ngValue]="null">Todas las temporadas</option>@for (temporada of catalogo().temporadas; track temporada.id) { <option [ngValue]="temporada.id">{{ temporada.nombre }}</option> }</select></label>
-    <label>Desde<input type="date" formControlName="desde"></label><label>Hasta<input type="date" formControlName="hasta"></label>
+    <label>Desde<app-fecha-input etiqueta="Desde" marcador="Sin límite" formControlName="desde" /></label><label>Hasta<app-fecha-input etiqueta="Hasta" marcador="Sin límite" formControlName="hasta" /></label>
     <div class="actions"><button type="button" class="secondary" (click)="limpiar()">Limpiar</button><button type="submit" [disabled]="cargando()">{{ cargando() ? 'Calculando…' : 'Consultar' }}</button></div>
   </form>
   @if (error()) { <div class="notice error" role="alert">{{ error() }}</div> }

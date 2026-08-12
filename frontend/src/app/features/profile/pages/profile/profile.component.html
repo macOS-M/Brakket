@@ -65,10 +65,9 @@
                         <span class="campo-pista">{{ edad }} años</span>
                       }
                     </span>
-                    <input
-                      type="date"
+                    <app-fecha-input
+                      etiqueta="Fecha de nacimiento"
                       formControlName="fechaNacimiento"
-                      autocomplete="bday"
                       [max]="maxFechaNacimiento"
                     />
                   </label>

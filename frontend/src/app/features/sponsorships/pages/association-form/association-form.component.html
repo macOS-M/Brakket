@@ -90,7 +90,7 @@
 
     <div class="campo">
       <label for="fechaInicio">Fecha de inicio *</label>
-      <input id="fechaInicio" type="date" formControlName="fechaInicio" />
+      <app-fecha-input idCampo="fechaInicio" etiqueta="Fecha de inicio" formControlName="fechaInicio" />
       @if (form.controls.fechaInicio.invalid && form.controls.fechaInicio.touched) {
       <span class="error-campo">La fecha de inicio es obligatoria.</span>
       }
@@ -98,7 +98,7 @@
 
     <div class="campo">
       <label for="fechaFin">Fecha de fin *</label>
-      <input id="fechaFin" type="date" formControlName="fechaFin" />
+      <app-fecha-input idCampo="fechaFin" etiqueta="Fecha de fin" formControlName="fechaFin" />
       @if (form.controls.fechaFin.invalid && form.controls.fechaFin.touched) {
       <span class="error-campo">La fecha de fin es obligatoria.</span>
       }

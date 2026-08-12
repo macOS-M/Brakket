@@ -12,7 +12,9 @@ import {
   output,
   signal
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 import { AjustePartida, CrearTorneoRequest, Torneo } from '../../../../models/tournament.model';
 import { Juego } from '../../../../models/juego.model';
 import { League, Season } from '../../../../models/league.model';
@@ -32,7 +34,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-tournament-wizard',
   standalone: true,
-  imports: [],
+  imports: [FormsModule, FechaInputComponent],
   templateUrl: './tournament-wizard.component.html',
   styleUrl: './tournament-wizard.component.scss'
 })

@@ -16,11 +16,13 @@
   <div class="filtros">
     <label>
       Desde
-      <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+      <app-fecha-input etiqueta="Desde" marcador="Sin límite"
+                       [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
     </label>
     <label>
       Hasta
-      <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+      <app-fecha-input etiqueta="Hasta" marcador="Sin límite"
+                       [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
     </label>
     <button type="button" class="btn-primario" (click)="cargar()">Filtrar</button>
     <button type="button" class="btn-secundario" (click)="limpiarFiltro()">Limpiar</button>

@@ -26,14 +26,16 @@
 
     <div class="campo">
       <label for="desde">Desde</label>
-      <input id="desde" type="date" [value]="desdeFiltro()"
-             (input)="desdeFiltro.set($any($event.target).value)" />
+      <app-fecha-input idCampo="desde" etiqueta="Desde" marcador="Sin límite"
+                       [ngModel]="desdeFiltro()" (ngModelChange)="desdeFiltro.set($event)"
+                       [ngModelOptions]="{ standalone: true }" />
     </div>
 
     <div class="campo">
       <label for="hasta">Hasta</label>
-      <input id="hasta" type="date" [value]="hastaFiltro()"
-             (input)="hastaFiltro.set($any($event.target).value)" />
+      <app-fecha-input idCampo="hasta" etiqueta="Hasta" marcador="Sin límite"
+                       [ngModel]="hastaFiltro()" (ngModelChange)="hastaFiltro.set($event)"
+                       [ngModelOptions]="{ standalone: true }" />
     </div>
 
     <button type="button" class="btn-buscar" (click)="buscar()">Buscar</button>

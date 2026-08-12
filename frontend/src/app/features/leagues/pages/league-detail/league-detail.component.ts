@@ -9,6 +9,7 @@ import { LeaguesService } from '../../services/leagues.service';
 import { TournamentsService } from '../../../tournaments/services/tournaments.service';
 import { TorneoCardComponent } from '../../../tournaments/components/torneo-card/torneo-card.component';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 import { TournamentWizardComponent } from '../../../tournaments/components/tournament-wizard/tournament-wizard.component';
 import { portadaGradiente } from '../../../../shared/utils/cover';
 
@@ -21,7 +22,7 @@ function rangoFechasValido(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-league-detail',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, TorneoCardComponent, TournamentWizardComponent, FormatoTorneoPipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, TorneoCardComponent, TournamentWizardComponent, FormatoTorneoPipe, FechaInputComponent],
   templateUrl: './league-detail.component.html',
   styleUrl: './league-detail.component.scss'
 })

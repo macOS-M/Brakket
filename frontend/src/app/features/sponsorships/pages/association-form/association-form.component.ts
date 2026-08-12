@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 import { PatrociniosService } from '../../services/patrocinios.service';
 import { SponsorshipsService } from '../../services/sponsorships.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
@@ -14,7 +15,7 @@ import { Torneo } from '../../../../models/tournament.model';
 @Component({
   selector: 'app-association-form',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule],
+  imports: [ReactiveFormsModule, FormsModule, FechaInputComponent],
   templateUrl: './association-form.component.html',
   styleUrl: './association-form.component.scss'
 })

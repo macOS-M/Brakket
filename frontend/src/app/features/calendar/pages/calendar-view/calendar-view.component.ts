@@ -1,4 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 
 import { CalendarioEvento } from '../../../../models/calendario-evento.model';
 import { Juego } from '../../../../models/juego.model';
@@ -10,7 +13,7 @@ import { LeaguesService } from '../../../leagues/services/leagues.service';
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [],
+  imports: [FormsModule, FechaInputComponent],
   templateUrl: './calendar-view.component.html',
   styleUrl: './calendar-view.component.scss'
 })
