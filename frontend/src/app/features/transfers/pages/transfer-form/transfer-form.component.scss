@@ -1,6 +1,6 @@
+// Ancho, rejilla, campos y botones del formulario vienen de `_forms.scss`.
 .page {
   padding: 0 0 1.5rem;
-  max-width: 620px;
 }
 
 // Banner de error general de la operación. Sobre el lienzo, no dentro de una
@@ -45,117 +45,35 @@
 
 // ----- Formulario -----
 
+// El formulario ya vive dentro de `.tarjeta`, así que no lleva `.form-card`:
+// solo el relleno interno que la tarjeta espera.
 .formulario {
-  display: flex;
-  flex-direction: column;
-  gap: 1.0625rem;
   padding: 1.25rem 1.5rem 1.5rem;
 }
 
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
+// ----- Botón "Volver" del encabezado -----
+//
+// Vive fuera del <form>, fuera del alcance de `.form-brakket`. Se acota a
+// `app-page-header` para no volver a pisar los botones del formulario, que
+// ahora los viste `_forms.scss`.
 
-.etiqueta {
-  color: var(--text-muted, #94a3b8);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-
-  .apunte {
-    color: var(--text-subtle, #8496ad);
-    font-weight: 400;
-    font-style: normal;
-  }
-}
-
-select,
-textarea {
-  width: 100%;
-  padding: 0.5625rem 0.75rem;
-  // Sobre la tarjeta (surface) los campos suben un nivel de tono,
-  // como en el wizard de torneos: sin esto se funden con el fondo.
-  background: var(--surface-2, #1f2937);
+app-page-header .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.1rem;
+  background: transparent;
   border: 1px solid var(--border, #334155);
   border-radius: var(--radius-sm, 8px);
   color: var(--text, #e2e8f0);
   font-family: inherit;
-  font-size: 0.875rem;
-  line-height: 1.55;
-  transition: border-color 0.15s ease;
-
-  &::placeholder {
-    color: var(--text-subtle, #8496ad);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-text, #ff6a1f);
-  }
-}
-
-textarea {
-  resize: vertical;
-  min-height: 4.5rem;
-}
-
-.nota {
-  color: var(--text-muted, #94a3b8);
-  font-size: 0.8125rem;
-}
-
-.error-campo {
-  color: var(--danger-text, #f87171);
-  font-size: 0.8125rem;
-}
-
-.acciones {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-// ----- Botones -----
-
-.btn-primary,
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm, 8px);
-  font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
-}
 
-.btn-primary {
-  background: var(--accent, #ff5500);
-  color: var(--accent-ink, #0b1120);
-
-  &:hover:not(:disabled) {
-    background: var(--accent-hover, #ff6a1f);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-}
-
-.btn-secondary {
-  background: transparent;
-  border-color: var(--border, #334155);
-  color: var(--text, #e2e8f0);
-
-  &:hover:not(:disabled) {
-    background: var(--surface-2, #1f2937);
+  &:hover {
+    background: var(--surface-3, #263041);
   }
 }

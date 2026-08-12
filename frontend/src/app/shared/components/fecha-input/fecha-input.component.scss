@@ -1,0 +1,322 @@
+// El calendario del navegador no acepta estilos: cambia de aspecto según el
+// sistema operativo y llegaba con fondo blanco sobre el tema oscuro. Este panel
+// se pinta con los mismos tokens que el resto de la app.
+
+:host {
+  display: block;
+}
+
+.fecha-input {
+  position: relative;
+}
+
+// ----- Campo cerrado -----
+//
+// Mismo cuerpo que un input del sistema de formularios (`_forms.scss`), para
+// que en una fila mixta no se note cuál es nativo y cuál no.
+
+.disparador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: var(--surface-2, #1f2937);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--text-subtle, #8496ad);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.abierto .disparador {
+  border-color: var(--accent, #ff5500);
+}
+
+.texto.vacio {
+  color: var(--text-subtle, #8496ad);
+}
+
+.icono {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--text-muted, #94a3b8);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+// ----- Panel -----
+
+.panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  width: 17.5rem;
+  padding: 0.75rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-modal, 0 24px 80px rgba(0, 0, 0, 0.55));
+}
+
+// Cerca del borde derecho el panel se anclaría fuera de la pantalla.
+@media (max-width: 420px) {
+  .panel {
+    left: auto;
+    right: 0;
+  }
+}
+
+// Modo incrustado: el calendario ocupa su lugar en el flujo, sin flotar.
+.incrustado .panel {
+  position: static;
+  width: 100%;
+  box-shadow: none;
+}
+
+.resumen {
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  color: var(--text, #e2e8f0);
+  font-size: 0.9375rem;
+  font-weight: 700;
+
+  &.vacio {
+    color: var(--text-subtle, #8496ad);
+    font-weight: 400;
+  }
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.mes {
+  color: var(--text, #e2e8f0);
+  font-size: 0.875rem;
+  font-weight: 700;
+  // Sin la mayúscula inicial se lee "agosto 2026" en minúscula, que desentona
+  // con el resto de encabezados de la app.
+  text-transform: capitalize;
+}
+
+.nav {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--text-muted, #94a3b8);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+
+    svg {
+      stroke: var(--text, #e2e8f0);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 1px;
+  }
+}
+
+// ----- Cuadrícula -----
+
+.semana,
+.dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.semana {
+  margin-bottom: 0.3rem;
+
+  span {
+    padding: 0.25rem 0;
+    color: var(--text-subtle, #8496ad);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.dia {
+  // Alto fijo y no `aspect-ratio`: incrustado el panel es mucho más ancho y
+  // con proporción cuadrada las celdas crecían hasta 65px de alto.
+  height: 2.25rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-2, #1f2937);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+}
+
+// Relleno del mes vecino: presente para no romper la cuadrícula, pero apagado.
+.dia.otro-mes {
+  color: var(--text-subtle, #8496ad);
+  opacity: 0.55;
+}
+
+// Hoy se marca con el borde, no con relleno: el relleno es del día elegido.
+.dia.hoy {
+  border-color: var(--accent-text, #ff6a1f);
+  font-weight: 700;
+}
+
+.dia.elegido {
+  background: var(--accent, #ff5500);
+  border-color: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+  font-weight: 700;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+// ----- Hora -----
+
+.hora {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
+
+.hora-etiqueta {
+  margin-right: auto;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.hora-select {
+  padding: 0.3rem 0.45rem;
+  background: var(--surface-2, #1f2937);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent, #ff5500);
+  }
+}
+
+.separador {
+  color: var(--text-muted, #94a3b8);
+}
+
+// ----- Pie -----
+
+.pie {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
+
+.accion {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-text, #ff6a1f);
+    outline-offset: 1px;
+  }
+
+  &.destacada {
+    border-color: var(--accent, #ff5500);
+    color: var(--accent-text, #ff6a1f);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disparador,
+  .dia,
+  .accion {
+    transition: none;
+  }
+}

@@ -1,5 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+import { ahoraCostaRica } from '../utils/hora-costa-rica';
+
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
 /**
@@ -18,7 +20,9 @@ export class FechaRelativaPipe implements PipeTransform {
       return '';
     }
     const fecha = new Date(valor);
-    const ahora = new Date();
+    // Hora de Costa Rica: las fechas del API son reloj de pared costarricense,
+    // así que el "ahora" con el que se restan tiene que serlo también.
+    const ahora = ahoraCostaRica();
     const diffMs = fecha.getTime() - ahora.getTime();
     const diffMin = Math.round(diffMs / 60000);
     const hora = `${fecha.getHours().toString().padStart(2, '0')}:${fecha.getMinutes().toString().padStart(2, '0')}`;

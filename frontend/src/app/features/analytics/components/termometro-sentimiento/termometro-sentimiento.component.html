@@ -1,0 +1,94 @@
+@if (lectura(); as t) {
+  <article class="termometro" [class]="'estado-' + t.estado.toLowerCase()">
+    <header class="cabecera">
+      <h3>Termómetro del chat</h3>
+      <span class="estado">{{ etiquetaEstado() }}</span>
+    </header>
+
+    @if (hayIndicador()) {
+      <!-- Indicador general -->
+      <div class="indicador">
+        <p class="puntaje" [class]="'texto-' + tono(t.clasificacion)">
+          {{ t.puntajeGeneral | number: '1.0-1' }}<span class="escala"> / 100</span>
+        </p>
+        <span class="badge" [class]="'badge-' + tono(t.clasificacion)">{{ t.clasificacion | etiqueta }}</span>
+      </div>
+
+      <div class="barra" role="img"
+           [attr.aria-label]="'Sentimiento general ' + (t.puntajeGeneral | number: '1.0-1') + ' sobre 100'">
+        <span class="aguja" [style.left.%]="posicionAguja()"></span>
+      </div>
+      <div class="extremos">
+        <span>Hostil</span><span>Neutro</span><span>Eufórico</span>
+      </div>
+    }
+
+    <!-- Resumen textual: la ERS lo pide siempre, en cualquier estado -->
+    <p class="resumen">{{ t.resumen }}</p>
+
+    @if (t.totalMuestras > 0) {
+      <!-- Distribución -->
+      <div class="distribucion">
+        <h4>Distribución de las {{ t.totalMuestras }} muestras</h4>
+        <div class="reparto" role="img"
+             [attr.aria-label]="t.distribucion.positivo + ' positivas, ' + t.distribucion.neutro
+               + ' neutras, ' + t.distribucion.negativo + ' negativas'">
+          @if (t.distribucion.positivo > 0) {
+            <span class="tramo tramo-positivo" [style.width.%]="t.distribucion.porcentajePositivo"></span>
+          }
+          @if (t.distribucion.neutro > 0) {
+            <span class="tramo tramo-neutro" [style.width.%]="t.distribucion.porcentajeNeutro"></span>
+          }
+          @if (t.distribucion.negativo > 0) {
+            <span class="tramo tramo-negativo" [style.width.%]="t.distribucion.porcentajeNegativo"></span>
+          }
+        </div>
+        <ul class="leyenda">
+          <li><span class="punto badge-positivo"></span>Positivas
+            <strong>{{ t.distribucion.positivo }}</strong>
+            <em>{{ t.distribucion.porcentajePositivo | number: '1.0-1' }}%</em></li>
+          <li><span class="punto badge-neutro"></span>Neutras
+            <strong>{{ t.distribucion.neutro }}</strong>
+            <em>{{ t.distribucion.porcentajeNeutro | number: '1.0-1' }}%</em></li>
+          <li><span class="punto badge-negativo"></span>Negativas
+            <strong>{{ t.distribucion.negativo }}</strong>
+            <em>{{ t.distribucion.porcentajeNegativo | number: '1.0-1' }}%</em></li>
+        </ul>
+      </div>
+    }
+
+    @if (hayEvolucion()) {
+      <!-- Evolución por intervalos -->
+      <div class="evolucion">
+        <h4>Evolución por intervalos de {{ t.intervaloMinutos }} min</h4>
+        <div class="grafico">
+          @for (i of t.intervalos; track i.inicio) {
+            <div class="columna"
+                 [title]="i.muestras + ' muestra(s) · ' + (i.puntajePromedio | number: '1.0-1')">
+              <span class="mitad arriba">
+                @if (i.puntajePromedio > 0) {
+                  <span class="barrita badge-positivo" [style.height.%]="altura(i.puntajePromedio)"></span>
+                }
+              </span>
+              <span class="eje"></span>
+              <span class="mitad abajo">
+                @if (i.puntajePromedio < 0) {
+                  <span class="barrita badge-negativo" [style.height.%]="altura(i.puntajePromedio)"></span>
+                }
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!--
+      La ERS pide explícitamente presentar el análisis como apoyo informativo y
+      no como una decisión automática sobre usuarios.
+    -->
+    <p class="aviso">
+      Lectura orientativa del clima de la audiencia. No evalúa ni sanciona a
+      usuarios individuales.
+    </p>
+  </article>
+}

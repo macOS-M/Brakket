@@ -7,6 +7,7 @@ import {
   ApelacionResponse,
   ApelarRequest,
   DisputaResponse,
+  MiDisputa,
   ResolverApelacionRequest,
   ResolverDisputaRequest
 } from '../../../models/disputa.model';
@@ -39,8 +40,14 @@ export class DisputesService {
     return this.api.get<ApelacionResponse[]>(`/disputas/${disputaId}/apelaciones`);
   }
 
+
   /** Solo el comisionado de la liga (o admin) resuelve la apelación. */
   resolverApelacion(apelacionId: number, request: ResolverApelacionRequest): Observable<ApelacionResponse> {
     return this.api.post<ApelacionResponse>(`/apelaciones/${apelacionId}/resolucion`, request);
+  }
+
+  /** Vista panorámica: todas mis disputas, de cualquiera de mis torneos. */
+  misDisputas(): Observable<MiDisputa[]> {
+    return this.api.get<MiDisputa[]>('/disputas/mias');
   }
 }

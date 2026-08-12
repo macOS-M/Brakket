@@ -1,8 +1,10 @@
+// Sin tope propio: el ancho lo marca el shell (--content-max).
 .page {
   padding: 1.5rem 0;
-  max-width: 980px;
 }
 
+// Par fijo (formulario + resultado): dos columnas que se reparten el ancho.
+// Con `auto-fill` quedaba una tercera pista vacía a la derecha.
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

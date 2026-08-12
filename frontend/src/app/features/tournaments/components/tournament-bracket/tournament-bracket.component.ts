@@ -126,6 +126,13 @@ export class TournamentBracketComponent {
   readonly esGestor = input(false);
   /** Organizador o árbitro de este torneo: habilita el botón de RF-28. */
   readonly puedeCasoEspecial = input(false);
+  /**
+   * RF-32: quién puede cerrar cada caso, resuelto por el backend. Deducirlo
+   * aquí llevaba a ofrecerle el botón al organizador (que el RF excluye) y a
+   * ocultárselo al comisionado, el único que puede cerrar una apelación.
+   */
+  readonly puedeCerrarDisputa = input(false);
+  readonly puedeCerrarApelacion = input(false);
   readonly enCurso = input(false);
   readonly ocupado = input(false);
   readonly enviarMarcador = output<MarcadorEvent>();
@@ -234,7 +241,10 @@ export class TournamentBracketComponent {
     if (/GRUPO/.test(plano)) {
       return 'GRUPOS';
     }
-    if (/ROBIN|SUIZO|SWISS/.test(plano)) {
+    // TODOS CONTRA TODOS es el nombre que muestra la interfaz desde que se
+    // tradujo; ROBIN queda por los torneos creados antes. Sin el nombre nuevo
+    // un todos-contra-todos caía en 'ARBOL' y se dibujaba como eliminación.
+    if (/ROBIN|TODOS CONTRA TODOS|SUIZO|SWISS/.test(plano)) {
       return 'LIGA';
     }
     if (/DOBLE/.test(plano)) {
@@ -243,9 +253,9 @@ export class TournamentBracketComponent {
     return 'ARBOL';
   });
 
-  /** Las jornadas de una liga se llaman así solo en round robin. */
+  /** Las jornadas de una liga se llaman así solo en todos contra todos. */
   readonly nombreJornada = computed(() =>
-    /ROBIN/i.test(this.formato()) ? 'Jornada' : 'Ronda');
+    /ROBIN|TODOS CONTRA TODOS/i.test(this.formato()) ? 'Jornada' : 'Ronda');
 
   // ---------- agrupaciones por vista ----------
 
@@ -872,7 +882,7 @@ export class TournamentBracketComponent {
   // ---------- RF-32: resolver la disputa ----------
 
   puedeResolverDisputa(): boolean {
-    return this.puedeCasoEspecial();
+    return this.puedeCerrarDisputa();
   }
 
   abrirResolverDisputa(): void {
@@ -965,7 +975,7 @@ export class TournamentBracketComponent {
   // ---------- RF-32: el comisionado resuelve la apelación ----------
 
   puedeResolverApelacion(): boolean {
-    return this.esGestor();
+    return this.puedeCerrarApelacion();
   }
 
   abrirResolverApelacion(): void {

@@ -1,0 +1,59 @@
+<section class="page">
+  <app-page-header
+    eyebrow="Twitch/IA"
+    titulo="Termómetro de sentimiento"
+    subtitulo="Interpretá el ambiente del público durante una transmisión."
+  />
+
+  <form class="filtros" (ngSubmit)="consultar()">
+    <label class="field">
+      <span class="label">Transmisión</span>
+      @if (cargandoTransmisiones()) {
+        <select name="transmisionId" disabled>
+          <option>Cargando transmisiones…</option>
+        </select>
+      } @else if (transmisiones().length === 0) {
+        <select name="transmisionId" disabled>
+          <option>No hay transmisiones con análisis</option>
+        </select>
+      } @else {
+        <select name="transmisionId" [(ngModel)]="transmisionId" (ngModelChange)="consultar()">
+          <option [ngValue]="null">Elegí una transmisión…</option>
+          @for (t of transmisiones(); track t.id) {
+            <option [ngValue]="t.id">{{ etiqueta(t) }}</option>
+          }
+        </select>
+      }
+    </label>
+
+    <label class="field">
+      <span class="label">Período</span>
+      <select name="periodo" [(ngModel)]="periodo" (ngModelChange)="consultar()"
+              [disabled]="!transmisionId">
+        @for (p of periodos; track p.etiqueta) {
+          <option [ngValue]="p">{{ p.etiqueta }}</option>
+        }
+      </select>
+    </label>
+
+    <button type="submit" class="btn btn-primary" [disabled]="cargando() || !transmisionId">
+      {{ cargando() ? 'Consultando…' : 'Actualizar' }}
+    </button>
+  </form>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+    <app-empty-state modo="cargando" />
+  } @else {
+    @if (termometro(); as t) {
+      <app-termometro-sentimiento [termometro]="t" />
+    } @else if (!error()) {
+      <app-empty-state
+        titulo="Elegí una transmisión"
+        mensaje="El termómetro muestra el ambiente del chat de la transmisión que selecciones." />
+    }
+  }
+</section>

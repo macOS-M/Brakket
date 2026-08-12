@@ -1,0 +1,93 @@
+<div class="fecha-input" [class.abierto]="abierto()" [class.incrustado]="incrustado()">
+  @if (!incrustado()) {
+  <button
+    type="button"
+    class="disparador"
+    [id]="idCampo()"
+    [disabled]="deshabilitado()"
+    [attr.aria-label]="etiqueta()"
+    [attr.aria-expanded]="abierto()"
+    aria-haspopup="dialog"
+    (click)="alternar()"
+  >
+    <span class="texto" [class.vacio]="!textoValor()">
+      {{ textoValor() || marcador() }}
+    </span>
+    <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  </button>
+  }
+
+  @if (panelVisible()) {
+  <div class="panel" role="group" [attr.aria-label]="etiqueta()">
+    @if (incrustado()) {
+    <p class="resumen" [class.vacio]="!textoValor()" aria-live="polite">
+      {{ textoValor() || marcador() }}
+    </p>
+    }
+    <div class="cabecera">
+      <button type="button" class="nav" (click)="mesAnterior()" aria-label="Mes anterior">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      </button>
+      <span class="mes" aria-live="polite">{{ tituloVista() }}</span>
+      <button type="button" class="nav" (click)="mesSiguiente()" aria-label="Mes siguiente">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+      </button>
+    </div>
+
+    <div class="semana" aria-hidden="true">
+      @for (dia of diasSemana; track dia) {
+      <span>{{ dia }}</span>
+      }
+    </div>
+
+    <div class="dias">
+      @for (celda of celdas(); track celda.iso) {
+      <button
+        type="button"
+        class="dia"
+        [class.otro-mes]="celda.otroMes"
+        [class.hoy]="celda.esHoy"
+        [class.elegido]="celda.iso === fechaSeleccionada()"
+        [disabled]="celda.deshabilitada"
+        [attr.aria-current]="celda.esHoy ? 'date' : null"
+        [attr.aria-pressed]="celda.iso === fechaSeleccionada()"
+        (click)="elegir(celda)"
+      >
+        {{ celda.dia }}
+      </button>
+      }
+    </div>
+
+    @if (conHora()) {
+    <div class="hora">
+      <span class="hora-etiqueta">Hora</span>
+      <!-- La selección se marca en cada <option>, no con [value] en el
+           <select>: Angular crea las opciones en la misma pasada de detección
+           y el valor asignado antes se pierde, dejando siempre la primera. -->
+      <select class="hora-select" aria-label="Hora" (change)="cambiarHora($any($event.target).value)">
+        @for (h of horas; track h) {
+        <option [value]="h" [selected]="h === horaActual()">{{ h }}</option>
+        }
+      </select>
+      <span class="separador">:</span>
+      <select class="hora-select" aria-label="Minutos" (change)="cambiarMinuto($any($event.target).value)">
+        @for (m of minutos; track m) {
+        <option [value]="m" [selected]="m === minutoActual()">{{ m }}</option>
+        }
+      </select>
+    </div>
+    }
+
+    <div class="pie">
+      <button type="button" class="accion" (click)="limpiar()">Limpiar</button>
+      <button type="button" class="accion destacada" (click)="hoy()">Hoy</button>
+      @if (conHora() && !incrustado()) {
+      <button type="button" class="accion destacada" (click)="cerrar()">Listo</button>
+      }
+    </div>
+  </div>
+  }
+</div>

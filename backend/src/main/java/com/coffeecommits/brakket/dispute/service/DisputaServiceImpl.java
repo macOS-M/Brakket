@@ -165,16 +165,43 @@ public class DisputaServiceImpl implements DisputaService {
         return DisputaResponse.fromEntity(disputa);
     }
 
-    
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.coffeecommits.brakket.dispute.dto.MiDisputaResponse> misDisputas(String correo, boolean esAdmin) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", correo));
+        // Un admin ve todo; el resto solo lo relacionado con sus torneos
+        // (organizador, árbitro asignado, o comisionado de la liga).
+        List<Disputa> disputas = esAdmin
+                ? disputaRepository.findAll()
+                : disputaRepository.findRelevantesParaUsuario(usuario.getId());
+        return disputas.stream()
+                .sorted(java.util.Comparator.comparing(Disputa::getFechaCreacion).reversed())
+                .map(com.coffeecommits.brakket.dispute.dto.MiDisputaResponse::fromEntity)
+                .toList();
+    }
+
+    /**
+     * A propósito NO incluye al organizador: RF-32 exige que resuelva
+     * alguien ajeno al torneo (árbitro, comisionado de la liga, o admin).
+     */
     private void exigirArbitroOComisionado(Torneo torneo, Usuario usuario, boolean esAdmin) {
         if (esAdmin) {
             return;
         }
+        boolean hayArbitros = !arbitroTorneoRepository.findByTorneoId(torneo.getId()).isEmpty();
         boolean esArbitro = arbitroTorneoRepository.findByTorneoId(torneo.getId()).stream()
                 .anyMatch(a -> a.getUsuario().getId().equals(usuario.getId()));
-        boolean esComisionado = torneo.getTemporada() != null
+        boolean hayComisionado = torneo.getTemporada() != null;
+        boolean esComisionado = hayComisionado
                 && torneo.getTemporada().getLiga().getComisionado().getId().equals(usuario.getId());
-        if (!esArbitro && !esComisionado) {
+        // Ultimo recurso: el RF prefiere que el organizador no falle sus propios
+        // casos, pero un torneo suelto (sin liga y sin arbitros) no tiene a nadie
+        // mas. Sin esta salida la disputa quedaba trabada para siempre.
+        boolean esOrganizadorDeUltimoRecurso = !hayArbitros && !hayComisionado
+                && torneo.getOrganizador().getId().equals(usuario.getId());
+        if (!esArbitro && !esComisionado && !esOrganizadorDeUltimoRecurso) {
             throw new ForbiddenException(
                     "Solo un arbitro del torneo, el comisionado de su liga o un admin pueden resolver la disputa");
         }

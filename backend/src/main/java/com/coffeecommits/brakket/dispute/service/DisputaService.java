@@ -15,4 +15,7 @@ public interface DisputaService {
 
     /** RF-32: solo árbitro del torneo, comisionado de su liga, o admin. */
     DisputaResponse resolver(Long disputaId, String correo, boolean esAdmin, ResolverDisputaRequest request);
+
+    /** Vista panorámica: todas las disputas relevantes para el usuario, de cualquiera de sus torneos. */
+    List<com.coffeecommits.brakket.dispute.dto.MiDisputaResponse> misDisputas(String correo, boolean esAdmin);
 }

@@ -3,12 +3,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CanalTwitch, MetricasTransmision, TransmisionTwitch } from '../../../../models/twitch.model';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 import { TwitchService } from '../../services/twitch.service';
 
 @Component({
   selector: 'app-twitch-panel',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe],
+  imports: [FormsModule, DatePipe, DecimalPipe, EtiquetaPipe],
   templateUrl: './twitch-panel.component.html',
   styleUrl: './twitch-panel.component.scss'
 })
@@ -23,6 +24,7 @@ export class TwitchPanelComponent implements OnInit {
   transmision: TransmisionTwitch | null = null;
   metricas: MetricasTransmision | null = null;
   cargando = false;
+  confirmandoFinalizar = false;
   mensaje = '';
   error = '';
 
@@ -84,6 +86,42 @@ export class TwitchPanelComponent implements OnInit {
         this.cargarMetricas();
       },
       error: err => { this.error = this.mensajeError(err); this.cargando = false; }
+    });
+  }
+
+  /**
+   * RF-34: cierra el período de captura. Se pide confirmación en dos pasos
+   * porque no hay vuelta atrás: una vez cerrada, el muestreo deja de escribir
+   * y para volver a capturar hay que asociar una transmisión nueva.
+   */
+  pedirConfirmacion(): void {
+    this.limpiar();
+    this.confirmandoFinalizar = true;
+  }
+
+  cancelarFinalizar(): void {
+    this.confirmandoFinalizar = false;
+  }
+
+  finalizar(): void {
+    if (!this.transmision) {
+      return;
+    }
+    this.limpiar();
+    this.cargando = true;
+    this.twitch.finalizar(this.transmision.id).subscribe({
+      next: data => {
+        this.transmision = data;
+        this.confirmandoFinalizar = false;
+        this.mensaje = 'Transmisión finalizada. Las métricas capturadas se conservan.';
+        this.cargando = false;
+        this.cargarMetricas();
+      },
+      error: err => {
+        this.error = this.mensajeError(err);
+        this.confirmandoFinalizar = false;
+        this.cargando = false;
+      }
     });
   }
 

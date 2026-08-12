@@ -1,4 +1,32 @@
-<app-coming-soon
-  titulo="Disputas"
-  descripcion="Impugná resultados con evidencia y seguí la resolución del árbitro paso a paso."
-/>
+<div class="disputas-page">
+  <header class="disputas-header">
+    <h1>Mis disputas</h1>
+    <p class="disputas-subtitulo">
+      Todas las disputas de tus torneos en un solo lugar. Hacé clic en una para ir directo al torneo.
+    </p>
+  </header>
+
+  @if (cargando()) {
+  <p class="disputas-mensaje">Cargando…</p>
+  } @else if (error()) {
+  <p class="mensaje-error" role="alert">{{ error() }}</p>
+  } @else if (disputas().length === 0) {
+  <p class="disputas-mensaje">No tenés ninguna disputa activa ni pasada por ahora.</p>
+  } @else {
+  <div class="disputas-lista">
+    @for (d of disputas(); track d.disputaId) {
+    <button type="button" class="disputa-item" (click)="irAlTorneo(d)">
+      <div class="disputa-item-principal">
+        <span class="disputa-torneo">{{ d.torneoNombre }}</span>
+        <span class="disputa-equipos">{{ d.equipoANombre ?? '—' }} vs {{ d.equipoBNombre ?? '—' }}</span>
+      </div>
+      <p class="disputa-motivo">{{ d.motivo }}</p>
+      <div class="disputa-item-meta">
+        <app-status-badge [estado]="d.estado" />
+        <span>{{ d.levantadaPorNombre }} · {{ formatearFecha(d.fechaCreacion) }}</span>
+      </div>
+    </button>
+    }
+  </div>
+  }
+</div>

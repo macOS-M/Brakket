@@ -7,6 +7,7 @@ import com.coffeecommits.brakket.auth.repository.UsuarioRolRepository;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.game.model.Juego;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
+import com.coffeecommits.brakket.team.dto.CrearEquipoRequest;
 import com.coffeecommits.brakket.team.dto.EditarEquipoRequest;
 import com.coffeecommits.brakket.team.dto.EquipoResponse;
 import com.coffeecommits.brakket.team.model.Equipo;
@@ -91,6 +92,52 @@ class TeamRegistrationServiceImplTest {
     }
 
     @Test
+    void crear_sin_juegos_crea_un_equipo_universal() {
+        Usuario creador = capitan();
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(creador));
+        when(equipoRepository.findByNombre("Universal")).thenReturn(Optional.empty());
+        when(equipoRepository.save(any(Equipo.class))).thenAnswer(inv -> {
+            Equipo guardado = inv.getArgument(0);
+            guardado.setId(10L);
+            return guardado;
+        });
+
+        EquipoResponse respuesta = service.crear(new CrearEquipoRequest(
+                "Universal", null, null, null, null, null,
+                null, List.of(), List.of(), null), CORREO, false);
+
+        assertThat(respuesta.juegoId()).isNull();
+        assertThat(respuesta.juegoIds()).isEmpty();
+        verify(juegoRepository, never()).findById(any());
+    }
+
+    @Test
+    void crear_con_varios_juegos_conserva_el_principal_solicitado() {
+        Usuario creador = capitan();
+        Juego valorant = Juego.builder().id(3L).nombre("Valorant").activo(true).build();
+        Juego rocket = Juego.builder().id(7L).nombre("Rocket League").activo(true).build();
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(creador));
+        when(equipoRepository.findByNombre("Multigame")).thenReturn(Optional.empty());
+        when(juegoRepository.findById(3L)).thenReturn(Optional.of(valorant));
+        when(juegoRepository.findById(7L)).thenReturn(Optional.of(rocket));
+        when(equipoRepository.save(any(Equipo.class))).thenAnswer(inv -> {
+            Equipo guardado = inv.getArgument(0);
+            guardado.setId(10L);
+            return guardado;
+        });
+
+        EquipoResponse respuesta = service.crear(new CrearEquipoRequest(
+                "Multigame", null, null, null, null, null,
+                7L, List.of(3L, 7L), List.of(), null), CORREO, false);
+
+        assertThat(respuesta.juegoId()).isEqualTo(7L);
+        org.mockito.ArgumentCaptor<Equipo> captor = org.mockito.ArgumentCaptor.forClass(Equipo.class);
+        verify(equipoRepository).save(captor.capture());
+        assertThat(captor.getValue().getJuegos()).extracting(Juego::getId)
+                .containsExactlyInAnyOrder(3L, 7L);
+    }
+
+    @Test
     void editar_aplica_cambios_y_borra_campos_enviados_vacios() {
         Equipo equipo = equipo();
         when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipo));
@@ -171,6 +218,26 @@ class TeamRegistrationServiceImplTest {
         assertThatThrownBy(() -> service.editar(10L, request(null, null, null, 7L, null), CORREO, false))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("torneo");
+    }
+
+    @Test
+    void editar_equipo_legacy_sin_juegos_ni_principal_no_lanza_npe() {
+        Equipo legacy = equipo();
+        legacy.setJuego(null);
+        legacy.setJuegos(new java.util.LinkedHashSet<>());
+        actorEsCapitanActivo();
+        Juego fifa = Juego.builder().id(7L).nombre("FIFA").genero("Deportes").activo(true).build();
+        when(equipoRepository.findById(10L)).thenReturn(Optional.of(legacy));
+        when(juegoRepository.findById(7L)).thenReturn(Optional.of(fifa));
+        when(inscripcionRepository.findByEquipoId(10L)).thenReturn(List.of());
+        when(equipoRepository.save(legacy)).thenReturn(legacy);
+        when(redSocialRepository.findByEquipoId(10L)).thenReturn(List.of());
+
+        EquipoResponse respuesta = service.editar(
+                10L, request(null, null, null, 7L, null), CORREO, false);
+
+        assertThat(respuesta.juegoId()).isEqualTo(7L);
+        assertThat(legacy.getJuegos()).extracting(Juego::getId).containsExactly(7L);
     }
 
     @Test

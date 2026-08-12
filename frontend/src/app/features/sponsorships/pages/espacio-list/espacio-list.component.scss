@@ -92,8 +92,9 @@
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
+  // Naranja de marca, como el resto de acciones primarias de la app.
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
 }
 
 .volver {

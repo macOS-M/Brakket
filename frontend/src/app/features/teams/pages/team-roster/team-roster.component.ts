@@ -14,6 +14,7 @@ import { SolicitudUnion } from '../../../../models/solicitud-union.model';
 import { TeamsService } from '../../services/teams.service';
 import { GamesService } from '../../../games/services/games.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 /** Jugador elegido para invitar, con el rol que le propone el capitán. */
 interface SeleccionInvitacion {
@@ -28,7 +29,7 @@ const ORDEN_ROLES: Record<string, number> = { CAPITAN: 0, TITULAR: 1, SUPLENTE: 
 @Component({
   selector: 'app-team-roster',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, RolEquipoPipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, RolEquipoPipe, EtiquetaPipe],
   templateUrl: './team-roster.component.html',
   styleUrl: './team-roster.component.scss'
 })

@@ -47,6 +47,7 @@ services:
       STREAMS_MULTI_SOURCE_ENABLED: ${STREAMS_MULTI_SOURCE_ENABLED:-false}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_API_BASE_URL: ${AI_API_BASE_URL:-}
+      CATALOGO_PROVEEDOR: ${CATALOGO_PROVEEDOR:-igdb}
       RAWG_API_KEY: ${RAWG_API_KEY:-}
       # Rescate puntual: bases locales que avanzaron en una rama pueden
       # necesitar aplicar migraciones intermedias llegadas después por un

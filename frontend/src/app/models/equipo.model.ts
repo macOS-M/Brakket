@@ -7,8 +7,10 @@ export interface Equipo {
   descripcion: string | null;
   sitioWeb: string | null;
   videoUrl: string | null;
-  juegoId: number;
-  juegoNombre: string;
+  juegoId: number | null;
+  juegoNombre: string | null;
+  juegoIds: number[];
+  juegoNombres: string[];
   capitanId: number;
   capitanNombre: string;
   estado: string;
@@ -29,6 +31,8 @@ export interface EquipoBusqueda {
   descripcion: string | null;
   juegoId: number | null;
   juegoNombre: string | null;
+  juegoIds?: number[];
+  juegoNombres?: string[];
   disciplina: string | null;
   estado: string;
 }
@@ -59,7 +63,8 @@ export interface CrearEquipoRequest {
   descripcion: string | null;
   sitioWeb: string | null;
   videoUrl: string | null;
-  juegoId: number;
+  juegoId: number | null;
+  juegoIds: number[];
   redesSociales: string[];
   /**
    * Correo del jugador que será capitán. Obligatorio cuando quien crea es
@@ -80,6 +85,7 @@ export interface EditarEquipoRequest {
   sitioWeb?: string | null;
   videoUrl?: string | null;
   juegoId?: number | null;
+  juegoIds?: number[] | null;
   redesSociales?: string[] | null;
   estadoPrivacidad?: string | null;
   /** Versión leída en el GET; el backend responde 409 si alguien guardó entre medio. */

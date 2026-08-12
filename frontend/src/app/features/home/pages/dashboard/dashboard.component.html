@@ -168,7 +168,7 @@
           <div class="item-cuerpo">
             <p class="item-titulo">Invitación de {{ invitacion.equipoNombre }}</p>
             <p class="item-detalle">
-              Rol propuesto: {{ invitacion.rolPropuesto }} · enviada por
+              Rol propuesto: {{ invitacion.rolPropuesto | rolEquipo }} · enviada por
               {{ invitacion.creadoPorNombre }}
             </p>
           </div>

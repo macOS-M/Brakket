@@ -1,6 +1,6 @@
+// Sin tope propio: el ancho lo marca el shell (--content-max).
 .page {
   padding: 1.5rem 0;
-  max-width: 980px;
 }
 
 .back {
@@ -283,11 +283,13 @@
   }
 }
 
+// Misma rejilla que el listado general de torneos, por el mismo motivo: la
+// línea de metadatos necesita ~460px para no cortarse.
 .torneos-lista {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
   gap: 0.75rem;
-  max-width: 760px;
+  align-items: start;
 }
 
 // ----- Zona de peligro / moderacion -----

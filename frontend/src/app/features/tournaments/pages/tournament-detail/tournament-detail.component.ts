@@ -24,6 +24,7 @@ import {
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
 import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 type TabDetalle = 'resumen' | 'llaves' | 'matches' | 'jugadores' | 'resultados';
 type FiltroMatch = 'todos' | 'pendientes' | 'finalizadas';
@@ -118,9 +119,10 @@ export class TournamentDetailComponent {
     return !!t && t.inscritos >= t.maxEquipos;
   });
 
+  // Contra la hora de Costa Rica, no la del navegador (ver hora-costa-rica.ts).
   readonly comenzo = computed(() => {
     const t = this.torneo();
-    return !!t && new Date(t.fechaInicio) <= new Date();
+    return !!t && new Date(t.fechaInicio) <= ahoraCostaRica();
   });
 
   readonly abierto = computed(() => {
@@ -150,6 +152,15 @@ export class TournamentDetailComponent {
   readonly esModeracion = computed(() => this.puedeEliminar() && !this.esOrganizador());
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
+
+  // RF-32: quién puede cerrar una disputa o una apelación. No se deduce en el
+  // frontend porque la regla es del backend (el organizador queda fuera salvo
+  // que no haya árbitros ni comisionado); mostrar el botón a quien luego recibe
+  // un 403 es peor que no mostrarlo.
+  readonly puedeResolverDisputa = computed(
+    () => this.detalle()?.puedeResolverDisputa ?? this.auth.hasRole('ADMIN'));
+  readonly puedeResolverApelacion = computed(
+    () => this.detalle()?.puedeResolverApelacion ?? this.auth.hasRole('ADMIN'));
 // RF-28: quién puede reportar descansos/avances/abandonos.
   readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
 

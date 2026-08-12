@@ -63,7 +63,7 @@
       Llaves
     </button>
     <button type="button" class="tab" [class.activo]="tab() === 'matches'" [attr.aria-current]="tab() === 'matches' ? 'true' : null" (click)="tab.set('matches')">
-      Matches
+      Partidas
     </button>
     <button type="button" class="tab" [class.activo]="tab() === 'jugadores'" [attr.aria-current]="tab() === 'jugadores' ? 'true' : null" (click)="tab.set('jugadores')">
       Jugadores ({{ jugadores().length }})
@@ -262,7 +262,7 @@
         </div>
         <div class="rail-stat">
           <p class="rail-numero">{{ torneo.maxEquipos }}</p>
-          <p class="rail-etiqueta">Slots</p>
+          <p class="rail-etiqueta">Cupos</p>
         </div>
       </div>
 
@@ -316,6 +316,8 @@
       [misEquipos]="misEquipos()"
       [esGestor]="esGestor()"
       [puedeCasoEspecial]="puedeCasoEspecial()"
+      [puedeCerrarDisputa]="puedeResolverDisputa()"
+      [puedeCerrarApelacion]="puedeResolverApelacion()"
       [enCurso]="enCurso()"
       [ocupado]="enviandoResultado()"
       (enviarMarcador)="onMarcador($event)"
@@ -332,11 +334,11 @@
   <div class="contenido">
     @if (matches().length === 0) {
     <app-empty-state
-      titulo="Todavía no hay matches"
+      titulo="Todavía no hay partidas"
       mensaje="Las partidas aparecen cuando el organizador inicia el torneo y se genera la llave."
     />
     } @else {
-    <div class="filtros-matches" role="group" aria-label="Filtrar matches">
+    <div class="filtros-matches" role="group" aria-label="Filtrar partidas">
       <button type="button" class="filtro" [class.activo]="filtroMatch() === 'todos'" (click)="filtroMatch.set('todos')">
         Todo
       </button>

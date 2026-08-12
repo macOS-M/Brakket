@@ -13,6 +13,7 @@ import { Juego } from '../../models/juego.model';
 import { League } from '../../models/league.model';
 import { Notificacion, TipoNotificacion } from '../../models/notificacion.model';
 import { EquipoResumenPublico } from '../../models/perfil-equipo-publico.model';
+import { EtiquetaPipe } from '../../shared/pipes/etiqueta.pipe';
 
 interface ResultadosBusqueda {
   juegos: Juego[];
@@ -31,7 +32,7 @@ interface ResultadosBusqueda {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, EtiquetaPipe],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss'
 })
