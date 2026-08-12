@@ -83,7 +83,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                     "Ya existe un equipo con el nombre '%s'".formatted(request.nombre()));
         });
 
-        List<Juego> juegos = buscarJuegosActivosOpcionales(request.juegoIds(), request.juegoId());
+        List<Juego> juegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
         Juego juego = juegos.isEmpty() ? null : juegoPrincipal(juegos, request.juegoId());
 
         Equipo equipoNuevo = Equipo.builder()
@@ -231,7 +231,9 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                 throw new BusinessException(
                         "No se pueden cambiar los juegos mientras el equipo participa en un torneo activo.");
             }
-            equipo.setJuego(juegoPrincipal(nuevosJuegos, request.juegoId()));
+            equipo.setJuego(nuevosJuegos.isEmpty()
+                    ? null
+                    : juegoPrincipal(nuevosJuegos, request.juegoId()));
             equipo.getJuegos().clear();
             equipo.getJuegos().addAll(nuevosJuegos);
         }
@@ -267,7 +269,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         LinkedHashSet<Long> ids = new LinkedHashSet<>();
         if (juegoIdCompatibilidad != null) ids.add(juegoIdCompatibilidad);
         if (juegoIds != null) ids.addAll(juegoIds);
-        if (ids.isEmpty()) throw new BusinessException("Debés seleccionar al menos un juego.");
+
 
         List<Juego> encontrados = ids.stream()
                 .map(id -> juegoRepository.findById(id)
@@ -285,18 +287,6 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         return juegos.stream().filter(j -> j.getId().equals(juegoIdPrincipal)).findFirst()
                 .orElseThrow(() -> new BusinessException(
                         "El juego principal debe formar parte de los juegos del equipo."));
-    }
-
-    /**
-     * Los equipos nuevos son universales: no declarar juegos significa que
-     * pueden competir en cualquier torneo. Se conserva el soporte de juegos
-     * explícitos para clientes y equipos anteriores.
-     */
-    private List<Juego> buscarJuegosActivosOpcionales(List<Long> juegoIds, Long juegoIdCompatibilidad) {
-        if (juegoIdCompatibilidad == null && (juegoIds == null || juegoIds.isEmpty())) {
-            return List.of();
-        }
-        return buscarJuegosActivos(juegoIds, juegoIdCompatibilidad);
     }
 
     /** Tolera equipos legacy sin filas en equipo_juego y sin juego principal. */
