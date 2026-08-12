@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page form-page">
   <app-page-header
     [titulo]="editando() ? 'Editar juego' : 'Nuevo juego'"
     subtitulo="Buscá el título en el catálogo y ajustá sus datos antes de guardar"
@@ -52,8 +52,8 @@
     } }
   </div>
 
-  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
-    <div class="campo">
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form form-brakket form-card">
+    <div class="campo campo-ancho">
       <span class="label-portada" id="etiqueta-portada">Portada</span>
       <app-foto-input etiqueta="Portada" forma="banner" formControlName="imagenUrl" aria-labelledby="etiqueta-portada" />
     </div>
@@ -74,7 +74,7 @@
       }
     </div>
 
-    <div class="campo">
+    <div class="campo campo-ancho">
       <label for="descripcion">Descripción</label>
       <textarea id="descripcion" formControlName="descripcion" rows="4"></textarea>
       @if (form.controls.descripcion.invalid && form.controls.descripcion.touched) {

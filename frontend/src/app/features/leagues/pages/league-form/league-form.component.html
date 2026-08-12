@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page form-page">
   <a class="volver" routerLink="/leagues">← Volver a ligas</a>
 
   <app-page-header
@@ -11,7 +11,7 @@
   @if (sinPermiso()) {
   <p class="aviso-error" role="alert">Solo el comisionado puede configurar esta liga.</p>
   } @else {
-  <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form form-brakket form-card" novalidate>
     <div class="field">
       <label class="label" for="nombre">Nombre de la liga</label>
       <input
@@ -73,7 +73,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field campo-ancho">
       <label class="label" for="fotoUrl">Foto de la liga (URL)</label>
       <input
         id="fotoUrl"

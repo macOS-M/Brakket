@@ -54,9 +54,10 @@
     border: 1px solid transparent;
   }
 
+  // Naranja de marca, como el resto de acciones primarias de la app.
   .btn-buscar {
-    background: var(--brand-blue, #2563eb);
-    color: #fff;
+    background: var(--accent, #ff5500);
+    color: var(--accent-ink, #0b1120);
   }
 
   .btn-limpiar {
@@ -79,11 +80,13 @@
   }
 }
 
+// Era una columna de 600px. Cada partido es una tarjeta compacta: se reparten
+// en las columnas que quepan.
 .lista {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 0.75rem;
-  max-width: 600px;
+  align-items: start;
 }
 
 .evento-card {

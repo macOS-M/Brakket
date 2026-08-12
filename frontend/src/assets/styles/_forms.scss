@@ -1,0 +1,233 @@
+// Layout compartido de formularios.
+//
+// Antes cada pantalla de formulario traía su propio ancho (480px, 560px,
+// 620px, 920px) y su propio vocabulario de clases: .field/.campo,
+// .label/.etiqueta, .field-error/.error-campo, .actions/.acciones. El
+// resultado eran siete formularios que no se parecían entre sí y que dejaban
+// media pantalla vacía a la derecha.
+//
+// Acá vive el layout de todos: un ancho único, una rejilla de dos columnas y
+// una normalización de los controles que cubre AMBOS vocabularios, para no
+// tener que renombrar las clases de cada plantilla.
+//
+// Los estilos de componente se inyectan después de esta hoja global, así que
+// una regla de componente con la misma especificidad gana. Por eso los
+// componentes que adoptan `.form-brakket` tienen borrados sus bloques
+// duplicados de input/label/botón: si los dejaran, esto no aplicaría.
+
+// Ancho de la caja de formulario. Más angosto que el shell (1280px) porque un
+// campo de texto de 1200px es incómodo de recorrer con la vista, pero muy por
+// encima de los 480-620px que había antes.
+.form-page {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: 0 0 2rem;
+}
+
+// Superficie que agrupa los campos. Sin esto los controles flotan sueltos
+// sobre el fondo y la pantalla se lee vacía aunque el ancho sea correcto.
+.form-card {
+  padding: 1.75rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-card, 0 8px 24px rgba(0, 0, 0, 0.12));
+}
+
+// ----- Rejilla -----
+
+// Dos columnas parejas. `minmax(0, 1fr)` y no `1fr` a secas: sin el mínimo en
+// cero, un <select> con una opción larga estira su columna y descuadra la
+// rejilla entera.
+.form-brakket {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem 1.5rem;
+  align-items: start;
+}
+
+// `[hidden]` es `display: none` en la hoja del navegador, que pierde por
+// especificidad contra el `display: grid` de arriba. Sin esto, una sección
+// que la plantilla oculta con [hidden] reaparecería en pantalla.
+.form-brakket[hidden] {
+  display: none;
+}
+
+// Campos que no tienen sentido a media fila: textareas, subida de imágenes,
+// listas de enlaces, grupos de checkboxes y la fila de botones.
+.form-brakket > .campo-ancho,
+.form-brakket > .acciones,
+.form-brakket > .actions,
+.form-brakket > .aviso-error,
+.form-brakket > .mensaje-error,
+.form-brakket > .aviso-exito {
+  grid-column: 1 / -1;
+}
+
+// Separador con título para agrupar campos dentro de la misma rejilla.
+.form-brakket > .grupo-titulo {
+  grid-column: 1 / -1;
+  margin: 0.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  color: var(--text, #e2e8f0);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+// Por debajo de ~780px la segunda columna deja de caber sin apretar los
+// controles: una sola columna, como estaba antes.
+@media (max-width: 780px) {
+  .form-brakket {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card {
+    padding: 1.25rem;
+  }
+}
+
+// ----- Campos -----
+
+// Cubre los dos vocabularios. `.campo` es un <div> en unos formularios y un
+// <label> envolvente en otros (transferencias): grid maneja los dos igual.
+.form-brakket .field,
+.form-brakket .campo {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+}
+
+// Etiqueta: una sola voz para los tres nombres que había.
+.form-brakket .label,
+.form-brakket .etiqueta,
+.form-brakket .campo > label,
+.form-brakket .field > label {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+// Controles: mismo alto, mismo radio, mismo foco en toda la app.
+.form-brakket input:not([type='checkbox']):not([type='radio']),
+.form-brakket select,
+.form-brakket textarea {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: var(--surface-2, #1f2937);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.875rem;
+
+  &::placeholder {
+    color: var(--text-subtle, #8496ad);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent, #ff5500);
+  }
+
+  &.invalido,
+  &.ng-invalid.ng-touched {
+    border-color: var(--danger-text, #f87171);
+  }
+}
+
+// Alto único, ignorando el rows="" de cada plantilla: dos textareas que caen
+// lado a lado en la rejilla tienen que medir lo mismo o la fila se ve chueca.
+.form-brakket textarea {
+  min-height: 8.5rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+// ----- Mensajes -----
+
+.form-brakket .field-error,
+.form-brakket .error-campo {
+  color: var(--danger-text, #f87171);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.form-brakket .field-hint,
+.form-brakket .field-pista,
+.form-brakket .nota,
+.form-brakket .apunte {
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+// ----- Acciones -----
+
+// Alineadas a la derecha y separadas del último campo: cierran la tarjeta en
+// lugar de quedar pegadas al contenido.
+.form-brakket .acciones,
+.form-brakket .actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+}
+
+@media (max-width: 560px) {
+  .form-brakket .acciones,
+  .form-brakket .actions {
+    flex-direction: column-reverse;
+
+    > * {
+      width: 100%;
+    }
+  }
+}
+
+// Botones de la fila de acciones. Estaban definidos en cada componente y
+// habían divergido: los de patrocinios usaban --brand-blue y los de ligas y
+// equipos el naranja de marca. Acá mandan todos el mismo idioma.
+.form-brakket .btn-primary,
+.form-brakket .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.form-brakket .btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover, #ff6a1f);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.form-brakket .btn-secondary {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:hover {
+    background: var(--surface-3, #263041);
+  }
+}

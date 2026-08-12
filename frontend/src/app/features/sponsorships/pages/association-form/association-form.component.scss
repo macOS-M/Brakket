@@ -1,6 +1,6 @@
+// Ancho, rejilla, campos, mensajes y botones vienen de `_forms.scss`.
 .page {
   padding: 1.5rem 0;
-  max-width: 480px;
 
   h1 {
     margin: 0 0 1.25rem;
@@ -10,85 +10,8 @@
 .mensaje-error {
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
-  border: 1px solid #f87171;
-  border-radius: 8px;
-  color: #f87171;
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--danger-text, #f87171);
   font-size: 0.9rem;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-
-  label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text, #e2e8f0);
-  }
-
-  input,
-  textarea,
-  select {
-    padding: 0.6rem 0.75rem;
-    background: var(--surface, #111827);
-    border: 1px solid var(--border, #334155);
-    border-radius: 8px;
-    color: var(--text, #e2e8f0);
-    font-family: inherit;
-    font-size: 0.9rem;
-
-    &:focus {
-      outline: none;
-      border-color: var(--brand-cyan, #22d3ee);
-    }
-  }
-
-  textarea {
-    resize: vertical;
-  }
-
-  .error-campo {
-    font-size: 0.78rem;
-    color: #f87171;
-  }
-}
-
-.acciones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 0.55rem 1.2rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.btn-secondary {
-  background: transparent;
-  border-color: var(--border, #334155);
-  color: var(--text, #e2e8f0);
 }

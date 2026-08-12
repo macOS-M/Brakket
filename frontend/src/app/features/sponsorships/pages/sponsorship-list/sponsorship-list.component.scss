@@ -134,9 +134,15 @@
   }
 }
 
+// El naranja de marca, como el resto de acciones primarias de la app. Este era
+// el único botón azul del panel de patrocinios.
 .btn-primary {
-  background: var(--brand-blue, #2563eb);
-  color: #fff;
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
 }
 
 .btn-secondary {
