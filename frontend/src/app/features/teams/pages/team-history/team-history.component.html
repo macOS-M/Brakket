@@ -52,7 +52,7 @@
                 </span>
 
         @if (mov.tipo === 'ALTA') {
-        <span class="detalle">se une como {{ mov.rol }}</span>
+        <span class="detalle">se une como {{ mov.rol | rolEquipo }}</span>
         } @else if (mov.tipo === 'BAJA') {
         <span class="detalle">
                     fue dado de baja{{ mov.causaBaja ? ' — ' + mov.causaBaja : '' }}
@@ -63,7 +63,7 @@
         } @else {
         <span class="detalle">
                     transferido de <strong>{{ mov.equipoOrigenNombre }}</strong> a
-                    <strong>{{ mov.equipoDestinoNombre }}</strong> como {{ mov.rol }}
+                    <strong>{{ mov.equipoDestinoNombre }}</strong> como {{ mov.rol | rolEquipo }}
                     @if (mov.responsableNombre) {
                       <span class="responsable"> · aprobado por {{ mov.responsableNombre }}</span>
                     }

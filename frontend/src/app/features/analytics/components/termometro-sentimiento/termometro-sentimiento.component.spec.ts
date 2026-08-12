@@ -57,7 +57,8 @@ describe('TermometroSentimientoComponent', () => {
 
     expect(component.hayIndicador()).toBeTrue();
     expect(html.querySelector('.puntaje')?.textContent).toContain('40');
-    expect(html.querySelector('.badge')?.textContent).toContain('POSITIVO');
+    // El badge muestra la etiqueta legible, no el código que guarda la base.
+    expect(html.querySelector('.badge')?.textContent).toContain('Positivo');
   });
 
   it('oculta el indicador cuando los datos son insuficientes', () => {

@@ -20,7 +20,7 @@
             [class.status-planned]="temporada.estado === 'PLANIFICADA'"
             [class.status-active]="temporada.estado === 'ACTIVA'"
             [class.status-finished]="temporada.estado === 'FINALIZADA'"
-            [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado }}</span></div>
+            [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado | etiqueta }}</span></div>
             <p>{{ temporada.fechaInicio | date:'dd/MM/yyyy' }} — {{ temporada.fechaFin | date:'dd/MM/yyyy' }}</p>
             <div class="chips"><span>{{ temporada.formatoNombre | formatoTorneo }}</span><span>Cupo: {{ temporada.cupoEquipos }}</span><span>{{ temporada.juegoNombre }}</span></div>
             <details><summary>Ver reglas</summary><p class="rules">{{ temporada.reglas }}</p></details></div>

@@ -6,8 +6,9 @@ import { GamesService } from '../../../games/services/games.service';
 import { Juego } from '../../../../models/juego.model';
 import { CatalogoEstadisticas, EstadisticasHistoricas, OpcionEstadistica, StatisticsService } from '../../services/statistics.service';
 import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
-@Component({ selector: 'app-statistics-view', standalone: true, imports: [CommonModule, ReactiveFormsModule, FechaInputComponent], templateUrl: './statistics-view.component.html', styleUrl: './statistics-view.component.scss' })
+@Component({ selector: 'app-statistics-view', standalone: true, imports: [CommonModule, ReactiveFormsModule, FechaInputComponent, EtiquetaPipe], templateUrl: './statistics-view.component.html', styleUrl: './statistics-view.component.scss' })
 export class StatisticsViewComponent implements OnInit {
   private readonly fb = inject(FormBuilder); private readonly statistics = inject(StatisticsService); private readonly games = inject(GamesService);
   readonly catalogo = signal<CatalogoEstadisticas>({ ligas: [], temporadas: [] }); readonly juegos = signal<Juego[]>([]);

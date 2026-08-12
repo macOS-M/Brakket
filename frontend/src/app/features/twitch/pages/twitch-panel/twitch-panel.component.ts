@@ -3,12 +3,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CanalTwitch, MetricasTransmision, TransmisionTwitch } from '../../../../models/twitch.model';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 import { TwitchService } from '../../services/twitch.service';
 
 @Component({
   selector: 'app-twitch-panel',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe],
+  imports: [FormsModule, DatePipe, DecimalPipe, EtiquetaPipe],
   templateUrl: './twitch-panel.component.html',
   styleUrl: './twitch-panel.component.scss'
 })

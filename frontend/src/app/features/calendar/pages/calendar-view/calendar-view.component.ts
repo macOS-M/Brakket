@@ -9,11 +9,12 @@ import { League } from '../../../../models/league.model';
 import { CalendarService } from '../../services/calendar.service';
 import { GamesService } from '../../../games/services/games.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [FormsModule, FechaInputComponent],
+  imports: [FormsModule, FechaInputComponent, EtiquetaPipe],
   templateUrl: './calendar-view.component.html',
   styleUrl: './calendar-view.component.scss'
 })

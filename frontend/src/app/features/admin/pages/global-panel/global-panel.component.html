@@ -37,7 +37,7 @@
         <ul class="log">
           @for (entrada of p.actividadReciente; track entrada.id) {
             <li class="log-item">
-              <span class="log-accion">{{ entrada.accion }}</span>
+              <span class="log-accion">{{ entrada.accion | etiqueta }}</span>
               <span class="log-entidad">{{ entrada.entidad }} #{{ entrada.entidadId }}</span>
               <span class="log-actor">{{ actor(entrada) }}</span>
               <span class="log-fecha">{{ entrada.fecha | date: 'dd/MM/yyyy HH:mm' }}</span>

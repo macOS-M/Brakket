@@ -11,7 +11,7 @@
   @if (canal; as c) {
     <article class="card status-card">
       <div>
-        <span class="status" [class.active]="c.activo">{{ c.estado }}</span>
+        <span class="status" [class.active]="c.activo">{{ c.estado | etiqueta }}</span>
         <h2>{{ c.nombreMostrado || c.loginCanal || 'Sin configurar' }}</h2>
         @if (c.urlCanal) {
           <a [href]="c.urlCanal" target="_blank" rel="noopener">{{ c.urlCanal }}</a>
@@ -19,7 +19,7 @@
       </div>
       <dl>
         <div><dt>Credenciales</dt><dd>{{ c.credencialesConfiguradas ? 'Configuradas' : 'Pendientes' }}</dd></div>
-        <div><dt>Última validación</dt><dd>{{ c.ultimaValidacion || 'Sin validar' }}</dd></div>
+        <div><dt>Última validación</dt><dd>{{ (c.ultimaValidacion | date: 'dd/MM/yyyy HH:mm') || 'Sin validar' }}</dd></div>
       </dl>
       @if (c.ultimoError) { <p class="notice">{{ c.ultimoError }}</p> }
     </article>
@@ -47,7 +47,7 @@
       Asociar y consultar estado en vivo
     </button>
     @if (transmision) {
-    <p class="result">Estado: {{ transmision.estado }}</p>
+    <p class="result">Estado: {{ transmision.estado | etiqueta }}</p>
 
     @if (transmision.estado !== 'FINALIZADA') {
       @if (confirmandoFinalizar) {
@@ -77,7 +77,7 @@
     <p>Muestras reales capturadas cada minuto mientras la transmisión está en vivo.</p>
     @if (metricas; as m) {
     <dl class="metricas">
-      <div><dt>Estado</dt><dd>{{ m.estado }}</dd></div>
+      <div><dt>Estado</dt><dd>{{ m.estado | etiqueta }}</dd></div>
       <div><dt>Muestras</dt><dd>{{ m.muestras }}</dd></div>
       <div><dt>Pico de espectadores</dt><dd>{{ m.pico ?? '—' }}</dd></div>
       <div><dt>Promedio</dt><dd>{{ m.promedio !== null ? (m.promedio | number : '1.0-1') : '—' }}</dd></div>

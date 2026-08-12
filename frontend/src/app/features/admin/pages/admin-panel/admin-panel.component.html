@@ -39,11 +39,11 @@
       </div>
       @for (rol of catalogo; track rol.id) {
       <div class="fila" role="row">
-        <span class="celda-rol" role="cell">{{ rol.nombreRol }}</span>
+        <span class="celda-rol" role="cell">{{ rol.nombreRol | etiqueta }}</span>
         <span class="celda-nivel" role="cell">{{ rol.nivel }}</span>
         <div class="celda-permisos" role="cell">
           @for (permiso of rol.permisos; track permiso) {
-          <span class="permiso">{{ permiso }}</span>
+          <span class="permiso">{{ permiso | etiqueta }}</span>
           } @empty {
           <span class="sin-roles">Sin permisos</span>
           }
@@ -119,7 +119,7 @@
           <select [(ngModel)]="rolSeleccionadoId" aria-label="Rol a asignar">
             <option [ngValue]="null">— Seleccionar —</option>
             @for (rol of catalogo; track rol.id) {
-            <option [ngValue]="rol.id">{{ rol.nombreRol }}</option>
+            <option [ngValue]="rol.id">{{ rol.nombreRol | etiqueta }}</option>
             }
           </select>
           <button

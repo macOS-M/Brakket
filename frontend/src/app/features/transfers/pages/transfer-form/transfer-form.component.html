@@ -41,7 +41,7 @@
             {{ cargandoMiembros() ? 'Cargando integrantes...' : 'Seleccionar jugador...' }}
           </option>
           @for (miembro of miembrosOrigen(); track miembro.id) {
-          <option [value]="miembro.usuarioId">{{ miembro.nombreUsuario }} ({{ miembro.rol }})</option>
+          <option [value]="miembro.usuarioId">{{ miembro.nombreUsuario }} ({{ miembro.rol | rolEquipo }})</option>
           }
         </select>
         @if (form.controls.equipoOrigenId.value && !cargandoMiembros() && miembrosOrigen().length === 0) {
@@ -68,7 +68,7 @@
         <span class="etiqueta">Rol propuesto</span>
         <select formControlName="rolPropuesto">
           @for (rol of rolesPropuestos; track rol) {
-          <option [value]="rol">{{ rol }}</option>
+          <option [value]="rol">{{ rol | rolEquipo }}</option>
           }
         </select>
       </label>

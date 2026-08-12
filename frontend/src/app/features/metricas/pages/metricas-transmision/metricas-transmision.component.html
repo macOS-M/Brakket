@@ -215,7 +215,7 @@
           <p class="leyenda">
             @if (d.resumen.clasificacionPredominante) {
               <span class="swatch serie-sentimiento"></span>
-              Predominante: {{ d.resumen.clasificacionPredominante }}
+              Predominante: {{ d.resumen.clasificacionPredominante | etiqueta }}
             } @else {
               <span class="pendiente">Pendiente</span>
             }

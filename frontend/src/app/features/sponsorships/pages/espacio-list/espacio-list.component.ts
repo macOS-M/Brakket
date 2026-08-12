@@ -1,14 +1,16 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { EspacioPublicitario } from '../../../../models/espacio-publicitario.model';
 import { EspaciosPublicitariosService } from '../../services/espacios-publicitarios.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 @Component({
   selector: 'app-espacio-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe, EtiquetaPipe],
   templateUrl: './espacio-list.component.html',
   styleUrl: './espacio-list.component.scss'
 })

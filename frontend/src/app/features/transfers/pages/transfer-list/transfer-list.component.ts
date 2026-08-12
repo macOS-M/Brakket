@@ -8,6 +8,7 @@ import { TransfersService } from '../../services/transfers.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 /**
  * Transferencias: bandeja de solicitudes pendientes por responder (RF-13)
@@ -16,7 +17,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 @Component({
   selector: 'app-transfer-list',
   standalone: true,
-  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent, RolEquipoPipe],
   templateUrl: './transfer-list.component.html',
   styleUrl: './transfer-list.component.scss'
 })

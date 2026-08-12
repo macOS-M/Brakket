@@ -18,7 +18,7 @@
   </form>
   @if (error()) { <div class="notice error" role="alert">{{ error() }}</div> }
   @if (resultado(); as data) {
-    <section class="result-heading"><div><span class="eyebrow">{{ data.tipoSujeto }}</span><h2>{{ data.sujetoNombre }}</h2></div><span class="official">● Solo resultados oficiales</span></section>
+    <section class="result-heading"><div><span class="eyebrow">{{ data.tipoSujeto | etiqueta }}</span><h2>{{ data.sujetoNombre }}</h2></div><span class="official">● Solo resultados oficiales</span></section>
     @if (data.resultadosNoDefinitivos > 0) { <div class="notice warning">{{ data.resultadosNoDefinitivos }} resultado(s) reportado(s) o en disputa no se incluyen en el cálculo.</div> }
     @if (data.juegos.length === 0) { <section class="empty"><span>—</span><h3>Sin estadísticas para este filtro</h3><p>No existe participación con resultados confirmados en el período y juego seleccionados.</p></section> }
     @for (juego of data.juegos; track juego.juegoId) {

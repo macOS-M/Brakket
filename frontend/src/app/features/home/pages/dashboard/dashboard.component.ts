@@ -20,6 +20,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 /**
  * Panel principal (referencia: dashboard de jugador): héroe con el juego
@@ -29,7 +30,7 @@ import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe, RolEquipoPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

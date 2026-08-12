@@ -6,11 +6,12 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { Invitacion } from '../../../../models/invitacion.model';
 import { TeamsService } from '../../services/teams.service';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 @Component({
   selector: 'app-my-invitations',
   standalone: true,
-  imports: [DatePipe, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
+  imports: [DatePipe, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent, RolEquipoPipe],
   templateUrl: './my-invitations.component.html',
   styleUrl: './my-invitations.component.scss'
 })

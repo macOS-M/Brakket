@@ -13,6 +13,7 @@ import {
 } from '../../components/grafico-serie/grafico-serie.component';
 import { aEpoch, cadenciaMs, indiceMasCercano } from '../../components/grafico-serie/escalas';
 import { MetricasTransmisionService } from '../../services/metricas-transmision.service';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 import {
   AgrupacionMetricas,
   ClaveSerie,
@@ -30,7 +31,7 @@ interface FilaTooltip {
 @Component({
   selector: 'app-metricas-transmision',
   standalone: true,
-  imports: [FormsModule, PageHeaderComponent, StatCardComponent, EmptyStateComponent, GraficoSerieComponent, FechaInputComponent],
+  imports: [FormsModule, PageHeaderComponent, StatCardComponent, EmptyStateComponent, GraficoSerieComponent, FechaInputComponent, EtiquetaPipe],
   templateUrl: './metricas-transmision.component.html',
   styleUrl: './metricas-transmision.component.scss',
 })
