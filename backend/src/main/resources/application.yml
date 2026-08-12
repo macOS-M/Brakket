@@ -78,9 +78,19 @@ brakket:
     api-key: ${AI_API_KEY:}
     api-base-url: ${AI_API_BASE_URL:https://api.anthropic.com/v1}
     model: ${AI_MODEL:claude-sonnet-5}
+  # Proveedor del catálogo externo de juegos: igdb (default) o rawg. Cada uno
+  # tiene su implementación de ExternalGameSearchService y solo se instancia
+  # la elegida; cambiar de proveedor no toca el resto del código (RNF-23).
+  # RAWG queda como respaldo: si IGDB se cae, poner rawg acá y recrear.
+  catalogo:
+    proveedor: ${CATALOGO_PROVEEDOR:igdb}
   rawg:
     api-key: ${RAWG_API_KEY:}
     base-url: https://api.rawg.io/api
+  igdb:
+    # IGDB se autentica con el App Access Token de Twitch: usa las mismas
+    # TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET, no pide credenciales propias.
+    base-url: https://api.igdb.com/v4
   # Correos que reciben ADMIN al iniciar sesión (bootstrap de plataforma).
   # El seed de V8 solo cubría cuentas ya existentes al migrar: en una base
   # recién creada nadie quedaba admin. Esta lista lo garantiza en el login.
