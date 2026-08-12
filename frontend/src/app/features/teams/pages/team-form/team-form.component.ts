@@ -52,8 +52,11 @@ export class TeamFormComponent implements OnInit {
     descripcion: ['', [Validators.maxLength(500)]],
     sitioWeb: [''],
     videoUrl: [''],
-    juegoId: [null as number | null, [Validators.required]],
-    juegoIds: this.fb.nonNullable.control<number[]>([], [Validators.required]),
+    // Opcional a propósito: un equipo puede crearse sin disciplina y elegirla
+    // después. El selector se conserva para poder asignarla en cualquier
+    // momento; sin él, equipo_juego (V57) se quedaría sin forma de poblarse.
+    juegoId: [null as number | null],
+    juegoIds: this.fb.nonNullable.control<number[]>([]),
     estadoPrivacidad: ['PUBLIC'],
     redesSociales: this.fb.nonNullable.array<string>([]),
     /** Solo lo usa (y lo exige el backend a) un ADMIN al crear. */
@@ -95,7 +98,11 @@ export class TeamFormComponent implements OnInit {
           sitioWeb: equipo.sitioWeb ?? '',
           videoUrl: equipo.videoUrl ?? '',
           juegoId: equipo.juegoId,
-          juegoIds: equipo.juegoIds?.length ? equipo.juegoIds : [equipo.juegoId],
+          // Un equipo puede no tener juego: sin el filtro, un juegoId nulo
+          // entraba a la lista como [null] y marcaba un check fantasma.
+          juegoIds: equipo.juegoIds?.length
+            ? equipo.juegoIds
+            : (equipo.juegoId ? [equipo.juegoId] : []),
           estadoPrivacidad: equipo.estadoPrivacidad
         });
         this.redesSociales.clear();
@@ -170,7 +177,7 @@ export class TeamFormComponent implements OnInit {
       descripcion: valores.descripcion || null,
       sitioWeb: valores.sitioWeb || null,
       videoUrl: valores.videoUrl || null,
-      juegoId: valores.juegoId!,
+      juegoId: valores.juegoId,
       juegoIds: this.juegosSeleccionados(valores.juegoId, valores.juegoIds),
       redesSociales: valores.redesSociales,
       capitanCorreo: this.esAdmin() ? valores.capitanCorreo.trim() : null

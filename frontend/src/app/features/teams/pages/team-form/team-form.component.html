@@ -108,22 +108,14 @@
           }
 
           <div class="field">
-            <label class="label" for="juegoId">Disciplina / juego principal *</label>
-            <select
-              id="juegoId"
-              formControlName="juegoId"
-              [class.invalido]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
-              [attr.aria-invalid]="form.controls.juegoId.invalid && form.controls.juegoId.touched"
-              [attr.aria-describedby]="form.controls.juegoId.invalid && form.controls.juegoId.touched ? 'juego-error' : null"
-            >
-              <option [ngValue]="null">Seleccioná un juego…</option>
+            <label class="label" for="juegoId">Disciplina / juego principal</label>
+            <select id="juegoId" formControlName="juegoId">
+              <option [ngValue]="null">Sin juego por ahora</option>
               @for (juego of juegos(); track juego.id) {
               <option [ngValue]="juego.id">{{ juego.nombre }}</option>
               }
             </select>
-            @if (form.controls.juegoId.invalid && form.controls.juegoId.touched) {
-            <span id="juego-error" class="field-error">Debés seleccionar un juego.</span>
-            }
+            <span class="field-pista">Opcional: podés dejarlo sin definir y elegirlo más adelante.</span>
           </div>
 
           <div class="field campo-ancho">

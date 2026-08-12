@@ -84,7 +84,7 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         });
 
         List<Juego> juegos = buscarJuegosActivos(request.juegoIds(), request.juegoId());
-        Juego juego = juegoPrincipal(juegos, request.juegoId());
+        Juego juego = juegos.isEmpty() ? null : juegoPrincipal(juegos, request.juegoId());
 
         Equipo equipoNuevo = Equipo.builder()
                 .nombre(request.nombre())
@@ -231,7 +231,9 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
                 throw new BusinessException(
                         "No se pueden cambiar los juegos mientras el equipo participa en un torneo activo.");
             }
-            equipo.setJuego(juegoPrincipal(nuevosJuegos, request.juegoId()));
+            equipo.setJuego(nuevosJuegos.isEmpty()
+                    ? null
+                    : juegoPrincipal(nuevosJuegos, request.juegoId()));
             equipo.getJuegos().clear();
             equipo.getJuegos().addAll(nuevosJuegos);
         }
@@ -263,11 +265,14 @@ public class TeamRegistrationServiceImpl implements TeamRegistrationService {
         return EquipoResponse.fromEntity(equipoActualizado, redesActuales);
     }
 
+    /**
+     * Lista vacía es válida: un equipo puede existir sin disciplina y elegirla
+     * después. Antes se exigía al menos un juego acá y eso impedía crearlo.
+     */
     private List<Juego> buscarJuegosActivos(List<Long> juegoIds, Long juegoIdCompatibilidad) {
         LinkedHashSet<Long> ids = new LinkedHashSet<>();
         if (juegoIdCompatibilidad != null) ids.add(juegoIdCompatibilidad);
         if (juegoIds != null) ids.addAll(juegoIds);
-        if (ids.isEmpty()) throw new BusinessException("Debés seleccionar al menos un juego.");
 
         List<Juego> encontrados = ids.stream()
                 .map(id -> juegoRepository.findById(id)
