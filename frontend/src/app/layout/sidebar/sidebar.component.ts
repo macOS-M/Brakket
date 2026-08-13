@@ -137,11 +137,11 @@ export class SidebarComponent {
       ]
     },
     {
-      // Portal del patrocinador (ACT-06): el panel comercial de RF-44 y el
-      // termómetro de sentimiento de RF-40, que son las dos vistas que puede
-      // consultar. El panel vive en la raíz y no bajo /sponsorships para no
-      // compartir prefijo con "Gestión > Patrocinios", que marcaría los dos
-      // enlaces como activos a la vez.
+      // Portal del patrocinador (ACT-06): el panel comercial de RF-44, el
+      // termómetro de sentimiento de RF-40, y ahora RF-50, que son las vistas
+      // que puede consultar. El panel vive en la raíz y no bajo /sponsorships
+      // para no compartir prefijo con "Gestión > Patrocinios", que marcaría
+      // los dos enlaces como activos a la vez.
       titulo: 'Mi marca',
       enlaces: [
         {
@@ -157,6 +157,16 @@ export class SidebarComponent {
           icono: 'pulse',
           exact: false,
           proximamente: false,
+          roles: ['PATROCINADOR']
+        },
+        {
+          // RF-50: exportar reportes de audiencia/patrocinio filtrados a la
+          // propia marca (el backend fuerza el patrocinadorId, no confía en
+          // este menú como control de acceso).
+          ruta: '/reports',
+          etiqueta: 'Reportes',
+          icono: 'chart',
+          exact: false,
           roles: ['PATROCINADOR']
         }
       ]
@@ -180,6 +190,15 @@ export class SidebarComponent {
           // porque /analytics quedó para el sentimiento y el termómetro.
           ruta: '/metricas',
           etiqueta: 'Analítica',
+          icono: 'chart',
+          exact: false,
+          roles: ['ADMIN', 'COMISIONADO']
+        },
+        {
+          // RF-50: mismo reporte que en "Mi marca", pero sin restricción de
+          // patrocinador — admin/comisionado ven todos los torneos.
+          ruta: '/reports',
+          etiqueta: 'Reportes',
           icono: 'chart',
           exact: false,
           roles: ['ADMIN', 'COMISIONADO']

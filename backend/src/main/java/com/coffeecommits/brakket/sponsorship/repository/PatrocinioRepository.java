@@ -44,4 +44,20 @@ public interface PatrocinioRepository extends JpaRepository<Patrocinio, Long> {
                                @Param("nivel") String nivel,
                                @Param("fechaInicio") LocalDate fechaInicio,
                                @Param("fechaFin") LocalDate fechaFin);
+
+    // RF-50: filtro combinado para el reporte de patrocinios. Los parámetros nulos
+    // se ignoran (mismo patrón IS NULL OR que existeSolapamiento). El rango de fechas
+    // es de solapamiento (igual que la validación de creación), no coincidencia exacta.
+    @Query("""
+            SELECT p FROM Patrocinio p
+            WHERE (:torneoId IS NULL OR p.torneo.id = :torneoId)
+              AND (:patrocinadorId IS NULL OR p.patrocinador.id = :patrocinadorId)
+              AND (:desde IS NULL OR p.fechaFin >= :desde)
+              AND (:hasta IS NULL OR p.fechaInicio <= :hasta)
+            ORDER BY p.fechaInicio DESC
+            """)
+    List<Patrocinio> buscarParaReporte(@Param("torneoId") Long torneoId,
+                                       @Param("patrocinadorId") Long patrocinadorId,
+                                       @Param("desde") LocalDate desde,
+                                       @Param("hasta") LocalDate hasta);
 }

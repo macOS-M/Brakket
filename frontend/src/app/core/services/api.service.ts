@@ -33,4 +33,10 @@ export class ApiService {
   delete<T>(path: string): Observable<T> {
     return this.http.delete<T>(`${this.baseUrl}${path}`);
   }
+
+  // RF-50: descarga de archivos binarios (PDF de reportes). Va aparte de
+  // get<T> porque responseType: 'blob' no es compatible con el tipado JSON.
+  getBlob(path: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}${path}`, { responseType: 'blob' });
+  }
 }
