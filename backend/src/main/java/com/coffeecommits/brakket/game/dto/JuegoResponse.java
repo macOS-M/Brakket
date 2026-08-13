@@ -18,7 +18,8 @@ public record JuegoResponse(
         String plataformas,
         String etiquetas,
         String sitioWeb,
-        List<String> capturas
+        List<String> capturas,
+        String trailerId
 ) {
 
     public static JuegoResponse fromEntity(Juego juego) {
@@ -35,7 +36,8 @@ public record JuegoResponse(
                 juego.getPlataformas(),
                 juego.getEtiquetas(),
                 juego.getSitioWeb(),
-                juego.getCapturas() == null ? List.of() : juego.getCapturas()
+                juego.getCapturas() == null ? List.of() : juego.getCapturas(),
+                juego.getTrailerId()
         );
     }
 }

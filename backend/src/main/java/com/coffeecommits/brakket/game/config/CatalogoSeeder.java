@@ -120,6 +120,8 @@ public class CatalogoSeeder implements ApplicationRunner {
                         juego.setEtiquetas(detalle.etiquetas().isEmpty()
                                 ? null : String.join(", ", detalle.etiquetas()));
                         juego.setCapturas(detalle.capturas());
+                        juego.setTrailerId(detalle.trailerId());
+                        juego.setTrailerConsultado(true);
                     }
                 } catch (Exception e) {
                     log.debug("Sin ficha externa para {}: {}", externo.nombre(), e.getMessage());
@@ -149,7 +151,7 @@ public class CatalogoSeeder implements ApplicationRunner {
         try {
             int completados = 0;
             for (Juego juego : juegoRepository.findByActivoTrue()) {
-                if (juego.getRating() != null || completados >= 30) {
+                if ((juego.getRating() != null && juego.isTrailerConsultado()) || completados >= 30) {
                     continue;
                 }
                 String slug = juego.getRawgSlug();
@@ -175,6 +177,8 @@ public class CatalogoSeeder implements ApplicationRunner {
                 juego.setEtiquetas(detalle.etiquetas().isEmpty()
                         ? null : String.join(", ", detalle.etiquetas()));
                 juego.setCapturas(detalle.capturas());
+                juego.setTrailerId(detalle.trailerId());
+                juego.setTrailerConsultado(true);
                 juegoRepository.save(juego);
                 completados++;
             }

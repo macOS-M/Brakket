@@ -203,7 +203,8 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
                                     .map(RawgCaptura::image)
                                     .filter(u -> u != null && !u.isBlank())
                                     .limit(6)
-                                    .toList());
+                                    .toList(),
+                    null);
         } catch (RestClientException e) {
             return null;
         }

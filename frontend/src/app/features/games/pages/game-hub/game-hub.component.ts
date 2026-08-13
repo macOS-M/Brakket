@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { Juego } from '../../../../models/juego.model';
 import { League } from '../../../../models/league.model';
@@ -45,6 +46,7 @@ export class GameHubComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sanitizer = inject(DomSanitizer);
   readonly auth = inject(AuthService);
 
   readonly juego = signal<Juego | null>(null);
@@ -74,6 +76,15 @@ export class GameHubComponent {
     return indice === null || capturas.length === 0
       ? null
       : this.capturaAltaResolucion(capturas[indice]);
+  });
+
+  readonly trailerUrl = computed<SafeResourceUrl | null>(() => {
+    const id = this.juego()?.trailerId;
+    return id
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(
+          `https://www.youtube-nocookie.com/embed/${id}?rel=0`
+        )
+      : null;
   });
 
   /** Zona y disparador del menú "Crear" (patrón menu button de ARIA). */
