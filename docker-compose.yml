@@ -36,7 +36,9 @@ services:
       DB_USER: ${POSTGRES_USER:-brakket}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-brakket}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
-      JWT_SECRET: ${JWT_SECRET:-cambiar-esta-clave-secreta-de-al-menos-32-chars}
+      # Sin valor por defecto: una clave commiteada permite firmar tokens de
+      # cualquier rol. `:?` corta el `up` con este mensaje si falta en el .env.
+      JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET en el .env (ver .env.example)}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
