@@ -4,7 +4,7 @@
   @if (success) { <p class="alert success">{{ success }}</p> }
   @if (loading) { <p class="state">Cargando tu trayectoria…</p> }
   @if (data) {
-    <section><div class="section-title"><div><span>Tienda cosmética</span><h2>Personaliza tu perfil</h2></div><p>Gasta los puntos obtenidos por logros en cosméticos. Los canjes son permanentes y no representan logros competitivos.</p></div>
+    <section><div class="section-title"><div><span>Tienda cosmética</span><h2>Personaliza tu perfil</h2></div></div>
       <div class="catalog">
         @for (item of data.elementos; track item.id) {
           <article class="item" [class.inactive]="!item.activo"><div class="icon">{{ item.tipo === 'TITULO' ? 'T' : item.tipo === 'MARCO' ? '◇' : '★' }}</div><span class="type">{{ label(item.tipo) }}</span><h3>{{ item.nombre }}</h3><p>{{ item.descripcion }}</p><small class="origin">{{ item.requisito }}</small>

@@ -119,7 +119,7 @@ export class SidebarComponent {
           etiqueta: 'Progresión',
           icono: 'star',
           exact: false,
-          proximamente: true,
+          proximamente: false,
           ocultarPara: ['PATROCINADOR']
         },
         {

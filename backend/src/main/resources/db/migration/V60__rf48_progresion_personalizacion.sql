@@ -61,4 +61,6 @@ VALUES
     ('Bronce', 'Marco decorativo para tu perfil público.', 'MARCO', 200, TRUE, NULL),
     ('Rival Implacable', 'Título para quienes nunca bajan la intensidad.', 'TITULO', 250, TRUE, NULL),
     ('Nova', 'Insignia luminosa para destacar tu trayectoria.', 'INSIGNIA', 300, TRUE, NULL),
-    ('Neón', 'Marco vibrante para perfiles competitivos.', 'MARCO', 400, TRUE, NULL);
+    ('Neón', 'Marco vibrante para perfiles competitivos.', 'MARCO', 400, TRUE, NULL),
+    ('Leyenda de la Arena', 'Título reservado para quienes dejan su huella en cada competición.', 'TITULO', 400, TRUE, NULL),
+    ('Eclipse', 'Insignia que representa una presencia imposible de ignorar.', 'INSIGNIA', 450, TRUE, NULL);
