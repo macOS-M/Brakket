@@ -315,180 +315,222 @@
   text-wrap: pretty;
 }
 
-.bloque-titulo {
+.resumen-juego {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.5rem;
+
+  &.sin-trailer {
+    grid-template-columns: 1fr;
+  }
+
+  .descripcion {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    margin-bottom: 0;
+  }
+}
+
+.ligas-resumen { min-width: 0; }
+
+.ligas-resumen-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  h2 { margin: 0; font-size: 1rem; }
+  .ver-todos-btn { margin: 0; }
+}
+
+.mas-responsive { display: none; }
+
+
+.ligas-resumen-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.torneos-resumen-lista {
+  position: relative;
+  height: calc(100% - 2rem);
+  grid-auto-rows: minmax(0, 1fr);
+
+  &[data-cantidad='1'] { grid-template-columns: 1fr; }
+  &[data-cantidad='2'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  &[data-cantidad='3'],
+  &[data-cantidad='4'],
+  &[data-cantidad='5'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  &[data-cantidad='3'] .liga-resumen-item:first-child {
+    grid-row: span 2;
+  }
+}
+
+.ligas-mas {
+  display: grid;
+  place-content: center;
+  padding: 0.75rem;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent-text);
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+
+  strong { font-size: 1.25rem; }
+  span { font-size: 0.72rem; }
+}
+
+.ligas-mas { min-height: 150px; }
+
+.liga-resumen-estado.torneos-mas {
+  inset: auto 0.6rem 0.6rem auto;
+  display: none;
+}
+
+.torneos-resumen-lista[data-cantidad='5'] .torneos-mas { display: block; }
+
+.liga-resumen-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 118px;
+  gap: 1rem;
+  padding: 0.9rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-position: center !important;
+  background-size: cover !important;
+  color: #fff;
+  text-decoration: none;
+  isolation: isolate;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+
+  > img {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover { border-color: var(--accent); transform: translateY(-2px); }
+  &:hover > img { transform: scale(1.05); }
+  &:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+}
+
+.liga-resumen-velo {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3, 7, 18, 0.22) 5%, rgba(3, 7, 18, 0.94) 100%);
+}
+
+.liga-resumen-estado {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-pill);
+  background: rgba(3, 7, 18, 0.68);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.liga-resumen-texto {
+  min-width: 0;
+  align-self: flex-end;
+
+  strong, span { display: block; }
+  strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  span { margin-top: 0.2rem; color: rgba(255, 255, 255, 0.72); font-size: 0.72rem; }
+}
+
+.liga-resumen-flecha {
+  display: grid;
+  flex: 0 0 auto;
+  align-self: flex-end;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  background: rgba(3, 7, 18, 0.55);
+}
+
+.ligas-vacio {
+  display: grid;
+  min-height: 160px;
+  place-content: center;
+  padding: 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+
+  p { margin: 0 0 0.35rem; color: var(--text); font-weight: 700; }
+  span { color: var(--text-muted); font-size: 0.8125rem; }
+}
+
+.ligas-seccion-encabezado {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.9rem;
 
-  h2 {
-    margin: 0;
-    font-size: 1.0625rem;
-    font-weight: 600;
-  }
+  .ver-todos-btn { margin: 0; }
 }
 
-.ver-todos {
-  color: var(--accent-text);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-decoration: none;
+.ligas-seccion-lista {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
-  &:hover {
-    text-decoration: underline;
-  }
+  &[data-cantidad='1'] { grid-template-columns: 1fr; }
+  &[data-cantidad='2'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  &[data-cantidad='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  &[data-cantidad='5'] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+  .liga-resumen-item { min-height: 150px; }
 }
 
-// ----- DescripciÃ³n: destacado, fila de torneos y pÃ³sters de ligas -----
-// Sin cajas con borde: el arte y el espacio hacen la jerarquÃ­a.
+.trailer-juego {
+  align-self: stretch;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-height: 220px;
+  overflow: hidden;
+  aspect-ratio: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #000;
+
+  iframe {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}
 
 .seccion {
   margin: 1.75rem 0 0.9rem;
   font-size: 1.0625rem;
   font-weight: 700;
-}
-
-.destacado {
-  display: grid;
-  grid-template-columns: minmax(220px, 420px) 1fr;
-  gap: 1.25rem;
-  align-items: center;
-  text-decoration: none;
-
-  &:hover .destacado-arte img {
-    transform: scale(1.03);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--accent-text);
-    outline-offset: 3px;
-    border-radius: var(--radius-md);
-  }
-
-  @media (max-width: 700px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.destacado-arte {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
-
-  img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.2s ease;
-  }
-}
-
-.destacado-info {
-  min-width: 0;
-}
-
-.destacado-fecha {
-  margin: 0;
-  color: var(--accent-text);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.destacado-info h3 {
-  margin: 0.25rem 0 0.35rem;
-  color: var(--text);
-  font-size: 1.5rem;
-  font-weight: 800;
-  text-wrap: balance;
-}
-
-.destacado-meta {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-
-.destacado-organizador {
-  margin: 0.35rem 0 0;
-  color: var(--text-subtle);
-  font-size: 0.8125rem;
-
-  strong {
-    color: var(--text-muted);
-  }
-}
-
-.fila-torneos {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1.25rem;
-}
-
-.torneo-mini {
-  text-decoration: none;
-
-  &:hover .mini-arte img {
-    transform: scale(1.04);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--accent-text);
-    outline-offset: 3px;
-    border-radius: var(--radius-md);
-  }
-}
-
-.mini-arte {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: var(--radius-md);
-
-  img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.2s ease;
-  }
-}
-
-.mini-fecha {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--radius-pill);
-  background: rgba(4, 8, 18, 0.75);
-  color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.mini-nombre {
-  margin: 0.5rem 0 0;
-  color: var(--text);
-  font-size: 0.875rem;
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mini-meta {
-  margin: 0.1rem 0 0;
-  color: var(--text-subtle);
-  font-size: 0.75rem;
 }
 
 .ver-todos-btn {
@@ -507,68 +549,9 @@
   }
 }
 
-.ligas-posters {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.liga-poster {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  transition: transform 0.15s ease;
-
-  &:hover {
-    transform: translateY(-3px);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--accent-text);
-    outline-offset: 3px;
-  }
-
-  img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-.poster-velo {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(4, 8, 18, 0.85) 0%, rgba(4, 8, 18, 0.1) 55%);
-}
-
-.poster-texto {
-  position: relative;
-  padding: 0.75rem 0.9rem;
-}
-
-.poster-nombre {
-  margin: 0;
-  color: #fff;
-  font-size: 1.0625rem;
-  font-weight: 800;
-}
-
-.poster-meta {
-  margin: 0.1rem 0 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.75rem;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .destacado-arte img,
-  .mini-arte img,
-  .liga-poster {
+  .liga-resumen-item,
+  .liga-resumen-item > img {
     transition: none;
   }
 }
@@ -642,11 +625,13 @@
 }
 
 .ficha-dato {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
   padding: 10px 16px;
   min-width: 96px;
+  text-align: left;
 
   .ficha-valor { display: block; font-weight: 800; color: var(--text); }
   .ficha-etiqueta {
@@ -659,7 +644,15 @@
   }
 }
 
-.ficha-plataformas { max-width: 420px; .ficha-valor { font-size: 0.85rem; font-weight: 600; } }
+.ficha-plataformas {
+  max-width: 420px;
+
+  .ficha-valor {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+}
 
 .tags-juego {
   display: flex;
@@ -681,8 +674,21 @@
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding: 20px 0 8px;
+  border-top: 1px solid;
+  border-image: linear-gradient(90deg, transparent, var(--border) 8%, var(--border) 92%, transparent) 1;
   margin-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, #334155) transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border, #334155);
+    border-radius: var(--radius-pill, 999px);
+  }
 }
 
 .galeria-item {
@@ -713,6 +719,51 @@
 .visor-anterior { left: 12px; }
 .visor-siguiente { right: 12px; }
 .visor-contador { position: absolute; bottom: 12px; left: 50%; padding: 5px 10px; border-radius: var(--radius-pill); background: rgba(4, 8, 18, 0.82); color: #fff; transform: translateX(-50%); }
+
+// En tablet y móvil todo se apila en una sola columna: lectura natural y sin
+// carruseles horizontales ocultos.
+@media (max-width: 960px) {
+  .resumen-juego {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .trailer-juego {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+
+  .torneos-resumen-lista,
+  .torneos-resumen-lista[data-cantidad] {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(130px, auto);
+
+    &[data-cantidad='3'] .liga-resumen-item:first-child {
+      grid-row: auto;
+    }
+
+    .liga-resumen-item:nth-of-type(n + 3) {
+      display: none;
+    }
+
+    .torneos-mas { display: block; }
+    .mas-escritorio { display: none; }
+  }
+
+  .ligas-seccion-lista,
+  .ligas-seccion-lista[data-cantidad] {
+    grid-template-columns: minmax(0, 1fr);
+
+    .liga-resumen-item:nth-of-type(n + 3),
+    .ligas-mas {
+      display: none;
+    }
+  }
+
+  .mas-responsive { display: inline-block; }
+}
 
 @media (max-width: 600px) {
   .visor-fondo { padding: 8px; }

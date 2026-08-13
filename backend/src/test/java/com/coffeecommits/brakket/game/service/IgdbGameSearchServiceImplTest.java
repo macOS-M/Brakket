@@ -127,6 +127,7 @@ class IgdbGameSearchServiceImplTest {
                                       {"url":"https://twitter.com/VALORANT","type":5}],
                           "platforms":[{"name":"PC (Microsoft Windows)"}],
                           "themes":[{"name":"Action"}],
+                          "videos":[{"video_id":"g8amyzDHOKw"}],
                           "screenshots":[{"image_id":"sc8xyz"}]}]
                         """, MediaType.APPLICATION_JSON));
 
@@ -147,6 +148,7 @@ class IgdbGameSearchServiceImplTest {
         assertThat(detalle.etiquetas()).containsExactly("Acción");
         assertThat(detalle.capturas())
                 .containsExactly("https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc8xyz.jpg");
+        assertThat(detalle.trailerId()).isEqualTo("g8amyzDHOKw");
         servidor.verify();
     }
 

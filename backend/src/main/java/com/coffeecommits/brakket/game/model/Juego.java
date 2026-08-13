@@ -64,6 +64,14 @@ public class Juego {
     @Column(name = "sitio_web", length = 300)
     private String sitioWeb;
 
+    /** Identificador de YouTube del primer trailer publicado en IGDB. */
+    @Column(name = "trailer_id", length = 32)
+    private String trailerId;
+
+    /** Evita consultar IGDB en cada arranque cuando un juego no tiene video. */
+    @Column(name = "trailer_consultado", nullable = false)
+    private boolean trailerConsultado;
+
     @Convert(converter = StringListConverter.class)
     @Column(name = "capturas")
     private List<String> capturas;

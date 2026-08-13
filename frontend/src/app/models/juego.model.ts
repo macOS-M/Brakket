@@ -13,6 +13,7 @@ export interface Juego {
   etiquetas?: string | null;
   sitioWeb?: string | null;
   capturas?: string[];
+  trailerId?: string | null;
 }
 
 export interface JuegoRequest {

@@ -247,7 +247,7 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
         }
         try {
             IgdbJuego juego = consultar("fields summary,first_release_date,rating,aggregated_rating,"
-                    + "websites.url,websites.type,platforms.name,themes.name,screenshots.image_id;"
+                    + "websites.url,websites.type,platforms.name,themes.name,screenshots.image_id,videos.video_id;"
                     + " where slug = \"" + limpio + "\";"
                     + " limit 1;")
                     .stream().findFirst().orElse(null);
@@ -276,7 +276,8 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
                             .map(imagen -> urlImagen(imagen, "t_screenshot_huge"))
                             .filter(u -> u != null && !u.isBlank())
                             .limit(6)
-                            .toList());
+                            .toList(),
+                    primerTrailer(juego.videos()));
         } catch (BusinessException e) {
             return null;
         }
@@ -371,6 +372,17 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
         return IMAGEN_BASE + tamano + "/" + imagen.imageId() + ".jpg";
     }
 
+    private static String primerTrailer(List<IgdbVideo> videos) {
+        if (videos == null) {
+            return null;
+        }
+        return videos.stream()
+                .map(IgdbVideo::videoId)
+                .filter(id -> id != null && id.matches("[A-Za-z0-9_-]{6,32}"))
+                .findFirst()
+                .orElse(null);
+    }
+
     /** IGDB entrega la fecha como epoch en segundos. */
     private static LocalDate aFecha(Long epochSegundos) {
         return epochSegundos == null
@@ -432,6 +444,7 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
                      @JsonProperty("platforms") List<IgdbNombre> plataformas,
                      @JsonProperty("themes") List<IgdbNombre> temas,
                      @JsonProperty("screenshots") List<IgdbImagen> capturas,
+                     @JsonProperty("videos") List<IgdbVideo> videos,
                      @JsonProperty("websites") List<IgdbSitio> sitios) {
     }
 
@@ -441,6 +454,10 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record IgdbNombre(String name) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record IgdbVideo(@JsonProperty("video_id") String videoId) {
     }
 
     /** El tipo llega como entero cuando se pide {@code websites.type} plano. */
