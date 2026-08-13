@@ -49,13 +49,22 @@ public interface MensajeChatRepository extends JpaRepository<MensajeChat, Long> 
      * <p>Se usa {@code websearch_to_tsquery} y no {@code to_tsquery} porque
      * acepta texto libre sin romperse: la consulta es una pregunta escrita por
      * una persona, y {@code to_tsquery} lanza error ante cualquier signo suelto.</p>
+     *
+     * <p><b>El {@code replace} de {@code &} por {@code |} no es cosmético.</b>
+     * {@code websearch_to_tsquery} une los términos con AND, así que
+     * "¿alguien habló de lag?" se convierte en {@code 'algui' & 'habl' & 'lag'}
+     * y exige que un mismo mensaje de chat contenga las tres palabras: no
+     * encontraba nada nunca. Con OR alcanza con que aparezca alguna. Se opera
+     * sobre la salida de {@code websearch_to_tsquery}, que ya viene saneada, y
+     * no sobre el texto crudo del usuario.</p>
      */
     @Query(value = """
             select id, transmision_twitch_id, texto, fecha_hora
             from mensaje_chat
             where transmision_twitch_id = :transmisionId
               and fecha_hora between :desde and :hasta
-              and to_tsvector('spanish', texto) @@ websearch_to_tsquery('spanish', :consulta)
+              and to_tsvector('spanish', texto) @@
+                  replace(websearch_to_tsquery('spanish', :consulta)::text, '&', '|')::tsquery
             order by fecha_hora
             limit :tope
             """, nativeQuery = true)
