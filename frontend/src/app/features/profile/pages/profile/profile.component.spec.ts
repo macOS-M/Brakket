@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import { ProfileComponent } from './profile.component';
 import { ApiService } from '../../../../core/services/api.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ahoraCostaRica, isoDeFechaLocal } from '../../../../shared/utils/hora-costa-rica';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
@@ -35,17 +36,19 @@ describe('ProfileComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  /** Fecha local YYYY-MM-DD (toISOString corre el día en husos negativos). */
-  const fechaLocal = (fecha: Date): string => {
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-    const dia = String(fecha.getDate()).padStart(2, '0');
-    return `${fecha.getFullYear()}-${mes}-${dia}`;
+  /**
+   * Se parte del reloj de Costa Rica, igual que el componente. Con `new Date()`
+   * la prueba usaba la hora de la máquina: pasaba acá y fallaba en CI, que corre
+   * en UTC, porque después de las 18:00 el día ya cambió allá y no acá.
+   */
+  const hace = (anios: number): string => {
+    const fecha = ahoraCostaRica();
+    fecha.setFullYear(fecha.getFullYear() - anios);
+    return isoDeFechaLocal(fecha);
   };
 
   it('calcula la edad a partir de la fecha de nacimiento', () => {
-    const hace20 = new Date();
-    hace20.setFullYear(hace20.getFullYear() - 20);
-    component.profileForm.controls.fechaNacimiento.setValue(fechaLocal(hace20));
+    component.profileForm.controls.fechaNacimiento.setValue(hace(20));
 
     expect(component.edad).toBe(20);
   });
@@ -57,10 +60,7 @@ describe('ProfileComponent', () => {
   });
 
   it('el tope del datepicker deja fuera a los menores de 13', () => {
-    const hace13 = new Date();
-    hace13.setFullYear(hace13.getFullYear() - 13);
-
-    expect(component.maxFechaNacimiento).toBe(fechaLocal(hace13));
+    expect(component.maxFechaNacimiento).toBe(hace(13));
   });
 
   it('cuenta los ajustes personales completos', () => {
