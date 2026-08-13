@@ -94,6 +94,9 @@ export class FechaInputComponent implements ControlValueAccessor {
   readonly abierto = signal(false);
   readonly deshabilitado = signal(false);
 
+  /** Cuál de las dos listas de hora está desplegada, si alguna. */
+  readonly listaAbierta = signal<'hora' | 'minuto' | null>(null);
+
   /** Mes que muestra la cuadrícula: {anio, mes} con mes 0-11. */
   private readonly vista = signal(this.mesDeHoy());
 
@@ -198,15 +201,32 @@ export class FechaInputComponent implements ControlValueAccessor {
     }
     this.abierto.set(abriendo);
     if (!abriendo) {
+      // Sin esto la lista queda marcada como abierta al cerrar el panel y
+      // reaparece desplegada la próxima vez.
+      this.cerrarLista();
       this.alTocar();
     }
   }
 
   cerrar(): void {
+    this.cerrarLista();
     if (this.abierto()) {
       this.abierto.set(false);
       this.alTocar();
     }
+  }
+
+  /** Despliega una de las listas de hora, cerrando la otra si estaba abierta. */
+  alternarLista(cual: 'hora' | 'minuto'): void {
+    const abriendo = this.listaAbierta() !== cual;
+    this.listaAbierta.set(abriendo ? cual : null);
+    if (abriendo) {
+      this.mostrarOpcionActiva();
+    }
+  }
+
+  cerrarLista(): void {
+    this.listaAbierta.set(null);
   }
 
   mesAnterior(): void {
@@ -241,12 +261,14 @@ export class FechaInputComponent implements ControlValueAccessor {
     const fecha = this.fechaSeleccionada() || this.isoDe(ahoraCostaRica());
     const minuto = this.minutoActual() || '00';
     this.emitir(`${fecha}T${hora}:${minuto}`);
+    this.cerrarLista();
   }
 
   cambiarMinuto(minuto: string): void {
     const fecha = this.fechaSeleccionada() || this.isoDe(ahoraCostaRica());
     const hora = this.horaActual() || '12';
     this.emitir(`${fecha}T${hora}:${minuto}`);
+    this.cerrarLista();
   }
 
   hoy(): void {
@@ -259,6 +281,7 @@ export class FechaInputComponent implements ControlValueAccessor {
 
   limpiar(): void {
     this.emitir('');
+    this.cerrarLista();
     this.abierto.set(false);
     this.alTocar();
   }
@@ -266,13 +289,30 @@ export class FechaInputComponent implements ControlValueAccessor {
   /** Cierra al hacer clic fuera; sin esto el panel queda colgado en pantalla. */
   @HostListener('document:pointerdown', ['$event'])
   alClicFuera(evento: PointerEvent): void {
-    if (this.abierto() && !this.elemento.nativeElement.contains(evento.target as Node)) {
-      this.cerrar();
+    const objetivo = evento.target as HTMLElement | null;
+
+    if (!this.elemento.nativeElement.contains(objetivo as Node)) {
+      // Incrustado el panel no se cierra, pero una lista desplegada sí.
+      this.cerrarLista();
+      if (this.abierto()) {
+        this.cerrar();
+      }
+      return;
+    }
+
+    // Dentro del componente: un clic fuera del selector cierra solo su lista.
+    if (this.listaAbierta() && !objetivo?.closest('.selector')) {
+      this.cerrarLista();
     }
   }
 
   @HostListener('keydown.escape')
   alEscape(): void {
+    // Escape cierra de dentro hacia fuera: primero la lista, luego el panel.
+    if (this.listaAbierta()) {
+      this.cerrarLista();
+      return;
+    }
     this.cerrar();
   }
 
@@ -310,6 +350,22 @@ export class FechaInputComponent implements ControlValueAccessor {
     // Comparación de cadenas: en formato ISO el orden lexicográfico coincide
     // con el cronológico.
     return (!!min && iso < min) || (!!max && iso > max);
+  }
+
+  /**
+   * Deja a la vista la opción marcada al desplegar la lista.
+   *
+   * <p>El `<select>` nativo abría ya posicionado en el valor actual; sin esto
+   * una lista de 24 horas se abre siempre en «00» y elegir «18» obliga a
+   * desplazar. El `setTimeout` espera a que Angular pinte las opciones: en el
+   * momento de la señal todavía no existen en el DOM.</p>
+   */
+  private mostrarOpcionActiva(): void {
+    setTimeout(() => {
+      this.elemento.nativeElement
+        .querySelector('.opcion.activa')
+        ?.scrollIntoView({ block: 'nearest' });
+    });
   }
 
   private dosDigitos(n: number): string {

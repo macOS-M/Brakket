@@ -142,9 +142,31 @@ class IgdbGameSearchServiceImplTest {
         // no el primero (que en el caso real es el canal de YouTube).
         assertThat(detalle.sitioWeb()).isEqualTo("https://playvalorant.com");
         assertThat(detalle.plataformas()).containsExactly("PC (Microsoft Windows)");
-        assertThat(detalle.etiquetas()).containsExactly("Action");
+        // Los temas de IGDB llegan en inglés y se traducen al guardarlos: la
+        // ficha del juego los muestra como etiquetas y la app está en español.
+        assertThat(detalle.etiquetas()).containsExactly("Acción");
         assertThat(detalle.capturas())
                 .containsExactly("https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc8xyz.jpg");
+        servidor.verify();
+    }
+
+    @Test
+    void detalle_traduce_los_temas_y_conserva_los_que_no_conoce() {
+        servidor.expect(requestTo(BASE_URL + "/games"))
+                .andRespond(withSuccess("""
+                        [{"summary":"MOBA",
+                          "themes":[{"name":"Fantasy"},
+                                    {"name":"Warfare"},
+                                    {"name":"Tema Nuevo De IGDB"}]}]
+                        """, MediaType.APPLICATION_JSON));
+
+        var detalle = servicio.detalle("dota-2");
+
+        // Un tema que IGDB agregue después sale en inglés, pero sale: perderlo
+        // dejaría la ficha con menos etiquetas de las que el juego tiene.
+        assertThat(detalle).isNotNull();
+        assertThat(detalle.etiquetas())
+                .containsExactly("Fantasía", "Bélico", "Tema Nuevo De IGDB");
         servidor.verify();
     }
 

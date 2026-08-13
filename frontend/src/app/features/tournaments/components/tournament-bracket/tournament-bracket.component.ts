@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Partida } from '../../../../models/tournament.model';
+import { fechaHoraNumerica } from '../../../../shared/utils/formato-fecha';
 import {
   ApelacionResponse,
   ApelarRequest,
@@ -1016,9 +1017,7 @@ export class TournamentBracketComponent {
   }
 
   formatearFecha(iso: string): string {
-    return new Date(iso).toLocaleString('es-CR', {
-      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+    return fechaHoraNumerica(iso);
   }
 
   abrirMarcador(p: Partida): void {

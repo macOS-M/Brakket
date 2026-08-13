@@ -12,6 +12,7 @@ import {
   SerieGrafico,
 } from '../../components/grafico-serie/grafico-serie.component';
 import { aEpoch, cadenciaMs, indiceMasCercano } from '../../components/grafico-serie/escalas';
+import { soloHora } from '../../../../shared/utils/formato-fecha';
 import { MetricasTransmisionService } from '../../services/metricas-transmision.service';
 import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 import {
@@ -105,10 +106,7 @@ export class MetricasTransmisionComponent implements OnInit {
     if (indice === null || indice < 0 || indice >= instantes.length) {
       return null;
     }
-    return new Date(instantes[indice]).toLocaleTimeString('es-CR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return soloHora(instantes[indice]);
   });
 
   /**

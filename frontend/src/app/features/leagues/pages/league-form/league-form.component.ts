@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { GameOption, League, LeagueRequest } from '../../../../models/league.model';
 import { LeaguesService } from '../../services/leagues.service';
+import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 /**
@@ -14,7 +15,7 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 @Component({
   selector: 'app-league-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent],
+  imports: [ReactiveFormsModule, RouterLink, FotoInputComponent, PageHeaderComponent],
   templateUrl: './league-form.component.html',
   styleUrl: './league-form.component.scss'
 })
@@ -82,11 +83,14 @@ export class LeagueFormComponent {
     return this.leagueId() !== null;
   }
 
-  /** Vista previa: la foto elegida o, sin foto, el arte del juego (edición). */
-  get fotoPreview(): string | null {
-    const propia = this.form.value.fotoUrl?.trim();
-    if (propia) {
-      return propia;
+  /**
+   * Arte del juego, que es la portada de reserva mientras la liga no tenga
+   * foto propia. Con foto propia devuelve null: la vista previa de esa la
+   * pinta `app-foto-input`.
+   */
+  get artePorDefecto(): string | null {
+    if (this.form.value.fotoUrl?.trim()) {
+      return null;
     }
     return this.ligaCargada()?.juegoImagenUrl ?? null;
   }
