@@ -16,11 +16,11 @@ import java.util.List;
  * <p>El origen permitido se configura con {@code brakket.frontend-url}
  * (variable FRONTEND_URL) y admite <b>una lista separada por comas</b> y
  * <b>comodines</b>, porque para la demo el frontend se sirve por un túnel de
- * ngrok con dominio cambiante. Ejemplos válidos:</p>
+ * dominio cambiante (ngrok o el Port Forwarding de VS Code). Ejemplos:</p>
  * <pre>
  *   FRONTEND_URL=http://localhost:4200
- *   FRONTEND_URL=http://localhost:4200,https://mi-front.ngrok-free.app
- *   FRONTEND_URL=http://localhost:4200,https://*.ngrok-free.app
+ *   FRONTEND_URL=http://localhost:4200,https://*.ngrok-free.dev
+ *   FRONTEND_URL=http://localhost:4200,https://*.devtunnels.ms
  * </pre>
  *
  * <p>Se usa {@code setAllowedOriginPatterns} (no {@code setAllowedOrigins})
