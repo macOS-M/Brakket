@@ -36,16 +36,19 @@ public class LocalAuthServiceImpl implements LocalAuthService {
     private final RolRepository rolRepository;
     private final UsuarioRolRepository usuarioRolRepository;
     private final JwtService jwtService;
+    private final IntentosLoginService intentosLoginService;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public LocalAuthServiceImpl(UsuarioRepository usuarioRepository,
                                 RolRepository rolRepository,
                                 UsuarioRolRepository usuarioRolRepository,
-                                JwtService jwtService) {
+                                JwtService jwtService,
+                                IntentosLoginService intentosLoginService) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.usuarioRolRepository = usuarioRolRepository;
         this.jwtService = jwtService;
+        this.intentosLoginService = intentosLoginService;
     }
 
     @Override
@@ -76,19 +79,24 @@ public class LocalAuthServiceImpl implements LocalAuthService {
     @Transactional(readOnly = true)
     public String login(LoginLocalRequest request) {
         String correo = request.correo().trim().toLowerCase(Locale.ROOT);
+        // El freno va antes que todo: bloqueado no se consulta la BD ni se
+        // compara BCrypt, así el martilleo no cuesta nada al servidor.
+        intentosLoginService.verificarBloqueo(correo);
+
         Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(LocalAuthServiceImpl::credencialesInvalidas);
+                .orElseThrow(() -> falloDeLogin(correo));
 
         if (usuario.getPasswordHash() == null) {
             throw new BusinessException("Esa cuenta inicia sesión con Google");
         }
         if (!passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
-            throw credencialesInvalidas();
+            throw falloDeLogin(correo);
         }
         if (Boolean.TRUE.equals(usuario.getBloqueado())) {
             throw new ForbiddenException("La cuenta está bloqueada");
         }
 
+        intentosLoginService.registrarExito(correo);
         return emitirToken(usuario);
     }
 
@@ -97,8 +105,13 @@ public class LocalAuthServiceImpl implements LocalAuthService {
         return jwtService.generateToken(usuario.getCorreo(), Map.of("name", nombre));
     }
 
-    /** Mensaje único: no revela si falló el correo o la contraseña. */
-    private static BusinessException credencialesInvalidas() {
+    /**
+     * Mensaje único: no revela si falló el correo o la contraseña. El fallo
+     * se cuenta también para correos inexistentes — si solo contaran los
+     * reales, el freno mismo delataría qué correos tienen cuenta.
+     */
+    private BusinessException falloDeLogin(String correo) {
+        intentosLoginService.registrarFallo(correo);
         return new BusinessException("Correo o contraseña incorrectos");
     }
 }

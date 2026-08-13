@@ -51,7 +51,10 @@ brakket:
     # Directorio de imágenes subidas; en Docker es un volumen persistente.
     dir: ${UPLOADS_DIR:uploads}
   jwt:
-    secret: ${JWT_SECRET:cambiar-esta-clave-secreta-de-al-menos-32-chars}
+    # Sin valor por defecto a propósito: un secret commiteado en el repo
+    # permite fabricar tokens de cualquier rol. JwtProperties aborta el
+    # arranque si falta o es muy corto.
+    secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   twitch:
     client-id: ${TWITCH_CLIENT_ID:}
