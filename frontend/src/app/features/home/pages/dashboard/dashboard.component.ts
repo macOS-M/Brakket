@@ -104,14 +104,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Estable a propósito (sin carrusel). Si un top ya está en el catálogo,
   // el póster navega a su página; si no, al catálogo para importarlo.
   readonly topJuegos = computed(() => {
+    // Se compara por nombre normalizado y no literal: el catálogo guarda el
+    // título comercial ("Rocket League®") y el top externo devuelve el corto,
+    // así que en minúsculas seguían sin calzar y el póster no enlazaba a su
+    // ficha. Emparejar por slug sería más exacto, pero el catálogo local no lo
+    // expone: solo lo trae JuegoExterno.
     const porNombre = new Map(
-      this.juegos().map((j) => [j.nombre.toLowerCase(), j.id])
+      this.juegos().map((j) => [this.claveNombre(j.nombre), j.id])
     );
     const lista = this.topRawg().length > 0
       ? this.topRawg().map((t) => ({
           nombre: t.nombre,
           imagenUrl: this.imagenAltaResolucion(t.imagenUrl),
-          idCatalogo: porNombre.get(t.nombre.toLowerCase()) ?? null
+          idCatalogo: porNombre.get(this.claveNombre(t.nombre)) ?? null
         }))
       : [...this.juegos()]
           .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
@@ -122,6 +127,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }));
     return lista.slice(0, this.mostrandoMas() ? 18 : 6);
   });
+
+  /**
+   * Clave de comparación de títulos: minúsculas y sin símbolos de marca ni
+   * puntuación. "Rocket League®" y "Rocket League" tienen que dar lo mismo.
+   */
+  private claveNombre(nombre: string): string {
+    return nombre.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  }
 
   ngOnDestroy(): void {
     if (this.heroTimer) {
