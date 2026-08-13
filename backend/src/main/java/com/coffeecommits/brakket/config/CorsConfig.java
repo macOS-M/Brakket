@@ -7,12 +7,26 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * CORS para permitir que el frontend Angular (por defecto http://localhost:4200)
- * consuma la API. El origen permitido se configura con la propiedad
- * {@code brakket.frontend-url} (variable de entorno FRONTEND_URL).
+ * CORS para permitir que el frontend Angular consuma la API.
+ *
+ * <p>El origen permitido se configura con {@code brakket.frontend-url}
+ * (variable FRONTEND_URL) y admite <b>una lista separada por comas</b> y
+ * <b>comodines</b>, porque para la demo el frontend se sirve por un túnel de
+ * ngrok con dominio cambiante. Ejemplos válidos:</p>
+ * <pre>
+ *   FRONTEND_URL=http://localhost:4200
+ *   FRONTEND_URL=http://localhost:4200,https://mi-front.ngrok-free.app
+ *   FRONTEND_URL=http://localhost:4200,https://*.ngrok-free.app
+ * </pre>
+ *
+ * <p>Se usa {@code setAllowedOriginPatterns} (no {@code setAllowedOrigins})
+ * porque es el único que combina comodines con {@code allowCredentials(true)}:
+ * el navegador exige que el servidor devuelva el origen concreto, y este método
+ * lo refleja a partir del patrón.</p>
  */
 @Configuration
 public class CorsConfig {
@@ -22,8 +36,13 @@ public class CorsConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> patrones = Arrays.stream(frontendUrl.split(","))
+                .map(String::trim)
+                .filter(origen -> !origen.isEmpty())
+                .toList();
+
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(frontendUrl));
+        config.setAllowedOriginPatterns(patrones);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

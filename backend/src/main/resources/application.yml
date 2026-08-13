@@ -1,3 +1,10 @@
+# Detrás de un túnel (ngrok) o proxy, la request llega a localhost pero el host
+# real viaja en X-Forwarded-*. Con esto Spring reconstruye las URLs absolutas
+# (imágenes subidas, redirect de OAuth) con el dominio público, no con
+# localhost —que en la máquina del profesor apuntaría a su propio equipo—.
+server:
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: brakket-backend
