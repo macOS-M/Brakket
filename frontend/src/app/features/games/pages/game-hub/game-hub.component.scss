@@ -683,6 +683,17 @@
   overflow-x: auto;
   padding-bottom: 8px;
   margin-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, #334155) transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border, #334155);
+    border-radius: var(--radius-pill, 999px);
+  }
 }
 
 .galeria-item {
