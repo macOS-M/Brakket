@@ -169,11 +169,6 @@
         <div class="ligas-resumen-encabezado">
           <h2 id="torneos-resumen-titulo">Torneos de {{ juego.nombre }}</h2>
           <div class="acciones-resumen">
-            @if (torneos().length > 2) {
-            <button type="button" class="ver-todos-btn mas-responsive" (click)="tab.set('torneos')">
-              +{{ torneos().length - 2 }} más
-            </button>
-            }
             @if (auth.isAuthenticated()) {
             <button type="button" class="ver-todos-btn" (click)="abrirWizard()">+ Crear torneo</button>
             }
@@ -206,12 +201,11 @@
             <span class="liga-resumen-flecha" aria-hidden="true">→</span>
           </a>
           }
-          @if (torneos().length > 4) {
-          <button type="button" class="torneos-mas" (click)="tab.set('torneos')"
-            [attr.aria-label]="'Ver ' + (torneos().length - 4) + ' torneos más'">
-            <strong>+{{ torneos().length - 4 }}</strong>
-            <span>torneos más</span>
-            <span aria-hidden="true">→</span>
+          @if (torneos().length > 2) {
+          <button type="button" class="liga-resumen-estado torneos-mas" (click)="tab.set('torneos')"
+            [attr.aria-label]="'Ver los ' + torneos().length + ' torneos de ' + juego.nombre">
+            <span class="mas-escritorio">+{{ torneos().length - 4 }} más</span>
+            <span class="mas-responsive">+{{ torneos().length - 2 }} más</span>
           </button>
           }
         </div>

@@ -347,13 +347,8 @@
   .ver-todos-btn { margin: 0; }
 }
 
-.acciones-resumen {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .mas-responsive { display: none; }
+
 
 .ligas-resumen-lista {
   display: grid;
@@ -362,6 +357,7 @@
 }
 
 .torneos-resumen-lista {
+  position: relative;
   height: calc(100% - 2rem);
   grid-auto-rows: minmax(0, 1fr);
 
@@ -376,7 +372,6 @@
   }
 }
 
-.torneos-mas,
 .ligas-mas {
   display: grid;
   place-content: center;
@@ -393,8 +388,14 @@
   span { font-size: 0.72rem; }
 }
 
-.torneos-mas { min-height: 76px; }
 .ligas-mas { min-height: 150px; }
+
+.liga-resumen-estado.torneos-mas {
+  inset: auto 0.6rem 0.6rem auto;
+  display: none;
+}
+
+.torneos-resumen-lista[data-cantidad='5'] .torneos-mas { display: block; }
 
 .liga-resumen-item {
   position: relative;
@@ -503,8 +504,6 @@
 
   .liga-resumen-item { min-height: 150px; }
 }
-
-.ligas-vacio-ancho { min-height: 130px; }
 
 .trailer-juego {
   align-self: stretch;
@@ -745,10 +744,12 @@
       grid-row: auto;
     }
 
-    .liga-resumen-item:nth-of-type(n + 3),
-    .torneos-mas {
+    .liga-resumen-item:nth-of-type(n + 3) {
       display: none;
     }
+
+    .torneos-mas { display: block; }
+    .mas-escritorio { display: none; }
   }
 
   .ligas-seccion-lista,
