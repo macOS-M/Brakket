@@ -30,3 +30,12 @@ jobs:
 
       - name: Compilar
         run: npm run build
+
+      # El backend corre sus pruebas desde el primer día (clean verify) y el
+      # frontend solo compilaba: cuatro pruebas rotas llegaron a develop con el
+      # CI en verde porque compilar no las ejecuta.
+      - name: Pruebas unitarias
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+        env:
+          # El runner trae Chrome instalado; karma-chrome-launcher lo busca acá.
+          CHROME_BIN: /usr/bin/google-chrome
