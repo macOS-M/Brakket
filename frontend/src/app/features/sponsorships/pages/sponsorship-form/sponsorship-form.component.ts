@@ -3,11 +3,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { SponsorshipsService } from '../../services/sponsorships.service';
+import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
 
 @Component({
   selector: 'app-sponsorship-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FotoInputComponent],
   templateUrl: './sponsorship-form.component.html',
   styleUrl: './sponsorship-form.component.scss'
 })
