@@ -12,6 +12,7 @@ import { TeamsService } from '../../features/teams/services/teams.service';
 import { Juego } from '../../models/juego.model';
 import { League } from '../../models/league.model';
 import { Notificacion, TipoNotificacion } from '../../models/notificacion.model';
+import { diaMes } from '../../shared/utils/formato-fecha';
 import { EquipoResumenPublico } from '../../models/perfil-equipo-publico.model';
 import { EtiquetaPipe } from '../../shared/pipes/etiqueta.pipe';
 
@@ -170,7 +171,7 @@ export class TopbarComponent {
     if (minutos < 1) return 'Ahora';
     if (minutos < 60) return `Hace ${minutos} min`;
     if (minutos < 1440) return `Hace ${Math.floor(minutos / 60)} h`;
-    return new Intl.DateTimeFormat('es-CR', { day: 'numeric', month: 'short' }).format(fecha);
+    return diaMes(fecha);
   }
 
   private cargarNotificaciones(): void {
