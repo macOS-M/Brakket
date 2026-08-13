@@ -71,8 +71,9 @@ export class TournamentDetailComponent {
   readonly detalle = signal<TorneoDetalle | null>(null);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
-
   readonly tab = signal<TabDetalle>('resumen');
+  /** Deep-link desde "Mis disputas": la partida a la que hay que hacerle scroll y abrirle el panel. */
+  readonly partidaResaltada = signal<number | null>(null);
 
   readonly elegibles = signal<EquipoElegible[]>([]);
   readonly equipoElegido = signal<number | null>(null);
@@ -286,6 +287,12 @@ export class TournamentDetailComponent {
     const tabInicial = this.route.snapshot.queryParamMap.get('tab');
     if (tabInicial && ['resumen', 'llaves', 'matches', 'jugadores', 'resultados'].includes(tabInicial)) {
       this.tab.set(tabInicial as TabDetalle);
+    }
+    // Deep-link desde "Mis disputas": /tournaments/7?partida=93 abre esa
+    // tarjeta específica con su panel de disputa ya desplegado.
+    const partidaParam = this.route.snapshot.queryParamMap.get('partida');
+    if (partidaParam && !Number.isNaN(Number(partidaParam))) {
+      this.partidaResaltada.set(Number(partidaParam));
     }
     this.cargar();
 

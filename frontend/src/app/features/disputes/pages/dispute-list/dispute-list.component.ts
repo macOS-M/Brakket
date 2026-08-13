@@ -42,9 +42,11 @@ export class DisputeListComponent {
     });
   }
 
-  /** Lleva directo al bracket del torneo; ahí se busca la partida y su panel de disputa. */
+  /** Lleva directo a la partida específica dentro del bracket, con su panel de disputa ya abierto. */
   irAlTorneo(disputa: MiDisputa): void {
-    this.router.navigate(['/tournaments', disputa.torneoId]);
+    this.router.navigate(['/tournaments', disputa.torneoId], {
+      queryParams: { tab: 'llaves', partida: disputa.partidaId }
+    });
   }
 
   formatearFecha(iso: string): string {
