@@ -132,6 +132,17 @@ export const routes: Routes = [
           import('./features/sponsorships/sponsorships.routes').then((m) => m.routes)
       },
       {
+        // RF-50: exportar reportes de competencias, audiencia, patrocinio y
+        // estadísticas — mismos 3 roles que /analytics, alineado con el
+        // permiso EXPORTAR_REPORTES sembrado en la migración V60.
+        path: 'reports',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'COMISIONADO', 'PATROCINADOR'] },
+        loadComponent: () =>
+          import('./features/reports/pages/reports-view/reports-view.component')
+            .then((m) => m.ReportsViewComponent)
+      },
+      {
         path: 'notifications',
         canActivate: [authGuard],
         loadChildren: () =>
