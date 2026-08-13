@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import {
   AnalizarChatRequest,
+  AsistenteRespuesta,
+  ClasificacionInmediata,
   FiltrosTermometro,
   SentimientoResultado,
   SerieSentimiento,
@@ -47,5 +49,38 @@ export class AnalyticsService {
     return this.api.get<Termometro>(
       `/analytics/transmisiones/${transmisionId}/sentimiento/termometro${query ? '?' + query : ''}`
     );
+  }
+
+  /**
+   * Pregunta al asistente sobre la transmisión (RF-40, solo ADMIN).
+   *
+   * <p>Cada consulta es independiente: el backend no guarda la conversación, así
+   * que el historial que ve el usuario es solo de la vista y el modelo no lee
+   * los turnos anteriores. Por eso conviene que cada pregunta se baste sola.</p>
+   */
+  preguntarAsistente(
+    transmisionId: number,
+    pregunta: string,
+    filtros: FiltrosTermometro = {}
+  ): Observable<AsistenteRespuesta> {
+    const params = new URLSearchParams();
+    if (filtros.desde) params.set('desde', filtros.desde);
+    if (filtros.hasta) params.set('hasta', filtros.hasta);
+    const query = params.toString();
+    return this.api.post<AsistenteRespuesta>(
+      `/analytics/transmisiones/${transmisionId}/asistente${query ? '?' + query : ''}`,
+      { pregunta }
+    );
+  }
+
+  /**
+   * Clasifica el chat acumulado sin esperar al bloque (RF-39, solo ADMIN).
+   *
+   * <p>No lleva id: el muestreo atiende una transmisión a la vez y cierra el
+   * bloque que tenga en curso. La petición espera al proveedor, así que puede
+   * tardar unos segundos.</p>
+   */
+  clasificarSentimientoAhora(): Observable<ClasificacionInmediata> {
+    return this.api.post<ClasificacionInmediata>('/analytics/muestreo/sentimiento', {});
   }
 }

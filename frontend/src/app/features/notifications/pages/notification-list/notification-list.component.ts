@@ -4,6 +4,7 @@ import { finalize } from 'rxjs';
 
 import { Notificacion, TipoNotificacion } from '../../../../models/notificacion.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { fechaHoraMedia } from '../../../../shared/utils/formato-fecha';
 import { NotificationsService } from '../../services/notifications.service';
 
 @Component({
@@ -102,9 +103,7 @@ export class NotificationListComponent {
   }
 
   fecha(fecha: string): string {
-    return new Intl.DateTimeFormat('es-CR', {
-      dateStyle: 'medium', timeStyle: 'short'
-    }).format(new Date(fecha));
+    return fechaHoraMedia(fecha);
   }
 
   private reemplazar(actualizada: Notificacion): void {

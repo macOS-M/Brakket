@@ -81,15 +81,43 @@ describe('FechaInputComponent', () => {
     expect(componente.valor().slice(11)).toBe(horaMostrada);
   });
 
-  it('los selectores de hora marcan la opción correcta', () => {
+  it('los selectores de hora muestran el valor actual', () => {
     fixture.componentRef.setInput('conHora', true);
     componente.writeValue('2026-08-11T18:45');
     componente.alternar();
     fixture.detectChanges();
 
-    const selects = fixture.nativeElement.querySelectorAll('.hora-select');
-    expect((selects[0] as HTMLSelectElement).value).toBe('18');
-    expect((selects[1] as HTMLSelectElement).value).toBe('45');
+    const botones = fixture.nativeElement.querySelectorAll('.selector-boton');
+    expect((botones[0] as HTMLElement).textContent?.trim()).toBe('18');
+    expect((botones[1] as HTMLElement).textContent?.trim()).toBe('45');
+  });
+
+  // El desplegable de un <select> lo dibuja el sistema operativo y no acepta
+  // estilos: es la única forma de que el calendario cambie de aspecto entre
+  // Windows, macOS y Linux. Esta prueba impide que vuelva a colarse uno.
+  it('no usa ningún <select> nativo', () => {
+    fixture.componentRef.setInput('conHora', true);
+    componente.alternar();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('select')).toBeNull();
+  });
+
+  it('elegir una hora de la lista la aplica y cierra la lista', () => {
+    fixture.componentRef.setInput('conHora', true);
+    componente.writeValue('2026-08-11T09:30');
+    componente.alternar();
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelectorAll('.selector-boton')[0] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const opciones = fixture.nativeElement.querySelectorAll('.opcion');
+    expect(opciones.length).withContext('las 24 horas del día').toBe(24);
+    (opciones[18] as HTMLButtonElement).click();
+
+    expect(componente.valor()).toBe('2026-08-11T18:30');
+    expect(componente.listaAbierta()).toBeNull();
   });
 
   it('cambiar la hora reescribe solo la parte horaria', () => {

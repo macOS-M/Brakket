@@ -62,22 +62,75 @@
     </div>
 
     @if (conHora()) {
+    <!-- Listas propias en vez de <select>: el desplegable nativo lo dibuja el
+         sistema operativo (menú de macOS, lista de GTK en Linux) y era la única
+         pieza del calendario que no se veía igual en todas partes. Se abren
+         hacia arriba, sobre la cuadrícula, porque el modal del wizard recorta
+         con overflow y hacia abajo saldrían cortadas. -->
     <div class="hora">
       <span class="hora-etiqueta">Hora</span>
-      <!-- La selección se marca en cada <option>, no con [value] en el
-           <select>: Angular crea las opciones en la misma pasada de detección
-           y el valor asignado antes se pierde, dejando siempre la primera. -->
-      <select class="hora-select" aria-label="Hora" (change)="cambiarHora($any($event.target).value)">
-        @for (h of horas; track h) {
-        <option [value]="h" [selected]="h === horaActual()">{{ h }}</option>
+
+      <div class="selector">
+        <button
+          type="button"
+          class="selector-boton"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="listaAbierta() === 'hora'"
+          aria-label="Hora"
+          (click)="alternarLista('hora')"
+        >
+          <span>{{ horaActual() }}</span>
+          <svg class="flecha" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" /></svg>
+        </button>
+        @if (listaAbierta() === 'hora') {
+        <div class="opciones" role="listbox" aria-label="Hora">
+          @for (h of horas; track h) {
+          <button
+            type="button"
+            role="option"
+            class="opcion"
+            [class.activa]="h === horaActual()"
+            [attr.aria-selected]="h === horaActual()"
+            (click)="cambiarHora(h)"
+          >
+            {{ h }}
+          </button>
+          }
+        </div>
         }
-      </select>
+      </div>
+
       <span class="separador">:</span>
-      <select class="hora-select" aria-label="Minutos" (change)="cambiarMinuto($any($event.target).value)">
-        @for (m of minutos; track m) {
-        <option [value]="m" [selected]="m === minutoActual()">{{ m }}</option>
+
+      <div class="selector">
+        <button
+          type="button"
+          class="selector-boton"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="listaAbierta() === 'minuto'"
+          aria-label="Minutos"
+          (click)="alternarLista('minuto')"
+        >
+          <span>{{ minutoActual() }}</span>
+          <svg class="flecha" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" /></svg>
+        </button>
+        @if (listaAbierta() === 'minuto') {
+        <div class="opciones" role="listbox" aria-label="Minutos">
+          @for (m of minutos; track m) {
+          <button
+            type="button"
+            role="option"
+            class="opcion"
+            [class.activa]="m === minutoActual()"
+            [attr.aria-selected]="m === minutoActual()"
+            (click)="cambiarMinuto(m)"
+          >
+            {{ m }}
+          </button>
+          }
+        </div>
         }
-      </select>
+      </div>
     </div>
     }
 

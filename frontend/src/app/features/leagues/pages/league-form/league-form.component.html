@@ -74,19 +74,19 @@
     </div>
 
     <div class="field campo-ancho">
-      <label class="label" for="fotoUrl">Foto de la liga (URL)</label>
-      <input
-        id="fotoUrl"
-        type="url"
+      <span class="label" id="etiqueta-foto">Foto de la liga</span>
+      <app-foto-input
+        etiqueta="Foto de la liga"
+        forma="banner"
         formControlName="fotoUrl"
-        placeholder="https://…"
+        aria-labelledby="etiqueta-foto"
       />
       <span class="field-hint">Si la dejás vacía, la portada será el arte del juego.</span>
-      @if (form.controls.fotoUrl.touched && form.controls.fotoUrl.invalid) {
-      <span class="field-error">Máximo 500 caracteres.</span>
-      }
-      @if (fotoPreview) {
-      <img class="foto-preview" [src]="fotoPreview" alt="Vista previa de la portada" />
+      <!-- Sin foto propia se muestra el arte del juego, que es lo que va a
+           quedar de portada; con foto propia la vista previa ya la pinta
+           app-foto-input y repetirla acá mostraría dos veces la misma imagen. -->
+      @if (artePorDefecto) {
+      <img class="foto-preview" [src]="artePorDefecto" alt="Portada que se usará: arte del juego" />
       }
     </div>
 

@@ -438,6 +438,45 @@
 .evidencia-form {
   margin-top: 10px;
 }
+
+// Confirmación de que la imagen ya subió: reemplaza al campo de URL, que
+// antes hacía de acuse de recibo mostrando la ruta devuelta.
+.evidencia-estado {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.evidencia-adjunta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.evidencia-miniatura {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.evidencia-quitar {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-3, var(--surface));
+    color: var(--text);
+  }
+}
 .caso-campo {
   display: flex;
   flex-direction: column;

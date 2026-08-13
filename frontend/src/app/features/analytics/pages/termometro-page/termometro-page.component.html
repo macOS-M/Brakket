@@ -56,4 +56,10 @@
         mensaje="El termómetro muestra el ambiente del chat de la transmisión que selecciones." />
     }
   }
+
+  <app-asistente-ia
+    [transmisionId]="transmisionId"
+    [desde]="desdeConsultado()"
+    (analisisHecho)="cargarTransmisiones()"
+  />
 </section>

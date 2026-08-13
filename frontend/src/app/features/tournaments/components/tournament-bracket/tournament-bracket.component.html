@@ -104,15 +104,18 @@
             (change)="elegirArchivoEvidencia($event)"
           />
         </label>
-        <label class="impugnar-campo">
-          <span>O pegar un enlace (URL)</span>
-          <input
-            type="text"
-            maxlength="500"
-            [value]="nuevaEvidenciaUrl()"
-            (input)="nuevaEvidenciaUrl.set($any($event.target).value)"
-          />
-        </label>
+        <!-- El campo de URL era la única señal de que la subida había
+             terminado; sin él, esa confirmación la da la miniatura. -->
+        @if (subiendoArchivo()) {
+        <p class="evidencia-estado">Subiendo imagen…</p>
+        } @else if (nuevaEvidenciaUrl()) {
+        <div class="evidencia-adjunta">
+          <img class="evidencia-miniatura" [src]="nuevaEvidenciaUrl()" alt="Vista previa de la evidencia" />
+          <button type="button" class="evidencia-quitar" (click)="nuevaEvidenciaUrl.set('')">
+            Quitar
+          </button>
+        </div>
+        }
         <label class="impugnar-campo">
           <span>Descripción (opcional)</span>
           <input

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { MiDisputa } from '../../../../models/disputa.model';
+import { fechaHoraNumerica } from '../../../../shared/utils/formato-fecha';
 import { DisputesService } from '../../services/disputes.service';
 
 /**
@@ -47,8 +48,6 @@ export class DisputeListComponent {
   }
 
   formatearFecha(iso: string): string {
-    return new Date(iso).toLocaleString('es-CR', {
-      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+    return fechaHoraNumerica(iso);
   }
 }

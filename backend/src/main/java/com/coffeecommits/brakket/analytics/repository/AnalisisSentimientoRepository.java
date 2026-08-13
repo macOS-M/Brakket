@@ -81,12 +81,12 @@ public interface AnalisisSentimientoRepository extends JpaRepository<AnalisisSen
      */
     @Query("""
             select new com.coffeecommits.brakket.analytics.dto.TransmisionAnalizadaResponse(
-                       t.id, t.estado, t.iniciadaEn, tor.id, count(a))
+                       t.id, t.estado, t.iniciadaEn, tor.id, tor.nombre, count(a))
             from AnalisisSentimiento a
             join a.metricaChat m
             join m.transmisionTwitch t
             left join t.torneo tor
-            group by t.id, t.estado, t.iniciadaEn, tor.id
+            group by t.id, t.estado, t.iniciadaEn, tor.id, tor.nombre
             order by max(a.fechaHora) desc""")
     List<TransmisionAnalizadaResponse> findTransmisionesAnalizadas();
 }

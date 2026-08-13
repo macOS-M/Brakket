@@ -73,11 +73,15 @@ brakket:
     minimo-muestras: ${ANALYTICS_MINIMO_MUESTRAS:3}
     intervalo-por-defecto-minutos: ${ANALYTICS_INTERVALO_MINUTOS:5}
   ai:
-    # RF-39: sin llave el análisis NO se cae, usa el analizador léxico. La demo
-    # y el CI corren así a propósito (no salen a la red).
-    api-key: ${AI_API_KEY:}
-    api-base-url: ${AI_API_BASE_URL:https://api.anthropic.com/v1}
-    model: ${AI_MODEL:claude-sonnet-5}
+    gemini:
+      # Único proveedor de IA: sentimiento del chat (RF-39) y asistente del
+      # termómetro (RF-40). Sin llave nada se cae —el sentimiento usa el
+      # analizador léxico y el asistente responde con los números ya
+      # calculados—, así la demo y el CI corren sin salir a la red. El modelo va
+      # por alias -latest: las versiones fijas se jubilan y devuelven 404.
+      api-key: ${GEMINI_API_KEY:}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
+      model: ${GEMINI_MODEL:gemini-flash-latest}
   # Proveedor del catálogo externo de juegos: igdb (default) o rawg. Cada uno
   # tiene su implementación de ExternalGameSearchService y solo se instancia
   # la elegida; cambiar de proveedor no toca el resto del código (RNF-23).

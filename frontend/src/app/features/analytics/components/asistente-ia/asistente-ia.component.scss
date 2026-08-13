@@ -1,0 +1,252 @@
+.fab {
+  position: fixed;
+  right: 1.5rem;
+  // Por encima del pie de página: con 1.5rem el botón le caía encima al
+  // "Brakket © 2026" al llegar al final del scroll.
+  bottom: 5rem;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+  // Headline de la escala: el glifo va dentro de un círculo de 3.25rem.
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, #ff5500);
+    outline-offset: 3px;
+  }
+}
+
+.panel {
+  position: fixed;
+  right: 1.5rem;
+  // Justo encima del botón, que ahora arranca en 5rem y mide 3.25rem.
+  bottom: 8.75rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: min(24rem, calc(100vw - 3rem));
+  max-height: min(32rem, calc(100vh - 11.5rem));
+  padding: 1rem;
+  gap: 0.75rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0;
+    color: var(--text, #e2e8f0);
+    // Title de la escala: es el encabezado de un bloque.
+    font-size: 1.0625rem;
+  }
+
+  .sub {
+    margin: 0.15rem 0 0;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.75rem;
+  }
+}
+
+.enlace {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text, #e2e8f0);
+  }
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+
+  .pista {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.6875rem;
+  }
+}
+
+.resultado {
+  margin: 0;
+  color: var(--text, #e2e8f0);
+  font-size: 0.75rem;
+}
+
+.conversacion {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.6rem;
+  overflow-y: auto;
+  min-height: 6rem;
+}
+
+.intro {
+  margin: 0;
+  color: var(--text, #e2e8f0);
+  font-size: 0.8125rem;
+}
+
+.nota {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+}
+
+.sugerencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.chip {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border, #334155);
+  border-radius: 999px;
+  background: var(--surface-2, #1f2937);
+  color: var(--text-muted, #94a3b8);
+  font-family: inherit;
+  font-size: 0.6875rem;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover:not([disabled]) {
+    border-color: var(--accent, #ff5500);
+    color: var(--text, #e2e8f0);
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.turno {
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-2, #1f2937);
+
+  &.propio {
+    align-self: flex-end;
+    max-width: 85%;
+    background: var(--accent, #ff5500);
+
+    .texto {
+      color: var(--accent-ink, #0b1120);
+    }
+  }
+
+  .texto {
+    margin: 0;
+    color: var(--text, #e2e8f0);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    /* Las respuestas vienen en parrafos separados por saltos de linea. */
+    white-space: pre-wrap;
+  }
+
+  .aviso {
+    margin: 0.4rem 0 0;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border, #334155);
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.6875rem;
+  }
+}
+
+.pensando {
+  margin: 0;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+}
+
+.error {
+  margin: 0;
+  color: #f87171;
+  font-size: 0.75rem;
+}
+
+.entrada {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+
+  textarea {
+    flex: 1;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--radius-sm, 8px);
+    background: var(--surface-2, #1f2937);
+    color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #ff5500);
+    }
+  }
+}
+
+.btn {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover:not([disabled]) {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+@media (max-width: 30rem) {
+  .panel {
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+  }
+}
