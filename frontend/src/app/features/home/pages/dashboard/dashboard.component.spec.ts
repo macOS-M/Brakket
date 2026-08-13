@@ -144,7 +144,7 @@ describe('DashboardComponent', () => {
     })).toBe('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc123.jpg');
   });
 
-  it('enlaza un juego top con su ficha local usando el slug externo', () => {
+  it('enlaza un juego top con su ficha local aunque el titulo traiga simbolo de marca', () => {
     crear(false);
     httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
     httpMock.expectOne(`${environment.apiUrl}/games`).flush([{

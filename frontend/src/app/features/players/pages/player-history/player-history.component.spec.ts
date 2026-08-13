@@ -10,7 +10,12 @@ describe('PlayerHistoryComponent', () => {
   let fixture: ComponentFixture<PlayerHistoryComponent>;
 
   beforeEach(async () => {
-    const playersServiceMock = { historial: () => of([]) };
+    // El componente pide historial y personalización en paralelo (forkJoin):
+    // si al doble le falta una de las dos, no emite y la vista queda cargando.
+    const playersServiceMock = {
+      historial: () => of([]),
+      personalizacion: () => of(null)
+    };
 
     await TestBed.configureTestingModule({
       imports: [PlayerHistoryComponent],
