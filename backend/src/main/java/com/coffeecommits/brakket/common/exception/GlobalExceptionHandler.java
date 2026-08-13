@@ -6,6 +6,7 @@ import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.ErrorResponse;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -91,6 +92,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleEntradaIlegible(Exception ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("La solicitud tiene un formato inválido."));
+    }
+
+    /** Subida por encima del tope (spring.servlet.multipart): 413 limpio, no 500. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSubidaGrande(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ApiResponse.error("El archivo supera el tamaño máximo permitido."));
     }
 
     /**
