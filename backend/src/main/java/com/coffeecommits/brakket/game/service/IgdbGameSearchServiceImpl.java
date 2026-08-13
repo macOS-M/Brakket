@@ -90,6 +90,39 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
             Map.entry("Visual Novel", "Novela visual")
     );
 
+    /**
+     * Temas de IGDB, que la ficha del juego muestra como etiquetas.
+     *
+     * <p>Es el catálogo completo de temas de IGDB, que es cerrado y corto (a
+     * diferencia de los tags de RAWG, que son miles y abiertos). Se conservan
+     * en inglés los préstamos ya asentados en español, con el mismo criterio
+     * que {@link #GENEROS}, donde quedaron Arcade, Indie, MOBA o Shooter.</p>
+     */
+    private static final Map<String, String> TEMAS = Map.ofEntries(
+            Map.entry("4X (explore, expand, exploit, and exterminate)", "4X"),
+            Map.entry("Action", "Acción"),
+            Map.entry("Business", "Negocios"),
+            Map.entry("Comedy", "Comedia"),
+            Map.entry("Drama", "Drama"),
+            Map.entry("Educational", "Educativo"),
+            Map.entry("Erotic", "Erótico"),
+            Map.entry("Fantasy", "Fantasía"),
+            Map.entry("Historical", "Histórico"),
+            Map.entry("Horror", "Terror"),
+            Map.entry("Kids", "Infantil"),
+            Map.entry("Mystery", "Misterio"),
+            Map.entry("Non-fiction", "No ficción"),
+            Map.entry("Open world", "Mundo abierto"),
+            Map.entry("Party", "Fiesta"),
+            Map.entry("Romance", "Romance"),
+            Map.entry("Sandbox", "Sandbox"),
+            Map.entry("Science fiction", "Ciencia ficción"),
+            Map.entry("Stealth", "Sigilo"),
+            Map.entry("Survival", "Supervivencia"),
+            Map.entry("Thriller", "Suspenso"),
+            Map.entry("Warfare", "Bélico")
+    );
+
     private final RestClient restClient;
     private final TwitchTokenProvider tokenProvider;
 
@@ -235,6 +268,7 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
                     juego.temas() == null ? List.of() : juego.temas().stream()
                             .map(IgdbNombre::name)
                             .filter(n -> n != null && !n.isBlank())
+                            .map(IgdbGameSearchServiceImpl::traducirTema)
                             .limit(8)
                             .toList(),
                     juego.capturas() == null ? List.of() : juego.capturas().stream()
@@ -371,6 +405,17 @@ public class IgdbGameSearchServiceImpl implements ExternalGameSearchService {
         }
         String nombre = juego.generos().get(0).name();
         return GENEROS.getOrDefault(nombre, nombre == null ? "" : nombre);
+    }
+
+    /**
+     * Traduce un tema de IGDB, que en la ficha se muestra como etiqueta.
+     *
+     * <p>Igual que con los géneros, un tema desconocido se deja tal cual en vez
+     * de descartarlo: si IGDB agrega uno nuevo, la etiqueta sale en inglés pero
+     * no desaparece de la ficha.</p>
+     */
+    private static String traducirTema(String nombre) {
+        return TEMAS.getOrDefault(nombre, nombre);
     }
 
     // ---------- Forma mínima de la respuesta de IGDB ----------

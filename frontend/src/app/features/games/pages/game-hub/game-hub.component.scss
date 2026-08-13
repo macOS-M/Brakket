@@ -306,7 +306,8 @@
 // ----- Contenido -----
 
 .descripcion {
-  max-width: 70ch;
+  // Sin tope de ancho: la ficha ya está dentro de un contenedor acotado y
+  // recortarla en 70ch dejaba media columna vacía a la derecha en escritorio.
   margin: 0 0 1.5rem;
   color: var(--text-muted);
   font-size: 0.875rem;
