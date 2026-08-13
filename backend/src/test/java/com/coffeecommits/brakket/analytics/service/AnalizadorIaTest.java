@@ -1,7 +1,7 @@
 package com.coffeecommits.brakket.analytics.service;
 
 import com.coffeecommits.brakket.analytics.model.ClasificacionSentimiento;
-import com.coffeecommits.brakket.config.AiProperties;
+import com.coffeecommits.brakket.config.GeminiProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -39,9 +39,10 @@ class AnalizadorIaTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private HttpServer servidor;
-    private AiProperties properties;
+    private GeminiProperties properties;
 
     private int llamadas;
+    private String rutaRecibida;
     private String cuerpoRecibido;
     private final Map<String, String> cabecerasRecibidas = new HashMap<>();
 
@@ -51,8 +52,9 @@ class AnalizadorIaTest {
     @BeforeEach
     void levantarProveedorFalso() throws Exception {
         servidor = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-        servidor.createContext("/messages", intercambio -> {
+        servidor.createContext("/models", intercambio -> {
             llamadas++;
+            rutaRecibida = intercambio.getRequestURI().getPath();
             cuerpoRecibido = new String(intercambio.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             intercambio.getRequestHeaders()
                     .forEach((clave, valores) -> cabecerasRecibidas.put(clave.toLowerCase(Locale.ROOT), valores.get(0)));
@@ -66,9 +68,10 @@ class AnalizadorIaTest {
         });
         servidor.start();
 
-        properties = new AiProperties();
+        properties = new GeminiProperties();
         properties.setApiKey("llave-de-prueba");
-        properties.setApiBaseUrl("http://localhost:" + servidor.getAddress().getPort());
+        properties.setModel("gemini-de-prueba");
+        properties.setBaseUrl("http://localhost:" + servidor.getAddress().getPort());
     }
 
     @AfterEach
@@ -77,19 +80,20 @@ class AnalizadorIaTest {
     }
 
     private AnalizadorIa analizador() {
-        return new AnalizadorIa(properties, RestClient.builder(), MAPPER, new AnalizadorLexico());
+        return new AnalizadorIa(new ClienteGemini(properties, RestClient.builder()),
+                properties, MAPPER, new AnalizadorLexico());
     }
 
-    /** Envuelve un texto en la forma que devuelve la API de mensajes. */
+    /** Envuelve un texto en la forma que devuelve la API de Gemini. */
     private void elModeloResponde(String texto) throws Exception {
-        cuerpoRespuesta = "{\"content\":[{\"type\":\"text\",\"text\":"
-                + MAPPER.writeValueAsString(texto) + "}]}";
+        cuerpoRespuesta = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":"
+                + MAPPER.writeValueAsString(texto) + "}]}}]}";
     }
 
     /** Contenido que viajó al modelo, una línea por mensaje. */
     private List<String> lineasEnviadas() throws Exception {
         String contenido = MAPPER.readTree(cuerpoRecibido)
-                .path("messages").get(0).path("content").asText();
+                .path("contents").get(0).path("parts").get(0).path("text").asText();
         return List.of(contenido.split("\n"));
     }
 
@@ -126,13 +130,27 @@ class AnalizadorIaTest {
     }
 
     @Test
-    void manda_la_llave_y_la_version_de_la_api_en_cabeceras() throws Exception {
+    void manda_la_llave_en_la_cabecera_y_el_modelo_en_la_ruta() throws Exception {
         elModeloResponde("{\"puntaje\": 0}");
 
         analizador().analizar(MENSAJES);
 
-        assertThat(cabecerasRecibidas).containsEntry("x-api-key", "llave-de-prueba");
-        assertThat(cabecerasRecibidas).containsEntry("anthropic-version", properties.getApiVersion());
+        assertThat(cabecerasRecibidas).containsEntry("x-goog-api-key", "llave-de-prueba");
+        assertThat(rutaRecibida).isEqualTo("/models/gemini-de-prueba:generateContent");
+    }
+
+    @Test
+    void pide_un_presupuesto_corto_de_respuesta() throws Exception {
+        elModeloResponde("{\"puntaje\": 0}");
+
+        analizador().analizar(MENSAJES);
+
+        // Es la llamada mas frecuente del sistema (una por ventana y por
+        // transmision abierta) y la respuesta es un JSON de una linea. El tope
+        // igual tiene que cubrir el razonamiento, que se descuenta del mismo
+        // presupuesto: con 128 la respuesta llegaba truncada.
+        assertThat(MAPPER.readTree(cuerpoRecibido).path("generationConfig").path("maxOutputTokens").asInt())
+                .isEqualTo(256);
     }
 
     @Test
@@ -144,6 +162,18 @@ class AnalizadorIaTest {
 
         assertThat(llamadas).isEqualTo(1);
         // La ventana igual queda clasificada: RF-38 no puede quedarse sin serie.
+        assertThat(resultado.puntaje()).isEqualByComparingTo(PUNTAJE_LEXICO);
+    }
+
+    @Test
+    void agotar_la_cuota_cae_al_lexico_sin_tumbar_la_ventana() {
+        estadoRespuesta = 429;
+        cuerpoRespuesta = "{\"error\":{\"message\":\"quota exceeded\"}}";
+
+        AnalizadorSentimiento.Resultado resultado = analizador().analizar(MENSAJES);
+
+        // El limite del tier gratuito es esperable en transmisiones largas; la
+        // serie sigue completa, solo que esa ventana la puntua el lexico.
         assertThat(resultado.puntaje()).isEqualByComparingTo(PUNTAJE_LEXICO);
     }
 
@@ -216,7 +246,8 @@ class AnalizadorIaTest {
             // Lambda y no RestClient::builder: la referencia a metodo es
             // ambigua contra la sobrecarga que recibe un RestTemplate.
             contexto.registerBean(RestClient.Builder.class, () -> RestClient.builder());
-            contexto.register(AiProperties.class, AnalizadorLexico.class, AnalizadorIa.class);
+            contexto.register(GeminiProperties.class, ClienteGemini.class,
+                    AnalizadorLexico.class, AnalizadorIa.class);
             contexto.refresh();
 
             assertThat(contexto.getBean(AnalizadorSentimiento.class)).isInstanceOf(AnalizadorIa.class);

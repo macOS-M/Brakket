@@ -15,6 +15,7 @@ describe('TermometroPageComponent', () => {
     estado: 'EN_VIVO',
     iniciadaEn: '2026-08-10T18:00:00',
     torneoId: 3,
+    torneoNombre: 'Copa Doble Órbita',
     totalMuestras: muestras
   });
 
@@ -140,6 +141,20 @@ describe('TermometroPageComponent', () => {
 
   it('arma una etiqueta legible para el desplegable', () => {
     responderListado([]);
-    expect(component.etiqueta(transmision(7, 20))).toBe('#7 · EN_VIVO · torneo 3 · 20 muestras');
+    // El nombre y no el id: "torneo 3" no se puede resolver desde ninguna pantalla.
+    expect(component.etiqueta(transmision(7, 20)))
+      .toBe('#7 · EN_VIVO · Copa Doble Órbita · 20 muestras');
+  });
+
+  it('cae al id del torneo cuando no viene el nombre', () => {
+    responderListado([]);
+    expect(component.etiqueta({ ...transmision(7, 20), torneoNombre: null }))
+      .toBe('#7 · EN_VIVO · torneo 3 · 20 muestras');
+  });
+
+  it('lo dice cuando la transmisión no cuelga de ningún torneo', () => {
+    responderListado([]);
+    expect(component.etiqueta({ ...transmision(7, 20), torneoId: null, torneoNombre: null }))
+      .toBe('#7 · EN_VIVO · sin torneo · 20 muestras');
   });
 });

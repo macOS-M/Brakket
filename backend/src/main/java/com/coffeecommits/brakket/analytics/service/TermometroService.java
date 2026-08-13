@@ -185,7 +185,9 @@ public class TermometroService {
 
     private static final String RESUMEN_PENDIENTE =
             "Todavía no hay análisis de sentimiento para esta transmisión en el período consultado. "
-                    + "Mientras la transmisión esté en vivo, el muestreo del chat genera una muestra por minuto.";
+                    + "Mientras la transmisión esté en vivo el chat se captura cada minuto, pero el "
+                    + "sentimiento se clasifica por bloques de varios minutos: la primera lectura "
+                    + "tarda un poco en aparecer.";
 
     private String resumenInsuficiente(long muestras) {
         return "Hay " + muestras + (muestras == 1 ? " muestra" : " muestras")

@@ -1,5 +1,10 @@
 .termometro {
   display: grid;
+  // Sin minmax(0, ...) la pista crece hasta el contenido mínimo del ítem más
+  // ancho y se desborda del borde de la tarjeta. Con muchas muestras el gráfico
+  // de evolución tiene decenas de columnas y arrastraba todo fuera del recuadro;
+  // acotada, el gráfico usa su propio scroll horizontal.
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   padding: 1.25rem 1.5rem;
   background: var(--surface, #111827);

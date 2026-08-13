@@ -3,6 +3,7 @@ package com.coffeecommits.brakket.twitch.service;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,11 +33,23 @@ public  class ChatTwitchListener {
 
     private static final URI IRC = URI.create("wss://irc-ws.chat.twitch.tv:443");
 
-    public record Ventana(int mensajes, int autoresDistintos, List <String> textos) {
+    /**
+     * Un mensaje del chat con su hora de llegada. <b>Sin autor a propósito</b>:
+     * el nick se usa solo para contar usuarios distintos y no sale de acá.
+     */
+    public record MensajeCapturado(String texto, LocalDateTime instante) {
+    }
+
+    public record Ventana(int mensajes, int autoresDistintos, List<MensajeCapturado> capturados) {
+
+        /** Solo los textos, que es lo que necesita el analizador de sentimiento. */
+        public List<String> textos() {
+            return capturados.stream().map(MensajeCapturado::texto).toList();
+        }
     }
 
     private final Object candado = new Object();
-    private final List<String> textos = new ArrayList<>();
+    private final List<MensajeCapturado> capturados = new ArrayList<>();
     private final Set<String> autores = new HashSet<>();
 
     private volatile WebSocket webSocket;
@@ -88,7 +101,7 @@ public  class ChatTwitchListener {
             }
         }
         synchronized (candado) {
-            textos.clear();
+            capturados.clear();
             autores.clear();
         }
     }
@@ -96,8 +109,8 @@ public  class ChatTwitchListener {
     /** Devuelve lo acumulado y deja los contadores en cero. */
     public Ventana tomarYReiniciar() {
         synchronized (candado) {
-            Ventana ventana = new Ventana(textos.size(), autores.size(), List.copyOf(textos));
-            textos.clear();
+            Ventana ventana = new Ventana(capturados.size(), autores.size(), List.copyOf(capturados));
+            capturados.clear();
             autores.clear();
             return ventana;
         }
@@ -122,7 +135,9 @@ public  class ChatTwitchListener {
         String autor = linea.substring(1, finAutor);
         String texto = linea.substring(inicioTexto + 2);
         synchronized (candado) {
-            textos.add(texto);
+            // La hora se toma acá y no al cerrar la ventana: RF-38 pide que cada
+            // mensaje quede asociado a su marca temporal, no a la del muestreo.
+            capturados.add(new MensajeCapturado(texto, LocalDateTime.now()));
             autores.add(autor);
         }
     }

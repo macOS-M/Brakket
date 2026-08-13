@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AnalyticsService } from '../../services/analytics.service';
 import { Termometro, TransmisionAnalizada } from '../../../../models/sentiment.model';
 import { TermometroSentimientoComponent } from '../../components/termometro-sentimiento/termometro-sentimiento.component';
+import { AsistenteIaComponent } from '../../components/asistente-ia/asistente-ia.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
@@ -26,7 +27,13 @@ interface OpcionPeriodo {
 @Component({
   selector: 'app-termometro-page',
   standalone: true,
-  imports: [FormsModule, TermometroSentimientoComponent, PageHeaderComponent, EmptyStateComponent],
+  imports: [
+    FormsModule,
+    TermometroSentimientoComponent,
+    AsistenteIaComponent,
+    PageHeaderComponent,
+    EmptyStateComponent
+  ],
   templateUrl: './termometro-page.component.html',
   styleUrl: './termometro-page.component.scss'
 })
@@ -54,6 +61,13 @@ export class TermometroPageComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly termometro = signal<Termometro | null>(null);
 
+  /**
+   * Inicio del período de la última consulta. Se guarda en vez de recalcularlo
+   * para que el asistente pregunte sobre exactamente la misma ventana que
+   * produjo el termómetro visible, y no sobre una que se corre sola con el reloj.
+   */
+  readonly desdeConsultado = signal<string | null>(null);
+
   ngOnInit(): void {
     this.cargarTransmisiones();
   }
@@ -77,9 +91,15 @@ export class TermometroPageComponent implements OnInit {
     });
   }
 
-  /** Etiqueta legible de una transmisión en el desplegable. */
+  /**
+   * Etiqueta legible de una transmisión en el desplegable.
+   *
+   * Se muestra el nombre del torneo y no su id: "torneo 27" no se puede
+   * resolver desde ninguna pantalla. El id queda de respaldo por si una
+   * transmisión vieja quedó colgando de un torneo sin nombre.
+   */
   etiqueta(t: TransmisionAnalizada): string {
-    const contexto = t.torneoId ? `torneo ${t.torneoId}` : 'sin torneo';
+    const contexto = t.torneoNombre ?? (t.torneoId ? `torneo ${t.torneoId}` : 'sin torneo');
     return `#${t.id} · ${t.estado} · ${contexto} · ${t.totalMuestras} muestras`;
   }
 
@@ -90,10 +110,13 @@ export class TermometroPageComponent implements OnInit {
       return;
     }
 
+    const desde = this.inicioDelPeriodo();
+    this.desdeConsultado.set(desde);
+
     this.cargando.set(true);
     this.analytics
       .termometro(this.transmisionId, {
-        desde: this.inicioDelPeriodo(),
+        desde,
         intervaloMinutos: this.periodo.intervaloMinutos
       })
       .subscribe({

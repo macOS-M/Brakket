@@ -97,6 +97,8 @@ export interface TransmisionAnalizada {
   estado: string;
   iniciadaEn: string | null;
   torneoId: number | null;
+  /** Nombre del torneo; null si la transmisión no cuelga de ninguno. */
+  torneoNombre: string | null;
   totalMuestras: number;
 }
 
@@ -105,4 +107,30 @@ export interface FiltrosTermometro {
   desde?: string | null;
   hasta?: string | null;
   intervaloMinutos?: number | null;
+}
+
+/** Respuesta del asistente del termómetro (RF-40). */
+export interface AsistenteRespuesta {
+  /** Texto para mostrar; nunca viene vacío. */
+  respuesta: string;
+  /** false cuando respondió el camino determinista en vez del modelo. */
+  generadaPorIa: boolean;
+  /** Motivo de la degradación, o null si respondió la IA. */
+  aviso: string | null;
+}
+
+/** Resultado de pedir una clasificación de sentimiento fuera de cadencia. */
+export interface ClasificacionInmediata {
+  /** false cuando todavía no había chat acumulado. */
+  clasificado: boolean;
+  mensajes: number;
+  mensaje: string;
+}
+
+/** Turno de la conversación con el asistente, para pintar el historial. */
+export interface TurnoAsistente {
+  autor: 'usuario' | 'asistente';
+  texto: string;
+  generadaPorIa?: boolean;
+  aviso?: string | null;
 }
