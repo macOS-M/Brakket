@@ -134,6 +134,8 @@ export class TournamentBracketComponent {
    */
   readonly puedeCerrarDisputa = input(false);
   readonly puedeCerrarApelacion = input(false);
+  /** Deep-link desde "Mis disputas": abre el panel de esta partida solo y le hace scroll. */
+  readonly partidaResaltada = input<number | null>(null);
   readonly enCurso = input(false);
   readonly ocupado = input(false);
   readonly enviarMarcador = output<MarcadorEvent>();
@@ -226,9 +228,9 @@ export class TournamentBracketComponent {
   readonly generacionReciente = signal(false);
   /** Credencial de lobby copiada al portapapeles ('id-lobby' | 'id-clave'). */
   readonly copiado = signal<string | null>(null);
-
   private readonly lienzo = viewChild<ElementRef<HTMLElement>>('lienzo');
   private estadosPrevios: Map<number, string> | null = null;
+  private yaResaltoPartida = false;
   private observador: ResizeObserver | null = null;
   private ultimaGeometria = '';
 
@@ -431,6 +433,28 @@ export class TournamentBracketComponent {
   });
 
   constructor() {
+    // Deep-link desde "Mis disputas": en cuanto lleguen las partidas,
+    // busca la resaltada, le abre el panel de disputa, y le hace scroll.
+    // Solo una vez (yaResaltoPartida), para no reabrirla sola si el
+    // usuario la cierra manualmente y luego la llave se refresca sola.
+    effect(() => {
+      const partidas = this.partidas();
+      const objetivo = this.partidaResaltada();
+      if (this.yaResaltoPartida || objetivo === null || partidas.length === 0) {
+        return;
+      }
+      const partida = partidas.find((p) => p.id === objetivo);
+      if (!partida) {
+        return;
+      }
+      this.yaResaltoPartida = true;
+      this.toggleEvidencia(partida);
+      setTimeout(() => {
+        document.querySelector(`[data-nodo="p${objetivo}"]`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    });
+
     effect(() => {
       const lista = this.partidas();
       const previos = this.estadosPrevios;
