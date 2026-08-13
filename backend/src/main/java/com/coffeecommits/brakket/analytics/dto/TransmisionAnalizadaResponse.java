@@ -14,11 +14,17 @@ import java.time.LocalDateTime;
  * indicador corresponda a una transmisión con análisis generado, y ofrecer en
  * la lista opciones que van a responder "pendiente" es hacer perder el viaje.</p>
  */
+/**
+ * <p>Viaja el nombre del torneo además del id: el selector mostraba "torneo 27"
+ * y no hay ninguna pantalla donde consultar a qué torneo corresponde ese número,
+ * salvo abrirlo y leer la URL.</p>
+ */
 public record TransmisionAnalizadaResponse(
         Long id,
         String estado,
         LocalDateTime iniciadaEn,
         Long torneoId,
+        String torneoNombre,
         Long totalMuestras
 ) {
 }

@@ -45,9 +45,14 @@ services:
       # Fail-fast: sin credenciales de Twitch el backend no arranca (RF-35).
       TWITCH_REQUIRED: ${TWITCH_REQUIRED:-true}
       STREAMS_MULTI_SOURCE_ENABLED: ${STREAMS_MULTI_SOURCE_ENABLED:-false}
-      AI_API_KEY: ${AI_API_KEY:-}
-      AI_API_BASE_URL: ${AI_API_BASE_URL:-}
       CATALOGO_PROVEEDOR: ${CATALOGO_PROVEEDOR:-igdb}
+      # IA: sentimiento del chat (RF-39) y asistente del termómetro (RF-40).
+      # Vacía = ambos degradan al camino determinista, no se cae nada.
+      # El modelo repite el default de application.yml a propósito: compose
+      # siempre define la variable, así que un ${GEMINI_MODEL:-} la dejaría en
+      # cadena vacía y pisaría el default en vez de caer en él.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
       RAWG_API_KEY: ${RAWG_API_KEY:-}
       # Rescate puntual: bases locales que avanzaron en una rama pueden
       # necesitar aplicar migraciones intermedias llegadas después por un

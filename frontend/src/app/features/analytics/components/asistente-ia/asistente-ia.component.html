@@ -1,0 +1,85 @@
+@if (esAdmin()) {
+  <button
+    type="button"
+    class="fab"
+    (click)="alternar()"
+    [attr.aria-expanded]="abierto()"
+    [attr.aria-label]="abierto() ? 'Cerrar asistente de análisis' : 'Abrir asistente de análisis'"
+  >
+    @if (abierto()) {
+      <span aria-hidden="true">✕</span>
+    } @else {
+      <span aria-hidden="true">✦</span>
+    }
+  </button>
+
+  @if (abierto()) {
+    <section class="panel" role="dialog" aria-label="Asistente de análisis">
+      <header class="cabecera">
+        <div>
+          <h2>Asistente</h2>
+          <p class="sub">Sobre la transmisión y el período seleccionados</p>
+        </div>
+        @if (turnos().length > 0) {
+          <button type="button" class="enlace" (click)="limpiar()">Limpiar</button>
+        }
+      </header>
+
+      <div class="acciones">
+        <button type="button" class="chip" (click)="analizarAhora()" [disabled]="analizando()">
+          {{ analizando() ? 'Analizando el chat…' : 'Analizar el chat ahora' }}
+        </button>
+        <span class="pista">El muestreo lo mide solo cada pocos minutos.</span>
+      </div>
+
+      @if (avisoAnalisis()) {
+        <p class="resultado">{{ avisoAnalisis() }}</p>
+      }
+
+      <div class="conversacion">
+        @if (turnos().length === 0) {
+          <p class="intro">Preguntame sobre la actividad del chat y el sentimiento de esta transmisión.</p>
+          <p class="nota">
+            No tengo acceso al contenido de los mensajes: Brakket solo guarda conteos por ventana.
+          </p>
+          <div class="sugerencias">
+            @for (s of sugerencias; track s) {
+              <button type="button" class="chip" (click)="usarSugerencia(s)">{{ s }}</button>
+            }
+          </div>
+        }
+
+        @for (t of turnos(); track $index) {
+          <article class="turno" [class.propio]="t.autor === 'usuario'">
+            <p class="texto">{{ t.texto }}</p>
+            @if (t.autor === 'asistente' && t.generadaPorIa === false && t.aviso) {
+              <p class="aviso">{{ t.aviso }}</p>
+            }
+          </article>
+        }
+
+        @if (enviando()) {
+          <p class="pensando">Consultando…</p>
+        }
+      </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <form class="entrada" (ngSubmit)="enviar()">
+        <textarea
+          name="pregunta"
+          [(ngModel)]="pregunta"
+          maxlength="500"
+          rows="2"
+          placeholder="Escribí tu pregunta…"
+          [disabled]="enviando()"
+        ></textarea>
+        <button type="submit" class="btn btn-primary" [disabled]="enviando() || !pregunta.trim()">
+          Preguntar
+        </button>
+      </form>
+    </section>
+  }
+}

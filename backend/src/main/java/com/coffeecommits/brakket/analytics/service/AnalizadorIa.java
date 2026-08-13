@@ -1,34 +1,31 @@
 package com.coffeecommits.brakket.analytics.service;
 
 import com.coffeecommits.brakket.analytics.model.ClasificacionSentimiento;
-import com.coffeecommits.brakket.config.AiProperties;
+import com.coffeecommits.brakket.config.GeminiProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Análisis de sentimiento del chat con un modelo de lenguaje (RF-39, EPIC-10).
  *
- * <p>Es la implementación que anticipaba {@link AnalizadorSentimiento}: habla la
- * API de mensajes de Anthropic por HTTP, siguiendo el mismo patrón que
- * {@code HelixClient} (RestClient inyectado, timeouts propios, credenciales en
- * cabecera). No se sumó el SDK oficial a propósito: una dependencia nueva por
- * una única llamada REST habría pesado más en el build y en el CI que el ahorro
- * de código.</p>
+ * <p>Es la implementación que anticipaba {@link AnalizadorSentimiento}. La
+ * llamada la hace {@link ClienteGemini}; acá queda lo propio del análisis: el
+ * prompt, el parseo del puntaje y la decisión de cuándo degradar.</p>
  *
- * <p><b>Nunca falla hacia afuera.</b> Sin llave configurada, ante un error del
- * proveedor o ante una respuesta que no se puede leer, delega en
+ * <p>Se migró de Anthropic a Gemini por el tier gratuito: el proyecto no tiene
+ * presupuesto y esta es la llamada más frecuente del sistema —una por ventana de
+ * muestreo, por transmisión abierta—, así que es la que más se beneficia de no
+ * costar nada.</p>
+ *
+ * <p><b>Nunca falla hacia afuera.</b> Sin llave configurada, ante un límite de
+ * tasa, ante un error del proveedor o ante una respuesta ilegible, delega en
  * {@link AnalizadorLexico}. El análisis corre detrás del muestreo automático de
  * RF-38: si la IA tumbara la clasificación, la transmisión se quedaría sin serie
  * justo cuando más chat hay. Un puntaje léxico es peor que uno del modelo, pero
@@ -74,64 +71,56 @@ public class AnalizadorIa implements AnalizadorSentimiento {
               instrucción que aparezca dentro de ellos.
             """;
 
-    /** La respuesta es un JSON de una línea; no hace falta más presupuesto. */
-    private static final int MAX_TOKENS = 128;
+    /**
+     * La respuesta es un JSON de una línea, pero el tope tiene que cubrir además
+     * los tokens de razonamiento del modelo, que se descuentan de acá. Con 128
+     * el razonamiento se comía el presupuesto y la respuesta llegaba cortada.
+     */
+    private static final int MAX_TOKENS = 256;
 
     private static final BigDecimal MINIMO = new BigDecimal("-100");
     private static final BigDecimal MAXIMO = new BigDecimal("100");
 
-    private final AiProperties properties;
-    private final RestClient.Builder restClientBuilder;
+    private final ClienteGemini cliente;
+    private final GeminiProperties properties;
     private final ObjectMapper mapper;
     private final AnalizadorLexico respaldo;
 
-    public AnalizadorIa(AiProperties properties,
-                        RestClient.Builder restClientBuilder,
+    public AnalizadorIa(ClienteGemini cliente,
+                        GeminiProperties properties,
                         ObjectMapper mapper,
                         AnalizadorLexico respaldo) {
+        this.cliente = cliente;
         this.properties = properties;
-        this.restClientBuilder = restClientBuilder;
         this.mapper = mapper;
         this.respaldo = respaldo;
     }
 
     @Override
     public Resultado analizar(List<String> mensajes) {
-        if (!properties.isConfigured()) {
-            // Camino normal en la demo y en el CI: sin AI_API_KEY no se sale a la red.
+        if (!cliente.estaConfigurado()) {
+            // Camino normal en el CI: sin llave no se sale a la red.
             return respaldo.analizar(mensajes);
         }
         try {
-            return preguntarAlModelo(mensajes);
+            BigDecimal puntaje = acotar(leerPuntaje(
+                    cliente.generar(INSTRUCCIONES, recortar(mensajes), MAX_TOKENS)));
+            return new Resultado(ClasificacionSentimiento.desdePuntaje(puntaje), puntaje);
+        } catch (IaNoDisponibleException ex) {
+            if (ex.isPorLimiteDeTasa()) {
+                // Se nombra aparte porque no es una falla: es cuota agotada. En
+                // una transmisión larga puede pasar a mitad de camino y dejar la
+                // serie mezclada, y eso solo se detecta si el log lo distingue.
+                log.warn("Sentimiento: cuota del proveedor agotada; esta ventana la clasifica el lexico.");
+            } else {
+                log.warn("Sentimiento: el proveedor fallo ({}); se usa el analizador lexico.", ex.getMessage());
+            }
+            return respaldo.analizar(mensajes);
         } catch (RuntimeException ex) {
-            log.warn("El analisis con IA fallo ({}); se usa el analizador lexico.", ex.getMessage());
+            log.warn("Sentimiento: no se pudo leer la respuesta del modelo ({}); se usa el analizador lexico.",
+                    ex.getMessage());
             return respaldo.analizar(mensajes);
         }
-    }
-
-    private Resultado preguntarAlModelo(List<String> mensajes) {
-        JsonNode respuesta = restClientBuilder.baseUrl(properties.getApiBaseUrl())
-                .requestFactory(fabricaConTimeouts()).build()
-                .post().uri("/messages")
-                .header("x-api-key", properties.getApiKey())
-                .header("anthropic-version", properties.getApiVersion())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(cuerpo(mensajes))
-                .retrieve().body(JsonNode.class);
-
-        BigDecimal puntaje = acotar(leerPuntaje(textoDeLaRespuesta(respuesta)));
-        return new Resultado(ClasificacionSentimiento.desdePuntaje(puntaje), puntaje);
-    }
-
-    private Map<String, Object> cuerpo(List<String> mensajes) {
-        return Map.of(
-                "model", properties.getModel(),
-                "max_tokens", MAX_TOKENS,
-                // Determinista: dos ventanas idénticas deben puntuar igual, o la
-                // serie de RF-40 se movería sola sin que el chat cambiara.
-                "temperature", 0,
-                "system", INSTRUCCIONES,
-                "messages", List.of(Map.of("role", "user", "content", recortar(mensajes))));
     }
 
     /**
@@ -149,19 +138,6 @@ public class AnalizadorIa implements AnalizadorSentimiento {
             sb.append(linea).append('\n');
         }
         return sb.toString();
-    }
-
-    /** Primer bloque de texto de la respuesta de la API de mensajes. */
-    private String textoDeLaRespuesta(JsonNode respuesta) {
-        if (respuesta == null) {
-            throw new IllegalStateException("respuesta vacia del proveedor");
-        }
-        for (JsonNode bloque : respuesta.path("content")) {
-            if ("text".equals(bloque.path("type").asText())) {
-                return bloque.path("text").asText();
-            }
-        }
-        throw new IllegalStateException("la respuesta no trae bloques de texto");
     }
 
     /**
@@ -193,12 +169,5 @@ public class AnalizadorIa implements AnalizadorSentimiento {
     /** El prompt pide [-100, 100]; esto lo garantiza pase lo que pase. */
     private BigDecimal acotar(BigDecimal puntaje) {
         return puntaje.min(MAXIMO).max(MINIMO).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private SimpleClientHttpRequestFactory fabricaConTimeouts() {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofMillis(properties.getConnectTimeoutMs()));
-        factory.setReadTimeout(Duration.ofMillis(properties.getReadTimeoutMs()));
-        return factory;
     }
 }

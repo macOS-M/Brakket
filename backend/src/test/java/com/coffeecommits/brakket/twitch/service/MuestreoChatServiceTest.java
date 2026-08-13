@@ -42,14 +42,38 @@ class MuestreoChatServiceTest {
     private MetricaChatRepository metricaChatRepository;
 
     @Mock
+    private com.coffeecommits.brakket.twitch.repository.MensajeChatRepository mensajeChatRepository;
+
+    @Mock
     private ApplicationEventPublisher eventos;
 
     private MuestreoChatService service;
 
+    /** Hora de referencia de los mensajes de prueba; el valor exacto da igual. */
+    private static final java.time.LocalDateTime BASE = java.time.LocalDateTime.of(2026, 8, 13, 10, 0);
+
+    /**
+     * Ventana de prueba. El conteo va aparte de los textos porque el muestreo
+     * puede haber contado más mensajes de los que conserva.
+     */
+    private ChatTwitchListener.Ventana ventana(int mensajes, int autores, String... textos) {
+        return new ChatTwitchListener.Ventana(mensajes, autores,
+                java.util.Arrays.stream(textos)
+                        .map(texto -> new ChatTwitchListener.MensajeCapturado(texto, BASE))
+                        .toList());
+    }
+
     @BeforeEach
     void setUp() {
-        service = new MuestreoChatService(listener, transmisionRepository,
-                metricaChatRepository, eventos, INTERVALO_MS);
+        // Bloque de cero minutos: cada ventana cierra su bloque, que es el
+        // comportamiento que ejercen las pruebas del tick. El agrupamiento tiene
+        // sus propias pruebas mas abajo.
+        service = servicio(0, 180);
+    }
+
+    private MuestreoChatService servicio(long bloqueMinutos, int maxMensajesBloque) {
+        return new MuestreoChatService(listener, transmisionRepository, metricaChatRepository,
+                mensajeChatRepository, eventos, INTERVALO_MS, bloqueMinutos, maxMensajesBloque);
     }
 
     /** La muestra persistida vuelve con id: el evento viaja por id, no por entidad. */
@@ -131,7 +155,7 @@ class MuestreoChatServiceTest {
         alGuardarDevolverConId(500L);
         when(listener.estaConectado()).thenReturn(true);
         when(listener.tomarYReiniciar())
-                .thenReturn(new ChatTwitchListener.Ventana(134, 122, List.of("hola", "gg")));
+                .thenReturn(ventana(134, 122, "hola", "gg"));
 
         service.muestrear(); // segundo tick: guarda
 
@@ -157,7 +181,7 @@ class MuestreoChatServiceTest {
         alGuardarDevolverConId(500L);
         when(listener.estaConectado()).thenReturn(true);
         when(listener.tomarYReiniciar())
-                .thenReturn(new ChatTwitchListener.Ventana(3, 2, List.of("gg", "que lag", "vamos")));
+                .thenReturn(ventana(3, 2, "gg", "que lag", "vamos"));
 
         service.muestrear();
 
@@ -182,11 +206,144 @@ class MuestreoChatServiceTest {
         when(listener.estaConectado()).thenReturn(true);
         // Chat mudo: la tasa de cero es un dato valido, pero no hay nada que analizar.
         when(listener.tomarYReiniciar())
-                .thenReturn(new ChatTwitchListener.Ventana(0, 0, List.of()));
+                .thenReturn(ventana(0, 0));
 
         service.muestrear();
 
         verify(metricaChatRepository).save(any(MetricaChat.class));
         verify(eventos, never()).publishEvent(any(MuestraChatCapturadaEvent.class));
+    }
+
+    // --- contenido de los mensajes (RF-38) -----------------------------------
+
+    @Test
+    void guarda_el_contenido_de_cada_mensaje_con_su_hora() {
+        conectar(service);
+        alGuardarDevolverConId(700L);
+        when(listener.tomarYReiniciar()).thenReturn(ventana(2, 2, "gg", "que lag"));
+
+        service.muestrear();
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<com.coffeecommits.brakket.twitch.model.MensajeChat>> guardados =
+                ArgumentCaptor.forClass(List.class);
+        verify(mensajeChatRepository).saveAll(guardados.capture());
+
+        assertThat(guardados.getValue())
+                .extracting(com.coffeecommits.brakket.twitch.model.MensajeChat::getTexto)
+                .containsExactly("gg", "que lag");
+        assertThat(guardados.getValue()).allSatisfy(mensaje -> {
+            // La hora es la de llegada del mensaje, no la del cierre de la ventana.
+            assertThat(mensaje.getFechaHora()).isEqualTo(BASE);
+            assertThat(mensaje.getTransmisionTwitch().getId()).isEqualTo(7L);
+        });
+    }
+
+    @Test
+    void una_ventana_muda_no_guarda_mensajes() {
+        conectar(service);
+        alGuardarDevolverConId(701L);
+        when(listener.tomarYReiniciar()).thenReturn(ventana(0, 0));
+
+        service.muestrear();
+
+        // La tasa de cero si es un dato valido y se guarda; mensajes no hay.
+        verify(metricaChatRepository).save(any(MetricaChat.class));
+        verify(mensajeChatRepository, never()).saveAll(any());
+    }
+
+    // --- agrupamiento del analisis de sentimiento ----------------------------
+
+    /** Conecta y deja el servicio listo para que el proximo tick guarde. */
+    private void conectar(MuestreoChatService servicio) {
+        when(transmisionRepository.findAbiertasParaMuestreo())
+                .thenReturn(List.of(transmisionAbierta()));
+        servicio.muestrear();
+        when(listener.estaConectado()).thenReturn(true);
+    }
+
+    @Test
+    void acumula_varias_ventanas_antes_de_clasificar() {
+        MuestreoChatService servicio = servicio(15, 180);
+        conectar(servicio);
+        alGuardarDevolverConId(600L);
+        when(listener.tomarYReiniciar())
+                .thenReturn(ventana(2, 2, "gg", "vamos"));
+
+        servicio.muestrear();
+        servicio.muestrear();
+        servicio.muestrear();
+
+        // Las tres muestras se guardan (contar es gratis), pero el bloque de
+        // quince minutos no se cumplio: una sola llamada al proveedor por bloque.
+        verify(metricaChatRepository, org.mockito.Mockito.times(3)).save(any(MetricaChat.class));
+        verify(eventos, never()).publishEvent(any(MuestraChatCapturadaEvent.class));
+    }
+
+    @Test
+    void al_cerrarse_la_transmision_clasifica_lo_que_quedo_a_medio_bloque() {
+        MuestreoChatService servicio = servicio(15, 180);
+        conectar(servicio);
+        alGuardarDevolverConId(601L);
+        when(listener.tomarYReiniciar())
+                .thenReturn(ventana(2, 2, "gg", "vamos"));
+        servicio.muestrear();
+
+        when(transmisionRepository.findAbiertasParaMuestreo()).thenReturn(List.of());
+        servicio.muestrear();
+
+        // Sin esto, una transmision mas corta que el bloque se quedaria sin una
+        // sola lectura de sentimiento.
+        ArgumentCaptor<MuestraChatCapturadaEvent> publicado =
+                ArgumentCaptor.forClass(MuestraChatCapturadaEvent.class);
+        verify(eventos).publishEvent(publicado.capture());
+        assertThat(publicado.getValue().mensajes()).containsExactly("gg", "vamos");
+    }
+
+    @Test
+    void se_puede_clasificar_el_bloque_antes_de_que_se_cumpla() {
+        MuestreoChatService servicio = servicio(15, 180);
+        conectar(servicio);
+        alGuardarDevolverConId(603L);
+        when(listener.tomarYReiniciar())
+                .thenReturn(ventana(2, 2, "gg", "vamos"));
+        servicio.muestrear();
+
+        assertThat(servicio.clasificarAhora()).isEqualTo(2);
+
+        ArgumentCaptor<MuestraChatCapturadaEvent> publicado =
+                ArgumentCaptor.forClass(MuestraChatCapturadaEvent.class);
+        verify(eventos).publishEvent(publicado.capture());
+        assertThat(publicado.getValue().mensajes()).containsExactly("gg", "vamos");
+
+        // El bloque quedo consumido: pedirlo de nuevo no reenvia lo mismo.
+        assertThat(servicio.clasificarAhora()).isZero();
+    }
+
+    @Test
+    void clasificar_sin_chat_acumulado_no_publica_nada() {
+        MuestreoChatService servicio = servicio(15, 180);
+
+        assertThat(servicio.clasificarAhora()).isZero();
+
+        verify(eventos, never()).publishEvent(any(MuestraChatCapturadaEvent.class));
+    }
+
+    @Test
+    void recorta_repartiendo_los_mensajes_por_todo_el_bloque() {
+        MuestreoChatService servicio = servicio(0, 3);
+        conectar(servicio);
+        alGuardarDevolverConId(602L);
+        when(listener.tomarYReiniciar()).thenReturn(ventana(9, 4, "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8"));
+
+        servicio.muestrear();
+
+        ArgumentCaptor<MuestraChatCapturadaEvent> publicado =
+                ArgumentCaptor.forClass(MuestraChatCapturadaEvent.class);
+        verify(eventos).publishEvent(publicado.capture());
+
+        // Tomar los ultimos tres seria mas simple, pero clasificaria el final del
+        // bloque y lo presentaria como el clima de todo el periodo.
+        assertThat(publicado.getValue().mensajes()).containsExactly("m0", "m3", "m6");
     }
 }
