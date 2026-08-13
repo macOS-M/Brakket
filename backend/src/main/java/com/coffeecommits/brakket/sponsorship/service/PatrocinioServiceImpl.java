@@ -3,7 +3,6 @@ package com.coffeecommits.brakket.sponsorship.service;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.league.model.Liga;
-import com.coffeecommits.brakket.league.model.Temporada;
 import com.coffeecommits.brakket.league.repository.LigaRepository;
 import com.coffeecommits.brakket.league.repository.TemporadaRepository;
 import com.coffeecommits.brakket.sponsorship.dto.CrearPatrocinioRequest;
@@ -17,14 +16,17 @@ import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 @Service
 public class PatrocinioServiceImpl implements PatrocinioService {
 
     private static final String ESTADO_ACTIVO = "ACTIVO";
-    private static final Set<String> NIVELES_VALIDOS = Set.of("ORO", "PLATA", "BRONCE");
+
+    private static final java.util.Set<String> ESTADOS_CERRADOS_TEMPORADA =
+            java.util.Set.of("FINALIZADA", "CANCELADA");
 
     private final PatrocinioRepository patrocinioRepository;
     private final PatrocinadorRepository patrocinadorRepository;
@@ -55,11 +57,6 @@ public class PatrocinioServiceImpl implements PatrocinioService {
             throw new BusinessException("El patrocinador debe estar activo para asociarse a una competencia");
         }
 
-        if (!NIVELES_VALIDOS.contains(request.nivel())) {
-            throw new BusinessException(
-                    "El nivel debe ser uno de: %s".formatted(String.join(", ", NIVELES_VALIDOS)));
-        }
-
         validarAlcanceUnico(request);
 
         if (request.fechaInicio().isAfter(request.fechaFin())) {
@@ -67,48 +64,39 @@ public class PatrocinioServiceImpl implements PatrocinioService {
         }
 
         Liga liga = null;
-        Temporada temporada = null;
         Torneo torneo = null;
 
         if (request.ligaId() != null) {
             liga = ligaRepository.findById(request.ligaId())
                     .orElseThrow(() -> new ResourceNotFoundException("Liga", request.ligaId()));
-            // Liga no tiene fechas propias en el esquema actual: no hay calendario contra qué validar.
-
-        } else if (request.temporadaId() != null) {
-            temporada = temporadaRepository.findById(request.temporadaId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Temporada", request.temporadaId()));
-            validarFechasDentroDeRango(request, temporada.getFechaInicio(), temporada.getFechaFin());
+            if (!Boolean.TRUE.equals(liga.getActivo())) {
+                throw new BusinessException("No se puede asociar un patrocinio a una liga inactiva");
+            }
 
         } else {
             torneo = torneoRepository.findById(request.torneoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Torneo", request.torneoId()));
-            // torneo.getFechaFin() puede ser null (torneo sin calendario cerrado aun);
-            // en ese caso solo se valida el limite inferior.
+            if (TorneoRepository.ESTADOS_CERRADOS.contains(torneo.getEstado())) {
+                throw new BusinessException(
+                        "No se puede asociar un patrocinio a un torneo finalizado o cancelado");
+            }
             validarFechasDentroDeRango(request, torneo.getFechaInicio().toLocalDate(),
                     torneo.getFechaFin() != null ? torneo.getFechaFin().toLocalDate() : null);
         }
 
-        // El recurso escaso es (competencia, nivel), no la competencia entera:
-        // dos patrocinios de niveles distintos (ej. ORO y PLATA) pueden coexistir
-        // en la misma competencia y periodo. Lo que no puede repetirse es el
-        // mismo nivel dos veces para la misma competencia en fechas solapadas.
         boolean solapa = patrocinioRepository.existeSolapamiento(
-                request.ligaId(), request.temporadaId(), request.torneoId(),
-                request.nivel(), request.fechaInicio(), request.fechaFin());
+                request.ligaId(), request.torneoId(), request.fechaInicio(), request.fechaFin());
 
         if (solapa) {
             throw new BusinessException(
-                    "Ya existe un patrocinio de nivel %s activo para esta competencia en el período seleccionado"
-                            .formatted(request.nivel()));
+                    "Ya existe un patrocinio activo para esta competencia en el período seleccionado");
         }
 
         Patrocinio patrocinio = Patrocinio.builder()
                 .patrocinador(patrocinador)
                 .liga(liga)
-                .temporada(temporada)
+                .temporada(null)
                 .torneo(torneo)
-                .nivel(request.nivel())
                 .condiciones(request.condiciones())
                 .fechaInicio(request.fechaInicio())
                 .fechaFin(request.fechaFin())
@@ -159,21 +147,55 @@ public class PatrocinioServiceImpl implements PatrocinioService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<PatrocinioResponse> resolverVigentePorTorneo(Long torneoId) {
+        Torneo torneo = torneoRepository.findById(torneoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Torneo", torneoId));
+
+        Optional<Patrocinio> propio = patrocinioRepository.findByTorneoId(torneoId).stream()
+                .filter(this::estaVigenteHoy)
+                .findFirst();
+        if (propio.isPresent()) {
+            return propio.map(PatrocinioResponse::fromEntity);
+        }
+
+        if (torneo.getTemporada() != null && torneo.getTemporada().getLiga() != null) {
+            Long ligaId = torneo.getTemporada().getLiga().getId();
+            return patrocinioRepository.findByLigaId(ligaId).stream()
+                    .filter(this::estaVigenteHoy)
+                    .findFirst()
+                    .map(PatrocinioResponse::fromEntity);
+        }
+
+        return Optional.empty();
+    }
+
+    private boolean estaVigenteHoy(Patrocinio p) {
+        LocalDate hoy = LocalDate.now();
+        return ESTADO_ACTIVO.equals(p.getEstado())
+                && !p.getFechaInicio().isAfter(hoy)
+                && !p.getFechaFin().isBefore(hoy);
+    }
+
     private void validarAlcanceUnico(CrearPatrocinioRequest request) {
+        if (request.temporadaId() != null) {
+            throw new BusinessException(
+                    "Los patrocinios ya no se asocian directamente a una temporada: usa Liga "
+                            + "(patrocinio principal) o Torneo (uno específico para ese evento).");
+        }
         int alcancesLlenos = 0;
         if (request.ligaId() != null) alcancesLlenos++;
-        if (request.temporadaId() != null) alcancesLlenos++;
         if (request.torneoId() != null) alcancesLlenos++;
 
         if (alcancesLlenos != 1) {
-            throw new BusinessException(
-                    "Debe especificar exactamente una competencia: liga, temporada o torneo");
+            throw new BusinessException("Debe especificar exactamente una competencia: liga o torneo");
         }
     }
 
     private void validarFechasDentroDeRango(CrearPatrocinioRequest request,
-                                            java.time.LocalDate inicioCompetencia,
-                                            java.time.LocalDate finCompetencia) {
+                                            LocalDate inicioCompetencia,
+                                            LocalDate finCompetencia) {
         if (request.fechaInicio().isBefore(inicioCompetencia)) {
             throw new BusinessException(
                     "La fecha de inicio del patrocinio no puede ser anterior al inicio de la competencia");

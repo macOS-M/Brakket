@@ -21,7 +21,7 @@
       <div class="info">
         <p class="nombre">{{ p.patrocinadorNombre }}</p>
         <span class="badge" [class.inactivo]="p.estado !== 'ACTIVO'">{{ p.estado | etiqueta }}</span>
-        <p class="descripcion">{{ alcanceTexto(p) }} · {{ p.nivel | etiqueta }}</p>
+        <p class="descripcion">{{ alcanceTexto(p) }}</p>
         <p class="contacto">{{ p.fechaInicio | date: 'dd/MM/yyyy' }} — {{ p.fechaFin | date: 'dd/MM/yyyy' }}</p>
         @if (p.condiciones) {
         <p class="descripcion">{{ p.condiciones }}</p>

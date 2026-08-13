@@ -86,6 +86,10 @@
     <p class="dato">Torneo: {{ t.nombreTorneo }}</p>
     }
 
+    @if (t.torneoId) {
+    <app-ad-slot ubicacion="TRANSMISION_INFERIOR" [torneoId]="t.torneoId" />
+    }
+
     <a class="accion" [href]="t.urlCanal" target="_blank" rel="noopener noreferrer">
       Ver en Twitch
     </a>

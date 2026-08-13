@@ -5,12 +5,15 @@ import { of, throwError } from 'rxjs';
 
 import { EspacioFormComponent } from './espacio-form.component';
 import { EspaciosPublicitariosService } from '../../services/espacios-publicitarios.service';
+import { PatrociniosService } from '../../services/patrocinios.service';
 import { UploadService } from '../../../../core/services/upload.service';
+import { Patrocinio } from '../../../../models/patrocinio.model';
 
 describe('EspacioFormComponent', () => {
   let component: EspacioFormComponent;
   let fixture: ComponentFixture<EspacioFormComponent>;
   let espaciosServiceSpy: jasmine.SpyObj<EspaciosPublicitariosService>;
+  let patrociniosServiceSpy: jasmine.SpyObj<PatrociniosService>;
   let uploadServiceSpy: jasmine.SpyObj<UploadService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
@@ -22,8 +25,26 @@ describe('EspacioFormComponent', () => {
     }
   };
 
+  // Patrocinio de torneo por defecto: mantiene el comportamiento de las
+  // pruebas ya existentes (form arranca en 'TORNEO_CABECERA', valor válido
+  // para este alcance, así que no se dispara el ajuste automático).
+  const patrocinioDeTorneoMock: Patrocinio = {
+    id: 2,
+    patrocinadorId: 11,
+    patrocinadorNombre: 'Nike Demo',
+    ligaId: null,
+    temporadaId: null,
+    torneoId: 3,
+    condiciones: null,
+    fechaInicio: '2026-08-05',
+    fechaFin: '2026-12-31',
+    estado: 'ACTIVO'
+  };
+
   beforeEach(async () => {
     espaciosServiceSpy = jasmine.createSpyObj('EspaciosPublicitariosService', ['crear']);
+    patrociniosServiceSpy = jasmine.createSpyObj('PatrociniosService', ['obtener']);
+    patrociniosServiceSpy.obtener.and.returnValue(of(patrocinioDeTorneoMock));
     uploadServiceSpy = jasmine.createSpyObj('UploadService', ['subirImagen']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
@@ -31,6 +52,7 @@ describe('EspacioFormComponent', () => {
       imports: [EspacioFormComponent, ReactiveFormsModule],
       providers: [
         { provide: EspaciosPublicitariosService, useValue: espaciosServiceSpy },
+        { provide: PatrociniosService, useValue: patrociniosServiceSpy },
         { provide: UploadService, useValue: uploadServiceSpy },
         { provide: Router, useValue: routerSpy },
         { provide: ActivatedRoute, useValue: activatedRouteStub }
@@ -53,6 +75,28 @@ describe('EspacioFormComponent', () => {
 
   it('el formulario es invalido cuando esta vacio', () => {
     expect(component.form.invalid).toBeTrue();
+  });
+
+  it('pide el patrocinio de la ruta y filtra las ubicaciones a las de un torneo', () => {
+    expect(patrociniosServiceSpy.obtener).toHaveBeenCalledWith(2);
+    expect(component.ubicaciones()).toEqual(['TORNEO_CABECERA', 'TRANSMISION_INFERIOR']);
+  });
+
+  it('un patrocinio de liga solo ofrece LIGA_CABECERA y ajusta el default del form', () => {
+    patrociniosServiceSpy.obtener.and.returnValue(of({
+      ...patrocinioDeTorneoMock,
+      torneoId: null,
+      ligaId: 8
+    }));
+
+    fixture = TestBed.createComponent(EspacioFormComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.ubicaciones()).toEqual(['LIGA_CABECERA']);
+    // El default 'TORNEO_CABECERA' no es válido para este alcance: se ajusta
+    // automáticamente a la única opción real.
+    expect(component.form.controls.ubicacion.value).toBe('LIGA_CABECERA');
   });
 
   it('rechaza un archivo mayor a 2MB sin llamar al servicio de subida', () => {

@@ -1,6 +1,5 @@
 export interface PatrocinioResumen {
   patrocinioId: number;
-  nivel: string;
   estado: string;
   vencido: boolean;
   ligaId: number | null;

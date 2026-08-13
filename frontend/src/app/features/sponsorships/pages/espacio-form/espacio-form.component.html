@@ -9,7 +9,7 @@
     <div class="campo">
       <label for="ubicacion">Ubicación *</label>
       <select id="ubicacion" formControlName="ubicacion">
-        @for (u of ubicaciones; track u) {
+        @for (u of ubicaciones(); track u) {
         <option [value]="u">{{ u }}</option>
         }
       </select>

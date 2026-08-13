@@ -16,7 +16,6 @@ describe('PanelComercialComponent', () => {
     patrocinios: [
       {
         patrocinioId: 1,
-        nivel: 'ORO',
         estado: 'ACTIVO',
         vencido: false,
         ligaId: 8,
@@ -28,7 +27,6 @@ describe('PanelComercialComponent', () => {
       },
       {
         patrocinioId: 3,
-        nivel: 'ORO',
         estado: 'ACTIVO',
         vencido: true,
         ligaId: null,

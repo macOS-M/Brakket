@@ -5,7 +5,6 @@ export interface Patrocinio {
   ligaId: number | null;
   temporadaId: number | null;
   torneoId: number | null;
-  nivel: string;
   condiciones: string | null;
   fechaInicio: string;
   fechaFin: string;
@@ -17,12 +16,12 @@ export interface CrearPatrocinioRequest {
   ligaId: number | null;
   temporadaId: number | null;
   torneoId: number | null;
-  nivel: string;
   condiciones: string | null;
   fechaInicio: string;
   fechaFin: string;
 }
 
+// TEMPORADA queda en el tipo por compatibilidad con datos viejos, aunque el
+// flujo de creación ya no la ofrece (ver association-form). Si prefieres
+// quitarla también del tipo, es un cambio de una línea — dímelo.
 export type AlcancePatrocinio = 'LIGA' | 'TEMPORADA' | 'TORNEO';
-
-export const NIVELES_PATROCINIO = ['ORO', 'PLATA', 'BRONCE'] as const;

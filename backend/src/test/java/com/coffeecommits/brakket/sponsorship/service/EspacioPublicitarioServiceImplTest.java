@@ -2,6 +2,7 @@ package com.coffeecommits.brakket.sponsorship.service;
 
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
+import com.coffeecommits.brakket.league.model.Liga;
 import com.coffeecommits.brakket.sponsorship.dto.CrearEspacioPublicitarioRequest;
 import com.coffeecommits.brakket.sponsorship.dto.EspacioPublicitarioResponse;
 import com.coffeecommits.brakket.sponsorship.model.EspacioPublicitario;
@@ -9,6 +10,7 @@ import com.coffeecommits.brakket.sponsorship.model.Patrocinador;
 import com.coffeecommits.brakket.sponsorship.model.Patrocinio;
 import com.coffeecommits.brakket.sponsorship.repository.EspacioPublicitarioRepository;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinioRepository;
+import com.coffeecommits.brakket.tournament.model.Torneo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +25,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,10 +50,12 @@ class EspacioPublicitarioServiceImplTest {
                 .estado("ACTIVO")
                 .build();
 
+        // Sin liga ni torneo seteados a propósito: cubre la rama sin
+        // restricción de alcance (ver ubicacionesPermitidasPara), y mantiene
+        // las pruebas ya existentes de este archivo sin cambios de comportamiento.
         patrocinioActivo = Patrocinio.builder()
                 .id(2L)
                 .patrocinador(patrocinador)
-                .nivel("ORO")
                 .estado("ACTIVO")
                 .fechaInicio(LocalDate.of(2026, 8, 5))
                 .fechaFin(LocalDate.of(2026, 12, 31))
@@ -137,6 +140,50 @@ class EspacioPublicitarioServiceImplTest {
         assertThatThrownBy(() -> service.crear(requestBasico("TORNEO_CABECERA")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ya está ocupado");
+        verify(espacioRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------
+    // Nuevo: el alcance del patrocinio restringe qué ubicaciones puede
+    // reclamar (fix del caso reportado: un patrocinio de un torneo puntual
+    // no debe poder ponerse en la cabecera de toda la liga).
+    // ---------------------------------------------------------------
+
+    @Test
+    void crear_falla_si_un_patrocinio_de_torneo_intenta_reclamar_liga_cabecera() {
+        Torneo torneo = Torneo.builder().id(3L).build();
+        patrocinioActivo.setTorneo(torneo);
+        when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioActivo));
+
+        assertThatThrownBy(() -> service.crear(requestBasico("LIGA_CABECERA")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no corresponde al alcance de este patrocinio");
+        verify(espacioRepository, never()).save(any());
+    }
+
+    @Test
+    void crear_permite_transmision_inferior_para_un_patrocinio_de_torneo() {
+        Torneo torneo = Torneo.builder().id(3L).build();
+        patrocinioActivo.setTorneo(torneo);
+        when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioActivo));
+        when(espacioRepository.existeEspacioOcupado(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(false);
+        when(espacioRepository.save(any(EspacioPublicitario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        EspacioPublicitarioResponse response = service.crear(requestBasico("TRANSMISION_INFERIOR"));
+
+        assertThat(response.ubicacion()).isEqualTo("TRANSMISION_INFERIOR");
+    }
+
+    @Test
+    void crear_falla_si_un_patrocinio_de_liga_intenta_reclamar_torneo_cabecera() {
+        Liga liga = Liga.builder().id(8L).build();
+        patrocinioActivo.setLiga(liga);
+        when(patrocinioRepository.findById(2L)).thenReturn(Optional.of(patrocinioActivo));
+
+        assertThatThrownBy(() -> service.crear(requestBasico("TORNEO_CABECERA")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no corresponde al alcance de este patrocinio");
         verify(espacioRepository, never()).save(any());
     }
 }

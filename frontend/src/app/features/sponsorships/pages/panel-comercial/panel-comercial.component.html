@@ -22,7 +22,6 @@
         [class.vencido]="p.vencido"
         (click)="seleccionarPatrocinio(p.patrocinioId)"
       >
-        <span class="nivel">{{ p.nivel | etiqueta }}</span>
         <span class="alcance">{{ alcanceTexto(p) }}</span>
         @if (p.vencido) {
         <span class="badge-vencido">Vencido</span>
@@ -35,7 +34,6 @@
       @if (patrocinioSeleccionado(); as patrocinio) {
       <div class="ficha">
         <h2>{{ alcanceTexto(patrocinio) }}</h2>
-        <p class="linea">Nivel: <strong>{{ patrocinio.nivel | etiqueta }}</strong></p>
         <p class="linea">Estado: <strong>{{ patrocinio.estado | etiqueta }}</strong></p>
         <p class="linea">Vigencia: {{ patrocinio.fechaInicio | date: 'dd/MM/yyyy' }} — {{ patrocinio.fechaFin | date: 'dd/MM/yyyy' }}</p>
         <p class="linea">Espacios publicitarios activos: {{ patrocinio.cantidadEspacios }}</p>

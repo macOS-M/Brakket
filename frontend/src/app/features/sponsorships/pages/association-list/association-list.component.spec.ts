@@ -19,7 +19,6 @@ describe('AssociationListComponent', () => {
     ligaId: null,
     temporadaId: null,
     torneoId: 12,
-    nivel: 'ORO',
     condiciones: null,
     fechaInicio: '2026-08-05',
     fechaFin: '2026-12-31',

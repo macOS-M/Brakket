@@ -22,9 +22,8 @@
     <div class="campo">
       <label for="alcance">Asociar a *</label>
       <select id="alcance" formControlName="alcance">
-        <option value="LIGA">Liga</option>
-        <option value="TEMPORADA">Temporada</option>
-        <option value="TORNEO">Torneo</option>
+        <option value="LIGA">Liga (patrocinio principal)</option>
+        <option value="TORNEO">Torneo específico</option>
       </select>
     </div>
 
@@ -35,28 +34,6 @@
         <option [ngValue]="null">Selecciona una liga</option>
         @for (l of ligas(); track l.id) {
         <option [ngValue]="l.id">{{ l.nombre }}</option>
-        }
-      </select>
-    </div>
-    }
-
-    @if (form.controls.alcance.value === 'TEMPORADA') {
-    <div class="campo">
-      <label for="temporadaLigaId">Liga *</label>
-      <select id="temporadaLigaId" formControlName="temporadaLigaId">
-        <option [ngValue]="null">Selecciona una liga</option>
-        @for (l of ligas(); track l.id) {
-        <option [ngValue]="l.id">{{ l.nombre }}</option>
-        }
-      </select>
-    </div>
-
-    <div class="campo">
-      <label for="temporadaId">Temporada *</label>
-      <select id="temporadaId" formControlName="temporadaId">
-        <option [ngValue]="null">Selecciona una temporada</option>
-        @for (t of temporadas(); track t.id) {
-        <option [ngValue]="t.id">{{ t.nombre }}</option>
         }
       </select>
     </div>
@@ -74,19 +51,16 @@
     </div>
     }
 
-    <div class="campo">
-      <label for="nivel">Nivel *</label>
-      <select id="nivel" formControlName="nivel">
-        @for (n of niveles; track n) {
-        <option [value]="n">{{ n }}</option>
-        }
-      </select>
-    </div>
-
     <div class="campo campo-ancho">
       <label for="condiciones">Condiciones</label>
       <textarea id="condiciones" formControlName="condiciones" rows="3"></textarea>
     </div>
+
+    @if (rangoDisponible(); as rango) {
+    <div class="campo campo-ancho rango-disponible">
+      <span>{{ rango }}</span>
+    </div>
+    }
 
     <div class="campo">
       <label for="fechaInicio">Fecha de inicio *</label>
