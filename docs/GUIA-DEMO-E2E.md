@@ -1,255 +1,364 @@
-# Guía E2E de demo — Primera iteración de Brakket
+# Guía E2E de demo — Segunda iteración de Brakket
 
-> Guía para presentar la app completa **tal como funciona hoy**. Escrita para que
-> cualquiera del equipo la siga sin haber programado el módulo que muestra.
-> Regla de oro: **nada se registra ni se carga a mano en vivo** — todo viene del
-> seed; solo 3 flujos se ejecutan en vivo porque vale la pena verlos ocurrir.
+> Script para presentar la app **tal como funciona hoy**, escrito para que
+> cualquiera del equipo lo siga sin haber programado el módulo que muestra.
+> **Regla de oro:** nada se registra ni se carga a mano en vivo salvo los pasos
+> marcados 🔴 — todo lo demás viene del seed.
+>
+> **Todos deben conocer este flujo completo.** El profesor advirtió que la
+> inseguridad al mostrar la app se castiga fuerte, y que en medio de la
+> presentación puede pedirle a cualquiera del equipo que tome el control.
 
-**Duración total estimada: ~25 min de demo + 5 de cierre.**
+**Duración estimada: ~30 min de demo + 5 de roadmap/known issues + preguntas.**
 
 ---
 
-## 1. Inventario real de módulos (qué se demuestra y qué no)
+## 0. Presentación remota por túnel (OBLIGATORIO esta iteración)
 
-Verificado contra el código en la rama de esta iteración (no contra el ERS).
+El profesor prueba la app **desde su computadora**, por un túnel. Se expone el
+backend y el frontend, y se le pasa **la URL del frontend**.
+
+### 0.1 Quién hostea
+
+**Una sola persona** corre todo (base + backend + frontend + túnel) y comparte
+**una URL**. Todos los demás —el equipo y el profesor— abren esa misma URL en su
+navegador. Nadie se conecta a la computadora del host; solo abren la página.
+
+> **Plan B por si al host se le va la luz/internet:** un segundo compañero deja
+> su host **completo y probado** de antemano (mismo `pull`, mismo seed, su propio
+> túnel). Si el primero cae, levanta su túnel y se pasa **su** URL. Los datos se
+> ven iguales porque ambos corren el mismo seed.
+
+### 0.2 Herramienta: Port Forwarding de VS Code
+
+Se usa el **Port Forwarding nativo de VS Code** (dev tunnels de Microsoft),
+no ngrok. Requiere iniciar sesión una vez con GitHub.
+
+1. Backend y frontend corriendo en local (8080 y 4200), en la rama con los
+   cambios de túnel mergeados a `develop`.
+2. Panel **Ports** de VS Code → **Forward a Port** → `8080`. Repetir con `4200`.
+3. Clic derecho en cada puerto → **Port Visibility → Public** (si quedan
+   privados, el profesor no entra).
+4. Copiar las dos URLs (`https://<algo>-8080.<region>.devtunnels.ms` y `-4200`).
+
+### 0.3 Config del host (NO se commitea, es local del que hostea)
+
+- `frontend/src/environments/environment.ts` → `apiUrl` a la URL del backend + `/api`:
+  `apiUrl: 'https://<algo>-8080.<region>.devtunnels.ms/api'`
+- `.env` → `FRONTEND_URL=` la **URL única** del frontend del túnel (URL concreta,
+  **sin comodín**: el comodín rompe el redirect de OAuth). Reiniciar el backend.
+- Al profesor se le pasa **la URL del frontend** (`-4200`).
+
+### 0.4 Login en la demo remota: SIEMPRE local
+
+Por el túnel se entra con **correo y contraseña**, no con Google (ver known
+issues §6). La cuenta admin del seed da acceso a todo:
+
+```
+admin.demo@brakket.gg  /  Demo2026!
+```
+
+Google login se puede mostrar como funcionalidad en **localhost** durante la
+presentación, pero por el túnel se usa el login local.
+
+---
+
+## 1. Inventario de módulos (qué se demuestra)
+
+Verificado contra el código de `develop`. Esta iteración cerró casi todo lo que
+en la primera estaba "próximamente".
 
 | Módulo | Estado | En la demo |
 |---|---|---|
-| Landing institucional y de producto | ✅ Funcional | Se muestra |
-| Registro / login local + Google | ✅ Funcional | Login en vivo (registro NO: precargado) |
-| Dashboard `/inicio` | ✅ Funcional | Se muestra (datos reales del seed) |
-| Juegos (catálogo, hub, importar RAWG) | ✅ Funcional | Se muestra |
-| Ligas y temporadas | ✅ Funcional | Se muestra (precargadas) |
-| Torneos (5 formatos, bracket, resultados) | ✅ Funcional | Torneo A precargado + **gran final EN VIVO** |
-| Calendario de eventos (`/calendar`, RF-46) | ✅ Funcional | Se muestra **con sesión** (el endpoint aún exige login; el menú lo enseña a anónimos — hallazgo del review de #36) |
-| Equipos (crear, invitar, roles, perfil público, stats) | ✅ Funcional | Perfil + **aceptar invitación EN VIVO** |
-| Transferencias | ✅ Funcional | Opcional en vivo |
-| Historial de jugador (`/players/:id/historial`) | ✅ Funcional | Se muestra |
-| Perfil propio (`/profile`) | ✅ Funcional | Se muestra rápido |
-| Transmisiones (`/transmisiones`, RF-35) | ✅ Funcional | Se muestra; EN VIVO si el canal transmite |
-| Canal de Twitch + métricas (`/twitch`, RF-34/36) | ✅ Funcional | Se muestra (ADMIN) |
-| Patrocinios (`/sponsorships`, RF-41) | ✅ Funcional | Se muestra (precargados) |
-| Administración de roles (`/admin`, RF-19) | ✅ Funcional | Se muestra (ADMIN) |
-| Disputas | 🔜 Próximamente (placeholder) | **NO demostrable** (la resolución de resultados en torneos SÍ existe) |
-| Estadísticas (página propia) | 🔜 Próximamente | **NO demostrable** (las stats del perfil de equipo SÍ) |
-| Progresión | 🔜 Próximamente | NO demostrable |
-| Notificaciones (página) | 🔜 Próximamente | NO demostrable (los "pendientes" del dashboard SÍ) |
-| Analítica (`/metricas`, RF-37) | ✅ Funcional | Se muestra (ADMIN y COMISIONADO) |
-| Panel comercial del patrocinador | 🔜 Próximamente | NO demostrable (necesita el vínculo usuario↔patrocinador de RF-44) |
-| Sentimiento IA y termómetro (RF-39/40) | ❌ No implementado | NO demostrable (la captura de chat de RF-38 SÍ) |
-| Consulta de métricas por período/rango (RF-37) | ✅ Funcional | Series de audiencia y chat, crudas o por hora |
+| Landing institucional y de producto | ✅ | Se muestra |
+| **Registro** local + login local + Google | ✅ | **Registro EN VIVO** (§ Sección 1) + login local |
+| Dashboard `/inicio` | ✅ | Se muestra (datos del seed) |
+| Juegos (catálogo, hub, tráiler, importar IGDB) | ✅ | Se muestra |
+| Ligas y temporadas | ✅ | Se muestra (precargadas) |
+| Torneos (formatos, bracket, resultados, disputa) | ✅ | Torneos precargados + **gran final EN VIVO** |
+| Calendario de eventos (`/calendar`, RF-46) | ✅ | Se muestra **con sesión** |
+| Equipos (crear, invitar, roles, perfil, stats) | ✅ | Perfil + **aceptar invitación EN VIVO** |
+| Transferencias | ✅ | Opcional en vivo |
+| Disputas (`/disputes`) | ✅ | Listado + deep-link a la partida |
+| Historial de jugador | ✅ | Se muestra (multijuego) |
+| Estadísticas (`/statistics`) | ✅ | Se muestra |
+| Progresión / tienda cosmética (`/progression`) | ✅ | Se muestra |
+| Notificaciones (`/notifications`) | ✅ | Se muestra |
+| Perfil propio (`/profile`) | ✅ | Se muestra rápido |
+| Transmisiones (`/transmisiones`, RF-35) | ✅ | Se muestra; EN VIVO si el canal transmite |
+| Canal de Twitch + métricas (`/twitch`, RF-34/36) | ✅ | Se muestra (ADMIN) |
+| Analítica por período (`/metricas`, RF-37) | ✅ | Series de audiencia/chat, crudas o por hora |
+| **Termómetro del chat + Asistente IA (RF-39/40)** | ✅ | Sentimiento + **asistente de IA EN VIVO** |
+| Reportes exportables (`/reports`, RF-50) | ✅ | Genera reporte + **descarga PDF** |
+| Patrocinios y asociaciones (`/sponsorships`) | ✅ | Se muestra (precargados) |
+| Panel comercial del patrocinador | ✅ | Se muestra (necesita cuenta patrocinador) |
+| Administración de roles (`/admin`, RF-19) | ✅ | Se muestra (ADMIN) |
 
-Otros límites honestos: el rol ÁRBITRO existe pero no participa del flujo de
-resultados (reporta capitán, confirma rival, resuelve organizador/admin); no hay
-perfil público de jugador más allá del historial de equipos.
+Límite honesto a narrar: el rol **ÁRBITRO** existe pero no participa del flujo de
+resultados (reporta capitán → confirma rival → resuelve organizador/admin).
 
 ---
 
-## 2. Datos semilla
+## 2. Datos que deja el seed
 
-### 2.1 Cuentas — opciones evaluadas y elección
+### 2.1 Cuentas (contraseña única: `Demo2026!`)
 
-Bracket sin byes = potencia de 2. Cuentas de staff fijas: 1 admin + 1 organizadora.
-
-| Opción | Cuentas de jugadores | Total cuentas |
-|---|---|---|
-| **4 equipos × 1 persona (ELEGIDA)** | 4 | **6** |
-| 8 equipos × 1 persona | 8 | 10 |
-| 4 equipos × 2 personas | 8 | 10 |
-
-Se eligió 4×1: brackets de 3 (eliminación) y 6 (doble eliminación) partidas,
-suficiente para contar la historia sin inflar cuentas ni alargar la demo. Los
-**mismos 4 equipos juegan ambos torneos**.
-
-### 2.2 Credenciales de demo (contraseña única: `Demo2026!`)
-
-⚠️ Credenciales obvias y públicas a propósito. Solo existen en entornos dev.
+⚠️ Credenciales obvias a propósito; solo existen en dev.
 
 | Cuenta | Correo | Rol / función |
 |---|---|---|
-| Adriana Admin | `admin.demo@brakket.gg` | **ADMIN** — /admin, /twitch, patrocinios |
-| Olivia Organizadora | `orga.demo@brakket.gg` | Comisionada de la liga, organizadora de los torneos |
+| Adriana Admin | `admin.demo@brakket.gg` | **ADMIN** — /admin, /twitch, patrocinios, reportes, termómetro |
+| Olivia Organizadora | `orga.demo@brakket.gg` | Comisionada de las ligas, organizadora de los torneos, resuelve resultados |
 | Ana Fénix | `cap1.demo@brakket.gg` | Capitana de **Fenix Demo** |
 | Bruno Lobo | `cap2.demo@brakket.gg` | Capitán de **Lobos Demo** |
 | Carla Cuervo | `cap3.demo@brakket.gg` | Capitana de **Cuervos Demo** |
 | Diego Titán | `cap4.demo@brakket.gg` | Capitán de **Titanes Demo** |
+| Elena Kraken | `cap5.demo@brakket.gg` | Capitana de **Kraken Demo** |
+| Fabián Nova | `cap6.demo@brakket.gg` | Capitán de **Nova Demo** |
+| Gabriela Raptor | `cap7.demo@brakket.gg` | Capitana de **Raptors Demo** |
+| Héctor Vórtex | `cap8.demo@brakket.gg` | Capitán de **Vortex Demo** |
 
-### 2.3 Qué deja montado el seed
+### 2.2 Qué monta el seed
 
-- **Jerarquía**: Liga Demo Brakket (Rocket League) → Temporada Demo 2026 (ACTIVA) → 2 torneos 1v1.
-- **Torneo A — "Copa Relampago (Demo)"**: eliminación directa, 4 equipos, **FINALIZADO**
-  con las 3 partidas cerradas, campeón coronado, y todo lo derivado (bracket
-  completo, estadísticas del perfil de equipo, historial).
-- **Torneo B — "Copa Doble Orbita (Demo)"**: doble eliminación, 4 equipos, **EN
-  CURSO** con llave superior e inferior resueltas y **solo la GRAN FINAL
-  pendiente** — el momento "mirá cómo avanza el bracket" de la presentación.
-- 1 invitación de equipo **pendiente** (Fenix Demo → Olivia) para que el
-  dashboard muestre acciones y se pueda aceptar en vivo.
-- 2 patrocinadores demo (Cafe Volcan, Nebula Energy).
-- Best-effort: canal oficial de Twitch validado + transmisión asociada al
-  Torneo B (si el `.env` tiene credenciales de Twitch).
+- **2 ligas** (dos juegos): *Liga Demo Brakket* → *Temporada Demo 2026* (ACTIVA), y
+  *Liga Multijuego Demo Brakket* → *Temporada Multijuego Demo 2026*.
+- **8 equipos** de 1 jugador, **multijuego** (juegan en los dos juegos).
+- **3 torneos 1v1**:
+  - **Copa Relampago (Demo)** — eliminación directa, **FINALIZADO**, campeón coronado.
+  - **Masters Horizonte (Demo)** — eliminación directa en el **juego secundario**,
+    **FINALIZADO** (alimenta el historial multijuego).
+  - **Copa Doble Orbita (Demo)** — doble eliminación, **EN CURSO** con **solo la
+    gran final reportada y sin confirmar** (el momento en vivo + aviso de
+    resultado no definitivo de RF-47).
+- **1 invitación de equipo pendiente** (Fenix Demo → Olivia) para que el
+  dashboard muestre acciones.
+- **2 patrocinadores** demo (Cafe Volcan, Nebula Energy).
+- **Best-effort**: canal oficial de Twitch validado + transmisión asociada a la
+  Copa Doble Orbita (si el `.env` tiene credenciales de Twitch).
 
-### 2.4 Cómo correrlo (y resetear para ensayar)
+> Los **IDs cambian en cada corrida**: en la demo navegá **por nombre**, nunca por
+> una URL con ID memorizado. (El ID del torneo ahora se ve en su página, por si
+> hace falta para asociar una transmisión.)
+
+### 2.3 Cómo correrlo
 
 ```bash
 # Requisitos: docker compose up -d (backend en localhost:8080) y Node 18+.
-node scripts/seed-demo.mjs               # reset + seed (idempotente: se puede correr N veces)
+node scripts/seed-demo.mjs               # reset + seed (idempotente, ~30-60 s)
 node scripts/seed-demo.mjs --solo-reset  # solo borrar los datos demo
 ```
 
 - **Guardas**: aborta si `SPRING_PROFILES_ACTIVE=prod` o si el backend no responde.
 - **Solo borra datos demo** (nombres `(Demo)` y correos `*.demo@brakket.gg`); jamás toca datos reales.
-- Los IDs cambian en cada corrida: en la demo **navegá siempre por nombre**, nunca por URL con ID memorizado.
-- Crea todo **vía API real** (mismas reglas de negocio que la UI), salvo el grant de ADMIN, que es un INSERT dev-only.
-
-### 2.5 Preparación previa (20 min antes, NO en escena)
-
-1. `docker compose up -d` y verificar `http://localhost:8080/actuator/health` = UP.
-2. `node scripts/seed-demo.mjs`.
-3. `ng serve` en `frontend/` — **abrí la app y verificá que /transmisiones carga**;
-   si el bundle quedó viejo, reiniciá `ng serve` (falla conocida del watch).
-4. Preparar **3 perfiles/ventanas de navegador** ya logueados:
-   - Ventana 1 (principal): `orga.demo@brakket.gg`
-   - Ventana 2: `cap3.demo@brakket.gg` (Cuervos — reporta la gran final)
-   - Ventana 3: `cap4.demo@brakket.gg` (Titanes — confirma) — puede ser incógnito
-   - Tener a mano las credenciales de `admin.demo@brakket.gg` (se usa la Ventana 1 al final, cerrando sesión).
-5. Opcional (módulo Twitch al máximo): dejar OBS o la app de Twitch lista para
-   poner en vivo el canal oficial en la sección 9.
+- Crea todo **vía API real** (mismas reglas de negocio que la UI), salvo el grant
+  de ADMIN a `admin.demo`, que es un INSERT dev-only.
+- **Prerrequisito**: tiene que haber ≥2 juegos activos en el catálogo (los siembra
+  `CatalogoSeeder` desde IGDB al arrancar). Si el catálogo está vacío, el seed
+  falla: entrar como admin, importar 2 juegos, y re-correr el seed.
 
 ---
 
-## 3. Recorrido paso a paso
+## 3. Checklist previo (30 min antes, NO en escena)
+
+1. `git pull` de `develop` con **todos los PRs de la iteración mergeados**.
+2. `docker compose up -d` y verificar `http://localhost:8080/actuator/health` = UP.
+3. `node scripts/seed-demo.mjs` — confirmar el resumen final con las credenciales.
+4. `ng serve` en `frontend/`. **Abrir la app y verificar que `/transmisiones`
+   carga**; si el bundle quedó viejo, reiniciar `ng serve` (falla conocida del watch).
+5. **Túnel** (§0): forward de 8080 y 4200, ambos **Public**, `environment.ts` y
+   `FRONTEND_URL` apuntando al túnel, backend reiniciado. Abrir la URL del
+   frontend en **incógnito** y entrar con `admin.demo` — si entra y ves `/admin`,
+   el túnel está OK.
+6. **Probar desde afuera**: pedile a un compañero que abra la URL del frontend
+   desde su casa. Si a él le funciona, le funciona al profesor.
+7. Preparar **3 ventanas/perfiles** de navegador ya logueados (para la gran final):
+   - Ventana 1 (principal): `orga.demo@brakket.gg`
+   - Ventana 2: capitán del equipo A de la gran final (leerlo del bracket)
+   - Ventana 3: capitán del equipo B de la gran final (puede ser incógnito)
+   - Credenciales de `admin.demo` a mano (se usa al final).
+8. Si se muestra el **termómetro/IA con datos reales**: dejar el canal oficial
+   **en vivo con chat activo** unos minutos antes, para que el muestreo capture
+   (ver §5).
+9. **Reiniciar el backend** una última vez antes de empezar (limpia contadores de
+   intentos de login si alguien probó de más).
+
+---
+
+## 4. Recorrido paso a paso
 
 Leyenda: 🖥️ = ya está cargado, solo se muestra · 🔴 = se ejecuta EN VIVO.
+Todo se hace **por la URL del túnel** (el profesor ve lo mismo).
 
-### Sección 1 — Portada y acceso (2 min) — Ventana 1
+### Sección 1 — Portada, registro y acceso (3 min)
 
 | # | Usuario | Acción | Qué se debe ver |
 |---|---|---|---|
-| 1.1 🖥️ | (nadie) | Abrir `http://localhost:4200/` | Landing institucional; botón "Ver plataforma" |
+| 1.1 🖥️ | (nadie) | Abrir la URL del frontend | Landing institucional; botón "Ver plataforma" |
 | 1.2 🖥️ | (nadie) | `/producto` | Landing del producto |
-| 1.3 🔴 | — | Login con `orga.demo@brakket.gg` / `Demo2026!` | Entra al dashboard. Mencionar que también hay login con Google (los correos del equipo entran como ADMIN) |
+| 1.3 🔴 | (nuevo) | **Registrarse en vivo** con un correo nuevo (`invitado.demo@brakket.gg`) — mostrar confirmar contraseña y el ojito de ver/ocultar | Cuenta creada, entra como JUGADOR. **El profe pidió ver el registro** |
+| 1.4 🔴 | Olivia | Cerrar sesión y entrar con `orga.demo@brakket.gg` / `Demo2026!` | Entra al dashboard |
 
-### Sección 2 — Dashboard (2 min) — Ventana 1 (Olivia)
+### Sección 2 — Dashboard (2 min) — Olivia
 
-| # | Usuario | Acción | Qué se debe ver |
-|---|---|---|---|
-| 2.1 🖥️ | Olivia | Recorrer `/inicio` | Carrusel de juegos, rail de **próximos torneos** (Copa Doble Orbita EN_CURSO), "Tus competencias" (organiza los 2 torneos) y **Pendientes: 1 invitación de Fenix Demo** |
+| # | Acción | Qué se debe ver |
+|---|---|---|
+| 2.1 🖥️ | Recorrer `/inicio` | Carrusel de juegos, rail de **próximos torneos** (Copa Doble Orbita EN_CURSO), "Tus competencias" y **Pendientes: 1 invitación de Fenix Demo** |
 
-### Sección 3 — Juegos, liga, temporada y calendario (4 min) — Ventana 1 (Olivia)
+### Sección 3 — Juegos, liga, temporada y calendario (4 min) — Olivia
 
-| # | Usuario | Acción | Qué se debe ver |
-|---|---|---|---|
-| 3.1 🖥️ | Olivia | `/games` → abrir Rocket League | Catálogo (5 juegos) y hub del juego. Mencionar: importar desde RAWG e (ADMIN) crear/editar |
-| 3.2 🖥️ | Olivia | `/leagues` → **Liga Demo Brakket** | Detalle de la liga; Olivia es la comisionada |
-| 3.3 🖥️ | Olivia | Tab/sección de temporadas | **Temporada Demo 2026** ACTIVA con cupo y formato; los 2 torneos cuelgan de ella. Narrar la jerarquía liga → temporada → torneo |
-| 3.4 🖥️ | Olivia | `/calendar` → filtrar por Rocket League y por la liga | Los 2 torneos demo como tarjetas de evento con fecha y estado (RF-46). ⚠️ Mostrarlo SIEMPRE con sesión iniciada: sin login el endpoint devuelve error |
+| # | Acción | Qué se debe ver |
+|---|---|---|
+| 3.1 🖥️ | `/games` → abrir Rocket League | Hub del juego: **tráiler embebido** (IGDB), ficha (rating, plataformas), y torneos del juego. Mencionar: importar desde IGDB e (ADMIN) crear/editar |
+| 3.2 🖥️ | `/leagues` → **Liga Demo Brakket** | Detalle de la liga; Olivia es la comisionada |
+| 3.3 🖥️ | Sección de temporadas | **Temporada Demo 2026** ACTIVA con cupo y formato. Narrar la jerarquía liga → temporada → torneo |
+| 3.4 🖥️ | `/calendar` → filtrar por juego y liga | Los torneos demo como tarjetas de evento con fecha y estado (RF-46). ⚠️ Siempre **con sesión** |
 
-### Sección 4 — Equipos + invitación EN VIVO (3 min) — Ventana 1 (Olivia)
+### Sección 4 — Equipos + invitación EN VIVO (3 min) — Olivia
 
-| # | Usuario | Acción | Qué se debe ver |
-|---|---|---|---|
-| 4.1 🖥️ | Olivia | `/teams` → buscar "Fenix" → perfil público | Tarjeta del club, tabs Resumen / Miembros / **Estadísticas** (victorias/derrotas/winrate REALES del Torneo A) |
-| 4.2 🔴 | Olivia | Dashboard o `/teams/invitaciones` → **aceptar** la invitación de Fenix Demo | Olivia queda SUPLENTE; la plantilla de Fenix Demo ahora muestra 2 miembros |
-| 4.3 🖥️ | Olivia | Desde el perfil del equipo → historial / miembros → historial de jugador | Historial de equipos del jugador (RF-15/16) |
+| # | Acción | Qué se debe ver |
+|---|---|---|
+| 4.1 🖥️ | `/teams` → buscar "Fenix" → perfil público | Tarjeta del club, tabs Resumen / Miembros / **Estadísticas** (winrate REAL del torneo finalizado) |
+| 4.2 🔴 | Dashboard o `/teams/invitaciones` → **aceptar** la invitación de Fenix Demo | Olivia queda SUPLENTE; la plantilla de Fenix Demo muestra 2 miembros |
+| 4.3 🖥️ | Perfil del equipo → historial de jugador | **Historial multijuego** (RF-15/16): el jugador aparece en los dos juegos |
 
-### Sección 5 — Torneo A: el ciclo completo ya jugado (3 min) — Ventana 1 (Olivia)
+### Sección 5 — Torneos: ciclo completo (4 min) — Olivia
 
-| # | Usuario | Acción | Qué se debe ver |
-|---|---|---|---|
-| 5.1 🖥️ | Olivia | `/tournaments` → **Copa Relampago (Demo)** | Estado FINALIZADO, 4 equipos, formato eliminación directa |
-| 5.2 🖥️ | Olivia | Abrir el bracket | Llave completa con marcadores, camino del campeón resaltado y **campeón coronado** |
-| 5.3 🖥️ | Olivia | Volver al perfil de un equipo participante | Las estadísticas del tab reflejan estas partidas — nada es simulado |
+| # | Acción | Qué se debe ver |
+|---|---|---|
+| 5.1 🖥️ | `/tournaments` → **Copa Relampago (Demo)** | Estado FINALIZADO, bracket completo con marcadores, camino del campeón resaltado, **campeón coronado**. (Mostrar el chip **ID N** del torneo.) |
+| 5.2 🖥️ | Perfil de un equipo participante | Las estadísticas reflejan estas partidas — nada es simulado |
+| 5.3 🖥️ | `/disputes` (opcional) | Listado de disputas; explicar el flujo reportar → rechazar → disputa → resuelve el organizador |
 
-### Sección 6 — Torneo B: la GRAN FINAL en vivo (5 min) — Ventanas 2 y 3 ⭐
+### Sección 6 — La GRAN FINAL en vivo (5 min) ⭐ — 3 ventanas
 
-El momento estrella. Narrar: "esto que sigue no está pregrabado".
-
-| # | Usuario | Acción | Qué se debe ver |
-|---|---|---|---|
-| 6.1 🖥️ | Olivia (V1) | `/tournaments` → **Copa Doble Orbita (Demo)** → bracket | **Doble eliminación**: llave superior, llave inferior y la **gran final dorada PENDIENTE** (Cuervos vs Titanes*) |
-| 6.2 🖥️ | Carla (V2) | Abrir la misma partida como capitana | Ve el **lobby con clave** (solo capitanes/organizador la ven) |
-| 6.3 🔴 | Carla (V2) | **Reportar resultado** de la gran final (p. ej. 3–2) | Partida pasa a REPORTADA |
-| 6.4 🔴 | Diego (V3) | **Confirmar** el resultado | La partida se cierra, el bracket avanza, **campeón coronado y torneo FINALIZADO** (confetti) |
-| 6.5 🖥️ | Olivia (V1) | Refrescar el bracket | Todo el torneo cerrado; mencionar que rechazar → disputa → la resuelve el organizador |
-
-\* Los finalistas pueden variar entre corridas del seed — leerlos del bracket, no de esta guía.
-
-### Sección 7 — Transferencias (2 min, OPCIONAL si hay tiempo) — Ventanas 2/1
+El momento estrella. Narrar: "esto no está pregrabado".
 
 | # | Usuario | Acción | Qué se debe ver |
 |---|---|---|---|
-| 7.1 🔴 | Bruno (o cap2 en V3) | `/transfers` → crear solicitud por **Olivia** (ahora suplente de Fenix) hacia Lobos Demo | Solicitud pendiente creada |
-| 7.2 🔴 | La otra parte | Responder la solicitud | Flujo completo de RF-13/14. **Fallback**: si algo falla, mostrar solo el listado y narrar |
+| 6.1 🖥️ | Olivia (V1) | `/tournaments` → **Copa Doble Orbita (Demo)** → bracket | **Doble eliminación**: llave superior, inferior y la **gran final dorada PENDIENTE** |
+| 6.2 🖥️ | Cap A (V2) | Abrir la misma partida como capitán | Ve el **lobby con clave** (solo capitanes/organizador) |
+| 6.3 🔴 | Cap A (V2) | **Reportar resultado** de la gran final (p. ej. 3–2) | Partida pasa a REPORTADA |
+| 6.4 🔴 | Cap B (V3) | **Confirmar** el resultado | La partida se cierra, el bracket avanza, **campeón coronado, torneo FINALIZADO** (confetti) |
+| 6.5 🖥️ | Olivia (V1) | Refrescar el bracket | Torneo cerrado. Mencionar: rechazar → disputa → la resuelve el organizador |
 
-### Sección 8 — Transmisiones y Twitch (4 min) — Ventana 1
+\* Los finalistas varían entre corridas del seed — **leerlos del bracket**, no de esta guía.
 
-| # | Usuario | Acción | Qué se debe ver |
-|---|---|---|---|
-| 8.1 🖥️ | (público) | `/transmisiones` (sirve sin sesión) | Vitrina estilo Twitch: hero con el canal oficial, estado real consultado a Helix. Offline = tarjeta digna con placeholder "Próximamente"; si el canal está EN VIVO: player, badge, espectadores en ~1 min |
-| 8.2 🖥️ | **Admin** (login en V1) | `/twitch` ("Canal de Twitch" en el menú) | Canal validado (RF-34), transmisión asociada al Torneo B |
-| 8.3 🖥️ | Admin | Bloque **Métricas de audiencia (RF-36)** | Muestras/pico/promedio/duración. Si el canal no transmitió: "Todavía no hay muestras" — narrar que el muestreo corre cada 60 s automáticamente |
-| 8.4 🖥️ | Admin | `/metricas` ("Analítica" en el menú) — **RF-37** | Elegir la transmisión del Torneo B: tarjetas de resumen y la curva de audiencia. Alternar **Por hora / Muestras crudas** (el resumen no cambia, la densidad sí) y acotar el rango a una hora del directo |
-| 8.5 🖥️ | Admin | Panel **Actividad de chat** (RF-38) | Mensajes por minuto y usuarios activos capturados del chat real. El panel de **Sentimiento** muestra su estado vacío: es RF-39, todavía sin mergear |
+### Sección 7 — Streaming, métricas y ASISTENTE DE IA (6 min) — Admin
 
-### Sección 9 — Patrocinios y administración (3 min) — Ventana 1 (Admin)
+Entrar como `admin.demo` (o seguir con Olivia para lo público).
 
 | # | Usuario | Acción | Qué se debe ver |
 |---|---|---|---|
-| 9.1 🖥️ | Admin | `/sponsorships` | Cafe Volcan y Nebula Energy precargados; formulario de crear/editar (crear uno en vivo es opcional y rápido) |
-| 9.2 🖥️ | Admin | `/admin` | Catálogo de roles y permisos (RF-19); buscar usuario y asignar/revocar rol (si se hace en vivo: dar ARBITRO a Diego y revocarlo) |
-| 9.3 🖥️ | Admin | `/profile` (opcional) | Edición de perfil propio (RF-18) |
+| 7.1 🖥️ | (público) | `/transmisiones` | Vitrina estilo Twitch: hero con el canal oficial, estado real. Offline = tarjeta con placeholder; EN VIVO = player + espectadores |
+| 7.2 🖥️ | Admin | `/twitch` | Canal validado (RF-34), transmisión asociada. Bloque **Métricas de audiencia (RF-36)**: muestras/pico/promedio |
+| 7.3 🖥️ | Admin | `/metricas` (Analítica, RF-37) | Elegir la transmisión: tarjetas de resumen y **curva de audiencia**. Alternar **Por hora / Muestras crudas** y acotar el rango |
+| 7.4 🖥️ | Admin | **Termómetro del chat** (RF-40) | Serie de **sentimiento** del chat (barra/termómetro). Con IA si hay llave; si no, el analizador léxico determinístico |
+| 7.5 🔴 | Admin | **Asistente de IA** (botón flotante en el termómetro) → preguntar p. ej. *"¿de qué habló el chat?"* o *"¿cuándo estuvo más positivo?"* | Respuesta en prosa basada en los datos reales capturados. **Si se agotó la cuota de Gemini, responde en modo degradado con los números calculados** — narrarlo como resiliencia, no como error |
 
-### Sección 10 — Cierre (2 min)
+> **Nota IA**: el asistente y el sentimiento trabajan sobre el **chat capturado**.
+> Para que haya datos ricos, dejá el canal oficial **en vivo con chat activo**
+> unos minutos antes (§3.8). Sin chat capturado, el termómetro avisa que no hay
+> muestras suficientes y el asistente responde con lo que haya.
 
-Mostrar el menú con los badges "Pronto" y ser explícitos: disputas como módulo,
-estadísticas globales, progresión, notificaciones, panel comercial del
-patrocinador y el análisis de sentimiento + termómetro (RF-39/40) son la
-**siguiente iteración**. Lo mostrado hoy es funcional de punta a punta sobre
-datos reales.
+### Sección 8 — Reportes, patrocinios y administración (4 min) — Admin
+
+| # | Acción | Qué se debe ver |
+|---|---|---|
+| 8.1 🔴 | `/reports` → elegir tipo (competencia/audiencia/patrocinio) → generar | Tabla del reporte en pantalla y **descarga del PDF** (RF-50) |
+| 8.2 🖥️ | `/sponsorships` | Cafe Volcan y Nebula Energy; asociaciones liga/torneo; crear uno en vivo es opcional |
+| 8.3 🖥️ | `/admin` | Catálogo de roles y permisos (RF-19); buscar usuario y asignar/revocar rol (en vivo: dar ÁRBITRO a un capitán y revocarlo) |
+| 8.4 🖥️ | `/progression` (opcional) | Tienda cosmética: canje de puntos por cosméticos (RF-48) |
+| 8.5 🖥️ | `/profile` (opcional) | Edición de perfil propio (RF-18) |
+
+### Sección 9 — Cierre + roadmap + known issues (5 min)
+
+**El profesor pidió explícitamente diapositivas con roadmap, completitud y known
+issues.** Cerrar con:
+
+- **Roadmap**: qué se planeó vs qué se completó en la iteración (backlog).
+- **Completitud**: los RFs cubiertos (mostrar el % del backlog).
+- **Known issues** (defectos encontrados y no resueltos — ver §6): decirlos de
+  frente. Un defecto documentado castiga menos que uno descubierto en vivo.
 
 ### Tiempos
 
-| Sección | Min | Acumulado |
+| Sección | Min | Acum. |
 |---|---|---|
-| 1. Portada y acceso | 2 | 2 |
-| 2. Dashboard | 2 | 4 |
-| 3. Juegos, liga, temporada, calendario | 4 | 8 |
-| 4. Equipos + invitación | 3 | 11 |
-| 5. Torneo A finalizado | 3 | 14 |
-| 6. **Gran final en vivo** | 5 | 19 |
-| 7. Transferencias (opcional) | 2 | 21 |
-| 8. Transmisiones + Twitch | 4 | 25 |
-| 9. Patrocinios + admin | 3 | 28 |
-| 10. Cierre | 2 | **30** |
+| 1. Portada, registro, acceso | 3 | 3 |
+| 2. Dashboard | 2 | 5 |
+| 3. Juegos, liga, temporada, calendario | 4 | 9 |
+| 4. Equipos + invitación | 3 | 12 |
+| 5. Torneos | 4 | 16 |
+| 6. **Gran final en vivo** | 5 | 21 |
+| 7. Streaming + métricas + **IA** | 6 | 27 |
+| 8. Reportes, patrocinios, admin | 4 | 31 |
+| 9. Cierre + roadmap + known issues | 5 | **36** |
 
-Si hay que recortar: sacrificar 7 (transferencias) y 9.3 (perfil).
+Si hay que recortar: sacrificar 8.4/8.5 (progresión/perfil) y 5.3 (disputas).
 
 ---
 
-## 4. Puntos frágiles y qué hacer si fallan
+## 5. El asistente de IA en detalle (RF-39/40)
 
-| Riesgo | Síntoma | Mitigación / plan B |
+Es la novedad estrella de la iteración; conviene ensayarlo aparte.
+
+- **Dónde**: `/analytics` (Termómetro del chat) → botón flotante del asistente.
+- **Qué hace**: el asistente **interpreta**; los **números los calcula Java**
+  (picos, mínimos, timestamps). El modelo nunca inventa un dato del sistema.
+- **Preguntas seguras para la demo**: "¿de qué se habló?", "¿cuándo estuvo más
+  animado el chat?", "¿alguien mencionó [tema]?".
+- **Proveedor**: Google Gemini. **Límite gratuito diario**: no lo pruebes de más
+  hoy, guardá llamadas para la presentación.
+- **Degradación**: sin llave o con la cuota agotada, el sentimiento cae al
+  analizador léxico y el asistente responde con los números ya calculados. Nunca
+  se cae. Es un punto a favor: mostrarlo como tolerancia a fallos.
+
+---
+
+## 6. Known issues (para la diapositiva de cierre)
+
+Decirlos de frente el viernes:
+
+1. **Login con Google por el túnel**: no funciona bien desde otra computadora. El
+   callback de Google es una navegación del navegador que choca con la página de
+   aviso del túnel. **Mitigación**: la demo remota usa **login local**; Google se
+   muestra, si se quiere, en localhost. (Al profesor su Google no le daría admin
+   igual, porque su correo no está en la lista.)
+2. **Descripción del juego / layout de temporada**: pulido visual pendiente.
+3. **Rol ÁRBITRO**: existe pero no participa del flujo de resultados.
+4. **Panel comercial del patrocinador**: requiere una cuenta con perfil de
+   patrocinador vinculado; con las cuentas del seed se muestra el flujo admin.
+
+---
+
+## 7. Puntos frágiles y plan B
+
+| Riesgo | Síntoma | Mitigación |
 |---|---|---|
-| `ng serve` sirve bundle viejo | Rutas nuevas redirigen al landing | Reiniciar `ng serve` ANTES de presentar (paso 2.5.3) |
-| Backend sin credenciales Twitch | El backend **no arranca** (fail-fast) | Poner `TWITCH_CLIENT_ID/SECRET` en `.env`, o `TWITCH_REQUIRED=false` y recrear el contenedor |
+| Túnel caído / VS Code cerrado | La URL deja de cargar | Mantener VS Code y el túnel abiertos toda la demo. Plan B: el host de respaldo (§0.1) |
+| Se le va la luz al host | Todo cae | Host de respaldo levanta su túnel y pasa su URL |
+| `ng serve` sirve bundle viejo | Rutas redirigen al landing | Reiniciar `ng serve` antes de presentar (§3.4) |
+| `.env` sin `JWT_SECRET` | El backend **no arranca** (fail-fast) | Tener `JWT_SECRET` (≥32 chars) en el `.env` |
 | `.env` editado sin recrear | Cambios no aplican | `docker compose up -d --force-recreate backend` (restart NO alcanza) |
-| Twitch/Helix caído en escena | `/transmisiones` muestra aviso ámbar "estado desconocido" | Narrarlo como feature: degradación ante fallos (RNF-15). No es un error |
-| Confusión de ventanas en la gran final | 403 "Solo un capitán…" al reportar/confirmar | Verificar la cuenta en el header. **Plan B**: Olivia (organizadora) fija el resultado con "Resolver" y se narra la disputa |
-| Finalistas distintos a los de la guía | La gran final no es Cuervos vs Titanes | Normal entre corridas del seed: leer los nombres del bracket |
-| Se ensució el estado ensayando | Datos demo inconsistentes | `node scripts/seed-demo.mjs` re-crea todo desde cero (~30 s). Los IDs cambian: navegar por nombre |
-| Ventana minimizada/tapada | Animaciones (confetti, avance) no se ven | Mantener la ventana del navegador visible y al frente |
-| Internet caído | Login Google, RAWG y Twitch fallan | Todo lo demás es local: usar solo cuentas demo y narrar las integraciones |
+| Twitch/Helix caído | `/transmisiones` muestra aviso ámbar | Narrarlo como degradación ante fallos (RNF-15), no es error |
+| Cuota de Gemini agotada | El asistente responde en modo degradado | Es tolerancia a fallos: los números siguen siendo correctos. No probar de más antes |
+| Confusión de ventanas en la gran final | 403 "Solo un capitán…" | Verificar la cuenta en el header. Plan B: Olivia resuelve con "Resolver" y se narra la disputa |
+| Finalistas distintos a la guía | La final no es la esperada | Normal entre corridas: leer los nombres del bracket |
+| Estado ensuciado ensayando | Datos inconsistentes | `node scripts/seed-demo.mjs` re-crea todo (~30-60 s). Navegar por nombre |
+| Login local bloqueado | "Demasiados intentos, 15 min" | Reiniciar el backend limpia el contador (es en memoria) |
 
 ---
 
-## 5. Reparto sugerido (5 presentadores)
+## 8. Reparto sugerido (5 presentadores)
 
-1. **Apertura** (secciones 1–2): visión del producto + dashboard.
-2. **Competencia** (3–5): liga, temporada, equipos, torneo finalizado.
-3. **El momento en vivo** (6–7): gran final + transferencia. Requiere ensayo con las 3 ventanas.
-4. **Streaming** (8): transmisiones + métricas (RF-34/35/36).
-5. **Plataforma** (9–10): patrocinios, roles, cierre y roadmap.
+> Todos deben conocer el flujo completo (el profesor puede pasar el control a
+> cualquiera). Este reparto es solo el orden de conducción.
 
-Ensayo recomendado: correr el seed, cronometrar una pasada completa, resetear y
-repetir. El seed existe exactamente para eso.
+1. **Apertura** (§1–2): visión + registro en vivo + dashboard.
+2. **Competencia** (§3–5): liga, temporada, equipos, torneos.
+3. **El momento en vivo** (§6): gran final. Requiere ensayo con las 3 ventanas.
+4. **Streaming + IA** (§7): transmisiones, métricas y el asistente de IA.
+5. **Plataforma + cierre** (§8–9): reportes, patrocinios, admin, roadmap y known issues.
+
+Ensayo recomendado: correr el seed, cronometrar una pasada completa por el túnel,
+resetear y repetir. El seed existe exactamente para eso.
