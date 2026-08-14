@@ -3,6 +3,7 @@ package com.coffeecommits.brakket.sponsorship.service;
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.sponsorship.dto.CrearEspacioPublicitarioRequest;
+import com.coffeecommits.brakket.sponsorship.dto.EditarEspacioPublicitarioRequest;
 import com.coffeecommits.brakket.sponsorship.dto.EspacioPublicitarioResponse;
 import com.coffeecommits.brakket.sponsorship.model.EspacioPublicitario;
 import com.coffeecommits.brakket.sponsorship.model.Patrocinio;
@@ -22,8 +23,8 @@ public class EspacioPublicitarioServiceImpl implements EspacioPublicitarioServic
     private static final String ESTADO_ACTIVO = "ACTIVO";
 
     // IMPORTANTE: esta lista es la fuente de la app, pero se duplica en el
-    // CHECK ck_espacio_publicitario_ubicacion de la migracion V66 (redujo de 5 a
-    // 3). Si se agrega o quita una ubicacion, hay que actualizar AMBOS lugares.
+    // CHECK ck_espacio_publicitario_ubicacion de la migracion V66. Si se agrega
+    // o quita una ubicacion, hay que actualizar AMBOS lugares.
     private static final Set<String> UBICACIONES_VALIDAS = Set.of(
             "TRANSMISION_INFERIOR",
             "TORNEO_CABECERA",
@@ -52,31 +53,9 @@ public class EspacioPublicitarioServiceImpl implements EspacioPublicitarioServic
         }
 
         String ubicacion = request.ubicacion().toUpperCase();
-        if (!UBICACIONES_VALIDAS.contains(ubicacion)) {
-            throw new BusinessException(
-                    "La ubicación debe ser una de: %s".formatted(String.join(", ", UBICACIONES_VALIDAS)));
-        }
+        validarUbicacion(ubicacion, patrocinio);
 
-        // El alcance del patrocinio limita qué ubicaciones puede reclamar: un
-        // patrocinio de LIGA (patrocinador principal) solo va en LIGA_CABECERA;
-        // uno de TORNEO (específico de ese evento) solo en las ubicaciones
-        // propias de ese torneo. Sin esto, un patrocinio que solo paga por un
-        // torneo puntual podía terminar poniendo su marca en toda la liga.
-        Set<String> ubicacionesPermitidas = ubicacionesPermitidasPara(patrocinio);
-        if (!ubicacionesPermitidas.contains(ubicacion)) {
-            throw new BusinessException(
-                    "La ubicación %s no corresponde al alcance de este patrocinio. Ubicaciones válidas para este alcance: %s"
-                            .formatted(ubicacion, String.join(", ", ubicacionesPermitidas)));
-        }
-
-        Long ligaId = patrocinio.getLiga() != null ? patrocinio.getLiga().getId() : null;
-        Long temporadaId = patrocinio.getTemporada() != null ? patrocinio.getTemporada().getId() : null;
-        Long torneoId = patrocinio.getTorneo() != null ? patrocinio.getTorneo().getId() : null;
-
-        boolean ocupado = espacioRepository.existeEspacioOcupado(
-                ligaId, temporadaId, torneoId, ubicacion,
-                patrocinio.getFechaInicio(), patrocinio.getFechaFin(), null);
-
+        boolean ocupado = existeOcupadoParaPatrocinio(patrocinio, ubicacion, null);
         if (ocupado) {
             throw new BusinessException(
                     "El espacio publicitario ya está ocupado para el período seleccionado en esta competencia");
@@ -94,18 +73,38 @@ public class EspacioPublicitarioServiceImpl implements EspacioPublicitarioServic
         return EspacioPublicitarioResponse.fromEntity(espacio);
     }
 
-    // Liga (principal) -> solo LIGA_CABECERA. Torneo (específico) -> las dos
-    // ubicaciones propias de ese torneo puntual, incluida su transmisión.
-    // Sin liga ni torneo resuelto (alcance TEMPORADA legado, o un mock/test
-    // que no seteó ninguno) no se restringe, para no romper datos viejos.
-    private Set<String> ubicacionesPermitidasPara(Patrocinio patrocinio) {
-        if (patrocinio.getLiga() != null) {
-            return Set.of("LIGA_CABECERA");
+    @Override
+    @Transactional
+    public EspacioPublicitarioResponse editar(Long id, EditarEspacioPublicitarioRequest request) {
+        EspacioPublicitario espacio = espacioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Espacio publicitario", id));
+
+        Patrocinio patrocinio = espacio.getPatrocinio();
+        String ubicacion = request.ubicacion().toUpperCase();
+        validarUbicacion(ubicacion, patrocinio);
+
+        // Se excluye el propio id: si la ubicación no cambia, no debe chocar
+        // contra sí mismo al validar ocupación.
+        boolean ocupado = existeOcupadoParaPatrocinio(patrocinio, ubicacion, id);
+        if (ocupado) {
+            throw new BusinessException(
+                    "El espacio publicitario ya está ocupado para el período seleccionado en esta competencia");
         }
-        if (patrocinio.getTorneo() != null) {
-            return Set.of("TORNEO_CABECERA", "TRANSMISION_INFERIOR");
-        }
-        return UBICACIONES_VALIDAS;
+
+        espacio.setUbicacion(ubicacion);
+        espacio.setImagenUrl(request.imagenUrl());
+        espacio.setEnlaceUrl(request.enlaceUrl());
+
+        espacio = espacioRepository.save(espacio);
+        return EspacioPublicitarioResponse.fromEntity(espacio);
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        EspacioPublicitario espacio = espacioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Espacio publicitario", id));
+        espacioRepository.delete(espacio);
     }
 
     @Override
@@ -128,5 +127,37 @@ public class EspacioPublicitarioServiceImpl implements EspacioPublicitarioServic
 
         return espacioRepository.buscarVigente(ligaId, temporadaId, torneoId, ubicacionNormalizada, LocalDate.now())
                 .map(EspacioPublicitarioResponse::fromEntity);
+    }
+
+    private void validarUbicacion(String ubicacion, Patrocinio patrocinio) {
+        if (!UBICACIONES_VALIDAS.contains(ubicacion)) {
+            throw new BusinessException(
+                    "La ubicación debe ser una de: %s".formatted(String.join(", ", UBICACIONES_VALIDAS)));
+        }
+        Set<String> permitidas = ubicacionesPermitidasPara(patrocinio);
+        if (!permitidas.contains(ubicacion)) {
+            throw new BusinessException(
+                    "La ubicación %s no corresponde al alcance de este patrocinio. Ubicaciones válidas para este alcance: %s"
+                            .formatted(ubicacion, String.join(", ", permitidas)));
+        }
+    }
+
+    private Set<String> ubicacionesPermitidasPara(Patrocinio patrocinio) {
+        if (patrocinio.getLiga() != null) {
+            return Set.of("LIGA_CABECERA");
+        }
+        if (patrocinio.getTorneo() != null) {
+            return Set.of("TORNEO_CABECERA", "TRANSMISION_INFERIOR");
+        }
+        return UBICACIONES_VALIDAS;
+    }
+
+    private boolean existeOcupadoParaPatrocinio(Patrocinio patrocinio, String ubicacion, Long excluirEspacioId) {
+        Long ligaId = patrocinio.getLiga() != null ? patrocinio.getLiga().getId() : null;
+        Long temporadaId = patrocinio.getTemporada() != null ? patrocinio.getTemporada().getId() : null;
+        Long torneoId = patrocinio.getTorneo() != null ? patrocinio.getTorneo().getId() : null;
+        return espacioRepository.existeEspacioOcupado(
+                ligaId, temporadaId, torneoId, ubicacion,
+                patrocinio.getFechaInicio(), patrocinio.getFechaFin(), excluirEspacioId);
     }
 }

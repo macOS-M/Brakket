@@ -22,18 +22,17 @@ export class EspacioFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  // Se filtra según el alcance real del patrocinio (liga/torneo) una vez que
-  // se carga en ngOnInit — mismo criterio que el backend en
-  // EspacioPublicitarioServiceImpl.ubicacionesPermitidasPara, para que el
-  // formulario ni siquiera ofrezca una ubicación que el servidor rechazaría.
   readonly ubicaciones = signal<readonly UbicacionEspacio[]>(UBICACIONES_ESPACIO);
   readonly guardando = signal(false);
+  readonly cargando = signal(false);
   readonly subiendoImagen = signal(false);
   readonly error = signal<string | null>(null);
   readonly previewUrl = signal<string | null>(null);
+  readonly editando = signal(false);
   private readonly TAMANO_MAXIMO_BYTES = 2 * 1024 * 1024; // 2MB
 
   private patrocinioId!: number;
+  private espacioId: number | null = null;
 
   readonly form = this.fb.nonNullable.group({
     ubicacion: ['TORNEO_CABECERA', Validators.required],
@@ -43,23 +42,52 @@ export class EspacioFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.patrocinioId = Number(this.route.snapshot.paramMap.get('patrocinioId'));
+    const idParam = this.route.snapshot.paramMap.get('id');
+    this.espacioId = idParam ? Number(idParam) : null;
+    this.editando.set(this.espacioId !== null);
 
+    // Filtra el catálogo según el alcance real del patrocinio (liga/torneo),
+    // igual en crear y en editar — el alcance no puede cambiar desde acá.
     this.patrociniosService.obtener(this.patrocinioId).subscribe({
       next: (patrocinio) => {
         const permitidas = this.ubicacionesPermitidasPara(patrocinio);
         this.ubicaciones.set(permitidas);
-        // El default 'TORNEO_CABECERA' puede no ser válido para este alcance
-        // (ej. un patrocinio de liga): se cambia a la primera opción real.
-        if (!permitidas.includes(this.form.controls.ubicacion.value as UbicacionEspacio)) {
+        // Solo se pisa el default en modo creación: en edición, el valor real
+        // ya lo trae el propio espacio (se carga aparte, más abajo).
+        if (!this.editando() && !permitidas.includes(this.form.controls.ubicacion.value as UbicacionEspacio)) {
           this.form.controls.ubicacion.setValue(permitidas[0]);
         }
       },
       error: () => {
-        // No se bloquea el formulario por esto: si falla la carga del
-        // patrocinio, se deja el catálogo completo — el backend igual
-        // valida el alcance real al guardar.
+        // No se bloquea el formulario: el backend igual valida el alcance real al guardar.
       }
     });
+
+    if (this.espacioId !== null) {
+      this.cargando.set(true);
+      // No existe GET /api/espacios/{id}: se reusa el listado por patrocinio
+      // y se busca el id acá, para no agregar un endpoint nuevo a esta hora.
+      this.espaciosService.listarPorPatrocinio(this.patrocinioId).subscribe({
+        next: (espacios) => {
+          const existente = espacios.find((e) => e.id === this.espacioId);
+          if (existente) {
+            this.form.patchValue({
+              ubicacion: existente.ubicacion,
+              imagenUrl: existente.imagenUrl,
+              enlaceUrl: existente.enlaceUrl ?? ''
+            });
+            this.previewUrl.set(existente.imagenUrl);
+          } else {
+            this.error.set('No se encontró el espacio publicitario a editar.');
+          }
+          this.cargando.set(false);
+        },
+        error: () => {
+          this.error.set('No se pudo cargar el espacio publicitario a editar.');
+          this.cargando.set(false);
+        }
+      });
+    }
   }
 
   private ubicacionesPermitidasPara(patrocinio: { ligaId: number | null; torneoId: number | null }): UbicacionEspacio[] {
@@ -107,12 +135,20 @@ export class EspacioFormComponent implements OnInit {
     this.error.set(null);
     const valores = this.form.getRawValue();
 
-    this.espaciosService.crear({
-      patrocinioId: this.patrocinioId,
-      ubicacion: valores.ubicacion,
-      imagenUrl: valores.imagenUrl,
-      enlaceUrl: valores.enlaceUrl || null
-    }).subscribe({
+    const accion = this.editando()
+      ? this.espaciosService.editar(this.espacioId!, {
+        ubicacion: valores.ubicacion,
+        imagenUrl: valores.imagenUrl,
+        enlaceUrl: valores.enlaceUrl || null
+      })
+      : this.espaciosService.crear({
+        patrocinioId: this.patrocinioId,
+        ubicacion: valores.ubicacion,
+        imagenUrl: valores.imagenUrl,
+        enlaceUrl: valores.enlaceUrl || null
+      });
+
+    accion.subscribe({
       next: () => this.router.navigate(['/sponsorships/asociaciones', this.patrocinioId, 'espacios']),
       error: (err) => {
         this.guardando.set(false);

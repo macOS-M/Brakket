@@ -20,13 +20,12 @@ public interface PatrocinioService {
 
     List<PatrocinioResponse> listarTodos();
 
-    /**
-     * Cascada Liga → Torneo: el patrocinio que corresponde mostrar para este
-     * torneo. Si el torneo tiene uno propio vigente, ese gana; si no, y el
-     * torneo pertenece a una liga, se usa el de la liga (si tiene uno vigente).
-     * Vacío si no hay ninguno de los dos. Pensado para el panel comercial y
-     * la pantalla de liga/torneo (pendientes de construir); ya se usa en
-     * RF-50 para que el filtro por patrocinador encuentre torneos heredados.
-     */
     Optional<PatrocinioResponse> resolverVigentePorTorneo(Long torneoId);
+
+    /**
+     * Elimina el patrocinio. Sus espacios publicitarios se borran en cascada
+     * a nivel de base de datos (ON DELETE CASCADE, migración V55) — no hace
+     * falta borrarlos aparte acá.
+     */
+    void eliminar(Long id);
 }

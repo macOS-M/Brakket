@@ -67,7 +67,6 @@ class PatrocinioServiceImplTest {
                 .build();
     }
 
-    // Rediseño: nivel ya no es parte del request.
     private CrearPatrocinioRequest requestParaTorneo(Long torneoId, LocalDate fechaInicio, LocalDate fechaFin) {
         return new CrearPatrocinioRequest(
                 11L, null, null, torneoId, "Condiciones de prueba", fechaInicio, fechaFin);
@@ -101,9 +100,6 @@ class PatrocinioServiceImplTest {
         assertThat(captor.getValue().getTorneo()).isEqualTo(torneoSinFechaFin);
     }
 
-    // Rediseño: el flujo de creación ya no acepta TEMPORADA como alcance —
-    // las temporadas no tienen pantalla propia, viven dentro de la liga.
-    // Se rechaza antes de tocar cualquier repositorio de competencia.
     @Test
     void crear_falla_si_se_intenta_asociar_a_una_temporada() {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
@@ -199,7 +195,6 @@ class PatrocinioServiceImplTest {
         verify(patrocinioRepository, never()).save(any());
     }
 
-    // Rediseño: el recurso escaso ahora es la competencia entera (sin nivel).
     @Test
     void crear_falla_si_existe_solapamiento_en_la_misma_competencia() {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
@@ -214,5 +209,37 @@ class PatrocinioServiceImplTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Ya existe un patrocinio activo");
         verify(patrocinioRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------
+    // Nuevo: eliminar. Sus espacios publicitarios se borran en cascada a
+    // nivel de base de datos (ON DELETE CASCADE, migración V55) — no hay
+    // nada que verificar sobre EspacioPublicitarioRepository acá.
+    // ---------------------------------------------------------------
+
+    @Test
+    void eliminar_borra_el_patrocinio_existente() {
+        Patrocinio existente = Patrocinio.builder()
+                .id(3L)
+                .patrocinador(patrocinadorActivo)
+                .torneo(torneoSinFechaFin)
+                .estado("ACTIVO")
+                .fechaInicio(LocalDate.of(2026, 8, 5))
+                .fechaFin(LocalDate.of(2026, 12, 31))
+                .build();
+        when(patrocinioRepository.findById(3L)).thenReturn(Optional.of(existente));
+
+        service.eliminar(3L);
+
+        verify(patrocinioRepository).delete(existente);
+    }
+
+    @Test
+    void eliminar_falla_si_el_patrocinio_no_existe() {
+        when(patrocinioRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.eliminar(999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(patrocinioRepository, never()).delete(any(Patrocinio.class));
     }
 }

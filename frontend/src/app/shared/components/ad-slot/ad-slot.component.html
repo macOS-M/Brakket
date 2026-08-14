@@ -1,5 +1,11 @@
 @if (espacio(); as e) {
-<a class="ad-slot" [href]="e.enlaceUrl ?? undefined" [attr.target]="e.enlaceUrl ? '_blank' : null" rel="noopener">
+@if (e.enlaceUrl) {
+<a class="ad-slot" [href]="e.enlaceUrl" target="_blank" rel="noopener">
   <img [src]="e.imagenUrl" [alt]="e.patrocinadorNombre" />
 </a>
+} @else {
+<div class="ad-slot ad-slot-sin-enlace">
+  <img [src]="e.imagenUrl" [alt]="e.patrocinadorNombre" />
+</div>
+}
 }

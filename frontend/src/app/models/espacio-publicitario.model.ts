@@ -17,6 +17,12 @@ export interface CrearEspacioPublicitarioRequest {
   enlaceUrl: string | null;
 }
 
+export interface EditarEspacioPublicitarioRequest {
+  ubicacion: string;
+  imagenUrl: string;
+  enlaceUrl: string | null;
+}
+
 // Rediseño: de 5 a 3. Se retiran DASHBOARD_CARD y CALENDARIO_FRANJA — son
 // pantallas que agregan contenido de muchas ligas/torneos a la vez, sin un
 // "dueño" natural del espacio (ver migración V64).

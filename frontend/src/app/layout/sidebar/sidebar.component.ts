@@ -145,13 +145,6 @@ export class SidebarComponent {
       titulo: 'Mi marca',
       enlaces: [
         {
-          ruta: '/panel-comercial',
-          etiqueta: 'Panel comercial',
-          icono: 'briefcase',
-          exact: false,
-          roles: ['PATROCINADOR']
-        },
-        {
           ruta: '/analytics/termometro',
           etiqueta: 'Termómetro del chat',
           icono: 'pulse',

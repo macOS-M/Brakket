@@ -112,17 +112,21 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'COMISIONADO'] },
         loadChildren: () => import('./features/metricas/metricas.routes').then((m) => m.routes)
       },
-      {
-        // Panel comercial del patrocinador (RF-44): ruta propia, separada de
-        // /sponsorships (que solo permite ADMIN/COMISIONADO) para que un
-        // PATROCINADOR real pueda acceder.
-        path: 'panel-comercial',
-        canActivate: [authGuard, roleGuard],
-        data: { roles: ['PATROCINADOR'] },
-        loadComponent: () =>
-          import('./features/sponsorships/pages/panel-comercial/panel-comercial.component')
-            .then((m) => m.PanelComercialComponent)
-      },
+      // RUTA DESHABILITADA A PROPÓSITO — limitación conocida documentada en el
+      // roadmap de la presentación: el Panel Comercial (RF-44) depende de
+      // TransmisionTwitch.iniciadaEn/torneoId para resolver "la" transmisión
+      // vigente de un torneo, pero el flujo de "Asociar transmisión" de RF-34
+      // crea una fila nueva en cada asociación en vez de reusar la existente
+      // (bug ajeno, fuera de este módulo). El componente y el backend siguen
+      // intactos: basta con restaurar este bloque cuando se corrija el origen.
+      // {
+      //   path: 'panel-comercial',
+      //   canActivate: [authGuard, roleGuard],
+      //   data: { roles: ['PATROCINADOR'] },
+      //   loadComponent: () =>
+      //     import('./features/sponsorships/pages/panel-comercial/panel-comercial.component')
+      //       .then((m) => m.PanelComercialComponent)
+      // },
       {
         // Gestión de patrocinios: administrador o comisionado (RF-42/RF-43).
         path: 'sponsorships',

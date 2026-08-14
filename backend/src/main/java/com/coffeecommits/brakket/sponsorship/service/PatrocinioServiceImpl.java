@@ -171,6 +171,14 @@ public class PatrocinioServiceImpl implements PatrocinioService {
         return Optional.empty();
     }
 
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Patrocinio patrocinio = patrocinioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patrocinio", id));
+        patrocinioRepository.delete(patrocinio);
+    }
+
     private boolean estaVigenteHoy(Patrocinio p) {
         LocalDate hoy = LocalDate.now();
         return ESTADO_ACTIVO.equals(p.getEstado())

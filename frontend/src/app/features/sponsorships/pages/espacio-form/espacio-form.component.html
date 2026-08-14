@@ -1,10 +1,13 @@
 <section class="page form-page">
-  <h1>Nuevo espacio publicitario</h1>
+  <h1>{{ editando() ? 'Editar espacio publicitario' : 'Nuevo espacio publicitario' }}</h1>
 
   @if (error()) {
   <p class="mensaje-error">{{ error() }}</p>
   }
 
+  @if (cargando()) {
+  <p class="placeholder">Cargando espacio...</p>
+  } @else {
   <form [formGroup]="form" (ngSubmit)="guardar()" class="form form-brakket form-card">
     <div class="campo">
       <label for="ubicacion">Ubicación *</label>
@@ -43,8 +46,9 @@
     <div class="acciones">
       <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
       <button type="submit" class="btn-primary" [disabled]="guardando() || subiendoImagen()">
-        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+        {{ guardando() ? 'Guardando...' : (editando() ? 'Guardar cambios' : 'Guardar') }}
       </button>
     </div>
   </form>
+  }
 </section>

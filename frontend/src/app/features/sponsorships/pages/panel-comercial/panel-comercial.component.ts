@@ -4,11 +4,13 @@ import { DatePipe } from '@angular/common';
 import { PanelComercialService } from '../../services/panel-comercial.service';
 import { MetricasPatrocinio, PatrocinioResumen } from '../../../../models/panel-comercial.model';
 import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-panel-comercial',
   standalone: true,
-  imports: [DatePipe, EtiquetaPipe],
+  imports: [DatePipe, EtiquetaPipe, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './panel-comercial.component.html',
   styleUrl: './panel-comercial.component.scss'
 })
@@ -29,6 +31,12 @@ export class PanelComercialComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.cargar();
+  }
+
+  cargar(): void {
+    this.cargando.set(true);
+    this.error.set(null);
     this.panelService.obtenerResumen().subscribe({
       next: (panel) => {
         this.patrocinadorNombre.set(panel.patrocinadorNombre);

@@ -1,22 +1,21 @@
 <section class="page">
-  <h1>Panel comercial</h1>
+  <app-page-header titulo="Panel comercial" [subtitulo]="patrocinadorNombre()" />
 
   @if (cargando()) {
-  <p class="placeholder">Cargando tu panel comercial...</p>
+  <app-empty-state modo="cargando" mensaje="Cargando tu panel comercial…" />
   } @else if (error()) {
-  <p class="placeholder error">{{ error() }}</p>
-  } @else {
-
-  <p class="subtitulo">{{ patrocinadorNombre() }}</p>
-
-  @if (patrocinios().length === 0) {
-  <p class="placeholder">Todavía no tenés patrocinios asociados.</p>
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()">
+    <button class="btn-secondary" type="button" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else if (patrocinios().length === 0) {
+  <app-empty-state titulo="Sin patrocinios" mensaje="Todavía no tenés patrocinios asociados." />
   } @else {
 
   <div class="layout">
     <aside class="lista-patrocinios">
       @for (p of patrocinios(); track p.patrocinioId) {
       <button
+        type="button"
         class="item-patrocinio"
         [class.activo]="p.patrocinioId === patrocinioSeleccionadoId()"
         [class.vencido]="p.vencido"
@@ -81,6 +80,5 @@
       }
     </div>
   </div>
-  }
   }
 </section>
