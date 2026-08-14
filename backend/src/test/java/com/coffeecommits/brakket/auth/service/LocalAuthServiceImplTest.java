@@ -105,13 +105,18 @@ class LocalAuthServiceImplTest {
     }
 
     @Test
-    void login_avisa_si_la_cuenta_es_de_google() {
+    void login_de_cuenta_google_responde_generico_y_cuenta_como_fallo() {
+        // Cuenta sin contraseña local (registrada con Google). No debe revelar
+        // "es de Google" (sería un oráculo de existencia) y debe contar para el
+        // freno de fuerza bruta, igual que cualquier otro fallo.
         Usuario deGoogle = Usuario.builder().id(1L).correo("g@x.com").googleId("g-1").build();
         when(usuarioRepository.findByCorreo("g@x.com")).thenReturn(Optional.of(deGoogle));
 
         assertThatThrownBy(() -> service.login(new LoginLocalRequest("g@x.com", "lo-que-sea")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Google");
+                .hasMessageContaining("Correo o contraseña");
+
+        verify(intentosLoginService).registrarFallo("g@x.com");
     }
 
     @Test

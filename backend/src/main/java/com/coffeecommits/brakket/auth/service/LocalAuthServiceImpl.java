@@ -86,10 +86,13 @@ public class LocalAuthServiceImpl implements LocalAuthService {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> falloDeLogin(correo));
 
-        if (usuario.getPasswordHash() == null) {
-            throw new BusinessException("Esa cuenta inicia sesión con Google");
-        }
-        if (!passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
+        // Cuenta creada con Google (sin contraseña local): mismo trato que una
+        // credencial equivocada. Revelar "es de Google" sería un oráculo de
+        // existencia de cuenta, y no pasar por falloDeLogin dejaba esta rama
+        // fuera del freno de fuerza bruta (se podían sondear correos sin límite).
+        // El usuario legítimo ya sabe que se registró con Google.
+        if (usuario.getPasswordHash() == null
+                || !passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
             throw falloDeLogin(correo);
         }
         if (Boolean.TRUE.equals(usuario.getBloqueado())) {
