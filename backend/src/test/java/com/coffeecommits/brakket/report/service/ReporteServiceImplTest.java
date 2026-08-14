@@ -17,6 +17,7 @@ import com.coffeecommits.brakket.sponsorship.model.Patrocinador;
 import com.coffeecommits.brakket.sponsorship.model.Patrocinio;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinadorRepository;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinioRepository;
+import com.coffeecommits.brakket.sponsorship.service.PatrocinioService;
 import com.coffeecommits.brakket.statistics.model.EstadisticaJugador;
 import com.coffeecommits.brakket.statistics.repository.EstadisticaJugadorRepository;
 import com.coffeecommits.brakket.team.model.Equipo;
@@ -55,6 +56,7 @@ class ReporteServiceImplTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private PatrocinadorRepository patrocinadorRepository;
     @Mock private PatrocinioRepository patrocinioRepository;
+    @Mock private PatrocinioService patrocinioService;
     @Mock private TorneoRepository torneoRepository;
     @Mock private PartidaRepository partidaRepository;
     @Mock private DisputaRepository disputaRepository;
@@ -73,15 +75,12 @@ class ReporteServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new ReporteServiceImpl(authService, usuarioRepository, patrocinadorRepository,
-                patrocinioRepository, torneoRepository, partidaRepository, disputaRepository,
+                patrocinioRepository, patrocinioService, torneoRepository, partidaRepository, disputaRepository,
                 transmisionRepository, metricaAudienciaRepository, metricaChatRepository,
                 sentimientoRepository, estadisticaJugadorRepository, reporteGeneradoRepository);
     }
 
     private void mockUsuarioActual(Long id, String nombre) {
-        // authentication.getName() no estaba stubbeado en los tests de ADMIN, así
-        // que devolvía null por defecto, y anyString() no hace match con null —
-        // se stubbea acá para que todos los tests que usan este helper queden cubiertos.
         when(authentication.getName()).thenReturn("usuario-test@demo.com");
         when(authService.getCurrentUser(anyString())).thenReturn(usuarioResponse);
         when(usuarioResponse.id()).thenReturn(id);
@@ -89,9 +88,6 @@ class ReporteServiceImplTest {
         when(usuarioRepository.getReferenceById(id)).thenReturn(mock(Usuario.class));
     }
 
-    // doReturn(...).when(...) en vez de when(...).thenReturn(...): getAuthorities()
-    // devuelve Collection<? extends GrantedAuthority>, y con thenReturn el compilador
-    // no logra inferir el tipo del wildcard a partir de List<SimpleGrantedAuthority>.
     private void mockRol(String rol) {
         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + rol));
         doReturn(authorities).when(authentication).getAuthorities();
@@ -116,13 +112,12 @@ class ReporteServiceImplTest {
 
         assertThat(reporte.filas()).hasSize(1);
         assertThat(reporte.filas().get(0)).containsExactly("Jugador X", "Rocket League", "10", "4", "3");
-        // Prueba explícita de la Opción A: aunque el filtro traiga torneoId/patrocinadorId/fechas, se ignoran.
         verifyNoInteractions(torneoRepository, patrocinioRepository);
         verify(reporteGeneradoRepository).save(any(ReporteGenerado.class));
     }
 
     @Test
-    void generar_patrocinio_usa_buscarParaReporte_y_mapea_las_filas() {
+    void generar_patrocinio_usa_buscarParaReporte_y_mapea_las_filas_sin_columna_de_nivel() {
         mockRol("ADMIN");
         mockUsuarioActual(1L, "Admin Uno");
 
@@ -134,7 +129,6 @@ class ReporteServiceImplTest {
         Patrocinio patrocinio = mock(Patrocinio.class);
         when(patrocinio.getPatrocinador()).thenReturn(patrocinador);
         when(patrocinio.getTorneo()).thenReturn(torneo);
-        when(patrocinio.getNivel()).thenReturn("ORO");
         when(patrocinio.getEstado()).thenReturn("ACTIVO");
         when(patrocinio.getFechaInicio()).thenReturn(LocalDate.of(2026, 1, 1));
         when(patrocinio.getFechaFin()).thenReturn(LocalDate.of(2026, 12, 31));
@@ -145,8 +139,9 @@ class ReporteServiceImplTest {
         FiltrosReporteRequest filtros = new FiltrosReporteRequest(5L, null, null, null);
         ReporteResponse reporte = service.generar(TipoReporte.PATROCINIO, filtros, authentication);
 
+        assertThat(reporte.columnas()).containsExactly("Patrocinador", "Competencia", "Estado", "Desde", "Hasta");
         assertThat(reporte.filas()).containsExactly(
-                List.of("Nike Demo", "Torneo: Copa Relampago", "ORO", "ACTIVO", "2026-01-01", "2026-12-31"));
+                List.of("Nike Demo", "Torneo: Copa Relampago", "ACTIVO", "2026-01-01", "2026-12-31"));
     }
 
     @Test
@@ -160,11 +155,9 @@ class ReporteServiceImplTest {
         when(patrocinioRepository.buscarParaReporte(isNull(), eq(7L), isNull(), isNull()))
                 .thenReturn(List.of());
 
-        // Pide explícitamente los datos de OTRA marca (patrocinadorId=999).
         FiltrosReporteRequest filtros = new FiltrosReporteRequest(null, 999L, null, null);
         service.generar(TipoReporte.PATROCINIO, filtros, authentication);
 
-        // El id ajeno nunca llega al repositorio: se sustituye por el propio (7L).
         verify(patrocinioRepository).buscarParaReporte(isNull(), eq(7L), isNull(), isNull());
         verify(patrocinioRepository, never()).buscarParaReporte(isNull(), eq(999L), isNull(), isNull());
     }
@@ -222,5 +215,38 @@ class ReporteServiceImplTest {
 
         List<String> fila = reporte.filas().get(0);
         assertThat(fila.get(fila.size() - 1)).isEqualTo("Resuelta: MANTENER");
+    }
+
+    @Test
+    void generar_competencia_con_patrocinador_usa_la_cascada_liga_torneo() {
+        mockRol("ADMIN");
+        mockUsuarioActual(1L, "Admin Uno");
+
+        // Sin partidas a propósito: esta prueba solo verifica que la cascada se
+        // consulte y que el filtro quede bien descrito, no el mapeo de filas
+        // (eso ya lo cubre generar_competencia_incluye_la_disputa_resuelta...).
+        // Por eso nombre/juego del torneo no se stubbean: el bucle de partidas
+        // nunca los pide, y Mockito en modo estricto marca como error cualquier
+        // stub que quede sin usar.
+        Torneo torneo = mock(Torneo.class);
+        when(torneo.getId()).thenReturn(2L);
+        when(torneoRepository.findAll()).thenReturn(List.of(torneo));
+        when(partidaRepository.findByTorneoIdOrderByRondaAscOrdenAsc(2L)).thenReturn(List.of());
+
+        // El torneo no tiene patrocinio propio, pero hereda el de su liga (id 9),
+        // que sí es del patrocinador buscado. Record de 10 campos, sin nivel:
+        // id, patrocinadorId, patrocinadorNombre, ligaId, temporadaId, torneoId,
+        // condiciones, fechaInicio, fechaFin, estado.
+        com.coffeecommits.brakket.sponsorship.dto.PatrocinioResponse heredado =
+                new com.coffeecommits.brakket.sponsorship.dto.PatrocinioResponse(
+                        50L, 9L, "Adidas Demo", 3L, null, null,
+                        null, LocalDate.now().minusDays(1), LocalDate.now().plusDays(30), "ACTIVO");
+        when(patrocinioService.resolverVigentePorTorneo(2L)).thenReturn(Optional.of(heredado));
+
+        FiltrosReporteRequest filtros = new FiltrosReporteRequest(null, 9L, null, null);
+        ReporteResponse reporte = service.generar(TipoReporte.COMPETENCIA, filtros, authentication);
+
+        assertThat(reporte.filtrosDescripcion()).contains("Patrocinador #9");
+        verify(partidaRepository).findByTorneoIdOrderByRondaAscOrdenAsc(2L);
     }
 }

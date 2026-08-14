@@ -19,29 +19,22 @@ public interface PatrocinioRepository extends JpaRepository<Patrocinio, Long> {
     // RF-44: patrocinios de una marca, para el panel comercial del patrocinador.
     List<Patrocinio> findByPatrocinadorId(Long patrocinadorId);
 
-    // El recurso escaso es (competencia, nivel): dos patrocinios de niveles
-    // distintos SI pueden coexistir en la misma competencia y periodo (ej.
-    // un ORO y un PLATA simultaneos). Lo que no puede repetirse es el mismo
-    // nivel dos veces para la misma competencia en fechas solapadas.
-    // Solo uno de ligaId/temporadaId/torneoId llega no-nulo (validado antes
-    // de llamar este metodo), por eso el OR funciona: solo compara contra
-    // el alcance real enviado.
+    // Rediseño: el recurso escaso ahora es la competencia entera (liga o
+    // torneo), no (competencia, nivel) — un solo patrocinio ACTIVO a la vez
+    // por liga y uno por torneo, sin importar quién sea. TEMPORADA ya no
+    // participa (alcance retirado del flujo de creación).
     @Query("""
             SELECT COUNT(p) > 0 FROM Patrocinio p
             WHERE p.estado = 'ACTIVO'
-            AND p.nivel = :nivel
             AND (
                 (:ligaId IS NOT NULL AND p.liga.id = :ligaId)
-                OR (:temporadaId IS NOT NULL AND p.temporada.id = :temporadaId)
                 OR (:torneoId IS NOT NULL AND p.torneo.id = :torneoId)
             )
             AND p.fechaInicio <= :fechaFin
             AND p.fechaFin >= :fechaInicio
             """)
     boolean existeSolapamiento(@Param("ligaId") Long ligaId,
-                               @Param("temporadaId") Long temporadaId,
                                @Param("torneoId") Long torneoId,
-                               @Param("nivel") String nivel,
                                @Param("fechaInicio") LocalDate fechaInicio,
                                @Param("fechaFin") LocalDate fechaFin);
 

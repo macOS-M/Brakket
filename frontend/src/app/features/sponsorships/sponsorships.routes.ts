@@ -35,5 +35,10 @@ export const routes: Routes = [
     path: 'asociaciones/:patrocinioId/espacios/nuevo',
     loadComponent: () =>
       import('./pages/espacio-form/espacio-form.component').then((m) => m.EspacioFormComponent)
+  },
+  {
+    path: 'asociaciones/:patrocinioId/espacios/:id/editar',
+    loadComponent: () =>
+      import('./pages/espacio-form/espacio-form.component').then((m) => m.EspacioFormComponent)
   }
 ];

@@ -29,8 +29,9 @@ public class Patrocinio {
     @JoinColumn(name = "patrocinador_id", nullable = false)
     private Patrocinador patrocinador;
 
-    // Alcance: exactamente uno de los tres debe estar lleno (liga/temporada/torneo).
-    // Validado en el servicio y garantizado en BD por ck_patrocinio_alcance_unico (V54).
+    // Alcance: exactamente uno de los dos debe estar lleno (liga/torneo).
+    // TEMPORADA se retiró del flujo de creación (V66): las temporadas no
+    // tienen pantalla propia. Validado en el servicio.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "liga_id")
     private Liga liga;
@@ -42,10 +43,6 @@ public class Patrocinio {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "torneo_id")
     private Torneo torneo;
-
-    // Cubre también "tipo de asociación" del ERS (decisión de equipo: mismo campo).
-    @Column(name = "nivel", nullable = false, length = 60)
-    private String nivel;
 
     @Column(name = "condiciones", length = 500)
     private String condiciones;

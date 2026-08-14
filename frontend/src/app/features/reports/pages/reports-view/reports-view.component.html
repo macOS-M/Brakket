@@ -20,12 +20,14 @@
         @for (t of torneos(); track t.id) { <option [ngValue]="t.id">{{ t.nombre }}</option> }
       </select>
     </label>
+    @if (!esPatrocinadorSolo()) {
     <label>Patrocinador
       <select formControlName="patrocinadorId">
         <option [ngValue]="null">Todos</option>
         @for (p of patrocinadores(); track p.id) { <option [ngValue]="p.id">{{ p.nombre }}</option> }
       </select>
     </label>
+    }
     <label>Desde<app-fecha-input etiqueta="Desde" marcador="Sin límite" formControlName="desde" /></label>
     <label>Hasta<app-fecha-input etiqueta="Hasta" marcador="Sin límite" formControlName="hasta" /></label>
     <div class="actions">
@@ -33,6 +35,10 @@
       <button type="submit" [disabled]="cargando()">{{ cargando() ? 'Generando…' : 'Generar reporte' }}</button>
     </div>
   </form>
+
+  @if (esPatrocinadorSolo()) {
+  <p class="nota-alcance">Estás viendo únicamente los reportes de tu propia marca.</p>
+  }
 
   @if (error()) { <div class="notice error" role="alert">{{ error() }}</div> }
 

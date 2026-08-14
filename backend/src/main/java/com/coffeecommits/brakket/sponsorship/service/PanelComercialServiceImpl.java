@@ -74,7 +74,6 @@ public class PanelComercialServiceImpl implements PanelComercialService {
         List<PanelComercialResponse.PatrocinioResumen> resumenes = patrocinios.stream()
                 .map(p -> new PanelComercialResponse.PatrocinioResumen(
                         p.getId(),
-                        p.getNivel(),
                         p.getEstado(),
                         p.getFechaFin().isBefore(LocalDate.now()),
                         p.getLiga() != null ? p.getLiga().getId() : null,
@@ -102,17 +101,9 @@ public class PanelComercialServiceImpl implements PanelComercialService {
         }
 
         if (patrocinio.getTorneo() == null) {
-            // Opcion A (decision de alcance): solo se calculan metricas reales
-            // cuando el patrocinio tiene torneo directo, dado que transmision_twitch
-            // solo se relaciona con torneo_id, no con liga_id ni temporada_id.
             return new MetricasPatrocinioResponse(patrocinioId, null, null, null, null, null, true);
         }
 
-        // RF-44 review: un torneo puede tener varias transmisiones (varias
-        // jornadas), asi que findByTorneoId no puede devolver Optional/uno solo
-        // sin arriesgar IncorrectResultSizeDataAccessException. Se trae la lista
-        // completa y se elige la mas relevante: la que sigue en vivo, o si
-        // ninguna esta en vivo, la mas reciente.
         List<TransmisionTwitch> transmisiones =
                 transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(patrocinio.getTorneo().getId());
 
@@ -143,8 +134,6 @@ public class PanelComercialServiceImpl implements PanelComercialService {
         );
     }
 
-    // Prioriza la transmision actualmente en vivo; si ninguna esta en vivo,
-    // toma la mas reciente (la lista ya llega ordenada por iniciadaEn desc).
     private Optional<TransmisionTwitch> seleccionarTransmisionRelevante(List<TransmisionTwitch> transmisiones) {
         return transmisiones.stream()
                 .filter(t -> t.getFinalizadaEn() == null)
@@ -152,15 +141,12 @@ public class PanelComercialServiceImpl implements PanelComercialService {
                 .or(() -> transmisiones.stream().findFirst());
     }
 
-    // RF-44 review: antes hacia N consultas (una por cada MetricaChat de la
-    // transmision) para traer su AnalisisSentimiento por separado. Ahora es
-    // una sola consulta agrupada por clasificacion en base de datos.
     private String calcularSentimientoPredominante(Long transmisionId) {
         List<AnalisisSentimientoRepository.ConteoClasificacion> conteos =
                 sentimientoRepository.contarPorClasificacionDeTransmision(transmisionId);
 
         if (conteos.isEmpty()) {
-            return null; // sin analisis todavia -> "pendiente" (RF-40, comportamiento valido)
+            return null;
         }
 
         return conteos.stream()

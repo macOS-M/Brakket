@@ -12,10 +12,12 @@ import com.coffeecommits.brakket.report.dto.ReporteResponse;
 import com.coffeecommits.brakket.report.model.ReporteGenerado;
 import com.coffeecommits.brakket.report.model.TipoReporte;
 import com.coffeecommits.brakket.report.repository.ReporteGeneradoRepository;
+import com.coffeecommits.brakket.sponsorship.dto.PatrocinioResponse;
 import com.coffeecommits.brakket.sponsorship.model.Patrocinador;
 import com.coffeecommits.brakket.sponsorship.model.Patrocinio;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinadorRepository;
 import com.coffeecommits.brakket.sponsorship.repository.PatrocinioRepository;
+import com.coffeecommits.brakket.sponsorship.service.PatrocinioService;
 import com.coffeecommits.brakket.statistics.repository.EstadisticaJugadorRepository;
 import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
@@ -42,6 +44,7 @@ public class ReporteServiceImpl implements ReporteService {
     private final UsuarioRepository usuarioRepository;
     private final PatrocinadorRepository patrocinadorRepository;
     private final PatrocinioRepository patrocinioRepository;
+    private final PatrocinioService patrocinioService;
     private final TorneoRepository torneoRepository;
     private final PartidaRepository partidaRepository;
     private final DisputaRepository disputaRepository;
@@ -54,8 +57,9 @@ public class ReporteServiceImpl implements ReporteService {
 
     public ReporteServiceImpl(AuthService authService, UsuarioRepository usuarioRepository,
                               PatrocinadorRepository patrocinadorRepository, PatrocinioRepository patrocinioRepository,
-                              TorneoRepository torneoRepository, PartidaRepository partidaRepository,
-                              DisputaRepository disputaRepository, TransmisionTwitchRepository transmisionRepository,
+                              PatrocinioService patrocinioService, TorneoRepository torneoRepository,
+                              PartidaRepository partidaRepository, DisputaRepository disputaRepository,
+                              TransmisionTwitchRepository transmisionRepository,
                               MetricaAudienciaRepository metricaAudienciaRepository, MetricaChatRepository metricaChatRepository,
                               AnalisisSentimientoRepository sentimientoRepository,
                               EstadisticaJugadorRepository estadisticaJugadorRepository,
@@ -64,6 +68,7 @@ public class ReporteServiceImpl implements ReporteService {
         this.usuarioRepository = usuarioRepository;
         this.patrocinadorRepository = patrocinadorRepository;
         this.patrocinioRepository = patrocinioRepository;
+        this.patrocinioService = patrocinioService;
         this.torneoRepository = torneoRepository;
         this.partidaRepository = partidaRepository;
         this.disputaRepository = disputaRepository;
@@ -97,12 +102,6 @@ public class ReporteServiceImpl implements ReporteService {
                 descripcionFiltros, datos.columnas(), datos.filas());
     }
 
-    // ---------------------------------------------------------------
-    // Autorización: un PATROCINADOR nunca puede pedir datos de otra marca,
-    // aunque mande un patrocinadorId ajeno en el filtro (mismo patrón que
-    // resolverPatrocinadorAutenticado de PanelComercialServiceImpl en RF-44).
-    // ADMIN/COMISIONADO sí pueden filtrar libremente o dejarlo vacío.
-    // ---------------------------------------------------------------
     private Long resolverPatrocinadorFiltro(Authentication authentication, FiltrosReporteRequest filtros) {
         boolean privilegiado = tieneRol(authentication, "ADMIN") || tieneRol(authentication, "COMISIONADO");
         if (privilegiado) {
@@ -121,18 +120,18 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     // ---------------------------------------------------------------
-    // PATROCINIO
+    // PATROCINIO — sin columna de Nivel (rediseño: el campo ya no es
+    // significativo para un patrocinio nuevo, puede venir null).
     // ---------------------------------------------------------------
     private DatosReporte generarPatrocinio(FiltrosReporteRequest f) {
         List<Patrocinio> patrocinios =
                 patrocinioRepository.buscarParaReporte(f.torneoId(), f.patrocinadorId(), f.desde(), f.hasta());
 
-        List<String> columnas = List.of("Patrocinador", "Competencia", "Nivel", "Estado", "Desde", "Hasta");
+        List<String> columnas = List.of("Patrocinador", "Competencia", "Estado", "Desde", "Hasta");
         List<List<String>> filas = patrocinios.stream()
                 .map(p -> List.of(
                         p.getPatrocinador().getNombre(),
                         nombreAlcance(p),
-                        p.getNivel(),
                         p.getEstado(),
                         p.getFechaInicio().toString(),
                         p.getFechaFin().toString()))
@@ -140,7 +139,6 @@ public class ReporteServiceImpl implements ReporteService {
         return new DatosReporte(columnas, filas);
     }
 
-    // ASUME que Liga y Temporada tienen getNombre() (mismo patrón que Torneo/Juego).
     private String nombreAlcance(Patrocinio p) {
         if (p.getTorneo() != null) return "Torneo: " + p.getTorneo().getNombre();
         if (p.getTemporada() != null) return "Temporada: " + p.getTemporada().getNombre();
@@ -149,7 +147,7 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     // ---------------------------------------------------------------
-    // COMPETENCIA / RESULTADOS (incluye disputa resuelta por partida)
+    // COMPETENCIA / RESULTADOS
     // ---------------------------------------------------------------
     private DatosReporte generarCompetencia(FiltrosReporteRequest f) {
         List<Torneo> torneos = resolverTorneos(f);
@@ -221,8 +219,7 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     // ---------------------------------------------------------------
-    // ESTADISTICA — Opción A: acumulado total, sin filtro de torneo/período
-    // (limitación conocida y documentada, ver resumen de la sesión).
+    // ESTADISTICA — Opción A: acumulado total, sin filtro de torneo/período.
     // ---------------------------------------------------------------
     private DatosReporte generarEstadistica() {
         List<String> columnas = List.of("Jugador", "Juego", "Victorias", "Derrotas", "Torneos jugados");
@@ -239,12 +236,16 @@ public class ReporteServiceImpl implements ReporteService {
 
     // ---------------------------------------------------------------
     // Compartido: resuelve la lista de torneos objetivo para Competencia/Audiencia.
-    // El período AHORA se aplica siempre como filtro adicional (intersección),
-    // no solo cuando no hay torneo/patrocinador — así "torneo X + fechas que no
-    // coinciden con su inicio" da vacío en vez de ignorar las fechas.
-    // Si hay patrocinadorId, solo entran los torneos con patrocinio de alcance
-    // directo torneo_id (misma limitación conocida que en RF-44: alcance
-    // liga/temporada no se puede rastrear hasta un torneo puntual).
+    // El período se aplica siempre como filtro adicional. El filtro por
+    // patrocinador ya NO se limita a alcance directo torneo_id (limitación
+    // resuelta con el rediseño): usa PatrocinioService.resolverVigentePorTorneo,
+    // la misma cascada Liga → Torneo del resto de la app — un torneo sin
+    // patrocinio propio activo hereda el de su liga.
+    //
+    // Nota de rendimiento: recorre todos los torneos y resuelve la cascada
+    // uno por uno (1-2 consultas cada uno). Aceptable a la escala de este
+    // proyecto; con un catálogo de torneos mucho mayor convendría una
+    // consulta agregada en vez de resolver torneo por torneo.
     // ---------------------------------------------------------------
     private List<Torneo> resolverTorneos(FiltrosReporteRequest f) {
         return resolverTorneosBase(f).stream()
@@ -255,22 +256,25 @@ public class ReporteServiceImpl implements ReporteService {
 
     private List<Torneo> resolverTorneosBase(FiltrosReporteRequest f) {
         if (f.patrocinadorId() != null) {
-            List<Long> torneosPatrocinados = patrocinioRepository.findByPatrocinadorId(f.patrocinadorId()).stream()
-                    .filter(p -> p.getTorneo() != null)
-                    .map(p -> p.getTorneo().getId())
-                    .distinct()
-                    .toList();
-            if (f.torneoId() != null) {
-                return torneosPatrocinados.contains(f.torneoId())
-                        ? torneoRepository.findById(f.torneoId()).map(List::of).orElse(List.of())
-                        : List.of();
-            }
-            return torneoRepository.findAllById(torneosPatrocinados);
+            return resolverTorneosDelPatrocinador(f.patrocinadorId(), f.torneoId());
         }
         if (f.torneoId() != null) {
             return torneoRepository.findById(f.torneoId()).map(List::of).orElse(List.of());
         }
         return torneoRepository.findAll();
+    }
+
+    private List<Torneo> resolverTorneosDelPatrocinador(Long patrocinadorId, Long torneoIdFiltro) {
+        List<Torneo> candidatos = torneoIdFiltro != null
+                ? torneoRepository.findById(torneoIdFiltro).map(List::of).orElse(List.of())
+                : torneoRepository.findAll();
+
+        return candidatos.stream()
+                .filter(t -> patrocinioService.resolverVigentePorTorneo(t.getId())
+                        .map(PatrocinioResponse::patrocinadorId)
+                        .map(id -> id.equals(patrocinadorId))
+                        .orElse(false))
+                .toList();
     }
 
     // ---------------------------------------------------------------

@@ -99,7 +99,6 @@ class PanelComercialServiceImplTest {
         Patrocinio patrocinio = Patrocinio.builder()
                 .id(2L)
                 .patrocinador(patrocinador)
-                .nivel("ORO")
                 .estado("ACTIVO")
                 .torneo(torneo)
                 .fechaInicio(LocalDate.of(2026, 8, 5))
@@ -125,7 +124,6 @@ class PanelComercialServiceImplTest {
         Patrocinio patrocinioVencido = Patrocinio.builder()
                 .id(3L)
                 .patrocinador(patrocinador)
-                .nivel("ORO")
                 .estado("ACTIVO")
                 .torneo(torneo)
                 .fechaInicio(LocalDate.of(2026, 7, 24))
@@ -251,9 +249,6 @@ class PanelComercialServiceImplTest {
         TransmisionTwitch transmision = TransmisionTwitch.builder().id(20L).finalizadaEn(null).build();
         when(transmisionRepository.findByTorneoIdOrderByIniciadaEnDesc(12L)).thenReturn(List.of(transmision));
 
-        // Se arma la lista ANTES del when(...), para no anidar mock()/when()
-        // dentro de un thenReturn() todavia abierto (confunde el estado interno
-        // de Mockito y dispara "UnfinishedStubbing").
         List<AnalisisSentimientoRepository.ConteoClasificacion> conteos =
                 List.of(conteoDe("POSITIVO", 2L), conteoDe("NEGATIVO", 1L));
         when(sentimientoRepository.contarPorClasificacionDeTransmision(20L)).thenReturn(conteos);

@@ -59,7 +59,6 @@ describe('AssociationFormComponent', () => {
       patrocinadorId: 1,
       alcance: 'TORNEO',
       torneoId: 12,
-      nivel: 'ORO',
       fechaInicio: '2026-08-05',
       fechaFin: '2026-12-31'
     });
@@ -78,7 +77,6 @@ describe('AssociationFormComponent', () => {
       patrocinadorId: 1,
       alcance: 'TORNEO',
       torneoId: 12,
-      nivel: 'ORO',
       condiciones: 'Prueba',
       fechaInicio: '2026-08-05',
       fechaFin: '2026-12-31'
@@ -90,8 +88,7 @@ describe('AssociationFormComponent', () => {
       patrocinadorId: 1,
       torneoId: 12,
       ligaId: null,
-      temporadaId: null,
-      nivel: 'ORO'
+      temporadaId: null
     }));
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/sponsorships/asociaciones']);
   });
@@ -103,7 +100,6 @@ describe('AssociationFormComponent', () => {
       patrocinadorId: 1,
       alcance: 'TORNEO',
       torneoId: 12,
-      nivel: 'ORO',
       fechaInicio: '2026-08-05',
       fechaFin: '2026-12-31'
     });

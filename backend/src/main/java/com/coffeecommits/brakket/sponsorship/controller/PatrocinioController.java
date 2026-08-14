@@ -1,6 +1,5 @@
 package com.coffeecommits.brakket.sponsorship.controller;
 
-import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.sponsorship.dto.CrearPatrocinioRequest;
 import com.coffeecommits.brakket.sponsorship.dto.PatrocinioResponse;
 import com.coffeecommits.brakket.sponsorship.service.PatrocinioService;
@@ -34,9 +33,6 @@ public class PatrocinioController {
         return patrocinioService.obtenerPorId(id);
     }
 
-    // Un solo endpoint de listado con filtro por alcance, consistente con como
-    // el frontend consultara el componente <app-ad-slot> mas adelante en RF-43.
-    // Solo uno de los tres parametros debe llegar a la vez.
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public List<PatrocinioResponse> listar(@RequestParam(required = false) Long torneoId,
@@ -52,5 +48,14 @@ public class PatrocinioController {
             return patrocinioService.listarPorTemporada(temporadaId);
         }
         return patrocinioService.listarTodos();
+    }
+
+    // Elimina la asociación completa. Sus espacios publicitarios se borran
+    // en cascada a nivel de base de datos (ON DELETE CASCADE, migración V55).
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('GESTIONAR_PATROCINIOS')")
+    public void eliminar(@PathVariable Long id) {
+        patrocinioService.eliminar(id);
     }
 }

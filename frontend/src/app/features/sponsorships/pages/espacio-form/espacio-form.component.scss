@@ -27,7 +27,7 @@
 
 .campo .subiendo {
   font-size: 0.8rem;
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text, #ff6a1f);
 }
 
 .input-archivo-oculto {
@@ -46,9 +46,9 @@
   font-weight: 600;
   font-family: inherit;
   border-radius: var(--radius-sm, 8px);
-  border: 1px dashed var(--brand-cyan, #22d3ee);
+  border: 1px dashed var(--accent-text, #ff6a1f);
   background: transparent;
-  color: var(--brand-cyan, #22d3ee);
+  color: var(--accent-text, #ff6a1f);
   cursor: pointer;
 
   &:disabled {

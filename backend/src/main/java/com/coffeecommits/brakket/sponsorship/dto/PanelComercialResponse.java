@@ -10,7 +10,6 @@ public record PanelComercialResponse(
 ) {
     public record PatrocinioResumen(
             Long patrocinioId,
-            String nivel,
             String estado,
             boolean vencido,
             Long ligaId,

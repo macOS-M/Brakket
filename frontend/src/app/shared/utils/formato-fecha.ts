@@ -35,6 +35,11 @@ export function diaMes(valor: Fecha): string {
   return formatDate(valor, 'd MMM', LOCALE_APP);
 }
 
+/** «11 ago 2026» — fecha sola, sin hora, para rangos de disponibilidad. */
+export function fechaCorta(valor: Fecha): string {
+  return formatDate(valor, 'd MMM y', LOCALE_APP);
+}
+
 /** «11 ago 2026, 14:45» */
 export function fechaHoraMedia(valor: Fecha): string {
   return formatDate(valor, 'd MMM y, HH:mm', LOCALE_APP);

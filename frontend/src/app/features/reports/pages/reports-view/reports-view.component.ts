@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
@@ -10,6 +10,7 @@ import { Torneo } from '../../../../models/tournament.model';
 import { SponsorshipsService } from '../../../sponsorships/services/sponsorships.service';
 import { TournamentsService } from '../../../tournaments/services/tournaments.service';
 import { ReportsService } from '../../services/reports.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-reports-view',
@@ -23,6 +24,7 @@ export class ReportsViewComponent implements OnInit {
   private readonly reports = inject(ReportsService);
   private readonly sponsorshipsService = inject(SponsorshipsService);
   private readonly tournamentsService = inject(TournamentsService);
+  private readonly authService = inject(AuthService);
 
   readonly resultado = signal<ReporteResponse | null>(null);
   readonly cargando = signal(false);
@@ -31,6 +33,18 @@ export class ReportsViewComponent implements OnInit {
 
   readonly torneos = signal<Torneo[]>([]);
   readonly patrocinadores = signal<Patrocinador[]>([]);
+
+  /**
+   * El backend YA fuerza el patrocinadorId al propio cuando quien pregunta es
+   * PATROCINADOR (ver ReporteServiceImpl.resolverPatrocinadorFiltro) — esto no
+   * es la protección real, es solo ocultar un selector que hoy no cambia nada
+   * para ese rol: mostrar "elegí cualquier patrocinador" cuando la elección
+   * se ignora es confuso y sugiere una fuga de datos que no existe.
+   */
+  readonly esPatrocinadorSolo = computed(() => {
+    const roles = this.authService.usuario()?.roles ?? [];
+    return roles.includes('PATROCINADOR') && !roles.includes('ADMIN') && !roles.includes('COMISIONADO');
+  });
 
   readonly form = this.fb.group({
     tipo: this.fb.nonNullable.control<TipoReporte>('COMPETENCIA', Validators.required),
@@ -41,9 +55,6 @@ export class ReportsViewComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Mismas fuentes que usa el formulario de asociación de patrocinios (RF-42),
-    // pero sin el filtro a solo ACTIVO que tiene ese formulario: acá sí interesa
-    // poder reportar sobre patrocinios ya vencidos o marcas dadas de baja.
     this.tournamentsService.listar().subscribe((data) => this.torneos.set(data));
     this.sponsorshipsService.listar().subscribe((data) => this.patrocinadores.set(data));
   }

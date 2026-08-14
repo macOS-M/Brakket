@@ -16,9 +16,6 @@ public record CrearPatrocinioRequest(
 
         Long torneoId,
 
-        @NotNull(message = "El nivel es obligatorio")
-        String nivel,
-
         @Size(max = 500, message = "Las condiciones no pueden superar los 500 caracteres")
         String condiciones,
 

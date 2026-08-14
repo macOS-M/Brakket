@@ -5,6 +5,7 @@ import { ReportsViewComponent } from './reports-view.component';
 import { ReportsService } from '../../services/reports.service';
 import { SponsorshipsService } from '../../../sponsorships/services/sponsorships.service';
 import { TournamentsService } from '../../../tournaments/services/tournaments.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ReporteResponse } from '../../../../models/reporte.model';
 
 describe('ReportsViewComponent', () => {
@@ -13,6 +14,7 @@ describe('ReportsViewComponent', () => {
   let reportsSpy: jasmine.SpyObj<ReportsService>;
   let sponsorshipsSpy: jasmine.SpyObj<SponsorshipsService>;
   let tournamentsSpy: jasmine.SpyObj<TournamentsService>;
+  let authServiceStub: { usuario: () => { roles: string[] } };
 
   const reporteDeEjemplo: ReporteResponse = {
     tipo: 'COMPETENCIA',
@@ -24,21 +26,28 @@ describe('ReportsViewComponent', () => {
     filas: [['Brakket Cup', 'Equipo A']]
   };
 
-  beforeEach(async () => {
+  function configurarModulo(roles: string[]): void {
     reportsSpy = jasmine.createSpyObj('ReportsService', ['generar', 'generarPdf']);
     sponsorshipsSpy = jasmine.createSpyObj('SponsorshipsService', ['listar']);
     tournamentsSpy = jasmine.createSpyObj('TournamentsService', ['listar']);
     sponsorshipsSpy.listar.and.returnValue(of([]));
     tournamentsSpy.listar.and.returnValue(of([]));
+    authServiceStub = { usuario: () => ({ roles }) };
 
-    await TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       imports: [ReportsViewComponent],
       providers: [
         { provide: ReportsService, useValue: reportsSpy },
         { provide: SponsorshipsService, useValue: sponsorshipsSpy },
-        { provide: TournamentsService, useValue: tournamentsSpy }
+        { provide: TournamentsService, useValue: tournamentsSpy },
+        { provide: AuthService, useValue: authServiceStub }
       ]
-    }).compileComponents();
+    });
+  }
+
+  beforeEach(async () => {
+    configurarModulo(['ADMIN']);
+    await TestBed.compileComponents();
 
     fixture = TestBed.createComponent(ReportsViewComponent);
     component = fixture.componentInstance;
@@ -91,5 +100,56 @@ describe('ReportsViewComponent', () => {
 
     expect(component.resultado()).toBeNull();
     expect(component.form.controls.torneoId.value).toBeNull();
+  });
+
+  // ---------------------------------------------------------------
+  // esPatrocinadorSolo: oculta el selector de patrocinador cuando quien
+  // mira el reporte es exclusivamente PATROCINADOR (el backend ya lo
+  // ignoraba; esto es solo dejar de mostrar una opción sin efecto real).
+  // ---------------------------------------------------------------
+
+  it('esPatrocinadorSolo es false para ADMIN', () => {
+    fixture.detectChanges();
+    expect(component.esPatrocinadorSolo()).toBeFalse();
+  });
+});
+
+describe('ReportsViewComponent — rol PATROCINADOR', () => {
+  let component: ReportsViewComponent;
+  let fixture: ComponentFixture<ReportsViewComponent>;
+  let sponsorshipsSpy: jasmine.SpyObj<SponsorshipsService>;
+  let tournamentsSpy: jasmine.SpyObj<TournamentsService>;
+
+  beforeEach(async () => {
+    const reportsSpy = jasmine.createSpyObj('ReportsService', ['generar', 'generarPdf']);
+    sponsorshipsSpy = jasmine.createSpyObj('SponsorshipsService', ['listar']);
+    tournamentsSpy = jasmine.createSpyObj('TournamentsService', ['listar']);
+    sponsorshipsSpy.listar.and.returnValue(of([]));
+    tournamentsSpy.listar.and.returnValue(of([]));
+
+    await TestBed.configureTestingModule({
+      imports: [ReportsViewComponent],
+      providers: [
+        { provide: ReportsService, useValue: reportsSpy },
+        { provide: SponsorshipsService, useValue: sponsorshipsSpy },
+        { provide: TournamentsService, useValue: tournamentsSpy },
+        { provide: AuthService, useValue: { usuario: () => ({ roles: ['PATROCINADOR'] }) } }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ReportsViewComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('esPatrocinadorSolo es true cuando el único rol es PATROCINADOR', () => {
+    expect(component.esPatrocinadorSolo()).toBeTrue();
+  });
+
+  it('el selector de patrocinador no aparece en el HTML para un PATROCINADOR puro', () => {
+    const selects: NodeListOf<HTMLSelectElement> =
+      fixture.nativeElement.querySelectorAll('select');
+    const idsFormulario = Array.from(selects).map((s) => s.getAttribute('formcontrolname'));
+    expect(idsFormulario).not.toContain('patrocinadorId');
   });
 });

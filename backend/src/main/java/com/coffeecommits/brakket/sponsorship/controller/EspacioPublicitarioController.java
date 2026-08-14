@@ -1,6 +1,7 @@
 package com.coffeecommits.brakket.sponsorship.controller;
 
 import com.coffeecommits.brakket.sponsorship.dto.CrearEspacioPublicitarioRequest;
+import com.coffeecommits.brakket.sponsorship.dto.EditarEspacioPublicitarioRequest;
 import com.coffeecommits.brakket.sponsorship.dto.EspacioPublicitarioResponse;
 import com.coffeecommits.brakket.sponsorship.service.EspacioPublicitarioService;
 import jakarta.validation.Valid;
@@ -26,6 +27,20 @@ public class EspacioPublicitarioController {
     @PreAuthorize("hasAuthority('GESTIONAR_PATROCINIOS')")
     public EspacioPublicitarioResponse crear(@Valid @RequestBody CrearEspacioPublicitarioRequest request) {
         return espacioService.crear(request);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('GESTIONAR_PATROCINIOS')")
+    public EspacioPublicitarioResponse editar(@PathVariable Long id,
+                                              @Valid @RequestBody EditarEspacioPublicitarioRequest request) {
+        return espacioService.editar(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('GESTIONAR_PATROCINIOS')")
+    public void eliminar(@PathVariable Long id) {
+        espacioService.eliminar(id);
     }
 
     @GetMapping

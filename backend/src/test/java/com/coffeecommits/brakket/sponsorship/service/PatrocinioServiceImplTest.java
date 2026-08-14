@@ -2,7 +2,6 @@ package com.coffeecommits.brakket.sponsorship.service;
 
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
-import com.coffeecommits.brakket.league.model.Temporada;
 import com.coffeecommits.brakket.league.repository.LigaRepository;
 import com.coffeecommits.brakket.league.repository.TemporadaRepository;
 import com.coffeecommits.brakket.sponsorship.dto.CrearPatrocinioRequest;
@@ -28,7 +27,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,17 +67,16 @@ class PatrocinioServiceImplTest {
                 .build();
     }
 
-    private CrearPatrocinioRequest requestParaTorneo(Long torneoId, String nivel,
-                                                     LocalDate fechaInicio, LocalDate fechaFin) {
+    private CrearPatrocinioRequest requestParaTorneo(Long torneoId, LocalDate fechaInicio, LocalDate fechaFin) {
         return new CrearPatrocinioRequest(
-                11L, null, null, torneoId, nivel, "Condiciones de prueba", fechaInicio, fechaFin);
+                11L, null, null, torneoId, "Condiciones de prueba", fechaInicio, fechaFin);
     }
 
     @Test
     void crear_asocia_patrocinio_a_torneo_correctamente() {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
         when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
-        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), anyString(), any(), any()))
+        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), any()))
                 .thenReturn(false);
         when(patrocinioRepository.save(any(Patrocinio.class))).thenAnswer(inv -> {
             Patrocinio p = inv.getArgument(0);
@@ -88,14 +85,13 @@ class PatrocinioServiceImplTest {
         });
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, "ORO", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+                12L, LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         PatrocinioResponse response = service.crear(request);
 
         assertThat(response.id()).isEqualTo(1L);
         assertThat(response.patrocinadorId()).isEqualTo(11L);
         assertThat(response.torneoId()).isEqualTo(12L);
-        assertThat(response.nivel()).isEqualTo("ORO");
         assertThat(response.estado()).isEqualTo("ACTIVO");
 
         ArgumentCaptor<Patrocinio> captor = ArgumentCaptor.forClass(Patrocinio.class);
@@ -105,25 +101,17 @@ class PatrocinioServiceImplTest {
     }
 
     @Test
-    void crear_permite_dos_niveles_distintos_en_la_misma_competencia_y_periodo() {
-        // Caso que estaba roto: ORO y PLATA deben poder coexistir en el mismo
-        // torneo y periodo. existeSolapamiento debe filtrar tambien por nivel,
-        // asi que devolver false aqui (nadie mas tiene nivel PLATA en ese
-        // torneo) confirma que la creacion no se bloquea.
+    void crear_falla_si_se_intenta_asociar_a_una_temporada() {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
-        when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
-        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), anyString(), any(), any()))
-                .thenReturn(false);
-        when(patrocinioRepository.save(any(Patrocinio.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CrearPatrocinioRequest requestPlata = requestParaTorneo(
-                12L, "PLATA", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+        CrearPatrocinioRequest request = new CrearPatrocinioRequest(
+                11L, null, 5L, null, null,
+                LocalDate.of(2026, 3, 1), LocalDate.of(2026, 9, 1));
 
-        PatrocinioResponse response = service.crear(requestPlata);
-
-        assertThat(response.nivel()).isEqualTo("PLATA");
-        verify(patrocinioRepository).existeSolapamiento(
-                any(), any(), any(), org.mockito.ArgumentMatchers.eq("PLATA"), any(), any());
+        assertThatThrownBy(() -> service.crear(request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no se asocian directamente a una temporada");
+        verify(patrocinioRepository, never()).save(any());
     }
 
     @Test
@@ -132,7 +120,7 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(inactivo));
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, "ORO", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+                12L, LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
@@ -145,7 +133,7 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.empty());
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, "ORO", LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
+                12L, LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -157,7 +145,7 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
 
         CrearPatrocinioRequest request = new CrearPatrocinioRequest(
-                11L, 1L, null, 12L, "ORO", null,
+                11L, 1L, null, 12L, null,
                 LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
@@ -171,7 +159,7 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
 
         CrearPatrocinioRequest request = new CrearPatrocinioRequest(
-                11L, null, null, null, "ORO", null,
+                11L, null, null, null, null,
                 LocalDate.of(2026, 8, 5), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
@@ -185,7 +173,7 @@ class PatrocinioServiceImplTest {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, "ORO", LocalDate.of(2026, 12, 31), LocalDate.of(2026, 8, 5));
+                12L, LocalDate.of(2026, 12, 31), LocalDate.of(2026, 8, 5));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
@@ -199,7 +187,7 @@ class PatrocinioServiceImplTest {
         when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, "ORO", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
+                12L, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
@@ -208,38 +196,50 @@ class PatrocinioServiceImplTest {
     }
 
     @Test
-    void crear_falla_si_la_fecha_fin_es_posterior_al_fin_de_una_temporada() {
-        when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
-        Temporada temporada = Temporada.builder()
-                .id(5L)
-                .fechaInicio(LocalDate.of(2026, 1, 1))
-                .fechaFin(LocalDate.of(2026, 6, 30))
-                .build();
-        when(temporadaRepository.findById(5L)).thenReturn(Optional.of(temporada));
-
-        CrearPatrocinioRequest request = new CrearPatrocinioRequest(
-                11L, null, 5L, null, "ORO", null,
-                LocalDate.of(2026, 3, 1), LocalDate.of(2026, 9, 1));
-
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("posterior al fin de la competencia");
-        verify(patrocinioRepository, never()).save(any());
-    }
-
-    @Test
-    void crear_falla_si_existe_solapamiento_con_el_mismo_nivel_en_la_misma_competencia() {
+    void crear_falla_si_existe_solapamiento_en_la_misma_competencia() {
         when(patrocinadorRepository.findById(11L)).thenReturn(Optional.of(patrocinadorActivo));
         when(torneoRepository.findById(12L)).thenReturn(Optional.of(torneoSinFechaFin));
-        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), anyString(), any(), any()))
+        when(patrocinioRepository.existeSolapamiento(any(), any(), any(), any()))
                 .thenReturn(true);
 
         CrearPatrocinioRequest request = requestParaTorneo(
-                12L, "ORO", LocalDate.of(2026, 9, 1), LocalDate.of(2026, 10, 1));
+                12L, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 10, 1));
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Ya existe un patrocinio de nivel ORO");
+                .hasMessageContaining("Ya existe un patrocinio activo");
         verify(patrocinioRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------
+    // Nuevo: eliminar. Sus espacios publicitarios se borran en cascada a
+    // nivel de base de datos (ON DELETE CASCADE, migración V55) — no hay
+    // nada que verificar sobre EspacioPublicitarioRepository acá.
+    // ---------------------------------------------------------------
+
+    @Test
+    void eliminar_borra_el_patrocinio_existente() {
+        Patrocinio existente = Patrocinio.builder()
+                .id(3L)
+                .patrocinador(patrocinadorActivo)
+                .torneo(torneoSinFechaFin)
+                .estado("ACTIVO")
+                .fechaInicio(LocalDate.of(2026, 8, 5))
+                .fechaFin(LocalDate.of(2026, 12, 31))
+                .build();
+        when(patrocinioRepository.findById(3L)).thenReturn(Optional.of(existente));
+
+        service.eliminar(3L);
+
+        verify(patrocinioRepository).delete(existente);
+    }
+
+    @Test
+    void eliminar_falla_si_el_patrocinio_no_existe() {
+        when(patrocinioRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.eliminar(999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(patrocinioRepository, never()).delete(any(Patrocinio.class));
     }
 }

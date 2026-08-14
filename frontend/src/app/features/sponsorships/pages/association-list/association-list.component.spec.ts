@@ -19,7 +19,6 @@ describe('AssociationListComponent', () => {
     ligaId: null,
     temporadaId: null,
     torneoId: 12,
-    nivel: 'ORO',
     condiciones: null,
     fechaInicio: '2026-08-05',
     fechaFin: '2026-12-31',
@@ -27,7 +26,7 @@ describe('AssociationListComponent', () => {
   };
 
   beforeEach(async () => {
-    patrociniosServiceSpy = jasmine.createSpyObj('PatrociniosService', ['listarTodos']);
+    patrociniosServiceSpy = jasmine.createSpyObj('PatrociniosService', ['listarTodos', 'eliminar']);
 
     const authServiceStub = {
       usuario: () => ({ roles: ['ADMIN'] })
@@ -88,5 +87,48 @@ describe('AssociationListComponent', () => {
     fixture.detectChanges();
 
     expect(component.puedeGestionar()).toBeTrue();
+  });
+
+  it('eliminar() no llama al servicio si el usuario cancela la confirmación', () => {
+    patrociniosServiceSpy.listarTodos.and.returnValue(of([patrocinioMock]));
+    spyOn(window, 'confirm').and.returnValue(false);
+    fixture = TestBed.createComponent(AssociationListComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.eliminar(patrocinioMock);
+
+    expect(patrociniosServiceSpy.eliminar).not.toHaveBeenCalled();
+  });
+
+  it('eliminar() quita la asociación de la lista cuando el servicio responde bien', () => {
+    patrociniosServiceSpy.listarTodos.and.returnValue(of([patrocinioMock]));
+    patrociniosServiceSpy.eliminar.and.returnValue(of(undefined));
+    spyOn(window, 'confirm').and.returnValue(true);
+    fixture = TestBed.createComponent(AssociationListComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.eliminar(patrocinioMock);
+
+    expect(patrociniosServiceSpy.eliminar).toHaveBeenCalledWith(1);
+    expect(component.patrocinios().length).toBe(0);
+    expect(component.eliminandoId()).toBeNull();
+  });
+
+  it('eliminar() muestra un mensaje de error si el servicio falla', () => {
+    patrociniosServiceSpy.listarTodos.and.returnValue(of([patrocinioMock]));
+    patrociniosServiceSpy.eliminar.and.returnValue(
+      throwError(() => ({ error: { message: 'No se pudo eliminar.' } }))
+    );
+    spyOn(window, 'confirm').and.returnValue(true);
+    fixture = TestBed.createComponent(AssociationListComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.eliminar(patrocinioMock);
+
+    expect(component.error()).toBe('No se pudo eliminar.');
+    expect(component.patrocinios().length).toBe(1);
   });
 });

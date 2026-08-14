@@ -106,6 +106,13 @@ input {
   }
 }
 
+.nota-alcance {
+  margin: 0.75rem 0 0;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+
 .notice {
   margin-top: 1rem;
   padding: 0.8rem 1rem;

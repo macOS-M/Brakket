@@ -31,4 +31,11 @@ export class PatrociniosService {
   crear(request: CrearPatrocinioRequest): Observable<Patrocinio> {
     return this.api.post<Patrocinio>('/patrocinios', request);
   }
+
+  // Asume DELETE /api/patrocinios/{id} — patrón REST estándar del resto del
+  // proyecto (mismo prefijo que crear/obtener). Falta confirmar contra el
+  // controller real por si la ruta o el verbo difieren.
+  eliminar(id: number): Observable<void> {
+    return this.api.delete<void>(`/patrocinios/${id}`);
+  }
 }
