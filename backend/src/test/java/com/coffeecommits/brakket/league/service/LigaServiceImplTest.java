@@ -10,12 +10,14 @@ import com.coffeecommits.brakket.game.model.FormatoCompetitivo;
 import com.coffeecommits.brakket.game.repository.FormatoCompetitivoRepository;
 import com.coffeecommits.brakket.game.repository.JuegoRepository;
 import com.coffeecommits.brakket.league.dto.ActualizarLigaRequest;
+import com.coffeecommits.brakket.league.dto.ActualizarTemporadaRequest;
 import com.coffeecommits.brakket.league.dto.CrearLigaRequest;
 import com.coffeecommits.brakket.league.dto.CrearTemporadaRequest;
 import com.coffeecommits.brakket.league.dto.JuegoOpcionResponse;
 import com.coffeecommits.brakket.league.dto.LigaResponse;
 import com.coffeecommits.brakket.league.dto.TemporadaResponse;
 import com.coffeecommits.brakket.league.model.Liga;
+import com.coffeecommits.brakket.league.model.Temporada;
 import com.coffeecommits.brakket.league.repository.LigaRepository;
 import com.coffeecommits.brakket.league.repository.TemporadaRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
@@ -55,6 +57,14 @@ class LigaServiceImplTest {
     private LigaServiceImpl ligaService;
 
     private static final String CORREO = "ana@brakket.gg";
+
+    /**
+     * Fechas relativas y no fijas: una temporada no puede arrancar en el pasado,
+     * asi que un LocalDate.of() escrito hoy convierte la prueba en una bomba de
+     * tiempo que empieza a fallar sola cuando esa fecha queda atras.
+     */
+    private static final LocalDate MANANA = LocalDate.now().plusDays(1);
+    private static final LocalDate EN_UN_MES = LocalDate.now().plusMonths(1);
 
     private Usuario comisionado() {
         return Usuario.builder().id(1L).nombre("Ana").correo(CORREO).build();
@@ -115,7 +125,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
 
         CrearTemporadaRequest req = new CrearTemporadaRequest(
-                "Temporada 1", LocalDate.of(2026, 8, 10), LocalDate.of(2026, 8, 10));
+                "Temporada 1", MANANA, MANANA.minusDays(1));
 
         assertThatThrownBy(() -> ligaService.crearTemporada(50L, CORREO, req))
                 .isInstanceOf(BusinessException.class);
@@ -132,7 +142,7 @@ class LigaServiceImplTest {
         when(formatoRepository.findById(7L)).thenReturn(Optional.of(formato()));
 
         CrearTemporadaRequest req = new CrearTemporadaRequest(
-                "Temporada 1", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1),
+                "Temporada 1", MANANA, EN_UN_MES,
                 "Reglas", "PLANIFICADA", 8, 7L);
 
         TemporadaResponse resp = ligaService.crearTemporada(50L, CORREO, req);
@@ -151,7 +161,7 @@ class LigaServiceImplTest {
         when(usuarioRepository.findByCorreo("beto@brakket.gg")).thenReturn(Optional.of(otro));
 
         CrearTemporadaRequest req = new CrearTemporadaRequest(
-                "Temporada 1", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1));
+                "Temporada 1", MANANA, EN_UN_MES);
 
         assertThatThrownBy(() -> ligaService.crearTemporada(50L, "beto@brakket.gg", req))
                 .isInstanceOf(ForbiddenException.class);
@@ -170,16 +180,61 @@ class LigaServiceImplTest {
     }
 
     @Test
+    void crearTemporada_rechaza_una_fecha_de_inicio_en_el_pasado() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
+
+        // Sin este control se podia crear una temporada que arrancaba en 1990.
+        CrearTemporadaRequest req = new CrearTemporadaRequest(
+                "Temporada vieja", LocalDate.now().minusDays(1), EN_UN_MES);
+
+        assertThatThrownBy(() -> ligaService.crearTemporada(50L, CORREO, req))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("anterior a hoy");
+        verify(temporadaRepository, never()).save(any());
+    }
+
+    @Test
+    void actualizarTemporada_deja_editar_una_que_ya_empezo_si_no_se_mueve_el_inicio() {
+        Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
+                .juego(juego()).comisionado(comisionado()).build();
+        LocalDate inicioPasado = LocalDate.now().minusMonths(1);
+        Temporada enCurso = Temporada.builder().id(9L).liga(liga).nombre("Apertura")
+                .fechaInicio(inicioPasado).fechaFin(EN_UN_MES).reglas("Reglas")
+                .estado("ACTIVA").cupoEquipos(8).formato(formato()).version(0L).build();
+
+        when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
+        when(temporadaRepository.findById(9L)).thenReturn(Optional.of(enCurso));
+        when(formatoRepository.findById(7L)).thenReturn(Optional.of(formato()));
+        when(temporadaRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // Se cambian las reglas y se conserva el inicio: una temporada en curso
+        // tiene su fecha de arranque en el pasado por definicion, y validarla
+        // siempre la volveria intocable apenas pasara su primer dia.
+        CrearTemporadaRequest config = new CrearTemporadaRequest(
+                "Apertura", inicioPasado, EN_UN_MES, "Reglas nuevas", "ACTIVA", 8, 7L);
+
+        TemporadaResponse resp = ligaService.actualizarTemporada(
+                50L, 9L, CORREO, new ActualizarTemporadaRequest(config, 0L));
+
+        assertThat(resp.nombre()).isEqualTo("Apertura");
+        verify(temporadaRepository).saveAndFlush(any());
+    }
+
+    @Test
     void crearTemporada_rechaza_fechas_solapadas_con_otra_temporada() {
         Liga liga = Liga.builder().id(50L).nombre("Liga Pro")
                 .juego(juego()).comisionado(comisionado()).build();
         when(ligaRepository.findById(50L)).thenReturn(Optional.of(liga));
         when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(comisionado()));
         when(temporadaRepository.existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
-                50L, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 8, 1))).thenReturn(true);
+                50L, EN_UN_MES, MANANA)).thenReturn(true);
 
         CrearTemporadaRequest req = new CrearTemporadaRequest(
-                "Temporada 2", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 1));
+                "Temporada 2", MANANA, EN_UN_MES);
 
         assertThatThrownBy(() -> ligaService.crearTemporada(50L, CORREO, req))
                 .isInstanceOf(BusinessException.class)

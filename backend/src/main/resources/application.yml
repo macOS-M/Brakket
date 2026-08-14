@@ -1,3 +1,10 @@
+# Detrás de un túnel (ngrok) o proxy, la request llega a localhost pero el host
+# real viaja en X-Forwarded-*. Con esto Spring reconstruye las URLs absolutas
+# (imágenes subidas, redirect de OAuth) con el dominio público, no con
+# localhost —que en la máquina del profesor apuntaría a su propio equipo—.
+server:
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: brakket-backend
@@ -51,7 +58,10 @@ brakket:
     # Directorio de imágenes subidas; en Docker es un volumen persistente.
     dir: ${UPLOADS_DIR:uploads}
   jwt:
-    secret: ${JWT_SECRET:cambiar-esta-clave-secreta-de-al-menos-32-chars}
+    # Sin valor por defecto a propósito: un secret commiteado en el repo
+    # permite fabricar tokens de cualquier rol. JwtProperties aborta el
+    # arranque si falta o es muy corto.
+    secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   twitch:
     client-id: ${TWITCH_CLIENT_ID:}

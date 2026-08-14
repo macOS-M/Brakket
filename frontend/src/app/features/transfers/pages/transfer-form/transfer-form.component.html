@@ -55,11 +55,13 @@
         <span class="etiqueta">Equipo destino <em class="apunte">(debés ser su capitán)</em></span>
         <select formControlName="equipoDestinoId">
           <option value="">Seleccionar equipo...</option>
-          @for (equipo of equipos(); track equipo.id) {
+          @for (equipo of misEquipos(); track equipo.id) {
           <option [value]="equipo.id">{{ equipo.nombre }}</option>
           }
         </select>
-        @if (form.controls.equipoDestinoId.touched && form.controls.equipoDestinoId.invalid) {
+        @if (misEquipos().length === 0) {
+        <small class="nota">No pertenecés a ningún equipo, así que no hay destino posible.</small>
+        } @else if (form.controls.equipoDestinoId.touched && form.controls.equipoDestinoId.invalid) {
         <small class="error-campo">Seleccioná el equipo destino.</small>
         }
       </label>

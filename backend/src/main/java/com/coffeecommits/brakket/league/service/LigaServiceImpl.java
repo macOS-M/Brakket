@@ -26,6 +26,7 @@ import jakarta.persistence.OptimisticLockException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -143,7 +144,7 @@ public class LigaServiceImpl implements LigaService {
         Usuario comisionado = buscarUsuario(correoComisionado);
         asegurarEsComisionado(liga, comisionado);
         asegurarLigaActiva(liga);
-        validarConfiguracion(liga, request, null);
+        validarConfiguracion(liga, request, (Temporada) null);
         if (temporadaRepository.existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqual(
                 ligaId, request.fechaFin(), request.fechaInicio())) {
             throw new BusinessException("Las fechas se solapan con otra temporada de esta liga");
@@ -180,7 +181,7 @@ public class LigaServiceImpl implements LigaService {
             throw new OptimisticLockException("La temporada fue modificada por otro usuario");
         }
         CrearTemporadaRequest config = request.configuracion();
-        validarConfiguracion(liga, config, temporadaId);
+        validarConfiguracion(liga, config, temporada);
         if (temporadaRepository.existsByLigaIdAndFechaInicioLessThanEqualAndFechaFinGreaterThanEqualAndIdNot(
                 ligaId, config.fechaFin(), config.fechaInicio(), temporadaId)) {
             throw new BusinessException("Las fechas se solapan con otra temporada de esta liga");
@@ -267,10 +268,29 @@ public class LigaServiceImpl implements LigaService {
         }
     }
 
-    private void validarConfiguracion(Liga liga, CrearTemporadaRequest request, Long temporadaId) {
+    /**
+     * Valida la configuración de una temporada. {@code existente} es null al
+     * crear; al editar llega la temporada que se está modificando.
+     */
+    private void validarConfiguracion(Liga liga, CrearTemporadaRequest request, Temporada existente) {
         if (request.fechaFin().isBefore(request.fechaInicio())) {
             throw new BusinessException("La fecha de inicio no puede ser posterior a la fecha de fin");
         }
+        // Una temporada es un período competitivo por delante: arrancarla en el
+        // pasado contradice la coherencia de fechas que pide RF-23, y sin este
+        // control se podía crear una temporada en 1990.
+        //
+        // Solo se exige cuando la fecha de inicio cambia. Editar el nombre o las
+        // reglas de una temporada que ya empezó es legítimo, y validar siempre
+        // la dejaría imposible de tocar apenas pasara su primer día.
+        boolean cambiaElInicio = existente == null
+                || !existente.getFechaInicio().equals(request.fechaInicio());
+        if (cambiaElInicio && request.fechaInicio().isBefore(LocalDate.now())) {
+            throw new BusinessException(
+                    "La fecha de inicio no puede ser anterior a hoy (%s)".formatted(LocalDate.now()));
+        }
+
+        Long temporadaId = existente == null ? null : existente.getId();
         String nombre = request.nombre().trim();
         boolean duplicada = temporadaId == null
                 ? temporadaRepository.existsByLigaIdAndNombreIgnoreCase(liga.getId(), nombre)

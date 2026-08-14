@@ -61,7 +61,10 @@ public class SecurityConfig {
                         // Registro y login locales (DD-04): públicos por diseño.
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro", "/api/auth/login").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // La documentación de la API describe cada endpoint y cada DTO:
+                        // es el mapa completo del backend. Sigue disponible para el
+                        // equipo, pero con sesión; anónimo recibe 401.
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
                         // Lecturas públicas: el catálogo, las ligas y la búsqueda de
                         // equipos son navegables sin sesión; el login se exige recién
                         // al actuar (crear, inscribir, invitar). El buscador externo
