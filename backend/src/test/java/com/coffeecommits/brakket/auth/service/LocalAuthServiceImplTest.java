@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +42,8 @@ class LocalAuthServiceImplTest {
     private UsuarioRolRepository usuarioRolRepository;
     @Mock
     private JwtService jwtService;
+    @Mock
+    private IntentosLoginService intentosLoginService;
     @InjectMocks
     private LocalAuthServiceImpl service;
 
@@ -102,12 +105,54 @@ class LocalAuthServiceImplTest {
     }
 
     @Test
-    void login_avisa_si_la_cuenta_es_de_google() {
+    void login_de_cuenta_google_responde_generico_y_cuenta_como_fallo() {
+        // Cuenta sin contraseña local (registrada con Google). No debe revelar
+        // "es de Google" (sería un oráculo de existencia) y debe contar para el
+        // freno de fuerza bruta, igual que cualquier otro fallo.
         Usuario deGoogle = Usuario.builder().id(1L).correo("g@x.com").googleId("g-1").build();
         when(usuarioRepository.findByCorreo("g@x.com")).thenReturn(Optional.of(deGoogle));
 
         assertThatThrownBy(() -> service.login(new LoginLocalRequest("g@x.com", "lo-que-sea")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Google");
+                .hasMessageContaining("Correo o contraseña");
+
+        verify(intentosLoginService).registrarFallo("g@x.com");
+    }
+
+    @Test
+    void login_fallido_registra_el_intento_aunque_el_correo_no_exista() {
+        when(usuarioRepository.findByCorreo("fantasma@x.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.login(new LoginLocalRequest("fantasma@x.com", "x")))
+                .isInstanceOf(BusinessException.class);
+
+        // Si solo contaran los correos reales, el freno delataría cuáles existen.
+        verify(intentosLoginService).registrarFallo("fantasma@x.com");
+    }
+
+    @Test
+    void login_exitoso_limpia_el_contador_de_fallos() {
+        Usuario usuario = Usuario.builder().id(1L).correo("ana@brakket.gg")
+                .passwordHash(new BCryptPasswordEncoder().encode("correcta-123")).build();
+        when(usuarioRepository.findByCorreo("ana@brakket.gg")).thenReturn(Optional.of(usuario));
+        when(jwtService.generateToken(anyString(), anyMap())).thenReturn("jwt-emitido");
+
+        service.login(new LoginLocalRequest("ana@brakket.gg", "correcta-123"));
+
+        verify(intentosLoginService).registrarExito("ana@brakket.gg");
+    }
+
+    @Test
+    void login_bloqueado_corta_antes_de_consultar_la_base() {
+        doThrow(new BusinessException("Demasiados intentos fallidos. Probá de nuevo en 15 minutos."))
+                .when(intentosLoginService).verificarBloqueo("ana@brakket.gg");
+
+        assertThatThrownBy(() -> service.login(new LoginLocalRequest("ana@brakket.gg", "correcta-123")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Demasiados intentos");
+
+        // Bloqueado no se consulta el usuario ni se compara BCrypt: el
+        // martilleo no le cuesta nada al servidor.
+        verify(usuarioRepository, never()).findByCorreo(anyString());
     }
 }
