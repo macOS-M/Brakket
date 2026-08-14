@@ -30,6 +30,9 @@
         </p>
       </div>
       <div class="stats-torneo">
+        <!-- El ID es el que se pide al asociar una transmisión en el panel de
+             Twitch; se muestra acá para no tener que buscarlo en la URL. -->
+        <span class="stat">ID {{ torneo.id }}</span>
         <span class="stat">{{ torneo.formato | formatoTorneo }}</span>
         <span class="stat">{{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
         <span class="stat resaltado">{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos</span>

@@ -20,7 +20,6 @@ export class TwitchPanelComponent implements OnInit {
   // su vez cae a la env var TWITCH_CHANNEL si no hay canal en BD).
   canalEntrada = '';
   torneoId: number | null = null;
-  partidaId: number | null = null;
   transmision: TransmisionTwitch | null = null;
   metricas: MetricasTransmision | null = null;
   cargando = false;
@@ -71,12 +70,12 @@ export class TwitchPanelComponent implements OnInit {
 
   asociar(): void {
     this.limpiar();
-    if (!this.torneoId && !this.partidaId) {
-      this.error = 'Indique el ID de un torneo o una partida.';
+    if (!this.torneoId) {
+      this.error = 'Indique el ID del torneo.';
       return;
     }
     this.cargando = true;
-    this.twitch.asociar(this.torneoId, this.partidaId).subscribe({
+    this.twitch.asociar(this.torneoId, null).subscribe({
       next: data => {
         this.transmision = data;
         this.mensaje = data.estado === 'EN_VIVO'

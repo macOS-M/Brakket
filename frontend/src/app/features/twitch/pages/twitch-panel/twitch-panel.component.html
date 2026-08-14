@@ -38,10 +38,9 @@
 
   <article class="card">
     <h2>Asociar transmisión</h2>
-    <p>Puede asociarse al torneo, a una partida o a ambos.</p>
+    <p>Indicá el ID del torneo que querés transmitir (lo ves en la página del torneo).</p>
     <div class="fields">
       <label>ID del torneo <input type="number" min="1" [(ngModel)]="torneoId"></label>
-      <label>ID de la partida <input type="number" min="1" [(ngModel)]="partidaId"></label>
     </div>
     <button (click)="asociar()" [disabled]="cargando || !canal?.activo">
       Asociar y consultar estado en vivo
