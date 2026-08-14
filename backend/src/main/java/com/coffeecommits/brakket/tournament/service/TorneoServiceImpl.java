@@ -113,6 +113,28 @@ public class TorneoServiceImpl implements TorneoService {
                 throw new ForbiddenException(
                         "Solo el comisionado de la liga puede hospedar torneos en su temporada");
             }
+            // El torneo no puede tener más cupos que la temporada que lo hospeda:
+            // el cupo de la temporada es el tope de sus torneos. (El cupo es
+            // NOT NULL en el esquema; el chequeo de nulo es defensivo.)
+            if (temporada.getCupoEquipos() != null
+                    && request.maxEquipos() > temporada.getCupoEquipos()) {
+                throw new BusinessException(
+                        "El torneo no puede tener más de %d equipos (cupo de la temporada)"
+                                .formatted(temporada.getCupoEquipos()));
+            }
+            // El torneo debe usar el formato de la temporada. Se comparan por
+            // FormatoTorneo.interpretar para que "DOBLE_ELIMINACION" (código del
+            // catálogo) y "Doble eliminación" (etiqueta que manda el wizard)
+            // cuenten como el mismo formato.
+            if (temporada.getFormato() != null) {
+                var formatoTemporada = FormatoTorneo.interpretar(temporada.getFormato().getNombre());
+                var formatoTorneo = FormatoTorneo.interpretar(request.formato());
+                if (formatoTemporada.isPresent() && !formatoTemporada.equals(formatoTorneo)) {
+                    throw new BusinessException(
+                            "El torneo debe usar el formato de la temporada (%s)."
+                                    .formatted(temporada.getFormato().getNombre()));
+                }
+            }
         }
 
         Torneo torneo = torneoRepository.save(Torneo.builder()

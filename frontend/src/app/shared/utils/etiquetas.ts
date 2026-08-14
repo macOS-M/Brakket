@@ -9,6 +9,10 @@
  * leerse como una frase y los que la base guarda en inglés.
  */
 const NOMBRES: Record<string, string> = {
+  // ----- Ubicaciones de espacio publicitario -----
+  TORNEO_CABECERA: 'Cabecera de torneo',
+  LIGA_CABECERA: 'Cabecera de liga',
+  TRANSMISION_INFERIOR: 'Inferior de transmisión',
   // ----- Estados -----
   INSCRIPCION_ABIERTA: 'Inscripción abierta',
   EN_APELACION: 'En apelación',

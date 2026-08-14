@@ -13,7 +13,7 @@
       <label for="ubicacion">Ubicación *</label>
       <select id="ubicacion" formControlName="ubicacion">
         @for (u of ubicaciones(); track u) {
-        <option [value]="u">{{ u }}</option>
+        <option [value]="u">{{ u | etiqueta }}</option>
         }
       </select>
     </div>

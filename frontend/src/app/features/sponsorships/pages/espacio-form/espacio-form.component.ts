@@ -6,11 +6,12 @@ import { EspaciosPublicitariosService } from '../../services/espacios-publicitar
 import { PatrociniosService } from '../../services/patrocinios.service';
 import { UploadService } from '../../../../core/services/upload.service';
 import { UBICACIONES_ESPACIO, UbicacionEspacio } from '../../../../models/espacio-publicitario.model';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 @Component({
   selector: 'app-espacio-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, EtiquetaPipe],
   templateUrl: './espacio-form.component.html',
   styleUrl: './espacio-form.component.scss'
 })

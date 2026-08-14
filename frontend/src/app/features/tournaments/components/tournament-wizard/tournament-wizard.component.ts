@@ -152,6 +152,30 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
   readonly tamanosPermitidos = signal<number[]>([1, 2, 3, 4, 5]);
   readonly cupos = [2, 4, 8, 16, 32, 64];
 
+  /** Tope de cupo que impone la temporada elegida; sin temporada, sin tope. */
+  readonly cupoMaxTemporada = computed(() => {
+    const id = this.temporadaId();
+    if (id === null) return Infinity;
+    const temporada = this.temporadas().find((t) => t.id === id);
+    return temporada ? temporada.cupoEquipos : Infinity;
+  });
+
+  /** Opciones de cupo del torneo, acotadas al tope de la temporada. */
+  readonly cuposDisponibles = computed(() =>
+    this.cupos.filter((c) => c <= this.cupoMaxTemporada()));
+
+  /**
+   * Formato que impone la temporada elegida (código del catálogo, p. ej.
+   * DOBLE_ELIMINACION). null si no hay temporada o si es una temporada vieja
+   * sin formato: en ese caso el usuario elige libremente.
+   */
+  readonly formatoTemporada = computed(() => {
+    const id = this.temporadaId();
+    if (id === null) return null;
+    const temporada = this.temporadas().find((t) => t.id === id);
+    return temporada && temporada.formatoId != null ? temporada.formatoNombre : null;
+  });
+
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
 
@@ -286,6 +310,24 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
         next: (temporadas) => this.temporadas.set(temporadas),
         error: () => this.temporadas.set([])
       });
+    }
+  }
+
+  /**
+   * Al elegir temporada, si el cupo actual del torneo supera el tope de esa
+   * temporada, se baja a la mayor opción permitida. Así el torneo nunca queda
+   * con más cupos que su temporada (regla que el backend también valida).
+   */
+  elegirTemporada(valor: string): void {
+    this.temporadaId.set(valor ? Number(valor) : null);
+    const disponibles = this.cuposDisponibles();
+    if (disponibles.length && !disponibles.includes(this.cupo())) {
+      this.cupo.set(disponibles[disponibles.length - 1]);
+    }
+    // Si la temporada tiene formato, el torneo queda fijado a ese formato.
+    const formato = this.formatoTemporada();
+    if (formato) {
+      this.formato.set(formato);
     }
   }
 
