@@ -40,14 +40,24 @@ public interface MiembroEquipoRepository extends JpaRepository<MiembroEquipo, Lo
 
     Optional<MiembroEquipo> findByEquipoIdAndUsuarioId(Long equipoId, Long usuarioId);
 
+    /**
+     * Valida capitanía sin cargar un MiembroEquipo en el contexto JPA. Esto es
+     * importante al borrar el equipo: una membresía administrada que apunte al
+     * Equipo eliminado provoca TransientObjectException durante el flush.
+     */
+    boolean existsByEquipoIdAndUsuarioIdAndRolAndEstado(
+            Long equipoId, Long usuarioId, String rol, String estado);
+
     long countByEquipoIdAndRolAndEstado(Long equipoId, String rol, String estado);
 
     @Query("""
-            select m from MiembroEquipo m
+            select distinct m from MiembroEquipo m
             join fetch m.equipo e
             left join fetch e.juego
+            left join fetch e.juegos juegos
+            left join e.juegos juegoFiltro
             where m.usuario.id = :usuarioId
-              and (:juegoId is null or e.juego.id = :juegoId)
+              and (:juegoId is null or juegoFiltro.id = :juegoId)
               and (:desde is null or m.fechaUnion >= :desde)
               and (:hasta is null or m.fechaUnion <= :hasta)
             order by m.fechaUnion desc

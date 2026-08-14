@@ -81,9 +81,10 @@ describe('TransmisionesPageComponent', () => {
     expect(texto).toContain('Gran final del torneo');
     expect(texto).toContain('EN VIVO');
     expect(texto).toContain('42');
-    // 1 tarjeta real + 3 de relleno hasta el mínimo de 4.
-    expect(fixture.nativeElement.querySelectorAll('app-stream-card').length).toBe(4 + 1); // +1 en "Por juego"
-    expect(fixture.nativeElement.querySelectorAll('.tarjeta-proximamente').length).toBe(3);
+    // Solo la transmisión real: la grilla ya no se rellena con tarjetas
+    // "Próximamente", que prometían directos de la comunidad inexistentes.
+    expect(fixture.nativeElement.querySelectorAll('app-stream-card').length).toBe(1 + 1); // +1 en "Por juego"
+    expect(fixture.nativeElement.querySelectorAll('.tarjeta-proximamente').length).toBe(0);
     // La sección por juego se agrupa desde la misma estructura de datos.
     expect(texto).toContain('League of Legends');
     discardPeriodicTasks();

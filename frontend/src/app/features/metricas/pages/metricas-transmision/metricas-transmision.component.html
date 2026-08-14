@@ -1,0 +1,251 @@
+<div class="page">
+  <app-page-header
+    eyebrow="Analítica"
+    titulo="Analítica de audiencia"
+    subtitulo="Audiencia, chat y sentimiento de una transmisión, por período."
+  >
+    @if (datos()) {
+      <button type="button" class="btn-exportar" (click)="exportarCsv()">Exportar CSV</button>
+    }
+  </app-page-header>
+
+  @if (cargandoCatalogo()) {
+    <app-empty-state modo="cargando" mensaje="Cargando transmisiones…" />
+  } @else if (errorCatalogo()) {
+    <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="errorCatalogo()">
+      <button type="button" (click)="cargarCatalogo()">Reintentar</button>
+    </app-empty-state>
+  } @else if (!transmisiones().length) {
+    <app-empty-state
+      titulo="No hay transmisiones"
+      mensaje="Cuando se registre una transmisión vas a poder consultar sus métricas acá."
+    />
+  } @else {
+    <div class="filtros">
+      <div class="campo">
+        <label for="transmision">Transmisión</label>
+        <select
+          id="transmision"
+          [value]="transmisionFiltro()"
+          (change)="alCambiarTransmision($any($event.target).value)"
+        >
+          @for (t of transmisiones(); track t.id) {
+            <option [value]="t.id" [disabled]="t.muestras === 0">
+              {{ t.etiqueta }}{{ t.muestras === 0 ? ' (sin datos)' : '' }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="desde">Desde</label>
+        <app-fecha-input
+          idCampo="desde"
+          etiqueta="Desde"
+          marcador="Sin límite"
+          [ngModel]="desdeFiltro()"
+          (ngModelChange)="desdeFiltro.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+      </div>
+
+      <div class="campo">
+        <label for="hasta">Hasta</label>
+        <app-fecha-input
+          idCampo="hasta"
+          etiqueta="Hasta"
+          marcador="Sin límite"
+          [ngModel]="hastaFiltro()"
+          (ngModelChange)="hastaFiltro.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+      </div>
+
+      <div class="campo">
+        <span class="etiqueta-grupo" id="etiqueta-agrupacion">Agrupación</span>
+        <div class="segmentado" role="group" aria-labelledby="etiqueta-agrupacion">
+          <button
+            type="button"
+            [class.activo]="agrupacionFiltro() === 'HORA'"
+            [attr.aria-pressed]="agrupacionFiltro() === 'HORA'"
+            (click)="agrupacionFiltro.set('HORA')"
+          >
+            Por hora
+          </button>
+          <button
+            type="button"
+            [class.activo]="agrupacionFiltro() === 'CRUDA'"
+            [attr.aria-pressed]="agrupacionFiltro() === 'CRUDA'"
+            (click)="agrupacionFiltro.set('CRUDA')"
+          >
+            Muestras crudas
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-buscar" (click)="buscar()">Buscar</button>
+      <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
+    </div>
+
+    @if (rangoInvalido()) {
+      <p class="aviso-error" role="alert">La fecha "desde" no puede ser posterior a "hasta".</p>
+    }
+
+    @if (cargando()) {
+      <app-empty-state modo="cargando" mensaje="Cargando métricas…" />
+    } @else if (error()) {
+      <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()">
+        <button type="button" (click)="buscar()">Reintentar</button>
+      </app-empty-state>
+    } @else {
+      @if (datos(); as d) {
+      @if (d.origen === 'SIMULADO' || d.origen === 'MIXTO') {
+        <p class="chip-aviso">
+          Esta transmisión contiene datos {{ d.origen === 'MIXTO' ? 'mixtos' : 'simulados' }}.
+        </p>
+      }
+
+      <div class="stats">
+        <app-stat-card
+          etiqueta="Pico de espectadores"
+          [valor]="cifra(d.resumen.picoEspectadores)"
+          tono="cyan"
+        />
+        <app-stat-card
+          etiqueta="Promedio de espectadores"
+          [valor]="cifra(d.resumen.promedioEspectadores, 1)"
+          tono="azul"
+        />
+        <app-stat-card
+          etiqueta="Mensajes por minuto"
+          [valor]="cifra(d.resumen.promedioMensajesPorMinuto, 1)"
+          nota="promedio"
+          tono="ambar"
+        />
+        <app-stat-card
+          etiqueta="Pico de usuarios activos"
+          [valor]="cifra(d.resumen.picoUsuariosActivos)"
+          tono="morado"
+        />
+        <app-stat-card
+          etiqueta="Duración"
+          [valor]="d.duracionMinutos !== null ? d.duracionMinutos + ' min' : '—'"
+          tono="verde"
+        />
+        <app-stat-card
+          etiqueta="Muestras"
+          [valor]="d.resumen.muestrasAudiencia"
+          [nota]="d.agrupacion === 'HORA' ? 'agrupadas por hora' : 'sin agrupar'"
+          tono="rojo"
+        />
+      </div>
+
+      <!-- Capa sin altura: si el cuadro empujara el layout, el puntero saldría del
+           gráfico y el hover entraría en un bucle de aparecer/desaparecer. -->
+      <div class="tooltip-capa">
+        @if (instanteActivo(); as instante) {
+          <div class="tooltip" role="status">
+            <p class="hora">{{ instante }}</p>
+            @for (fila of filasTooltip(); track fila.etiqueta) {
+              <p class="fila"><span>{{ fila.etiqueta }}</span><strong>{{ fila.valor }}</strong></p>
+            }
+          </div>
+        }
+      </div>
+
+      @if (unicoBucket()) {
+        <p class="chip-aviso">
+          El rango cae dentro de una sola hora, así que agrupado se ve un único punto.
+          Probá <strong>Muestras crudas</strong> para ver el detalle.
+        </p>
+      }
+
+      <section class="panel">
+        <header>
+          <h2>Audiencia</h2>
+          <p class="leyenda"><span class="swatch serie-espectadores"></span>Espectadores</p>
+        </header>
+        @if (audienciaDisponible()) {
+          <app-grafico-serie
+            [series]="graficoAudiencia()"
+            [instantes]="instantes()"
+            [intervaloSegundos]="d.intervaloSegundos"
+            [indiceActivo]="indiceActivo()"
+            (indiceActivoChange)="indiceActivo.set($event)"
+          />
+        } @else {
+          <div class="sin-serie">
+            <app-empty-state
+              titulo="Sin muestras de audiencia"
+              mensaje="El muestreo guarda una muestra por minuto mientras la transmisión está en vivo."
+            />
+          </div>
+        }
+      </section>
+
+      <section class="panel">
+        <header>
+          <h2>Actividad de chat</h2>
+          <p class="leyenda">
+            <span class="swatch serie-mensajes"></span>Mensajes/min
+            <span class="swatch serie-usuarios"></span>Usuarios activos
+          </p>
+        </header>
+        @if (chatDisponible()) {
+          <app-grafico-serie
+            [series]="graficoChat()"
+            [instantes]="instantes()"
+            [intervaloSegundos]="d.intervaloSegundos"
+            [indiceActivo]="indiceActivo()"
+            (indiceActivoChange)="indiceActivo.set($event)"
+          />
+        } @else {
+          <div class="sin-serie">
+            <app-empty-state
+              titulo="Sin actividad de chat"
+              mensaje="La captura del chat registra mensajes y usuarios mientras el directo corre."
+            />
+          </div>
+        }
+      </section>
+
+      <section class="panel">
+        <header>
+          <h2>Sentimiento del chat</h2>
+          <p class="leyenda">
+            @if (d.resumen.clasificacionPredominante) {
+              <span class="swatch serie-sentimiento"></span>
+              Predominante: {{ d.resumen.clasificacionPredominante | etiqueta }}
+            } @else {
+              <span class="pendiente">Pendiente</span>
+            }
+          </p>
+        </header>
+        @if (sentimientoDisponible()) {
+          <app-grafico-serie
+            [series]="graficoSentimiento()"
+            [instantes]="instantes()"
+            [alto]="160"
+            [dominioFijo]="dominioSentimiento"
+            [intervaloSegundos]="d.intervaloSegundos"
+            [indiceActivo]="indiceActivo()"
+            (indiceActivoChange)="indiceActivo.set($event)"
+          />
+        } @else {
+          <div class="sin-serie">
+            <app-empty-state
+              titulo="Sin análisis de sentimiento"
+              mensaje="Se va a activar cuando el análisis del chat esté disponible."
+            />
+          </div>
+        }
+      </section>
+      } @else {
+        <app-empty-state
+          titulo="Elegí una transmisión"
+          mensaje="Seleccioná una transmisión y presioná Buscar para ver sus métricas."
+        />
+      }
+    }
+  }
+</div>

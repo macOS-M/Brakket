@@ -23,6 +23,37 @@
   </div>
   } @else {
 
+  <div class="filtros-barra">
+    <div class="chips" role="group" aria-label="Filtrar por estado del torneo">
+      @for (e of estadosFiltro; track e.key) {
+      <button
+        type="button"
+        class="chip"
+        [class.activo]="estadoActivo() === e.key"
+        [attr.aria-pressed]="estadoActivo() === e.key"
+        (click)="filtrarEstado(e.key)"
+      >
+        {{ e.label }}
+      </button>
+      }
+    </div>
+
+    @if (juegos().length > 1) {
+    <div class="filtro-juego">
+      <label for="filtro-juego">Juego</label>
+      <select
+        id="filtro-juego"
+        (change)="filtrarJuego($any($event.target).value ? +$any($event.target).value : null)"
+      >
+        <option value="" [selected]="juegoActivo() === null">Todos los juegos</option>
+        @for (j of juegos(); track j.id) {
+        <option [value]="j.id" [selected]="juegoActivo() === j.id">{{ j.nombre }}</option>
+        }
+      </select>
+    </div>
+    }
+  </div>
+
   <div class="chips" role="group" aria-label="Filtrar por jugadores por equipo">
     <button
       type="button"
@@ -47,8 +78,8 @@
   </div>
 
   @if (filtrados().length === 0) {
-  <app-empty-state titulo="Sin torneos de ese tamaño" mensaje="Probá con otro filtro.">
-    <button type="button" class="btn-secondary" (click)="filtrar(null)">Ver todos</button>
+  <app-empty-state titulo="Sin torneos con ese filtro" mensaje="Probá con otro estado, juego o tamaño.">
+    <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Ver todos</button>
   </app-empty-state>
   } @else {
 

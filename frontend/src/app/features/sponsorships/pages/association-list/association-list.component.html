@@ -1,0 +1,78 @@
+<section class="page">
+  <a class="volver" routerLink="/sponsorships">← Volver a patrocinadores</a>
+
+  <app-page-header titulo="Asociaciones de patrocinio" subtitulo="Patrocinadores vinculados a ligas y torneos">
+    @if (puedeGestionar()) {
+    <a class="btn-primary" routerLink="/sponsorships/asociaciones/nuevo">+ Nueva asociación</a>
+    }
+  </app-page-header>
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando asociaciones…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()">
+    <button class="btn-secondary" type="button" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else if (patrocinios().length === 0) {
+  <app-empty-state titulo="Sin asociaciones" mensaje="Todavía no hay patrocinios registrados.">
+    @if (puedeGestionar()) {
+    <a class="btn-secondary" routerLink="/sponsorships/asociaciones/nuevo">+ Nueva asociación</a>
+    }
+  </app-empty-state>
+  } @else {
+  <div class="seccion-titulo">
+    <h2>Asociaciones</h2>
+    <span class="conteo">{{ patrocinios().length }}</span>
+  </div>
+
+  <div class="grid">
+    @for (p of patrocinios(); track p.id) {
+    <article class="patrocinador-card">
+      <div class="banda" [style.background]="colorDe(p.patrocinadorNombre)" aria-hidden="true">
+        <span class="badge" [class.inactivo]="p.estado !== 'ACTIVO'">{{ p.estado | etiqueta }}</span>
+      </div>
+
+      <div class="cuerpo">
+        <div class="cabecera">
+          <span class="avatar" [style.background]="colorDe(p.patrocinadorNombre)" aria-hidden="true">
+            {{ p.patrocinadorNombre.charAt(0) }}
+          </span>
+          <div class="identidad">
+            <p class="nombre">{{ p.patrocinadorNombre }}</p>
+            <p class="alcance">{{ alcanceTexto(p) }}</p>
+          </div>
+        </div>
+
+        <p class="fechas">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5h16V20H4zM4 10h16M8 3v4.5M16 3v4.5" />
+          </svg>
+          {{ p.fechaInicio | date: 'dd/MM/yyyy' }} — {{ p.fechaFin | date: 'dd/MM/yyyy' }}
+        </p>
+
+        @if (p.condiciones) {
+        <p class="descripcion">{{ p.condiciones }}</p>
+        }
+      </div>
+
+      <div class="acciones">
+        <a class="btn-icono" [routerLink]="['/sponsorships/asociaciones', p.id, 'espacios']" title="Gestionar espacios">
+          ⚙ Espacios
+        </a>
+        @if (puedeGestionar()) {
+        <button
+          type="button"
+          class="btn-icono btn-eliminar"
+          (click)="eliminar(p)"
+          [disabled]="eliminandoId() === p.id"
+          title="Eliminar asociación"
+        >
+          {{ eliminandoId() === p.id ? 'Eliminando…' : '🗑 Eliminar' }}
+        </button>
+        }
+      </div>
+    </article>
+    }
+  </div>
+  }
+</section>

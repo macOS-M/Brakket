@@ -9,8 +9,12 @@ import { LeaguesService } from '../../services/leagues.service';
 import { TournamentsService } from '../../../tournaments/services/tournaments.service';
 import { TorneoCardComponent } from '../../../tournaments/components/torneo-card/torneo-card.component';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 import { TournamentWizardComponent } from '../../../tournaments/components/tournament-wizard/tournament-wizard.component';
 import { portadaGradiente } from '../../../../shared/utils/cover';
+import { hoyCostaRicaIso } from '../../../../shared/utils/hora-costa-rica';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 function rangoFechasValido(control: AbstractControl): ValidationErrors | null {
   const inicio = control.get('fechaInicio')?.value;
@@ -21,7 +25,7 @@ function rangoFechasValido(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-league-detail',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, TorneoCardComponent, TournamentWizardComponent, FormatoTorneoPipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, TorneoCardComponent, TournamentWizardComponent, FormatoTorneoPipe, FechaInputComponent, EtiquetaPipe, AdSlotComponent],
   templateUrl: './league-detail.component.html',
   styleUrl: './league-detail.component.scss'
 })
@@ -32,6 +36,9 @@ export class LeagueDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  // Mismas opciones que el cupo del torneo, para que el tope de la temporada
+  // hable el mismo idioma que sus torneos (potencias de 2 hasta 64).
+  readonly cuposEquipos = [2, 4, 8, 16, 32, 64];
   readonly league = signal<League | null>(null);
   readonly seasons = signal<Season[]>([]);
   readonly formats = signal<FormatOption[]>([]);
@@ -79,7 +86,37 @@ export class LeagueDetailComponent {
     estado: ['PLANIFICADA' as SeasonStatus, Validators.required],
     cupoEquipos: [8, [Validators.required, Validators.min(2), Validators.max(1024)]],
     formatoId: [null as number | null, Validators.required]
-  }, { validators: rangoFechasValido });
+  }, { validators: [rangoFechasValido, (grupo) => this.inicioNoEsPasado(grupo)] });
+
+  /**
+   * Al crear, la fecha de inicio no puede quedar en el pasado: una temporada es
+   * un período por delante, y sin esto se podía guardar una que arrancaba en 1990.
+   *
+   * Al editar no se valida acá. Una temporada que ya empezó tiene por fuerza su
+   * inicio en el pasado, y exigirlo la volvería intocable apenas pasara su primer
+   * día. El backend distingue el caso: solo rechaza si la fecha cambia.
+   */
+  private inicioNoEsPasado(grupo: AbstractControl): ValidationErrors | null {
+    if (this.editingId() !== null) {
+      return null;
+    }
+    const inicio = grupo.get('fechaInicio')?.value;
+    return inicio && inicio < hoyCostaRicaIso() ? { inicioPasado: true } : null;
+  }
+
+  /**
+   * Tope inferior del calendario. Al crear se apagan los días pasados, que es
+   * mejor que dejar elegirlos y rechazarlos después; al editar no hay tope,
+   * porque una temporada en curso ya empezó.
+   */
+  minimoInicio(): string | null {
+    return this.editingId() === null ? hoyCostaRicaIso() : null;
+  }
+
+  /** El fin nunca antes del inicio ya elegido. */
+  minimoFin(): string | null {
+    return this.seasonForm.controls.fechaInicio.value || this.minimoInicio();
+  }
 
   constructor() {
     this.leaguesService.getById(this.ligaId).subscribe({

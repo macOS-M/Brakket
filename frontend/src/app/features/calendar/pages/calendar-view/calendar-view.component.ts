@@ -1,16 +1,19 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-
+import { FormsModule } from '@angular/forms';
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 import { CalendarioEvento } from '../../../../models/calendario-evento.model';
 import { Juego } from '../../../../models/juego.model';
 import { League } from '../../../../models/league.model';
 import { CalendarService } from '../../services/calendar.service';
 import { GamesService } from '../../../games/services/games.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [],
+  imports: [FormsModule, FechaInputComponent, EtiquetaPipe, AdSlotComponent],
   templateUrl: './calendar-view.component.html',
   styleUrl: './calendar-view.component.scss'
 })

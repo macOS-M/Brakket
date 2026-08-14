@@ -91,6 +91,11 @@ public class Usuario {
     @Builder.Default
     private Boolean perfilCompleto = false;
 
+    /** Hito de progresión: se activa una sola vez al cambiar el gamertag. */
+    @Column(name = "nombre_visible_cambiado", nullable = false)
+    @Builder.Default
+    private Boolean nombreVisibleCambiado = false;
+
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

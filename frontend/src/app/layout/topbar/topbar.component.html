@@ -43,8 +43,8 @@
           <path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M18 20h4a6 6 0 0 0-4-5.6" />
         </svg>
         <span class="resultado-nombre">{{ equipo.nombre }}</span>
-        @if (equipo.juegoNombre) {
-        <span class="resultado-meta">{{ equipo.juegoNombre }}</span>
+        @if (equipo.juegoNombres?.length || equipo.juegoNombre) {
+        <span class="resultado-meta">{{ equipo.juegoNombres?.join(' · ') || equipo.juegoNombre }}</span>
         }
       </a>
       } } @if (res.juegos.length > 0) {
@@ -69,23 +69,86 @@
   </div>
 
   <div class="acciones">
-    <a
+    @if (usuario()?.authenticated) {
+    <div class="notificaciones-menu">
+    <button
+      type="button"
       class="btn-campana"
-      routerLink="/notifications"
-      title="Notificaciones (pronto)"
+      [class.activa]="panelNotificacionesAbierto()"
+      [attr.title]="notificacionesNoLeidas() ? notificacionesNoLeidas() + ' notificaciones sin leer' : 'Notificaciones'"
+      [attr.aria-expanded]="panelNotificacionesAbierto()"
+      aria-controls="panel-notificaciones"
+      (click)="alternarNotificaciones($event)"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M18 15V10a6 6 0 1 0-12 0v5l-2 3h16zM10 21h4" />
       </svg>
-      <span class="sr-only">Notificaciones (pronto)</span>
-    </a>
+      @if (notificacionesNoLeidas() > 0) {
+        <span class="contador" aria-hidden="true">{{ notificacionesNoLeidas() > 99 ? '99+' : notificacionesNoLeidas() }}</span>
+      }
+      <span class="sr-only">Notificaciones, {{ notificacionesNoLeidas() }} sin leer</span>
+    </button>
+
+    @if (panelNotificacionesAbierto()) {
+      <section id="panel-notificaciones" class="panel-notificaciones" (click)="$event.stopPropagation()">
+        <header>
+          <div>
+            <h2>Notificaciones</h2>
+            <span>{{ notificacionesNoLeidas() }} sin leer</span>
+          </div>
+          <a routerLink="/notifications" (click)="cerrarNotificaciones()">Ver todas</a>
+        </header>
+
+        <div class="lista-notificaciones">
+          @if (cargandoNotificaciones()) {
+            @for (item of [1, 2, 3]; track item) {
+              <div class="notificacion-mini cargando"><i></i><span></span></div>
+            }
+          } @else if (notificacionesRecientes().length === 0) {
+            <div class="notificaciones-vacias">
+              <span aria-hidden="true">✓</span>
+              <p>No tienes notificaciones pendientes.</p>
+            </div>
+          } @else {
+            @for (notificacion of notificacionesRecientes(); track notificacion.id) {
+              <button
+                type="button"
+                class="notificacion-mini"
+                [class.no-leida]="!notificacion.leida"
+                (click)="marcarNotificacionLeida(notificacion, $event)"
+                [attr.title]="'Abrir ' + etiquetaNotificacion(notificacion.tipo).toLowerCase()"
+              >
+                <span class="punto-tipo" aria-hidden="true"></span>
+                <span class="notificacion-texto">
+                  <span class="notificacion-meta">
+                    <strong>{{ etiquetaNotificacion(notificacion.tipo) }}</strong>
+                    <time [attr.datetime]="notificacion.fecha">{{ fechaNotificacion(notificacion.fecha) }}</time>
+                  </span>
+                  <span class="notificacion-mensaje">{{ notificacion.mensaje }}</span>
+                </span>
+                @if (!notificacion.leida) {
+                  <span class="punto-no-leida" title="Sin leer"></span>
+                }
+              </button>
+            }
+          }
+        </div>
+
+        <a class="ir-bandeja" routerLink="/notifications" (click)="cerrarNotificaciones()">
+          Abrir centro de notificaciones
+          <span aria-hidden="true">→</span>
+        </a>
+      </section>
+    }
+    </div>
+    }
 
     @if (usuario()?.authenticated) {
     <a class="usuario" routerLink="/profile">
       <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
       <span class="datos">
         <span class="nombre">{{ usuario()?.nombre || 'Mi perfil' }}</span>
-        <span class="rol">{{ rolPrincipal() }}</span>
+        <span class="rol">{{ rolPrincipal() | etiqueta }}</span>
       </span>
     </a>
     <button type="button" class="btn-salir" (click)="logout()">

@@ -27,10 +27,19 @@ describe('TransferFormComponent', () => {
     httpMock.verify();
   });
 
+  /**
+   * El formulario pide dos listas distintas: todos los equipos para el origen
+   * —de cualquiera puede salir el jugador— y solo los propios para el destino,
+   * porque hay que ser su capitán.
+   */
   function responderEquipos(): void {
     httpMock.expectOne(`${environment.apiUrl}/public/teams?criterio=`).flush([
       { id: 10, nombre: 'Origen FC', juegoNombre: null, integrantesActivos: 3 },
       { id: 20, nombre: 'Destino FC', juegoNombre: null, integrantesActivos: 2 }
+    ]);
+    httpMock.expectOne(`${environment.apiUrl}/teams/mios`).flush([
+      { id: 20, nombre: 'Destino FC', logo: null, bannerUrl: null, descripcion: null,
+        juegoId: null, juegoNombre: null, disciplina: null, estado: 'ACTIVO' }
     ]);
   }
 

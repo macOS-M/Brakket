@@ -2,7 +2,10 @@
   <div class="header">
     <h1>Patrocinadores</h1>
     @if (puedeGestionar()) {
-    <a class="btn-primary" routerLink="/sponsorships/nuevo">+ Nuevo patrocinador</a>
+    <div class="header-acciones">
+      <a class="btn-secondary" routerLink="/sponsorships/asociaciones">Ver asociaciones</a>
+      <a class="btn-primary" routerLink="/sponsorships/nuevo">+ Nuevo patrocinador</a>
+    </div>
     }
   </div>
 
@@ -24,7 +27,7 @@
       <div class="info">
         <p class="nombre">{{ patrocinador.nombre }}</p>
         <span class="badge" [class.inactivo]="patrocinador.estado !== 'ACTIVO'">
-              {{ patrocinador.estado }}
+              {{ patrocinador.estado | etiqueta }}
             </span>
         @if (patrocinador.descripcion) {
         <p class="descripcion">{{ patrocinador.descripcion }}</p>

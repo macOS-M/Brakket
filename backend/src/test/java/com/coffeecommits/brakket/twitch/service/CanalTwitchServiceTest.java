@@ -33,12 +33,70 @@ class CanalTwitchServiceTest {
         properties = new TwitchProperties();
         service = new CanalTwitchService(canalRepository, transmisionRepository, incidenteRepository,
                 metricaRepository, torneoRepository, partidaRepository, gateway, properties);
-        when(canalRepository.findFirstByActivoTrue()).thenReturn(Optional.empty());
-        when(canalRepository.save(any())).thenAnswer(invocation -> {
+        // lenient: los tests de finalizar no tocan el canal, y el modo estricto
+        // marcaria estos stubs compartidos como innecesarios.
+        lenient().when(canalRepository.findFirstByActivoTrue()).thenReturn(Optional.empty());
+        lenient().when(canalRepository.save(any())).thenAnswer(invocation -> {
             CanalOficialTwitch c = invocation.getArgument(0);
             c.setId(1L);
             return c;
         });
+    }
+
+    @Test
+    void finalizarCierraElPeriodoDeCaptura() {
+        var transmision = com.coffeecommits.brakket.twitch.model.TransmisionTwitch.builder()
+                .id(7L).estado("EN_VIVO")
+                .iniciadaEn(java.time.LocalDateTime.of(2026, 7, 24, 18, 0))
+                .creadaEn(java.time.LocalDateTime.of(2026, 7, 24, 18, 0)).build();
+        when(transmisionRepository.findById(7L)).thenReturn(Optional.of(transmision));
+
+        var response = service.finalizar(7L);
+
+        assertThat(response.estado()).isEqualTo("FINALIZADA");
+        assertThat(transmision.getFinalizadaEn()).isNotNull();
+        verify(transmisionRepository).save(transmision);
+    }
+
+    @Test
+    void finalizarDosVecesFalla() {
+        var transmision = com.coffeecommits.brakket.twitch.model.TransmisionTwitch.builder()
+                .id(7L).estado("FINALIZADA")
+                .finalizadaEn(java.time.LocalDateTime.of(2026, 7, 24, 19, 0))
+                .creadaEn(java.time.LocalDateTime.of(2026, 7, 24, 18, 0)).build();
+        when(transmisionRepository.findById(7L)).thenReturn(Optional.of(transmision));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.finalizar(7L))
+                .isInstanceOf(com.coffeecommits.brakket.common.exception.BusinessException.class);
+        verify(transmisionRepository, never()).save(any());
+    }
+
+    /** RF-34: reasociar el mismo directo con otra abierta debe explicarse, no reventar. */
+    @Test
+    void noSePuedeAsociarDosVecesElMismoDirectoAbierto() {
+        var canal = CanalOficialTwitch.builder().id(1L).loginCanal("sol1xd").activo(true).build();
+        when(canalRepository.findFirstByActivoTrue()).thenReturn(Optional.of(canal));
+        when(torneoRepository.findById(27L)).thenReturn(Optional.of(
+                com.coffeecommits.brakket.tournament.model.Torneo.builder().id(27L).build()));
+        when(gateway.findLiveStream("sol1xd")).thenReturn(
+                new TwitchGateway.StreamInfo("317466024803", 4300, java.time.LocalDateTime.now()));
+        when(transmisionRepository.findByTwitchStreamIdAndFinalizadaEnIsNull("317466024803"))
+                .thenReturn(Optional.of(com.coffeecommits.brakket.twitch.model.TransmisionTwitch.builder()
+                        .id(7L).build()));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.asociar(
+                        new com.coffeecommits.brakket.twitch.dto.AsociarTransmisionRequest(27L, null)))
+                .isInstanceOf(com.coffeecommits.brakket.common.exception.BusinessException.class)
+                .hasMessageContaining("Finalizala");
+        verify(transmisionRepository, never()).save(any());
+    }
+
+    @Test
+    void finalizarUnaTransmisionInexistenteDaNotFound() {
+        when(transmisionRepository.findById(99L)).thenReturn(Optional.empty());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.finalizar(99L))
+                .isInstanceOf(com.coffeecommits.brakket.common.exception.ResourceNotFoundException.class);
     }
 
     @Test

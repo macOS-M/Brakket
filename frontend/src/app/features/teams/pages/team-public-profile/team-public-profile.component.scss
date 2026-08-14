@@ -537,6 +537,20 @@
   }
 }
 
+// Enlace al historial y acción de gestión, uno en cada extremo del recuadro.
+// Los dos son elementos en línea y `.bloque` no es flex, así que caían pegados
+// en el mismo renglón y el botón se leía como la continuación del enlace.
+.bloque-acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+// Contra el borde derecho incluso cuando el enlace de historial no está (visita
+// sin sesión): con `justify-content: space-between` el botón se iría a la
+// izquierda al quedar como hijo único.
 .btn-secondary.gestionar {
-  margin-top: 12px;
+  margin-left: auto;
 }

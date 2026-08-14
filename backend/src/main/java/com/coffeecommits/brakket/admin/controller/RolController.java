@@ -27,11 +27,14 @@ public class RolController {
     private final RolPermisoService rolPermisoService;
 
     /**
-     * Catálogo de roles reconocidos (ADMIN, COMISIONADO, ARBITRO, CAPITAN,
-     * JUGADOR, PATROCINADOR). Cualquier autenticado puede consultarlo,
-     * p. ej. para poblar el combo del panel administrativo.
+     * Catálogo de roles reconocidos con los permisos de cada uno. Expone el
+     * modelo de seguridad completo, así que va tras GESTIONAR_ROLES igual que
+     * el resto del panel: su único consumidor es el panel administrativo, que
+     * ya es ADMIN-only. (Antes quedaba abierto a cualquier autenticado, que es
+     * información que un jugador no debería poder listar.)
      */
     @GetMapping("/roles")
+    @PreAuthorize("hasAuthority('GESTIONAR_ROLES')")
     public ResponseEntity<List<RolDTO>> listarRoles() {
         return ResponseEntity.ok(rolPermisoService.listarCatalogo());
     }

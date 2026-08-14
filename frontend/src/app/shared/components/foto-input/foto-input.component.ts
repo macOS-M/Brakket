@@ -11,9 +11,9 @@ interface Recorte {
 }
 
 /**
- * Control de imagen para formularios reactivos: subir un archivo directo
- * (se guarda en el backend y el control recibe la URL) o pegar una URL
- * externa. Se usa con formControlName en todo formulario que pida foto.
+ * Control de imagen para formularios reactivos: adjunta un archivo, permite
+ * encuadrarlo y lo guarda en el backend. El formulario recibe la URL pública
+ * generada por el sistema, pero el usuario nunca tiene que escribirla.
  *
  * Al elegir un archivo se abre un recortador con marco fijo (cuadrado
  * para logos, apaisado para banners): la imagen se arrastra y acerca
@@ -103,13 +103,6 @@ export class FotoInputComponent implements ControlValueAccessor {
 
   setDisabledState(deshabilitado: boolean): void {
     this.deshabilitado.set(deshabilitado);
-  }
-
-  alEscribirUrl(url: string): void {
-    this.valor.set(url);
-    this.errorSubida.set(null);
-    this.alCambiar(url);
-    this.alTocar();
   }
 
   alElegirArchivo(evento: Event): void {

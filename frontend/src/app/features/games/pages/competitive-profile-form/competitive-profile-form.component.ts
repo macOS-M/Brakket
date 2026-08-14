@@ -7,11 +7,12 @@ import { catchError } from 'rxjs/operators';
 import { CompetitiveProfileService } from '../../../../core/services/competitive-profile.service';
 import { CatalogoCompetitivo, PerfilCompetitivoRequest } from '../../../../models/perfil-competitivo.model';
 import { GamesService } from '../../services/games.service';
+import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
 
 @Component({
   selector: 'app-competitive-profile-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, FormatoTorneoPipe],
   templateUrl: './competitive-profile-form.component.html',
   styleUrl: './competitive-profile-form.component.scss'
 })
@@ -36,8 +37,12 @@ export class CompetitiveProfileFormComponent implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     modalidad: ['EQUIPOS' as 'INDIVIDUAL' | 'EQUIPOS', Validators.required],
-    plantillaMinima: [1, [Validators.required, Validators.min(1)]],
-    plantillaMaxima: [1, [Validators.required, Validators.min(1)]],
+    // Sin valor por defecto a propósito. Con 1/1 precargado —una combinación
+    // válida— aceptar el formulario sin tocar nada guardaba un perfil que
+    // parecía configurado y después bloqueaba los torneos de ese juego: el de
+    // Valorant quedó exigiendo equipos de 1 a 1 jugadores.
+    plantillaMinima: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    plantillaMaxima: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
     formatosIds: this.fb.nonNullable.control<number[]>([], Validators.required),
     estadisticasIds: this.fb.nonNullable.control<number[]>([], Validators.required)
   });
@@ -115,17 +120,21 @@ export class CompetitiveProfileFormComponent implements OnInit {
     this.error.set(null);
     this.confirmacion.set(null);
     const raw = this.form.getRawValue();
-    if (this.form.invalid || raw.formatosIds.length === 0 || raw.estadisticasIds.length === 0) {
+    const { plantillaMinima, plantillaMaxima } = raw;
+    if (this.form.invalid || plantillaMinima === null || plantillaMaxima === null
+        || raw.formatosIds.length === 0 || raw.estadisticasIds.length === 0) {
       this.form.markAllAsTouched();
       this.error.set('Completa los campos obligatorios y selecciona al menos un formato y una estadística.');
       return;
     }
-    if (raw.plantillaMinima > raw.plantillaMaxima) {
+    if (plantillaMinima > plantillaMaxima) {
       this.error.set('El tamaño mínimo no puede ser mayor al máximo.');
       return;
     }
 
-    const request: PerfilCompetitivoRequest = { juegoId: this.juegoId, ...raw };
+    const request: PerfilCompetitivoRequest = {
+      ...raw, juegoId: this.juegoId, plantillaMinima, plantillaMaxima
+    };
     this.guardando.set(true);
     const accion = this.perfilId()
       ? this.profilesService.actualizar(this.perfilId()!, request)

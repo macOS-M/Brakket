@@ -1,0 +1,90 @@
+:host {
+  display: block;
+}
+
+.lienzo {
+  position: relative;
+  // Deja lugar a las etiquetas del eje Y, que son HTML y no <text> del SVG:
+  // dentro del SVG se deformarían por el preserveAspectRatio="none".
+  padding-left: 3rem;
+}
+
+.ejes {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3rem;
+}
+
+.tick {
+  position: absolute;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  font-family: var(--font-data, 'Barlow Condensed', sans-serif);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle, #7c8698);
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-2, #161b22);
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-cyan, #22d3ee);
+    outline-offset: 2px;
+  }
+}
+
+.grilla {
+  stroke: var(--border-soft, #232a35);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.guia {
+  stroke: var(--text-subtle, #7c8698);
+  stroke-width: 1;
+}
+
+.captura {
+  fill: transparent;
+}
+
+.serie {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke: var(--serie, var(--accent, #ff5500));
+}
+
+.area {
+  fill: var(--serie, var(--accent, #ff5500));
+  fill-opacity: 0.12;
+  stroke: none;
+}
+
+.marca {
+  fill: var(--serie, var(--accent, #ff5500));
+  stroke: var(--surface-2, #161b22);
+  stroke-width: 1;
+}
+
+.serie-espectadores {
+  --serie: var(--brand-cyan, #22d3ee);
+}
+
+.serie-mensajes {
+  --serie: var(--accent, #ff5500);
+}
+
+.serie-usuarios {
+  --serie: var(--accent-purple, #8b5cf6);
+}
+
+.serie-sentimiento {
+  --serie: var(--success, #22c55e);
+}

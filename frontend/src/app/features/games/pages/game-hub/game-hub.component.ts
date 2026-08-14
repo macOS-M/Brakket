@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { Juego } from '../../../../models/juego.model';
 import { League } from '../../../../models/league.model';
@@ -45,6 +46,7 @@ export class GameHubComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sanitizer = inject(DomSanitizer);
   readonly auth = inject(AuthService);
 
   readonly juego = signal<Juego | null>(null);
@@ -67,6 +69,23 @@ export class GameHubComponent {
 
   readonly menuCrearAbierto = signal(false);
   readonly wizardAbierto = signal(false);
+  readonly capturaAbierta = signal<number | null>(null);
+  readonly capturaVisible = computed(() => {
+    const indice = this.capturaAbierta();
+    const capturas = this.juego()?.capturas ?? [];
+    return indice === null || capturas.length === 0
+      ? null
+      : this.capturaAltaResolucion(capturas[indice]);
+  });
+
+  readonly trailerUrl = computed<SafeResourceUrl | null>(() => {
+    const id = this.juego()?.trailerId;
+    return id
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(
+          `https://www.youtube-nocookie.com/embed/${id}?rel=0`
+        )
+      : null;
+  });
 
   /** Zona y disparador del menú "Crear" (patrón menu button de ARIA). */
   private readonly zonaCrear = viewChild<ElementRef<HTMLElement>>('zonaCrear');
@@ -76,12 +95,31 @@ export class GameHubComponent {
   readonly confirmandoDesactivar = signal(false);
   readonly errorAccion = signal<string | null>(null);
 
-  readonly foto = computed(() => {
+  /** Portada vertical para el cartel y las tarjetas. */
+  readonly portada = computed(() => {
     const juego = this.juego();
     if (!juego) {
       return null;
     }
-    return juego.imagenUrl || portadaFoto(juego.nombre);
+    return this.imagenAltaResolucion(juego.imagenUrl) || portadaFoto(juego.nombre);
+  });
+
+  /** Alias usado por las tarjetas internas y el asistente de torneos. */
+  readonly foto = this.portada;
+
+  /** Arte panorámico para el fondo del banner. */
+  readonly arteBanner = computed(() => {
+    const juego = this.juego();
+    if (!juego) {
+      return null;
+    }
+    const captura = juego.capturas?.find(Boolean);
+    return captura
+      ? captura.replace(
+          /(images\.igdb\.com\/igdb\/image\/upload\/)t_screenshot_big(\/)/,
+          '$1t_screenshot_huge$2'
+        )
+      : portadaFoto(juego.nombre);
   });
 
   readonly gradiente = computed(() => portadaGradiente(this.juego()?.nombre ?? '?'));
@@ -94,7 +132,17 @@ export class GameHubComponent {
       }
     };
     document.addEventListener('click', alClickGlobal);
-    this.destroyRef.onDestroy(() => document.removeEventListener('click', alClickGlobal));
+    const alTecladoGlobal = (evento: KeyboardEvent) => {
+      if (this.capturaAbierta() === null) return;
+      if (evento.key === 'Escape') this.cerrarVisor();
+      if (evento.key === 'ArrowLeft') this.cambiarCaptura(-1);
+      if (evento.key === 'ArrowRight') this.cambiarCaptura(1);
+    };
+    document.addEventListener('keydown', alTecladoGlobal);
+    this.destroyRef.onDestroy(() => {
+      document.removeEventListener('click', alClickGlobal);
+      document.removeEventListener('keydown', alTecladoGlobal);
+    });
 
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.gamesService.obtenerPorId(id).subscribe({
@@ -133,7 +181,34 @@ export class GameHubComponent {
   }
 
   portadaLiga(liga: League): string | null {
-    return liga.fotoUrl || this.foto();
+    return liga.fotoUrl || this.portada();
+  }
+
+  private imagenAltaResolucion(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+    return url.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_cover_big(\/)/,
+      '$1t_cover_big_2x$2'
+    );
+  }
+
+  capturaAltaResolucion(url: string): string {
+    return url.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_screenshot_big(\/)/,
+      '$1t_screenshot_huge$2'
+    );
+  }
+
+  abrirVisor(indice: number): void { this.capturaAbierta.set(indice); }
+  cerrarVisor(): void { this.capturaAbierta.set(null); }
+
+  cambiarCaptura(direccion: number): void {
+    const total = this.juego()?.capturas?.length ?? 0;
+    const actual = this.capturaAbierta();
+    if (actual === null || total < 2) return;
+    this.capturaAbierta.set((actual + direccion + total) % total);
   }
 
   gradienteLiga(liga: League): string {

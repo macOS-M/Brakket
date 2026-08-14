@@ -1,3 +1,10 @@
+# Detrás de un túnel (ngrok) o proxy, la request llega a localhost pero el host
+# real viaja en X-Forwarded-*. Con esto Spring reconstruye las URLs absolutas
+# (imágenes subidas, redirect de OAuth) con el dominio público, no con
+# localhost —que en la máquina del profesor apuntaría a su propio equipo—.
+server:
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: brakket-backend
@@ -51,7 +58,10 @@ brakket:
     # Directorio de imágenes subidas; en Docker es un volumen persistente.
     dir: ${UPLOADS_DIR:uploads}
   jwt:
-    secret: ${JWT_SECRET:cambiar-esta-clave-secreta-de-al-menos-32-chars}
+    # Sin valor por defecto a propósito: un secret commiteado en el repo
+    # permite fabricar tokens de cualquier rol. JwtProperties aborta el
+    # arranque si falta o es muy corto.
+    secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   twitch:
     client-id: ${TWITCH_CLIENT_ID:}
@@ -67,12 +77,34 @@ brakket:
     # RF-36: cadencia del muestreo de audiencia (1 request batcheada por tick;
     # 60s mantiene el desfase bajo el minuto de RNF-02 sin gastar cuota).
     muestreo-intervalo-ms: ${STREAMS_MUESTREO_INTERVALO_MS:60000}
+  analytics:
+    # RF-40: por debajo de este número de muestras el termómetro no se muestra
+    # y se avisa que los datos no alcanzan.
+    minimo-muestras: ${ANALYTICS_MINIMO_MUESTRAS:3}
+    intervalo-por-defecto-minutos: ${ANALYTICS_INTERVALO_MINUTOS:5}
   ai:
-    api-key: ${AI_API_KEY:}
-    api-base-url: ${AI_API_BASE_URL:}
+    gemini:
+      # Único proveedor de IA: sentimiento del chat (RF-39) y asistente del
+      # termómetro (RF-40). Sin llave nada se cae —el sentimiento usa el
+      # analizador léxico y el asistente responde con los números ya
+      # calculados—, así la demo y el CI corren sin salir a la red. El modelo va
+      # por alias -latest: las versiones fijas se jubilan y devuelven 404.
+      api-key: ${GEMINI_API_KEY:}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
+      model: ${GEMINI_MODEL:gemini-flash-latest}
+  # Proveedor del catálogo externo de juegos: igdb (default) o rawg. Cada uno
+  # tiene su implementación de ExternalGameSearchService y solo se instancia
+  # la elegida; cambiar de proveedor no toca el resto del código (RNF-23).
+  # RAWG queda como respaldo: si IGDB se cae, poner rawg acá y recrear.
+  catalogo:
+    proveedor: ${CATALOGO_PROVEEDOR:igdb}
   rawg:
     api-key: ${RAWG_API_KEY:}
     base-url: https://api.rawg.io/api
+  igdb:
+    # IGDB se autentica con el App Access Token de Twitch: usa las mismas
+    # TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET, no pide credenciales propias.
+    base-url: https://api.igdb.com/v4
   # Correos que reciben ADMIN al iniciar sesión (bootstrap de plataforma).
   # El seed de V8 solo cubría cuentas ya existentes al migrar: en una base
   # recién creada nadie quedaba admin. Esta lista lo garantiza en el login.

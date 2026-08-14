@@ -19,25 +19,33 @@
   @if (heroJuegos().length > 0) {
   <div
     class="hero-carrusel"
+    [class.arrastrando]="heroArrastrando()"
     (mouseenter)="heroPausado.set(true)"
     (mouseleave)="heroPausado.set(false)"
     (focusin)="heroPausado.set(true)"
     (focusout)="heroPausado.set(false)"
+    (pointerdown)="iniciarDragHero($event)"
+    (pointermove)="moverDragHero($event)"
+    (pointerup)="terminarDragHero($event)"
+    (pointercancel)="terminarDragHero($event)"
+    (dragstart)="bloquearDragNativo($event)"
   >
     <div
       class="hero-pista"
-      [style.transform]="'translateX(-' + heroVisible() * 100 + '%)'"
+      [style.transform]="'translateX(calc(-' + heroVisible() * 100 + '% + ' + heroDesplazamiento() + 'px))'"
     >
       @for (hero of heroJuegos(); track hero.id) {
       <a
         class="hero-slide"
+        draggable="false"
         [routerLink]="['/games', hero.id]"
         [attr.tabindex]="heroVisible() === $index ? null : -1"
         [attr.aria-hidden]="heroVisible() === $index ? null : true"
-        [style.background]="foto(hero) ? undefined : gradiente(hero.nombre)"
+        [style.background]="fotoHero(hero) ? undefined : gradiente(hero.nombre)"
+        (click)="cancelarClickHero($event)"
       >
-        @if (foto(hero)) {
-        <img [src]="foto(hero)" alt="" />
+        @if (fotoHero(hero)) {
+        <img [src]="fotoHero(hero)" alt="" draggable="false" />
         }
         <div class="hero-velo" aria-hidden="true"></div>
         <div class="hero-texto">
@@ -142,7 +150,7 @@
           titulo="Panel comercial en camino"
           mensaje="Acá vas a auditar la audiencia, la interacción y el sentimiento del público de las competencias que patrocinás."
         >
-          <a class="btn-secondary" routerLink="/analytics">Ver panel</a>
+          <a class="btn-secondary" routerLink="/panel-comercial">Ver panel</a>
         </app-empty-state>
       </section>
       } @else if (!auth.isAuthenticated()) {
@@ -168,7 +176,7 @@
           <div class="item-cuerpo">
             <p class="item-titulo">Invitación de {{ invitacion.equipoNombre }}</p>
             <p class="item-detalle">
-              Rol propuesto: {{ invitacion.rolPropuesto }} · enviada por
+              Rol propuesto: {{ invitacion.rolPropuesto | rolEquipo }} · enviada por
               {{ invitacion.creadoPorNombre }}
             </p>
           </div>
@@ -218,6 +226,8 @@
 
     <!-- Rail derecho: próximos torneos (referencia "Upcoming Tournaments"). -->
     <aside class="rail" aria-label="Próximos torneos">
+      <app-ad-slot ubicacion="DASHBOARD_CARD" />
+
       <div class="rail-titulo">
         <h2>Próximos torneos</h2>
         <a routerLink="/tournaments">Ver más →</a>

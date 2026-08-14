@@ -87,8 +87,15 @@ El perfil activo por defecto es `dev` (`application-dev.yml`).
 
 Ver `.env.example` en la raíz. Claves: base de datos (`DB_*` / `POSTGRES_*`),
 Google OAuth (`GOOGLE_CLIENT_ID/SECRET`), **JWT** (`JWT_SECRET`), Twitch (`TWITCH_*`)
-e IA (`AI_*`). Las integraciones externas están encapsuladas en `config/TwitchProperties`
-y `config/AiProperties` (RNF-23).
+e IA (`GEMINI_*`). Las integraciones externas están encapsuladas en `config/TwitchProperties`
+y `config/GeminiProperties` (RNF-23).
+
+Sin `GEMINI_API_KEY` **no se cae nada**. El análisis de sentimiento del chat (RF-39)
+cae al analizador léxico, que es determinista y no sale a la red; el asistente del
+termómetro (RF-40) responde con los números que el backend ya calculó, marcando la
+respuesta como degradada. Con la llave, cada bloque de chat que captura RF-38 se
+clasifica con el modelo, y si el proveedor falla se vuelve al léxico sin perder la
+muestra. La demo y el CI corren sin credenciales a propósito.
 
 ## Comandos útiles
 

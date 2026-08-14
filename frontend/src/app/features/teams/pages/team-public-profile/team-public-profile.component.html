@@ -27,7 +27,11 @@
       <h1>{{ equipo.nombre }}</h1>
       <p class="sub">
         {{ equipo.plantilla.length }} {{ equipo.plantilla.length === 1 ? 'integrante' : 'integrantes' }}
-        @if (equipo.juegoNombre) { · {{ equipo.juegoNombre }} }
+        @if (equipo.juegoNombres?.length) {
+          · {{ equipo.juegoNombres?.join(' · ') }}
+        } @else if (equipo.juegoNombre) {
+          · {{ equipo.juegoNombre }}
+        }
       </p>
     </div>
 
@@ -94,7 +98,7 @@
             </div>
             <div class="torneo-estados">
               <app-status-badge [estado]="torneo.estado" />
-              <span class="inscripcion">Inscripción: {{ torneo.estadoInscripcion }}</span>
+              <span class="inscripcion">Inscripción: {{ torneo.estadoInscripcion | etiqueta }}</span>
             </div>
           </li>
           }
@@ -207,15 +211,19 @@
     <!-- RF-16: la línea de tiempo de altas, bajas y transferencias. Solo
          con sesión: el endpoint exige JWT (protege causas de expulsión) y
          mostrárselo a un anónimo lo patearía al login sin explicación. -->
-    @if (auth.isAuthenticated()) {
-    <a class="ver-historial" [routerLink]="['/team-profile', equipo.id, 'historial']">
-      Ver historial completo de altas, bajas y transferencias →
-    </a>
-    }
-    @if (puedeGestionar() && equipo.estado === 'ACTIVO') {
-    <a class="btn-secondary gestionar" [routerLink]="['/teams', equipo.id, 'plantilla']">
-      Gestionar plantilla e invitaciones
-    </a>
+    @if (auth.isAuthenticated() || (puedeGestionar() && equipo.estado === 'ACTIVO')) {
+    <div class="bloque-acciones">
+      @if (auth.isAuthenticated()) {
+      <a class="ver-historial" [routerLink]="['/team-profile', equipo.id, 'historial']">
+        Ver historial completo de altas, bajas y transferencias →
+      </a>
+      }
+      @if (puedeGestionar() && equipo.estado === 'ACTIVO') {
+      <a class="btn-secondary gestionar" [routerLink]="['/teams', equipo.id, 'plantilla']">
+        Gestionar plantilla e invitaciones
+      </a>
+      }
+    </div>
     }
   </section>
   }

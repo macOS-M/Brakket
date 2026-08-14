@@ -31,4 +31,14 @@ export class TwitchService {
   metricas(transmisionId: number): Observable<MetricasTransmision> {
     return this.api.get<MetricasTransmision>(`/twitch/transmisiones/${transmisionId}/metricas`);
   }
+
+  /** RF-34: transmisiones con periodo de captura abierto. */
+  abiertas(): Observable<TransmisionTwitch[]> {
+    return this.api.get<TransmisionTwitch[]>('/twitch/transmisiones');
+  }
+
+  /** RF-34: cierra el periodo de captura sin esperar a que termine el directo. */
+  finalizar(transmisionId: number): Observable<TransmisionTwitch> {
+    return this.api.post<TransmisionTwitch>(`/twitch/transmisiones/${transmisionId}/finalizar`, {});
+  }
 }

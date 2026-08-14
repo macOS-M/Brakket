@@ -5,6 +5,42 @@
   margin-bottom: 1.1rem;
 }
 
+// Estado (izquierda) y juego (derecha) en una sola fila.
+.filtros-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.1rem;
+
+  .chips {
+    margin-bottom: 0;
+  }
+}
+
+.filtro-juego {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  select {
+    padding: 0.4rem 0.6rem;
+    background: var(--surface, #111827);
+    color: var(--text, #e2e8f0);
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--radius-sm, 8px);
+    font-family: inherit;
+    font-size: 0.8125rem;
+  }
+}
+
 .chip {
   padding: 0.4rem 0.85rem;
   background: var(--surface, #111827);
@@ -28,11 +64,15 @@
   }
 }
 
+// Era una columna única de 760px, que en pantallas anchas dejaba vacío el
+// resto de la fila. El mínimo de 460px no es arbitrario: la línea de metadatos
+// de la tarjeta (organizador · formato · tamaño · cupos) va en una sola línea
+// con ellipsis, y por debajo de ese ancho se corta antes del formato.
 .lista {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
   gap: 0.75rem;
-  max-width: 760px;
+  align-items: start;
 }
 
 .btn-primary,

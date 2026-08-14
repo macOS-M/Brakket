@@ -78,8 +78,8 @@ class TeamDissolutionServiceImplTest {
 
     private void solicitanteEsCapitanActivo() {
         when(usuarioRepository.findByCorreo("cap@x.com")).thenReturn(Optional.of(capitan));
-        when(miembroEquipoRepository.findByEquipoIdAndUsuarioId(10L, 1L))
-                .thenReturn(Optional.of(miembro(capitan, "CAPITAN", "ACTIVO")));
+        when(miembroEquipoRepository.existsByEquipoIdAndUsuarioIdAndRolAndEstado(
+                10L, 1L, "CAPITAN", "ACTIVO")).thenReturn(true);
     }
 
     /** El equipo no dejó rastro competitivo: se puede borrar físicamente. */
@@ -133,8 +133,8 @@ class TeamDissolutionServiceImplTest {
     void disolver_falla_si_el_solicitante_no_es_capitan() {
         when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipoActivo()));
         when(usuarioRepository.findByCorreo("jug@x.com")).thenReturn(Optional.of(jugador));
-        when(miembroEquipoRepository.findByEquipoIdAndUsuarioId(10L, 2L))
-                .thenReturn(Optional.of(miembro(jugador, "TITULAR", "ACTIVO")));
+        when(miembroEquipoRepository.existsByEquipoIdAndUsuarioIdAndRolAndEstado(
+                10L, 2L, "CAPITAN", "ACTIVO")).thenReturn(false);
 
         assertThatThrownBy(() -> service.disolver(10L,
                 new DisolverEquipoRequest(true, null), "jug@x.com", false))
@@ -147,7 +147,8 @@ class TeamDissolutionServiceImplTest {
     void disolver_falla_si_el_solicitante_no_pertenece_al_equipo() {
         when(equipoRepository.findById(10L)).thenReturn(Optional.of(equipoActivo()));
         when(usuarioRepository.findByCorreo("jug@x.com")).thenReturn(Optional.of(jugador));
-        when(miembroEquipoRepository.findByEquipoIdAndUsuarioId(10L, 2L)).thenReturn(Optional.empty());
+        when(miembroEquipoRepository.existsByEquipoIdAndUsuarioIdAndRolAndEstado(
+                10L, 2L, "CAPITAN", "ACTIVO")).thenReturn(false);
 
         assertThatThrownBy(() -> service.disolver(10L,
                 new DisolverEquipoRequest(true, null), "jug@x.com", false))
@@ -167,7 +168,8 @@ class TeamDissolutionServiceImplTest {
         service.disolver(10L, new DisolverEquipoRequest(true, "moderación"), "adm@x.com", true);
 
         assertThat(equipo.getEstado()).isEqualTo("DISUELTO");
-        verify(miembroEquipoRepository, never()).findByEquipoIdAndUsuarioId(anyLong(), anyLong());
+        verify(miembroEquipoRepository, never())
+                .existsByEquipoIdAndUsuarioIdAndRolAndEstado(anyLong(), anyLong(), any(), any());
     }
 
     @Test
@@ -266,6 +268,7 @@ class TeamDissolutionServiceImplTest {
         service.eliminar(10L, "cap@x.com", false);
 
         verify(equipoRepository).delete(equipo);
+        verify(logAuditoriaRepository).save(any());
     }
 
     @Test

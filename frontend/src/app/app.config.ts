@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
+import { LOCALE_APP } from './shared/utils/formato-fecha';
 
 // Sin esto, DatePipe usa en-US y mezcla idiomas: "Tuesday, 21 de July de 2026".
 // La app es integramente en espanol, asi que el locale tiene que serlo tambien.
@@ -17,6 +18,6 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([jwtInterceptor, errorInterceptor])),
-    { provide: LOCALE_ID, useValue: 'es' }
+    { provide: LOCALE_ID, useValue: LOCALE_APP }
   ]
 };

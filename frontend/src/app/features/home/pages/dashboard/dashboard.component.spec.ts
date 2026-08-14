@@ -113,4 +113,57 @@ describe('DashboardComponent', () => {
     expect(component.cargando()).toBeFalse();
     expect(component.errorGeneral()).toBeFalse();
   });
+
+  it('usa la portada 2x de IGDB para URLs que ya estaban guardadas', () => {
+    crear(false);
+    httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/games`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/tournaments`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/games/top`).flush([]);
+
+    expect(component.imagenAltaResolucion(
+      'https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvx.jpg'
+    )).toBe('https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co2mvx.jpg');
+  });
+
+  it('usa una captura panorámica de alta resolución en el hero', () => {
+    crear(false);
+    httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/games`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/tournaments`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/games/top`).flush([]);
+
+    expect(component.fotoHero({
+      id: 1,
+      nombre: 'Rocket League',
+      genero: 'Sport',
+      descripcion: null,
+      imagenUrl: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co123.jpg',
+      activo: true,
+      capturas: ['https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc123.jpg']
+    })).toBe('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc123.jpg');
+  });
+
+  it('enlaza un juego top con su ficha local aunque el titulo traiga simbolo de marca', () => {
+    crear(false);
+    httpMock.expectOne(`${environment.apiUrl}/leagues`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/games`).flush([{
+      id: 42,
+      slug: 'rocket-league',
+      nombre: 'Rocket League®',
+      genero: 'Sport',
+      descripcion: null,
+      imagenUrl: null,
+      activo: true
+    }]);
+    httpMock.expectOne(`${environment.apiUrl}/tournaments`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/games/top`).flush([{
+      slug: 'rocket-league',
+      nombre: 'Rocket League',
+      genero: 'Sport',
+      imagenUrl: null
+    }]);
+
+    expect(component.topJuegos()[0].idCatalogo).toBe(42);
+  });
 });

@@ -6,6 +6,7 @@ import com.coffeecommits.brakket.game.dto.JuegoExternoResponse;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,14 @@ import java.util.Map;
  * al navegador; el frontend consume nuestro proxy autenticado. Los géneros de
  * RAWG vienen en inglés: se traducen los comunes y el resto se deja tal cual
  * (el formulario permite editarlo antes de guardar).</p>
+ *
+ * <p>Respaldo del catálogo: el proveedor por defecto es IGDB y esta
+ * implementación solo se instancia con {@code brakket.catalogo.proveedor=rawg}.
+ * Se mantiene viva a propósito — si IGDB deja de responder, volver es cambiar
+ * esa variable y recrear el backend, sin tocar código.</p>
  */
 @Service
+@ConditionalOnProperty(name = "brakket.catalogo.proveedor", havingValue = "rawg")
 public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
 
     private static final int MAX_RESULTADOS = 12;
@@ -196,7 +203,8 @@ public class RawgGameSearchServiceImpl implements ExternalGameSearchService {
                                     .map(RawgCaptura::image)
                                     .filter(u -> u != null && !u.isBlank())
                                     .limit(6)
-                                    .toList());
+                                    .toList(),
+                    null);
         } catch (RestClientException e) {
             return null;
         }

@@ -104,12 +104,47 @@ export const routes: Routes = [
         loadChildren: () => import('./features/analytics/analytics.routes').then((m) => m.routes)
       },
       {
+        // RF-37: consulta de métricas de una transmisión por período. Va aparte
+        // de /analytics, que quedó para el sentimiento y el termómetro (RF-39/40):
+        // son pantallas distintas con públicos distintos.
+        path: 'metricas',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'COMISIONADO'] },
+        loadChildren: () => import('./features/metricas/metricas.routes').then((m) => m.routes)
+      },
+      // RUTA DESHABILITADA A PROPÓSITO — limitación conocida documentada en el
+      // roadmap de la presentación: el Panel Comercial (RF-44) depende de
+      // TransmisionTwitch.iniciadaEn/torneoId para resolver "la" transmisión
+      // vigente de un torneo, pero el flujo de "Asociar transmisión" de RF-34
+      // crea una fila nueva en cada asociación en vez de reusar la existente
+      // (bug ajeno, fuera de este módulo). El componente y el backend siguen
+      // intactos: basta con restaurar este bloque cuando se corrija el origen.
+      // {
+      //   path: 'panel-comercial',
+      //   canActivate: [authGuard, roleGuard],
+      //   data: { roles: ['PATROCINADOR'] },
+      //   loadComponent: () =>
+      //     import('./features/sponsorships/pages/panel-comercial/panel-comercial.component')
+      //       .then((m) => m.PanelComercialComponent)
+      // },
+      {
         // Gestión de patrocinios: administrador o comisionado (RF-42/RF-43).
         path: 'sponsorships',
         canActivate: [authGuard, roleGuard],
         data: { roles: ['ADMIN', 'COMISIONADO'] },
         loadChildren: () =>
           import('./features/sponsorships/sponsorships.routes').then((m) => m.routes)
+      },
+      {
+        // RF-50: exportar reportes de competencias, audiencia, patrocinio y
+        // estadísticas — mismos 3 roles que /analytics, alineado con el
+        // permiso EXPORTAR_REPORTES sembrado en la migración V60.
+        path: 'reports',
+        canActivate: [authGuard, roleGuard],
+        data: { roles: ['ADMIN', 'COMISIONADO', 'PATROCINADOR'] },
+        loadComponent: () =>
+          import('./features/reports/pages/reports-view/reports-view.component')
+            .then((m) => m.ReportsViewComponent)
       },
       {
         path: 'notifications',

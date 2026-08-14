@@ -1,0 +1,174 @@
+.page {
+  padding: 1.5rem 0;
+}
+
+// Estas mini-notas (cargando/sin datos) viven dentro del panel de métricas,
+// no a nivel de página completa — por eso no usan <app-empty-state>, que es
+// para el estado de toda la pantalla.
+.placeholder {
+  display: inline-block;
+  padding: 0.6rem 0.9rem;
+  border: 1px dashed var(--accent-text, #ff6a1f);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.85rem;
+}
+
+// ----- Layout maestro-detalle -----
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.5rem;
+}
+
+.lista-patrocinios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.item-patrocinio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease-out, background 0.15s ease-out;
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+
+  .alcance {
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .badge-vencido {
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--danger-text, #f87171);
+  }
+
+  &.activo {
+    background: var(--surface-2, #1f2937);
+    border-color: var(--accent, #ff5500);
+  }
+
+  &.vencido {
+    opacity: 0.7;
+  }
+}
+
+.detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ficha {
+  padding: 1.1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+
+  h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .linea {
+    margin: 0.3rem 0;
+    font-size: 0.85rem;
+    color: var(--text-muted, #94a3b8);
+
+    strong {
+      color: var(--text, #e2e8f0);
+    }
+  }
+}
+
+.metricas {
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+  }
+}
+
+.grid-metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border-soft, rgba(148, 163, 184, 0.18));
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+}
+
+.metrica-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  background: var(--bg, #0b1120);
+
+  .etiqueta {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+  }
+
+  .valor {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-text, #ff6a1f);
+  }
+
+  .pendiente {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--warning-text, #fbbf24);
+  }
+}
+
+// ----- Botones -----
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease-out, border-color 0.2s ease-out;
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+    border-color: var(--accent-text, #ff6a1f);
+  }
+}

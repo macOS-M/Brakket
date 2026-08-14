@@ -4,6 +4,20 @@
     subtitulo="Gestiona cómo te ve el resto de la comunidad y tus datos personales."
   />
 
+  @if (tituloAplicado || insigniasAplicadas.length) {
+    <section class="identity-preview" aria-label="Personalización pública aplicada">
+      <div class="identity-mark">{{ (usuario()?.nombre || 'J').charAt(0).toUpperCase() }}</div>
+      <div><span>Así te ve la comunidad</span><h2>{{ usuario()?.nombre }}</h2>
+        @if (tituloAplicado) { <strong>{{ tituloAplicado.nombre }}</strong> }
+      </div>
+      @if (insigniasAplicadas.length) {
+        <div class="identity-badges">
+          @for (badge of insigniasAplicadas; track badge.id) { <span [title]="badge.descripcion">★ {{ badge.nombre }}</span> }
+        </div>
+      }
+    </section>
+  }
+
   @if (usuario(); as u) {
     @if (u.authenticated) {
       <div class="columnas">
@@ -21,10 +35,14 @@
                     <span class="campo-etiqueta">Nombre visible</span>
                     <input type="text" formControlName="nombre" />
                   </label>
-                  <label class="campo">
-                    <span class="campo-etiqueta">Avatar (URL)</span>
-                    <input type="url" formControlName="foto" placeholder="https://…" />
-                  </label>
+                  <div class="campo">
+                    <span class="campo-etiqueta" id="etiqueta-avatar">Foto de perfil</span>
+                    <app-foto-input
+                      etiqueta="Foto de perfil"
+                      formControlName="foto"
+                      aria-labelledby="etiqueta-avatar"
+                    />
+                  </div>
                 </div>
 
                 <label class="campo">
@@ -65,10 +83,9 @@
                         <span class="campo-pista">{{ edad }} años</span>
                       }
                     </span>
-                    <input
-                      type="date"
+                    <app-fecha-input
+                      etiqueta="Fecha de nacimiento"
                       formControlName="fechaNacimiento"
-                      autocomplete="bday"
                       [max]="maxFechaNacimiento"
                     />
                   </label>
@@ -147,7 +164,8 @@
                     </button>
                   </div>
                   <span class="campo-ayuda">
-                    Con esto mostramos los horarios de tus partidos en tu hora local.
+                    Dato de contacto para coordinar horarios. Los horarios de la
+                    plataforma se muestran siempre en hora de Costa Rica (GMT-6).
                   </span>
                 </div>
               </div>

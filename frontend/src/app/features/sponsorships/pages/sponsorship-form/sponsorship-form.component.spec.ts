@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -19,6 +21,9 @@ describe('SponsorshipFormComponent', () => {
     await TestBed.configureTestingModule({
       imports: [SponsorshipFormComponent],
       providers: [
+        // El campo de logo es app-foto-input, que sube el archivo por HTTP.
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([]),
         { provide: SponsorshipsService, useValue: sponsorshipsServiceMock },
         {

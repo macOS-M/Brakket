@@ -18,7 +18,10 @@ import { Torneo } from '../../../../models/tournament.model';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 /**
  * Panel principal (referencia: dashboard de jugador): héroe con el juego
@@ -28,7 +31,7 @@ import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe],
+  imports: [RouterLink, DatePipe, PageHeaderComponent, EmptyStateComponent, FechaRelativaPipe, AdSlotComponent, RolEquipoPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -51,7 +54,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Si todas las peticiones fallan mostramos un error, no un panel en ceros. */
   readonly errorGeneral = signal(false);
 
-  readonly hoy = new Date();
+  /** Fecha del saludo: la de Costa Rica, no la del dispositivo de quien mira. */
+  readonly hoy = ahoraCostaRica();
 
   readonly nombreCorto = computed(() => {
     const nombre = this.auth.usuario()?.nombre?.trim();
@@ -70,11 +74,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Carousel del héroe: los juegos más jugados (rating RAWG), rotando. */
   readonly heroIndex = signal(0);
   readonly heroPausado = signal(false);
+  readonly heroArrastrando = signal(false);
+  readonly heroDesplazamiento = signal(0);
   private heroTimer: ReturnType<typeof setInterval> | null = null;
+  private heroInicioX = 0;
+  private heroAncho = 1;
+  private heroPointerId: number | null = null;
+  private heroFueArrastre = false;
+  private heroElemento: HTMLElement | null = null;
 
   readonly heroJuegos = computed(() =>
     [...this.juegos()]
-      .filter((j) => j.imagenUrl)
+      .filter((j) => j.capturas?.some(Boolean))
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
       .slice(0, 5));
 
@@ -93,23 +104,92 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Estable a propósito (sin carrusel). Si un top ya está en el catálogo,
   // el póster navega a su página; si no, al catálogo para importarlo.
   readonly topJuegos = computed(() => {
-    const porNombre = new Map(this.juegos().map((j) => [j.nombre.toLowerCase(), j.id]));
+    // Se compara por nombre normalizado y no literal: el catálogo guarda el
+    // título comercial ("Rocket League®") y el top externo devuelve el corto,
+    // así que en minúsculas seguían sin calzar y el póster no enlazaba a su
+    // ficha. Emparejar por slug sería más exacto, pero el catálogo local no lo
+    // expone: solo lo trae JuegoExterno.
+    const porNombre = new Map(
+      this.juegos().map((j) => [this.claveNombre(j.nombre), j.id])
+    );
     const lista = this.topRawg().length > 0
       ? this.topRawg().map((t) => ({
           nombre: t.nombre,
-          imagenUrl: t.imagenUrl,
-          idCatalogo: porNombre.get(t.nombre.toLowerCase()) ?? null
+          imagenUrl: this.imagenAltaResolucion(t.imagenUrl),
+          idCatalogo: porNombre.get(this.claveNombre(t.nombre)) ?? null
         }))
       : [...this.juegos()]
           .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-          .map((j) => ({ nombre: j.nombre, imagenUrl: j.imagenUrl, idCatalogo: j.id }));
+          .map((j) => ({
+            nombre: j.nombre,
+            imagenUrl: this.imagenAltaResolucion(j.imagenUrl),
+            idCatalogo: j.id
+          }));
     return lista.slice(0, this.mostrandoMas() ? 18 : 6);
   });
+
+  /**
+   * Clave de comparación de títulos: minúsculas y sin símbolos de marca ni
+   * puntuación. "Rocket League®" y "Rocket League" tienen que dar lo mismo.
+   */
+  private claveNombre(nombre: string): string {
+    return nombre.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  }
 
   ngOnDestroy(): void {
     if (this.heroTimer) {
       clearInterval(this.heroTimer);
     }
+  }
+  
+  iniciarDragHero(evento: PointerEvent): void {
+    if (evento.pointerType === 'mouse' && evento.button !== 0) return;
+    const elemento = evento.currentTarget as HTMLElement;
+    this.heroPointerId = evento.pointerId;
+    this.heroInicioX = evento.clientX;
+    this.heroAncho = elemento.clientWidth || 1;
+    this.heroFueArrastre = false;
+    this.heroElemento = elemento;
+    this.heroPausado.set(true);
+    this.heroArrastrando.set(true);
+  }
+
+  moverDragHero(evento: PointerEvent): void {
+    if (this.heroPointerId !== evento.pointerId) return;
+    const delta = evento.clientX - this.heroInicioX;
+    if (Math.abs(delta) > 6 && !this.heroFueArrastre) {
+      this.heroFueArrastre = true;
+      this.heroElemento?.setPointerCapture(evento.pointerId);
+    }
+    this.heroDesplazamiento.set(delta);
+  }
+
+  terminarDragHero(evento: PointerEvent): void {
+    if (this.heroPointerId !== evento.pointerId) return;
+    const delta = this.heroDesplazamiento();
+    const umbral = Math.min(90, this.heroAncho * 0.15);
+    const total = this.heroJuegos().length;
+    if (total > 1 && Math.abs(delta) >= umbral) {
+      this.heroIndex.update((indice) =>
+        delta < 0 ? (indice + 1) % total : (indice - 1 + total) % total
+      );
+    }
+    this.heroDesplazamiento.set(0);
+    this.heroArrastrando.set(false);
+    this.heroPointerId = null;
+    this.heroElemento = null;
+  }
+
+  cancelarClickHero(evento: MouseEvent): void {
+    if (this.heroFueArrastre) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      this.heroFueArrastre = false;
+    }
+  }
+
+  bloquearDragNativo(evento: DragEvent): void {
+    evento.preventDefault();
   }
 
   /** Rail de próximos torneos (referencia "Upcoming Tournaments"): solo
@@ -212,7 +292,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   foto(juego: Juego): string | null {
-    return juego.imagenUrl || portadaFoto(juego.nombre);
+    return this.imagenAltaResolucion(juego.imagenUrl) || portadaFoto(juego.nombre);
+  }
+
+  fotoHero(juego: Juego): string | null {
+    const captura = juego.capturas?.find(Boolean);
+    if (!captura) {
+      return null;
+    }
+    // Los registros importados antes del cambio conservan t_screenshot_big.
+    // IGDB permite pedir el mismo image_id como screenshot_huge (1280x720).
+    return captura.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_screenshot_big(\/)/,
+      '$1t_screenshot_huge$2'
+    );
   }
 
   gradiente(nombre: string): string {
@@ -220,6 +313,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   fotoTorneo(torneo: Torneo): string | null {
-    return torneo.juegoImagenUrl || portadaFoto(torneo.juegoNombre);
+    return this.imagenAltaResolucion(torneo.juegoImagenUrl) || portadaFoto(torneo.juegoNombre);
   }
+
+  imagenAltaResolucion(url: string | null | undefined): string | null {
+    if (!url) {
+      return null;
+    }
+    return url.replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_cover_big(\/)/,
+      '$1t_cover_big_2x$2'
+    );
+  }
+
 }

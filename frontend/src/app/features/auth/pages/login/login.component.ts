@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
@@ -35,27 +35,62 @@ export class LoginComponent {
   readonly enviando = signal(false);
   readonly errorLocal = signal<string | null>(null);
 
+  // Mostrar/ocultar el texto de cada campo de contraseña, cada uno por separado.
+  readonly verPassword = signal(false);
+  readonly verConfirmarPassword = signal(false);
+
+  /** Solo exige coincidencia en modo registro; en login no hay confirmarPassword que comparar. */
+  private readonly confirmarPasswordValidator: ValidatorFn = (control) => {
+    const grupo = control.parent;
+    if (!grupo || this.modo() !== 'registro') {
+      return null;
+    }
+    return grupo.get('password')?.value === control.value ? null : { passwordsNoCoinciden: true };
+  };
+
   readonly form = this.fb.nonNullable.group({
     nombre: [''],
     correo: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmarPassword: ['', [this.confirmarPasswordValidator]]
   });
+
+  constructor() {
+    // Si cambia la contraseña, hay que revisar de nuevo si sigue coincidiendo
+    // con lo que ya se había escrito en "confirmar" (si no, el error se
+    // queda pegado aunque el usuario ya haya corregido la contraseña).
+    this.form.controls.password.valueChanges.subscribe(() =>
+      this.form.controls.confirmarPassword.updateValueAndValidity({ onlySelf: true, emitEvent: false })
+    );
+  }
 
   login(): void {
     this.authService.login();
   }
 
+  toggleVerPassword(): void {
+    this.verPassword.update((v) => !v);
+  }
+
+  toggleVerConfirmarPassword(): void {
+    this.verConfirmarPassword.update((v) => !v);
+  }
+
   cambiarModo(modo: ModoLocal): void {
     this.modo.set(modo);
     this.errorLocal.set(null);
-    // El nombre solo es obligatorio al registrarse.
+    // El nombre y la confirmación de contraseña solo son obligatorios al registrarse.
     const nombre = this.form.controls.nombre;
+    const confirmarPassword = this.form.controls.confirmarPassword;
     if (modo === 'registro') {
       nombre.addValidators([Validators.required, Validators.maxLength(120)]);
+      confirmarPassword.addValidators([Validators.required]);
     } else {
       nombre.clearValidators();
+      confirmarPassword.clearValidators();
     }
     nombre.updateValueAndValidity();
+    confirmarPassword.updateValueAndValidity();
   }
 
   enviarLocal(): void {
@@ -78,9 +113,9 @@ export class LoginComponent {
         this.enviando.set(false);
         this.errorLocal.set(
           err?.error?.message ??
-            (this.modo() === 'registro'
-              ? 'No se pudo crear la cuenta.'
-              : 'No se pudo iniciar sesión.')
+          (this.modo() === 'registro'
+            ? 'No se pudo crear la cuenta.'
+            : 'No se pudo iniciar sesión.')
         );
       }
     });

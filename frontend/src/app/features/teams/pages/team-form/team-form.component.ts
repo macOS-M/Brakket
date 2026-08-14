@@ -52,7 +52,11 @@ export class TeamFormComponent implements OnInit {
     descripcion: ['', [Validators.maxLength(500)]],
     sitioWeb: [''],
     videoUrl: [''],
-    juegoId: [null as number | null, [Validators.required]],
+    // Opcional a propósito: un equipo puede crearse sin disciplina y elegirla
+    // después. El selector se conserva para poder asignarla en cualquier
+    // momento; sin él, equipo_juego (V57) se quedaría sin forma de poblarse.
+    juegoId: [null as number | null],
+    juegoIds: this.fb.nonNullable.control<number[]>([]),
     estadoPrivacidad: ['PUBLIC'],
     redesSociales: this.fb.nonNullable.array<string>([]),
     /** Solo lo usa (y lo exige el backend a) un ADMIN al crear. */
@@ -94,6 +98,11 @@ export class TeamFormComponent implements OnInit {
           sitioWeb: equipo.sitioWeb ?? '',
           videoUrl: equipo.videoUrl ?? '',
           juegoId: equipo.juegoId,
+          // Un equipo puede no tener juego: sin el filtro, un juegoId nulo
+          // entraba a la lista como [null] y marcaba un check fantasma.
+          juegoIds: equipo.juegoIds?.length
+            ? equipo.juegoIds
+            : (equipo.juegoId ? [equipo.juegoId] : []),
           estadoPrivacidad: equipo.estadoPrivacidad
         });
         this.redesSociales.clear();
@@ -143,6 +152,7 @@ export class TeamFormComponent implements OnInit {
         sitioWeb: valores.sitioWeb.trim(),
         videoUrl: valores.videoUrl.trim(),
         juegoId: valores.juegoId,
+        juegoIds: this.juegosSeleccionados(valores.juegoId, valores.juegoIds),
         estadoPrivacidad: valores.estadoPrivacidad,
         redesSociales: valores.redesSociales,
         version: this.version() ?? undefined
@@ -167,7 +177,8 @@ export class TeamFormComponent implements OnInit {
       descripcion: valores.descripcion || null,
       sitioWeb: valores.sitioWeb || null,
       videoUrl: valores.videoUrl || null,
-      juegoId: valores.juegoId!,
+      juegoId: valores.juegoId,
+      juegoIds: this.juegosSeleccionados(valores.juegoId, valores.juegoIds),
       redesSociales: valores.redesSociales,
       capitanCorreo: this.esAdmin() ? valores.capitanCorreo.trim() : null
     }).subscribe({
@@ -181,5 +192,20 @@ export class TeamFormComponent implements OnInit {
 
   cancelar(): void {
     this.router.navigate(['/teams']);
+  }
+
+  toggleJuego(juegoId: number, seleccionado: boolean): void {
+    const ids = new Set(this.form.controls.juegoIds.value);
+    seleccionado ? ids.add(juegoId) : ids.delete(juegoId);
+    this.form.controls.juegoIds.setValue([...ids]);
+    this.form.controls.juegoIds.markAsDirty();
+  }
+
+  juegoSeleccionado(juegoId: number): boolean {
+    return this.form.controls.juegoIds.value.includes(juegoId);
+  }
+
+  private juegosSeleccionados(principal: number | null, seleccionados: number[]): number[] {
+    return [...new Set([...(principal ? [principal] : []), ...seleccionados])];
   }
 }

@@ -9,13 +9,14 @@ import { StatCardComponent } from '../../../../shared/components/stat-card/stat-
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 type TabPerfil = 'resumen' | 'miembros' | 'estadisticas';
 
 @Component({
   selector: 'app-team-public-profile',
   standalone: true,
-  imports: [DatePipe, RouterLink, StatCardComponent, StatusBadgeComponent, EmptyStateComponent, RolEquipoPipe],
+  imports: [DatePipe, RouterLink, StatCardComponent, StatusBadgeComponent, EmptyStateComponent, RolEquipoPipe, EtiquetaPipe],
   templateUrl: './team-public-profile.component.html',
   styleUrl: './team-public-profile.component.scss'
 })

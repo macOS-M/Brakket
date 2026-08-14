@@ -17,11 +17,14 @@ import { TournamentsService } from '../../services/tournaments.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import {
+  ImpugnarEvent,
   MarcadorEvent,
   TournamentBracketComponent
 } from '../../components/tournament-bracket/tournament-bracket.component';
 import { portadaFoto, portadaGradiente } from '../../../../shared/utils/cover';
 import { FormatoTorneoPipe } from '../../../../shared/pipes/formato-torneo.pipe';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 type TabDetalle = 'resumen' | 'llaves' | 'matches' | 'jugadores' | 'resultados';
 type FiltroMatch = 'todos' | 'pendientes' | 'finalizadas';
@@ -51,7 +54,7 @@ interface EventoTimeline {
 @Component({
   selector: 'app-tournament-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent, FormatoTorneoPipe],
+  imports: [RouterLink, DatePipe, EmptyStateComponent, TournamentBracketComponent, FormatoTorneoPipe, AdSlotComponent],
   templateUrl: './tournament-detail.component.html',
   styleUrl: './tournament-detail.component.scss'
 })
@@ -68,8 +71,9 @@ export class TournamentDetailComponent {
   readonly detalle = signal<TorneoDetalle | null>(null);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
-
   readonly tab = signal<TabDetalle>('resumen');
+  /** Deep-link desde "Mis disputas": la partida a la que hay que hacerle scroll y abrirle el panel. */
+  readonly partidaResaltada = signal<number | null>(null);
 
   readonly elegibles = signal<EquipoElegible[]>([]);
   readonly equipoElegido = signal<number | null>(null);
@@ -116,9 +120,10 @@ export class TournamentDetailComponent {
     return !!t && t.inscritos >= t.maxEquipos;
   });
 
+  // Contra la hora de Costa Rica, no la del navegador (ver hora-costa-rica.ts).
   readonly comenzo = computed(() => {
     const t = this.torneo();
-    return !!t && new Date(t.fechaInicio) <= new Date();
+    return !!t && new Date(t.fechaInicio) <= ahoraCostaRica();
   });
 
   readonly abierto = computed(() => {
@@ -135,6 +140,11 @@ export class TournamentDetailComponent {
     return !!t && !!usuario?.id && Number(usuario.id) === t.organizadorId;
   });
 
+// Árbitro asignado a este torneo puntual (no es un rol global). Ya
+// viene calculado del backend, así no exponemos la lista completa de
+// árbitros del torneo a cualquier visitante.
+  readonly esArbitro = computed(() => this.detalle()?.esArbitro ?? false);
+
   readonly puedeEliminar = computed(
     () => this.esOrganizador() || this.auth.hasRole('ADMIN')
   );
@@ -144,8 +154,20 @@ export class TournamentDetailComponent {
 
   readonly esGestor = computed(() => this.esOrganizador() || this.auth.hasRole('ADMIN'));
 
+  // RF-32: quién puede cerrar una disputa o una apelación. No se deduce en el
+  // frontend porque la regla es del backend (el organizador queda fuera salvo
+  // que no haya árbitros ni comisionado); mostrar el botón a quien luego recibe
+  // un 403 es peor que no mostrarlo.
+  readonly puedeResolverDisputa = computed(
+    () => this.detalle()?.puedeResolverDisputa ?? this.auth.hasRole('ADMIN'));
+  readonly puedeResolverApelacion = computed(
+    () => this.detalle()?.puedeResolverApelacion ?? this.auth.hasRole('ADMIN'));
+// RF-28: quién puede reportar descansos/avances/abandonos.
+  readonly puedeCasoEspecial = computed(() => this.esGestor() || this.esArbitro());
+
   /** Iniciar exige gestor, etapa de inscripción y al menos 2 equipos. */
   readonly puedeIniciar = computed(() => {
+
     const t = this.torneo();
     return !!t && this.esGestor() && t.estado === 'INSCRIPCION_ABIERTA' && t.inscritos >= 2;
   });
@@ -265,6 +287,12 @@ export class TournamentDetailComponent {
     const tabInicial = this.route.snapshot.queryParamMap.get('tab');
     if (tabInicial && ['resumen', 'llaves', 'matches', 'jugadores', 'resultados'].includes(tabInicial)) {
       this.tab.set(tabInicial as TabDetalle);
+    }
+    // Deep-link desde "Mis disputas": /tournaments/7?partida=93 abre esa
+    // tarjeta específica con su panel de disputa ya desplegado.
+    const partidaParam = this.route.snapshot.queryParamMap.get('partida');
+    if (partidaParam && !Number.isNaN(Number(partidaParam))) {
+      this.partidaResaltada.set(Number(partidaParam));
     }
     this.cargar();
 
@@ -509,7 +537,7 @@ export class TournamentDetailComponent {
   }
 
   /** Tras cada resultado el avance puede tocar otras partidas y el torneo. */
-  private refrescarLlaves(): void {
+  protected refrescarLlaves(): void {
     forkJoin({
       detalle: this.tournamentsService.obtener(this.torneoId).pipe(catchError(() => of(null))),
       partidas: this.tournamentsService.bracket(this.torneoId).pipe(catchError(() => of([] as Partida[])))
@@ -555,7 +583,6 @@ export class TournamentDetailComponent {
       }
     });
   }
-
   onRechazar(p: Partida): void {
     this.enviandoResultado.set(true);
     this.errorLlaves.set(null);
@@ -564,6 +591,18 @@ export class TournamentDetailComponent {
       error: (err) => {
         this.enviandoResultado.set(false);
         this.errorLlaves.set(err?.error?.message ?? 'No se pudo rechazar el resultado.');
+      }
+    });
+  }
+
+  onImpugnar(evento: ImpugnarEvent): void {
+    this.enviandoResultado.set(true);
+    this.errorLlaves.set(null);
+    this.tournamentsService.impugnar(evento.partida.id, evento.request).subscribe({
+      next: () => this.refrescarLlaves(),
+      error: (err) => {
+        this.enviandoResultado.set(false);
+        this.errorLlaves.set(err?.error?.message ?? 'No se pudo registrar la impugnación.');
       }
     });
   }

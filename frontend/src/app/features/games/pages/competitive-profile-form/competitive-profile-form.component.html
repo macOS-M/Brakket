@@ -1,9 +1,9 @@
-<section class="page">
+<section class="page form-page">
   <a class="back-link" routerLink="/games">← Volver al catálogo</a>
 
   <header class="page-header">
     <div>
-      <p class="eyebrow">RF-21 · Configuración competitiva</p>
+      <p class="eyebrow">Configuración competitiva</p>
       <h1>{{ editando() ? 'Editar perfil competitivo' : 'Crear perfil competitivo' }}</h1>
       <p>Define cómo se disputarán los torneos de <strong>{{ juegoNombre() || 'este juego' }}</strong>.</p>
     </div>
@@ -64,7 +64,7 @@
             <label class="check-card" [class.selected]="estaSeleccionado('formatosIds', formato.id)">
               <input type="checkbox" [checked]="estaSeleccionado('formatosIds', formato.id)"
                 (change)="alternar('formatosIds', formato.id, $any($event.target).checked)" />
-              <span>{{ formato.nombre.replaceAll('_', ' ') }}</span>
+              <span>{{ formato.nombre | formatoTorneo }}</span>
             </label>
           }
         </div>

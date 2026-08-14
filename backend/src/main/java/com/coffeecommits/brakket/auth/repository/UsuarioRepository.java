@@ -1,12 +1,16 @@
 package com.coffeecommits.brakket.auth.repository;
 
 import com.coffeecommits.brakket.auth.model.Usuario;
+import com.coffeecommits.brakket.statistics.dto.OpcionEstadisticaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
@@ -14,6 +18,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByGoogleId(String googleId);
 
     Optional<Usuario> findByCorreo(String correo);
+
+    /** Serializa canjes concurrentes para que un mismo saldo no pueda gastarse dos veces. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from Usuario u where u.correo = :correo")
+    Optional<Usuario> findLockedByCorreo(@Param("correo") String correo);
+
+    /** Cuentas bloqueadas: métrica de moderación del panel global (RF-49). */
+    long countByBloqueadoTrue();
 
     /**
      * Jugadores disponibles para invitar a un equipo. Todos los filtros van en
@@ -53,4 +65,22 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
                                     @Param("equipoId") Long equipoId,
                                     @Param("soloDisponibles") boolean soloDisponibles,
                                     Pageable pageable);
+
+    @Query("""
+            select new com.coffeecommits.brakket.statistics.dto.OpcionEstadisticaResponse(u.id, u.nombre)
+            from Usuario u
+            where lower(u.nombre) like lower(concat('%', :texto, '%'))
+              and exists (
+                select m.id from MiembroEquipo m, Partida p
+                where m.usuario = u
+                  and (p.equipoA = m.equipo or p.equipoB = m.equipo)
+                  and p.estado = com.coffeecommits.brakket.tournament.model.EstadoPartida.FINALIZADA
+                  and p.equipoA is not null and p.equipoB is not null
+                  and (:juegoId is null or p.torneo.juego.id = :juegoId)
+              )
+            order by u.nombre
+            """)
+    Page<OpcionEstadisticaResponse> buscarOpcionesEstadisticas(@Param("texto") String texto,
+                                                               @Param("juegoId") Long juegoId,
+                                                               Pageable pageable);
 }

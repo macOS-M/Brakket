@@ -2,7 +2,7 @@
   <app-page-header
     eyebrow="En directo"
     titulo="Transmisiones"
-    subtitulo="Los directos oficiales de Brakket y de la comunidad"
+    subtitulo="Los directos oficiales de Brakket"
   />
 
   @if (cargando()) {
@@ -52,6 +52,10 @@
     }
 
     <app-destacado-hero [transmisiones]="destacadas()" />
+
+    @if (destacadas()[0]?.torneoId; as torneoId) {
+    <app-ad-slot ubicacion="TRANSMISION_INFERIOR" [torneoId]="torneoId" />
+    }
 
     <section class="seccion" [attr.aria-label]="seccionCanales().titulo">
       <h2>{{ seccionCanales().titulo }}</h2>

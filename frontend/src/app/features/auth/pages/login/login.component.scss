@@ -196,6 +196,50 @@
   gap: 0.75rem;
 }
 
+.campo-password {
+  position: relative;
+  display: flex;
+
+  input {
+    flex: 1;
+    // Deja espacio a la derecha para que el texto no quede debajo del ojito.
+    padding-right: 2.4rem !important;
+  }
+}
+
+.ojito {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+
+  svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  &:hover {
+    color: var(--text, #e2e8f0);
+    background: var(--surface-3, rgba(255, 255, 255, 0.06));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent, #6366f1);
+    outline-offset: 1px;
+  }
+}
+
 .campo {
   display: flex;
   flex-direction: column;

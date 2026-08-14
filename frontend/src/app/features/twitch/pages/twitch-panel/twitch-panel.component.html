@@ -4,10 +4,14 @@
     <p>Configura el canal de Brakket.</p>
   </header>
 
+  <!-- Columna izquierda: todo lo que configura el canal. Apilar estas dos
+       tarjetas iguala su alto con el de "Asociar transmisión" y evita el
+       hueco que quedaba debajo de la más corta. -->
+  <div class="columna">
   @if (canal; as c) {
     <article class="card status-card">
       <div>
-        <span class="status" [class.active]="c.activo">{{ c.estado }}</span>
+        <span class="status" [class.active]="c.activo">{{ c.estado | etiqueta }}</span>
         <h2>{{ c.nombreMostrado || c.loginCanal || 'Sin configurar' }}</h2>
         @if (c.urlCanal) {
           <a [href]="c.urlCanal" target="_blank" rel="noopener">{{ c.urlCanal }}</a>
@@ -15,7 +19,7 @@
       </div>
       <dl>
         <div><dt>Credenciales</dt><dd>{{ c.credencialesConfiguradas ? 'Configuradas' : 'Pendientes' }}</dd></div>
-        <div><dt>Última validación</dt><dd>{{ c.ultimaValidacion || 'Sin validar' }}</dd></div>
+        <div><dt>Última validación</dt><dd>{{ (c.ultimaValidacion | date: 'dd/MM/yyyy HH:mm') || 'Sin validar' }}</dd></div>
       </dl>
       @if (c.ultimoError) { <p class="notice">{{ c.ultimoError }}</p> }
     </article>
@@ -30,27 +34,49 @@
       <button class="secondary" (click)="validar()" [disabled]="cargando || !canal?.id">Validar conexión</button>
     </div>
   </article>
+  </div>
 
   <article class="card">
     <h2>Asociar transmisión</h2>
-    <p>Puede asociarse al torneo, a una partida o a ambos.</p>
+    <p>Indicá el ID del torneo que querés transmitir (lo ves en la página del torneo).</p>
     <div class="fields">
       <label>ID del torneo <input type="number" min="1" [(ngModel)]="torneoId"></label>
-      <label>ID de la partida <input type="number" min="1" [(ngModel)]="partidaId"></label>
     </div>
     <button (click)="asociar()" [disabled]="cargando || !canal?.activo">
       Asociar y consultar estado en vivo
     </button>
-    @if (transmision) { <p class="result">Estado: {{ transmision.estado }}</p> }
+    @if (transmision) {
+    <p class="result">Estado: {{ transmision.estado | etiqueta }}</p>
+
+    @if (transmision.estado !== 'FINALIZADA') {
+      @if (confirmandoFinalizar) {
+        <div class="confirmar">
+          <p>
+            Se cierra el período de captura: deja de guardar espectadores y actividad de chat.
+            Las métricas ya capturadas se conservan. Para volver a capturar hay que asociar
+            una transmisión nueva.
+          </p>
+          <button class="peligro" (click)="finalizar()" [disabled]="cargando">
+            Sí, finalizar
+          </button>
+          <button (click)="cancelarFinalizar()" [disabled]="cargando">Cancelar</button>
+        </div>
+      } @else {
+        <button (click)="pedirConfirmacion()" [disabled]="cargando">
+          Finalizar transmisión
+        </button>
+      }
+    }
+    }
   </article>
 
   @if (transmision) {
-  <article class="card">
-    <h2>Métricas de audiencia (RF-36)</h2>
+  <article class="card card-ancha">
+    <h2>Métricas de audiencia</h2>
     <p>Muestras reales capturadas cada minuto mientras la transmisión está en vivo.</p>
     @if (metricas; as m) {
     <dl class="metricas">
-      <div><dt>Estado</dt><dd>{{ m.estado }}</dd></div>
+      <div><dt>Estado</dt><dd>{{ m.estado | etiqueta }}</dd></div>
       <div><dt>Muestras</dt><dd>{{ m.muestras }}</dd></div>
       <div><dt>Pico de espectadores</dt><dd>{{ m.pico ?? '—' }}</dd></div>
       <div><dt>Promedio</dt><dd>{{ m.promedio !== null ? (m.promedio | number : '1.0-1') : '—' }}</dd></div>

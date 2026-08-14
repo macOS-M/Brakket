@@ -1,0 +1,54 @@
+<section class="page form-page">
+  <h1>{{ editando() ? 'Editar espacio publicitario' : 'Nuevo espacio publicitario' }}</h1>
+
+  @if (error()) {
+  <p class="mensaje-error">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+  <p class="placeholder">Cargando espacio...</p>
+  } @else {
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form form-brakket form-card">
+    <div class="campo">
+      <label for="ubicacion">Ubicación *</label>
+      <select id="ubicacion" formControlName="ubicacion">
+        @for (u of ubicaciones(); track u) {
+        <option [value]="u">{{ u | etiqueta }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="campo campo-ancho">
+      <label>Imagen *</label>
+      <input
+        #inputArchivo
+        type="file"
+        accept="image/*"
+        class="input-archivo-oculto"
+        (change)="onArchivoSeleccionado($event)"
+      />
+      <button type="button" class="btn-subir" (click)="inputArchivo.click()" [disabled]="subiendoImagen()">
+        {{ subiendoImagen() ? 'Subiendo...' : (previewUrl() ? 'Cambiar imagen' : 'Seleccionar imagen') }}
+      </button>
+      @if (previewUrl()) {
+      <img class="preview" [src]="previewUrl()" alt="Vista previa" />
+      }
+      @if (form.controls.imagenUrl.invalid && form.controls.imagenUrl.touched) {
+      <span class="error-campo">Debes subir una imagen.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="enlaceUrl">Enlace (opcional)</label>
+      <input id="enlaceUrl" type="text" formControlName="enlaceUrl" placeholder="https://..." />
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="btn-secondary" (click)="cancelar()">Cancelar</button>
+      <button type="submit" class="btn-primary" [disabled]="guardando() || subiendoImagen()">
+        {{ guardando() ? 'Guardando...' : (editando() ? 'Guardar cambios' : 'Guardar') }}
+      </button>
+    </div>
+  </form>
+  }
+</section>

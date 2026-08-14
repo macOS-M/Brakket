@@ -1,0 +1,102 @@
+// Sin tope propio: el ancho lo marca el shell (--content-max).
+.page {
+  padding: 1.5rem 0;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent, #ff5500);
+  color: var(--accent-ink, #0b1120);
+
+  &:hover {
+    background: var(--accent-hover, #ff6a1f);
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text, #e2e8f0);
+  border-color: var(--border, #334155);
+
+  &:hover {
+    background: var(--surface-2, #1f2937);
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.actividad {
+  h2 {
+    margin: 0 0 0.9rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+}
+
+.log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.log-item {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+  font-size: 0.8125rem;
+
+  .log-accion {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .log-entidad {
+    color: var(--text-muted, #94a3b8);
+  }
+
+  .log-actor {
+    color: var(--text, #e2e8f0);
+  }
+
+  .log-fecha {
+    color: var(--text-muted, #94a3b8);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+}
+
+@media (max-width: 720px) {
+  .log-item {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+
+    .log-fecha {
+      text-align: left;
+    }
+  }
+}

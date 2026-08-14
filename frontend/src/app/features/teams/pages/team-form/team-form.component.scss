@@ -1,6 +1,6 @@
+// Ancho, rejilla, campos y botones vienen de `_forms.scss`.
 .page {
   padding: 0 0 1.5rem;
-  max-width: 620px;
 }
 
 // ----- Avisos -----
@@ -61,63 +61,34 @@
 }
 
 // ----- Formulario -----
+//
+// Campos, etiquetas, controles, errores y acciones vienen de `_forms.scss`.
+// Acá queda el relleno contra la tarjeta y lo propio de esta pantalla.
 
 .form {
-  display: grid;
-  gap: 1.25rem;
   padding: 1.25rem 1.5rem 1.5rem;
 }
 
-.field {
+// La lista de checkboxes de "juegos en los que compite" es el único campo que
+// no se lee bien en columna: se reparte en varias para no estirar la fila.
+.lista-juegos {
   display: grid;
-  gap: 0.4rem;
-}
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.35rem 1rem;
 
-.label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-muted, #94a3b8);
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 0.55rem 0.75rem;
-  // Sobre la tarjeta (surface) los campos suben un nivel de tono,
-  // como en el wizard de torneos: sin esto se funden con el fondo.
-  background: var(--surface-2, #1f2937);
-  border: 1px solid var(--border, #334155);
-  border-radius: var(--radius-sm, 8px);
-  color: var(--text, #e2e8f0);
-  font-family: inherit;
-  font-size: 0.875rem;
-  transition: border-color 0.15s ease;
-
-  &::placeholder {
-    color: var(--text-subtle, #64748b);
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text, #e2e8f0);
+    font-size: 0.875rem;
+    font-weight: 400;
   }
 
-  &:focus {
-    outline: none;
-    border-color: var(--accent-text, #ff6a1f);
+  input[type='checkbox'] {
+    width: auto;
+    margin: 0;
   }
-
-  &.invalido {
-    border-color: var(--danger-text, #f87171);
-  }
-}
-
-textarea {
-  resize: vertical;
-  line-height: 1.55;
-}
-
-.field-error {
-  color: var(--danger-text, #f87171);
-  font-size: 0.8125rem;
-  font-weight: 600;
 }
 
 // ----- Redes sociales -----
@@ -165,55 +136,6 @@ textarea {
   &:hover {
     background: var(--surface-2, #1f2937);
     border-color: var(--accent-text, #ff6a1f);
-  }
-}
-
-// ----- Acciones -----
-
-.actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  margin-top: 0.25rem;
-}
-
-.btn-primary,
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.45rem 0.9rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm, 8px);
-  font-family: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.btn-primary {
-  background: var(--accent, #ff5500);
-  color: var(--accent-ink, #0b1120);
-
-  &:hover:not(:disabled) {
-    background: var(--accent-hover, #ff6a1f);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-}
-
-.btn-secondary {
-  background: transparent;
-  border-color: var(--border, #334155);
-  color: var(--text, #e2e8f0);
-
-  &:hover {
-    background: var(--surface-2, #1f2937);
   }
 }
 

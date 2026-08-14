@@ -15,5 +15,30 @@ export const routes: Routes = [
     path: ':id/editar',
     loadComponent: () =>
       import('./pages/sponsorship-form/sponsorship-form.component').then((m) => m.SponsorshipFormComponent)
+  },
+  {
+    path: 'asociaciones',
+    loadComponent: () =>
+      import('./pages/association-list/association-list.component').then((m) => m.AssociationListComponent)
+  },
+  {
+    path: 'asociaciones/nuevo',
+    loadComponent: () =>
+      import('./pages/association-form/association-form.component').then((m) => m.AssociationFormComponent)
+  },
+  {
+    path: 'asociaciones/:patrocinioId/espacios',
+    loadComponent: () =>
+      import('./pages/espacio-list/espacio-list.component').then((m) => m.EspacioListComponent)
+  },
+  {
+    path: 'asociaciones/:patrocinioId/espacios/nuevo',
+    loadComponent: () =>
+      import('./pages/espacio-form/espacio-form.component').then((m) => m.EspacioFormComponent)
+  },
+  {
+    path: 'asociaciones/:patrocinioId/espacios/:id/editar',
+    loadComponent: () =>
+      import('./pages/espacio-form/espacio-form.component').then((m) => m.EspacioFormComponent)
   }
 ];

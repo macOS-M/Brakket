@@ -49,7 +49,7 @@
               <span class="ruta">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
             </p>
             <p class="item-meta">
-              Rol propuesto: {{ t.rolPropuesto }} · Solicitada por {{ t.solicitanteNombre }} el
+              Rol propuesto: {{ t.rolPropuesto | rolEquipo }} · Solicitada por {{ t.solicitanteNombre }} el
               <time class="dato">{{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}</time>
             </p>
             @if (t.justificacion) {
@@ -123,7 +123,7 @@
               <span class="ruta">{{ t.equipoOrigenNombre }} → {{ t.equipoDestinoNombre }}</span>
             </p>
             <p class="item-meta">
-              Rol propuesto: {{ t.rolPropuesto }} · Solicitada el
+              Rol propuesto: {{ t.rolPropuesto | rolEquipo }} · Solicitada el
               <time class="dato">{{ t.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}</time>
             </p>
             @if (t.justificacion) {

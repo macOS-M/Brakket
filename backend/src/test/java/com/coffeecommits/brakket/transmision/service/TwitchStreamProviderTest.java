@@ -2,6 +2,7 @@ package com.coffeecommits.brakket.transmision.service;
 
 import com.coffeecommits.brakket.config.TwitchProperties;
 import com.coffeecommits.brakket.twitch.service.HelixClient;
+import com.coffeecommits.brakket.twitch.service.TwitchTokenProvider;
 import com.coffeecommits.brakket.twitch.service.TwitchUnavailableException;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -56,7 +57,10 @@ class TwitchStreamProviderTest {
         // Timeouts cortos para que el caso "Twitch colgado" no frene la suite.
         properties.setConnectTimeoutMs(500);
         properties.setReadTimeoutMs(500);
-        provider = new TwitchStreamProvider(new HelixClient(properties, RestClient.builder()));
+        // El token vive en TwitchTokenProvider (lo comparte con IGDB); acá se
+        // le pasa uno real para seguir cubriendo cacheo y renovación por 401.
+        TwitchTokenProvider tokenProvider = new TwitchTokenProvider(properties, RestClient.builder());
+        provider = new TwitchStreamProvider(new HelixClient(properties, tokenProvider, RestClient.builder()));
     }
 
     @AfterEach

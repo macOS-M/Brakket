@@ -157,17 +157,26 @@ public class TeamInvitationServiceImpl implements TeamInvitationService {
                 throw new BusinessException("El equipo ya no tiene cupo disponible");
             }
 
-            MiembroEquipo miembro = MiembroEquipo.builder()
-                    .equipo(invitacion.getEquipo())
-                    .usuario(jugador)
-                    .estado(ESTADO_ACTIVO)
-                    .fechaUnion(LocalDate.now())
-                    .rol(invitacion.getRolPropuesto())
-                    .build();
+            // Si el jugador ya tuvo una fila (salió o fue expulsado) se reactiva;
+            // si no, se crea una nueva membresía. Insertar siempre chocaba con la
+            // restricción única de (equipo, usuario), y el error se traducía a
+            // "El jugador ya pertenece al equipo": un mensaje falso, porque
+            // justamente no pertenecía. Mismo criterio que TeamJoinRequestServiceImpl.
+            MiembroEquipo miembro = miembroEquipoRepository
+                    .findByEquipoIdAndUsuarioId(invitacion.getEquipo().getId(), jugador.getId())
+                    .orElseGet(() -> MiembroEquipo.builder()
+                            .equipo(invitacion.getEquipo())
+                            .usuario(jugador)
+                            .build());
+            miembro.setEstado(ESTADO_ACTIVO);
+            miembro.setFechaUnion(LocalDate.now());
+            miembro.setRol(invitacion.getRolPropuesto());
             try {
                 miembroEquipoRepository.save(miembro);
             } catch (DataIntegrityViolationException e) {
-                throw new BusinessException("El jugador ya pertenece al equipo");
+                // Ya sin el choque de la reincorporación, esto solo salta si dos
+                // aceptaciones simultáneas cruzan la misma invitación.
+                throw new BusinessException("No se pudo completar la incorporación; intentá de nuevo");
             }
 
             invitacion.setEstado("ACEPTADA");

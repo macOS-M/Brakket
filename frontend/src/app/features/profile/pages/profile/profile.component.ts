@@ -8,6 +8,10 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { FotoInputComponent } from '../../../../shared/components/foto-input/foto-input.component';
+import { ElementoProgresion, ProgressionService } from '../../../progression/services/progression.service';
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
+import { ahoraCostaRica, isoDeFechaLocal } from '../../../../shared/utils/hora-costa-rica';
 
 interface GameOption {
   id: number;
@@ -45,7 +49,14 @@ const EDAD_MINIMA = 13;
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent, StatusBadgeComponent],
+  imports: [
+    ReactiveFormsModule,
+    PageHeaderComponent,
+    EmptyStateComponent,
+    StatusBadgeComponent,
+    FotoInputComponent,
+    FechaInputComponent
+  ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
@@ -53,6 +64,7 @@ export class ProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly api = inject(ApiService);
+  private readonly progressionService = inject(ProgressionService);
 
   readonly usuario = this.authService.usuario;
   readonly perfilCompleto = this.authService.perfilCompleto;
@@ -101,6 +113,8 @@ export class ProfileComponent implements OnInit {
   protected saveError = '';
   protected saveSuccess = '';
   protected games: GameOption[] = [];
+  protected tituloAplicado: ElementoProgresion | null = null;
+  protected insigniasAplicadas: ElementoProgresion[] = [];
 
   readonly profileForm = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
@@ -153,6 +167,12 @@ export class ProfileComponent implements OnInit {
       next: (games) => (this.games = games),
       error: () => (this.games = [])
     });
+    this.progressionService.get().subscribe({
+      next: data => {
+        this.tituloAplicado = data.elementos.find(e => e.tipo === 'TITULO' && e.aplicado) ?? null;
+        this.insigniasAplicadas = data.elementos.filter(e => e.tipo === 'INSIGNIA' && e.aplicado);
+      }
+    });
   }
 
   toggleGame(gameId: number, checked: boolean): void {
@@ -181,13 +201,11 @@ export class ProfileComponent implements OnInit {
 
   /** Tope del datepicker: nadie menor a la edad mínima puede registrarse. */
   get maxFechaNacimiento(): string {
-    const hoy = new Date();
+    const hoy = ahoraCostaRica();
     hoy.setFullYear(hoy.getFullYear() - EDAD_MINIMA);
     // Fecha LOCAL, no toISOString(): en GMT-6, después de las 18:00 el
     // día UTC ya es mañana y el tope quedaba corrido un día.
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoy.getDate()).padStart(2, '0');
-    return `${hoy.getFullYear()}-${mes}-${dia}`;
+    return isoDeFechaLocal(hoy);
   }
 
   /** Edad a partir de la fecha cargada; null si no hay fecha o es inválida. */
@@ -200,7 +218,7 @@ export class ProfileComponent implements OnInit {
     if (Number.isNaN(nacimiento.getTime())) {
       return null;
     }
-    const hoy = new Date();
+    const hoy = ahoraCostaRica();
     let anios = hoy.getFullYear() - nacimiento.getFullYear();
     const cumplioEsteAnio =
       hoy.getMonth() > nacimiento.getMonth() ||

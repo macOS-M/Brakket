@@ -12,6 +12,7 @@ public record JuegoExternoDetalle(
         String sitioWeb,
         List<String> plataformas,
         List<String> etiquetas,
-        List<String> capturas
+        List<String> capturas,
+        String trailerId
 ) {
 }

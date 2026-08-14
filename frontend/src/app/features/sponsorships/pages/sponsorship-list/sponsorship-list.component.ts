@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { Patrocinador } from '../../../../models/patrocinador.model';
 import { SponsorshipsService } from '../../services/sponsorships.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EtiquetaPipe } from '../../../../shared/pipes/etiqueta.pipe';
 
 @Component({
   selector: 'app-sponsorship-list',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, EtiquetaPipe],
   templateUrl: './sponsorship-list.component.html',
   styleUrl: './sponsorship-list.component.scss'
 })

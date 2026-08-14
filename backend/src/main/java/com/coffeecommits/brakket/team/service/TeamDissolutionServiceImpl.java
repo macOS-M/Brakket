@@ -169,9 +169,8 @@ public class TeamDissolutionServiceImpl implements TeamDissolutionService {
             return;
         }
         boolean esCapitanActivo = miembroEquipoRepository
-                .findByEquipoIdAndUsuarioId(equipoId, solicitante.getId())
-                .filter(m -> "CAPITAN".equals(m.getRol()) && ESTADO_ACTIVO.equals(m.getEstado()))
-                .isPresent();
+                .existsByEquipoIdAndUsuarioIdAndRolAndEstado(
+                        equipoId, solicitante.getId(), "CAPITAN", ESTADO_ACTIVO);
         if (!esCapitanActivo) {
             throw new BusinessException(
                     "Solo el capitán activo del equipo (o un administrador) puede " + accion);

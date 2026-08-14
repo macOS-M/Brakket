@@ -1,4 +1,33 @@
-<app-coming-soon
-  titulo="Progresión y logros"
-  descripcion="Subí de nivel, desbloqueá logros y personalizá tu perfil con lo que ganás compitiendo."
-/>
+<main class="progression">
+  <header><div><h1>Progresión y personalización</h1><p>Convierte tus logros oficiales en una identidad propia.</p></div><div class="balance"><span>Saldo disponible</span><strong>{{ data?.puntos ?? 0 }}</strong><small>puntos</small></div></header>
+  @if (error) { <p class="alert error">{{ error }}</p> }
+  @if (success) { <p class="alert success">{{ success }}</p> }
+  @if (loading) { <p class="state">Cargando tu trayectoria…</p> }
+  @if (data) {
+    <section><div class="section-title"><div><span>Tienda cosmética</span><h2>Personaliza tu perfil</h2></div></div>
+      <div class="catalog">
+        @for (item of data.elementos; track item.id) {
+          <article class="item" [class.inactive]="!item.activo"><div class="icon">{{ item.tipo === 'TITULO' ? 'T' : item.tipo === 'MARCO' ? '◇' : '★' }}</div><span class="type">{{ label(item.tipo) }}</span><h3>{{ item.nombre }}</h3><p>{{ item.descripcion }}</p><small class="origin">{{ item.requisito }}</small>
+            <div class="item-footer"><strong>{{ item.costo }} pts</strong>
+              @if (item.aplicado) { <button class="remove" (click)="remove(item)" [disabled]="busy !== null">Quitar</button> }
+              @else if (item.canjeado) { <button (click)="apply(item)" [disabled]="busy !== null || !item.activo">Aplicar</button> }
+              @else { <button (click)="redeem(item)" [disabled]="busy !== null || !item.activo || !item.habilitado || data.puntos < item.costo">{{ !item.activo ? 'No disponible' : 'Canjear' }}</button> }
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+    <section><div class="section-title"><div><span>Logros</span><h2>Logros obtenidos y origen de tus puntos</h2></div></div>
+      <div class="achievements">
+        @for (achievement of data.logros; track achievement.id) {
+          <article [class.locked]="!achievement.desbloqueado">
+            <div class="medal">{{ achievement.desbloqueado ? '★' : '🔒' }}</div>
+            <div><h3>{{ achievement.nombre }} <b>{{ achievement.desbloqueado ? '+' : '' }}{{ achievement.puntos }} pts</b></h3><p>{{ achievement.descripcion }}</p>
+              <small>{{ achievement.origen }} @if (achievement.desbloqueado && achievement.fecha) { · Obtenido el {{ achievement.fecha | date:'mediumDate' }} } @else { · Pendiente }</small>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</main>

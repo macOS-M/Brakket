@@ -1,0 +1,32 @@
+// Ancho, rejilla, campos, mensajes y botones vienen de `_forms.scss`.
+.page {
+  padding: 1.5rem 0;
+
+  h1 {
+    margin: 0 0 1.25rem;
+  }
+}
+
+.mensaje-error {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--danger-text, #f87171);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--danger-text, #f87171);
+  font-size: 0.9rem;
+}
+
+// Ayuda de rango de fechas: mismo tono apagado que el resto de textos
+// secundarios de la app (ver .filtros-aplicados en reports-view, .pista en
+// asistente-ia). No es un error ni una advertencia, así que no reusa
+// .mensaje-error ni las clases de warning/danger.
+.rango-disponible {
+  span {
+    display: block;
+    padding: 0.6rem 0.8rem;
+    background: var(--surface-2, #1f2937);
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text-subtle, #8496ad);
+    font-size: 0.8125rem;
+  }
+}

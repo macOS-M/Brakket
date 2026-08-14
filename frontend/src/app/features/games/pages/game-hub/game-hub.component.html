@@ -8,18 +8,18 @@
   } @else { @if (juego(); as juego) {
 
   <!-- Banner con el arte del juego (referencia Challenger Mode). -->
-  <header class="banner" [style.background]="foto() ? undefined : gradiente()">
-    @if (foto()) {
-    <img class="banner-arte" [src]="foto()" alt="" />
+  <header class="banner" [style.background]="arteBanner() ? undefined : gradiente()">
+    @if (arteBanner()) {
+    <img class="banner-arte" [src]="arteBanner()" alt="" />
     }
     <div class="banner-velo" aria-hidden="true"></div>
 
     <a class="volver" routerLink="/games">← Catálogo</a>
 
     <div class="banner-contenido">
-      <div class="cartel" [style.background]="foto() ? undefined : gradiente()">
-        @if (foto()) {
-        <img [src]="foto()" alt="" loading="lazy" />
+      <div class="cartel" [style.background]="portada() ? undefined : gradiente()">
+        @if (portada()) {
+        <img [src]="portada()" alt="" loading="lazy" />
         } @else {
         <span class="monograma">{{ juego.nombre.charAt(0) }}</span>
         }
@@ -98,7 +98,7 @@
       [attr.aria-current]="tab() === 'descripcion' ? 'page' : null"
       (click)="tab.set('descripcion')"
     >
-      Descripción
+      Resumen
     </button>
     <button
       type="button"
@@ -113,7 +113,7 @@
 
   @if (tab() === 'descripcion') {
   <div class="contenido">
-    <!-- Ficha del juego: datos reales de RAWG guardados al importar. -->
+    <!-- Ficha del juego: datos de IGDB guardados al importar. -->
     @if (juego.rating || juego.metacritic || juego.fechaLanzamiento || juego.plataformas) {
     <div class="ficha-juego">
       @if (juego.rating) {
@@ -125,7 +125,7 @@
       @if (juego.metacritic) {
       <div class="ficha-dato">
         <span class="ficha-valor">{{ juego.metacritic }}</span>
-        <span class="ficha-etiqueta">Metacritic</span>
+        <span class="ficha-etiqueta">Críticos</span>
       </div>
       }
       @if (juego.fechaLanzamiento) {
@@ -136,7 +136,7 @@
       }
       @if (juego.plataformas) {
       <div class="ficha-dato ficha-plataformas">
-        <span class="ficha-valor">{{ juego.plataformas }}</span>
+        <span class="ficha-valor" [title]="juego.plataformas">{{ juego.plataformas }}</span>
         <span class="ficha-etiqueta">Plataformas</span>
       </div>
       }
@@ -151,104 +151,129 @@
     </div>
     }
 
-    @if (juego.descripcion) {
-    <p class="descripcion">{{ juego.descripcion }}</p>
-    }
+    <div class="resumen-juego" [class.sin-trailer]="!trailerUrl()">
+      @if (trailerUrl(); as url) {
+      <div class="trailer-juego">
+        <iframe
+          [src]="url"
+          [title]="'Tráiler de ' + juego.nombre"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </div>
+      }
+
+      <section class="ligas-resumen" aria-labelledby="torneos-resumen-titulo">
+        <div class="ligas-resumen-encabezado">
+          <h2 id="torneos-resumen-titulo">Torneos de {{ juego.nombre }}</h2>
+          <div class="acciones-resumen">
+            @if (auth.isAuthenticated()) {
+            <button type="button" class="ver-todos-btn" (click)="abrirWizard()">+ Crear torneo</button>
+            }
+          </div>
+        </div>
+
+        @if (torneos().length === 0) {
+        <div class="ligas-vacio">
+          <p>Todavía no hay torneos de este juego.</p>
+          <span>Organizá la primera competencia para la comunidad.</span>
+        </div>
+        } @else {
+        <div class="ligas-resumen-lista torneos-resumen-lista"
+          [attr.data-cantidad]="torneos().length > 4 ? 5 : torneos().length">
+          @for (torneo of torneos().slice(0, 4); track torneo.id) {
+          <a
+            class="liga-resumen-item"
+            [routerLink]="['/tournaments', torneo.id]"
+            [style.background]="foto() ? undefined : gradiente()"
+          >
+            @if (foto()) {
+            <img [src]="foto()" alt="" loading="lazy" />
+            }
+            <span class="liga-resumen-velo" aria-hidden="true"></span>
+            <span class="liga-resumen-estado">{{ torneo.fechaInicio | date: 'd MMM · HH:mm' }}</span>
+            <div class="liga-resumen-texto">
+              <strong>{{ torneo.nombre }}</strong>
+              <span>{{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos · {{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }}</span>
+            </div>
+            <span class="liga-resumen-flecha" aria-hidden="true">→</span>
+          </a>
+          }
+          @if (torneos().length > 2) {
+          <button type="button" class="liga-resumen-estado torneos-mas" (click)="tab.set('torneos')"
+            [attr.aria-label]="'Ver los ' + torneos().length + ' torneos de ' + juego.nombre">
+            <span class="mas-escritorio">+{{ torneos().length - 4 }} más</span>
+            <span class="mas-responsive">+{{ torneos().length - 2 }} más</span>
+          </button>
+          }
+        </div>
+        }
+      </section>
+    </div>
 
     @if (juego.capturas && juego.capturas.length > 0) {
     <!-- Galería de capturas reales (RAWG), con scroll horizontal propio. -->
     <div class="galeria" role="list" aria-label="Capturas del juego">
-      @for (captura of juego.capturas; track captura) {
-      <img class="galeria-item" role="listitem" [src]="captura" [alt]="'Captura de ' + juego.nombre" loading="lazy" />
+      @for (captura of juego.capturas; track captura; let i = $index) {
+      <button type="button" class="galeria-item" role="listitem"
+        [attr.aria-label]="'Ampliar captura ' + (i + 1) + ' de ' + juego.nombre"
+        (click)="abrirVisor(i)">
+        <img [src]="captura" [alt]="'Captura de ' + juego.nombre" loading="lazy" />
+        <span aria-hidden="true" class="icono-ampliar">⛶</span>
+      </button>
       }
     </div>
     }
 
-    <!-- Torneo destacado (referencia CM "Recommended tournaments"):
-         arte grande + datos al lado, sin caja alrededor. -->
-    @if (destacado(); as torneo) {
-    <h2 class="seccion">Torneos destacados</h2>
-    <a class="destacado" [routerLink]="['/tournaments', torneo.id]">
-      <div class="destacado-arte" [style.background]="foto() ? undefined : gradiente()">
-        @if (foto()) {
-        <img [src]="foto()" alt="" loading="lazy" />
+    <div class="ligas-seccion-encabezado">
+      <h2 class="seccion">Ligas de {{ juego.nombre }}</h2>
+      <div class="acciones-resumen">
+        @if (ligas().length > 2) {
+        <a class="ver-todos-btn mas-responsive" routerLink="/leagues" [queryParams]="{ juegoId: juego.id }">
+          +{{ ligas().length - 2 }} más
+        </a>
+        }
+        @if (auth.isAuthenticated()) {
+        <button type="button" class="ver-todos-btn" (click)="crearLiga()">+ Crear liga</button>
         }
       </div>
-      <div class="destacado-info">
-        <p class="destacado-fecha">{{ torneo.fechaInicio | date: "EEEE d 'de' MMMM, HH:mm" }}</p>
-        <h3>{{ torneo.nombre }}</h3>
-        <p class="destacado-meta">
-          {{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }} ·
-          {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos
-          @if (torneo.premio) { · 🏆 {{ torneo.premio }} }
-        </p>
-        <p class="destacado-organizador">
-          Organizado por <strong>{{ torneo.organizadorNombre }}</strong>
-          @if (torneo.ligaNombre) { · {{ torneo.ligaNombre }} } @else { · Comunitario }
-        </p>
-      </div>
-    </a>
-
-    @if (otrosTorneos().length > 0) {
-    <div class="fila-torneos">
-      @for (torneo of otrosTorneos(); track torneo.id) {
-      <a class="torneo-mini" [routerLink]="['/tournaments', torneo.id]">
-        <div class="mini-arte" [style.background]="foto() ? undefined : gradiente()">
-          @if (foto()) {
-          <img [src]="foto()" alt="" loading="lazy" />
-          }
-          <span class="mini-fecha">{{ torneo.fechaInicio | date: "EEE d, HH:mm" }}</span>
-        </div>
-        <p class="mini-nombre">{{ torneo.nombre }}</p>
-        <p class="mini-meta">
-          {{ torneo.tamanoEquipo }}v{{ torneo.tamanoEquipo }} ·
-          {{ torneo.inscritos }}/{{ torneo.maxEquipos }} equipos
-        </p>
-      </a>
-      }
     </div>
-    }
-    <button type="button" class="ver-todos-btn" (click)="tab.set('torneos')">
-      Ver todos los torneos →
-    </button>
-    }
-
-    <h2 class="seccion">Ligas de {{ juego.nombre }}</h2>
     @if (ligas().length === 0) {
-    <app-empty-state
-      titulo="Todavía no hay ligas de este juego"
-      [mensaje]="
-        auth.isAuthenticated()
-          ? 'Creá la primera desde el botón Crear: cualquier usuario puede organizar.'
-          : 'Iniciá sesión y creá la primera liga de este título.'
-      "
-    >
-      @if (auth.isAuthenticated()) {
-      <button type="button" class="btn-primary" (click)="crearLiga()">+ Nueva liga</button>
-      }
-    </app-empty-state>
+    <div class="ligas-vacio ligas-vacio-ancho">
+      <p>Todavía no hay ligas de este juego.</p>
+      <span>Podés ser quien organice la primera competencia.</span>
+    </div>
     } @else {
-    <!-- Pósters con el nombre sobre el arte (referencia dashboard):
-         nada de cajitas con borde. -->
-    <div class="ligas-posters">
-      @for (liga of ligas(); track liga.id) {
-      <a
-        class="liga-poster"
-        [routerLink]="['/leagues', liga.id]"
-        [style.background]="portadaLiga(liga) ? undefined : gradienteLiga(liga)"
-      >
+    <div class="ligas-resumen-lista ligas-seccion-lista"
+      [attr.data-cantidad]="ligas().length > 4 ? 5 : ligas().length">
+      @for (liga of ligas().slice(0, 4); track liga.id) {
+      <a class="liga-resumen-item" [routerLink]="['/leagues', liga.id]"
+        [style.background]="portadaLiga(liga) ? undefined : gradienteLiga(liga)">
         @if (portadaLiga(liga)) {
         <img [src]="portadaLiga(liga)" alt="" loading="lazy" />
         }
-        <div class="poster-velo" aria-hidden="true"></div>
-        <div class="poster-texto">
-          <p class="poster-nombre">{{ liga.nombre }}</p>
-          <p class="poster-meta">{{ liga.comisionadoNombre }}</p>
+        <span class="liga-resumen-velo" aria-hidden="true"></span>
+        <span class="liga-resumen-estado">Liga activa</span>
+        <div class="liga-resumen-texto">
+          <strong>{{ liga.nombre }}</strong>
+          <span>Por {{ liga.comisionadoNombre }}</span>
         </div>
+        <span class="liga-resumen-flecha" aria-hidden="true">→</span>
+      </a>
+      }
+      @if (ligas().length > 4) {
+      <a class="ligas-mas" routerLink="/leagues" [queryParams]="{ juegoId: juego.id }"
+        [attr.aria-label]="'Ver ' + (ligas().length - 4) + ' ligas más de ' + juego.nombre">
+        <strong>+{{ ligas().length - 4 }}</strong>
+        <span>ligas más</span>
+        <span aria-hidden="true">→</span>
       </a>
       }
     </div>
     }
+
   </div>
   } @else {
   <div class="contenido">
@@ -299,3 +324,22 @@
   }
   } }
 </section>
+
+@if (capturaVisible(); as captura) {
+<div class="visor-fondo" role="dialog" aria-modal="true"
+  [attr.aria-label]="'Captura ampliada de ' + juego()!.nombre" (click)="cerrarVisor()">
+  <div class="visor" (click)="$event.stopPropagation()">
+    <img [src]="captura" [alt]="'Captura ampliada de ' + juego()!.nombre" />
+    <button type="button" class="visor-cerrar" aria-label="Cerrar visor" (click)="cerrarVisor()">×</button>
+    @if ((juego()?.capturas?.length ?? 0) > 1) {
+    <button type="button" class="visor-anterior" aria-label="Captura anterior" (click)="cambiarCaptura(-1)">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
+    </button>
+    <button type="button" class="visor-siguiente" aria-label="Captura siguiente" (click)="cambiarCaptura(1)">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+    </button>
+    <span class="visor-contador">{{ capturaAbierta()! + 1 }} / {{ juego()!.capturas!.length }}</span>
+    }
+  </div>
+</div>
+}

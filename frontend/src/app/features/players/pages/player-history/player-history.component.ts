@@ -1,13 +1,16 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 import { HistorialEquipoJugador } from '../../../../models/historial-jugador.model';
-import { PlayersService } from '../../services/players.service';
+import { PerfilPersonalizado, PlayersService } from '../../services/players.service';
+import { catchError, forkJoin, of } from 'rxjs';
+import { RolEquipoPipe } from '../../../../shared/pipes/rol-equipo.pipe';
 
 @Component({
   selector: 'app-player-history',
   standalone: true,
-  imports: [],
+  imports: [DatePipe, RolEquipoPipe],
   templateUrl: './player-history.component.html',
   styleUrl: './player-history.component.scss'
 })
@@ -18,6 +21,7 @@ export class PlayerHistoryComponent implements OnInit {
   readonly historial = signal<HistorialEquipoJugador[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+  readonly perfil = signal<PerfilPersonalizado | null>(null);
 
   private jugadorId!: number;
 
@@ -29,9 +33,12 @@ export class PlayerHistoryComponent implements OnInit {
   cargar(): void {
     this.cargando.set(true);
     this.error.set(null);
-    this.playersService.historial(this.jugadorId, null, null, null).subscribe({
-      next: (historial) => {
-        this.historial.set(historial);
+    forkJoin({
+      historial:this.playersService.historial(this.jugadorId, null, null, null),
+      perfil:this.playersService.personalizacion(this.jugadorId).pipe(catchError(() => of(null)))
+    }).subscribe({
+      next: ({historial,perfil}) => {
+        this.historial.set(historial); this.perfil.set(perfil);
         this.cargando.set(false);
       },
       error: (err) => {

@@ -8,6 +8,9 @@
       <span class="status" [class.inactive]="!liga.activo">{{ liga.activo ? 'Liga activa' : 'Liga inactiva' }}</span>
       @if (esComisionado()) { <a class="btn btn-ghost" [routerLink]="['editar']">Configurar liga</a> }
     </header>
+
+  <app-ad-slot ubicacion="LIGA_CABECERA" [ligaId]="liga.id" />
+
     @if (confirmation()) { <p class="success" role="status">✓ {{ confirmation() }}</p> }
     <section class="calendar"><div class="section-title"><div><span class="eyebrow">Calendario competitivo</span><h2>Temporadas</h2></div>
       <div class="season-actions"><span>{{ seasons().length }} período(s)</span>
@@ -20,7 +23,7 @@
             [class.status-planned]="temporada.estado === 'PLANIFICADA'"
             [class.status-active]="temporada.estado === 'ACTIVA'"
             [class.status-finished]="temporada.estado === 'FINALIZADA'"
-            [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado }}</span></div>
+            [class.status-cancelled]="temporada.estado === 'CANCELADA'">{{ temporada.estado | etiqueta }}</span></div>
             <p>{{ temporada.fechaInicio | date:'dd/MM/yyyy' }} — {{ temporada.fechaFin | date:'dd/MM/yyyy' }}</p>
             <div class="chips"><span>{{ temporada.formatoNombre | formatoTorneo }}</span><span>Cupo: {{ temporada.cupoEquipos }}</span><span>{{ temporada.juegoNombre }}</span></div>
             <details><summary>Ver reglas</summary><p class="rules">{{ temporada.reglas }}</p></details></div>
@@ -34,15 +37,16 @@
         @if (!liga.activo) { <p class="error">La liga está inactiva. No se pueden crear ni modificar temporadas.</p> }
         <div class="form-grid">
           <label class="field wide"><span>Nombre</span><input formControlName="nombre" placeholder="Ej. Apertura 2026"></label>
-          <label class="field"><span>Fecha de inicio</span><input type="date" formControlName="fechaInicio"></label>
-          <label class="field"><span>Fecha de fin</span><input type="date" formControlName="fechaFin"></label>
+          <label class="field"><span>Fecha de inicio</span><app-fecha-input etiqueta="Fecha de inicio" [min]="minimoInicio()" formControlName="fechaInicio" /></label>
+          <label class="field"><span>Fecha de fin</span><app-fecha-input etiqueta="Fecha de fin" [min]="minimoFin()" formControlName="fechaFin" /></label>
           <label class="field"><span>Estado</span><select formControlName="estado"><option value="PLANIFICADA">Planificada</option><option value="ACTIVA">Activa</option><option value="FINALIZADA">Finalizada</option><option value="CANCELADA">Cancelada</option></select></label>
-          <label class="field"><span>Cupo de equipos</span><input type="number" min="2" max="1024" formControlName="cupoEquipos"></label>
+          <label class="field"><span>Cupo de equipos</span><select formControlName="cupoEquipos">@for (c of cuposEquipos; track c) {<option [value]="c">{{ c }} equipos</option>}</select></label>
           <label class="field wide"><span>Formato competitivo activo</span><select formControlName="formatoId"><option [ngValue]="null">Seleccionar formato</option>@for (formato of formats(); track formato.id) { <option [ngValue]="formato.id">{{ formato.nombre | formatoTorneo }}</option> }</select></label>
           <label class="field full"><span>Reglas específicas</span><textarea rows="5" formControlName="reglas" placeholder="Criterios de participación, desempates, conducta y puntuación"></textarea></label>
         </div>
         @if (seasonForm.hasError('rangoFechas')) { <p class="field-error">La fecha de inicio no puede ser posterior a la fecha de fin.</p> }
-        @if (seasonForm.touched && seasonForm.invalid && !seasonForm.hasError('rangoFechas')) { <p class="field-error">Corrige los campos marcados antes de guardar.</p> }
+        @if (seasonForm.hasError('inicioPasado')) { <p class="field-error">La fecha de inicio no puede ser anterior a hoy.</p> }
+        @if (seasonForm.touched && seasonForm.invalid && !seasonForm.hasError('rangoFechas') && !seasonForm.hasError('inicioPasado')) { <p class="field-error">Corrige los campos marcados antes de guardar.</p> }
         @if (seasonError()) { <p class="error">{{ seasonError() }}</p> }
         <div class="actions"><button class="btn btn-primary" type="submit" [disabled]="savingSeason() || !liga.activo">{{ savingSeason() ? 'Guardando…' : (editingId() ? 'Guardar cambios' : 'Crear temporada') }}</button>
           <button class="btn btn-ghost" type="button" (click)="cancelarEdicion()">Cancelar</button></div>
@@ -59,7 +63,7 @@
         <span class="mas" aria-hidden="true">+</span>
         <span class="crear-texto">
           <strong>Crear torneo en esta liga</strong>
-          <span>El wizard llega con {{ liga.nombre }} preseleccionada; elegí la temporada.</span>
+          <span>El asistente llega con {{ liga.nombre }} preseleccionada; elegí la temporada.</span>
         </span>
       </button>
       }

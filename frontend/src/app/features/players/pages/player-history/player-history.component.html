@@ -1,5 +1,19 @@
 <section class="page">
-  <h1>Historial del jugador</h1>
+  @if (perfil(); as perfilJugador) {
+    <header class="player-card">
+      <div class="avatar" aria-hidden="true">{{ perfilJugador.nombre.charAt(0).toUpperCase() }}</div>
+      <div><p class="kicker">Perfil de jugador</p><h1>{{ perfilJugador.nombre }}</h1>
+        @if (perfilJugador.titulo) { <span class="player-title">{{ perfilJugador.titulo.nombre }}</span> }
+      </div>
+      @if (perfilJugador.insignia; as badge) {
+        <div class="badges" aria-label="Insignia equipada">
+          <span class="badge" [title]="badge.descripcion"><b>★</b>{{ badge.nombre }}</span>
+        </div>
+      }
+    </header>
+  } @else { <h1>Historial del jugador</h1> }
+
+  <h2 class="history-title">Historial de equipos</h2>
 
   @if (cargando()) {
   <p class="placeholder">Cargando historial...</p>
@@ -16,16 +30,18 @@
       <div class="punto" [class.activo]="item.estado === 'ACTIVO'"></div>
       <div class="contenido">
         <p class="equipo">{{ item.equipoNombre }}</p>
-        @if (item.juegoNombre) {
+        @if (item.juegoNombres?.length) {
+        <p class="juego">{{ item.juegoNombres?.join(' · ') }}</p>
+        } @else if (item.juegoNombre) {
         <p class="juego">{{ item.juegoNombre }}</p>
         }
-        <p class="rol">Rol: {{ item.rol }}</p>
+        <p class="rol">Rol: {{ item.rol | rolEquipo }}</p>
         <p class="fechas">
-          {{ item.fechaIngreso }} —
+          {{ item.fechaIngreso | date: 'dd/MM/yyyy' }} —
           @if (item.estado === 'ACTIVO') {
           presente
           } @else if (item.fechaSalida) {
-          {{ item.fechaSalida.substring(0, 10) }}
+          {{ item.fechaSalida | date: 'dd/MM/yyyy' }}
           } @else {
           {{ item.estado.toLowerCase() }}
           }

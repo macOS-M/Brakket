@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page form-page">
   <h1>{{ editando() ? 'Editar patrocinador' : 'Nuevo patrocinador' }}</h1>
 
   @if (error()) {
@@ -14,7 +14,7 @@
   </div>
   }
 
-  <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form form-brakket form-card">
     <div class="campo">
       <label for="nombre">Nombre comercial *</label>
       <input id="nombre" type="text" formControlName="nombre" />
@@ -24,8 +24,8 @@
     </div>
 
     <div class="campo">
-      <label for="logo">Logo (URL)</label>
-      <input id="logo" type="text" formControlName="logo" placeholder="https://..." />
+      <span class="label" id="etiqueta-logo">Logo</span>
+      <app-foto-input etiqueta="Logo" formControlName="logo" aria-labelledby="etiqueta-logo" />
     </div>
 
     <div class="campo">
@@ -36,12 +36,12 @@
       }
     </div>
 
-    <div class="campo">
+    <div class="campo campo-ancho">
       <label for="descripcion">Descripción</label>
       <textarea id="descripcion" formControlName="descripcion" rows="3"></textarea>
     </div>
 
-    <div class="campo">
+    <div class="campo campo-ancho">
       <label>Enlaces</label>
       @for (control of enlaces.controls; track $index) {
       <div class="enlace-item">

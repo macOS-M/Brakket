@@ -1,0 +1,84 @@
+<main class="reports-page">
+  <header class="page-header">
+    <span class="eyebrow">Reportes</span>
+    <h1>Exportar reportes</h1>
+    <p>Genera reportes de competencias, audiencia, patrocinio y estadísticas con los filtros que necesites.</p>
+  </header>
+
+  <form class="filters" [formGroup]="form" (ngSubmit)="generar()">
+    <label>Tipo de reporte
+      <select formControlName="tipo">
+        <option value="COMPETENCIA">Competencias y resultados</option>
+        <option value="AUDIENCIA">Audiencia</option>
+        <option value="PATROCINIO">Patrocinio</option>
+        <option value="ESTADISTICA">Estadísticas</option>
+      </select>
+    </label>
+    <label>Torneo
+      <select formControlName="torneoId">
+        <option [ngValue]="null">Todos los torneos</option>
+        @for (t of torneos(); track t.id) { <option [ngValue]="t.id">{{ t.nombre }}</option> }
+      </select>
+    </label>
+    @if (!esPatrocinadorSolo()) {
+    <label>Patrocinador
+      <select formControlName="patrocinadorId">
+        <option [ngValue]="null">Todos</option>
+        @for (p of patrocinadores(); track p.id) { <option [ngValue]="p.id">{{ p.nombre }}</option> }
+      </select>
+    </label>
+    }
+    <label>Desde<app-fecha-input etiqueta="Desde" marcador="Sin límite" formControlName="desde" /></label>
+    <label>Hasta<app-fecha-input etiqueta="Hasta" marcador="Sin límite" formControlName="hasta" /></label>
+    <div class="actions">
+      <button type="button" class="secondary" (click)="limpiar()">Limpiar</button>
+      <button type="submit" [disabled]="cargando()">{{ cargando() ? 'Generando…' : 'Generar reporte' }}</button>
+    </div>
+  </form>
+
+  @if (esPatrocinadorSolo()) {
+  <p class="nota-alcance">Estás viendo únicamente los reportes de tu propia marca.</p>
+  }
+
+  @if (error()) { <div class="notice error" role="alert">{{ error() }}</div> }
+
+  @if (resultado(); as data) {
+  <section class="result-heading">
+    <div>
+      <span class="eyebrow">{{ data.fechaGeneracion | date:'dd MMM yyyy, HH:mm' }}</span>
+      <h2>{{ data.titulo }}</h2>
+    </div>
+    <button type="button" class="pdf-button" (click)="descargarPdf()" [disabled]="descargando()">
+      {{ descargando() ? 'Descargando…' : '⬇ Descargar PDF' }}
+    </button>
+  </section>
+  <p class="filtros-aplicados">{{ data.filtrosDescripcion }} · Solicitado por {{ data.usuarioSolicitante }}</p>
+
+  @if (data.filas.length === 0) {
+  <section class="empty">
+    <span>—</span>
+    <h3>Sin datos para este filtro</h3>
+    <p>No hay resultados que coincidan con los criterios seleccionados.</p>
+  </section>
+  } @else {
+  <div class="table-wrapper">
+    <table class="report-table">
+      <thead>
+      <tr>@for (columna of data.columnas; track columna) { <th>{{ columna }}</th> }</tr>
+      </thead>
+      <tbody>
+      @for (fila of data.filas; track $index) {
+      <tr>@for (valor of fila; track $index) { <td>{{ valor }}</td> }</tr>
+      }
+      </tbody>
+    </table>
+  </div>
+  }
+  } @else if (!cargando() && !error()) {
+  <section class="empty intro">
+    <span>↗</span>
+    <h3>Genera tu primer reporte</h3>
+    <p>Elige un tipo de reporte y aplica los filtros que necesites.</p>
+  </section>
+  }
+</main>

@@ -13,13 +13,12 @@ import { DestacadoHeroComponent } from '../../components/destacado-hero/destacad
 import { StreamCardComponent } from '../../components/stream-card/stream-card.component';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 
 /** Cada cuánto se refresca el estado en vivo. Con el caché backend de 25s el
  *  peor caso de desfase queda en ~55s, dentro del minuto de RNF-02. */
 const INTERVALO_REFRESCO_MS = 30_000;
 
-/** Huecos mínimos de la grilla principal; se rellenan con "próximamente". */
-const TARJETAS_MINIMAS = 4;
 
 interface SeccionGrid {
   titulo: string;
@@ -34,7 +33,7 @@ interface SeccionGrid {
 @Component({
   selector: 'app-transmisiones-page',
   standalone: true,
-  imports: [DatePipe, DestacadoHeroComponent, StreamCardComponent, PageHeaderComponent, EmptyStateComponent],
+  imports: [DatePipe, DestacadoHeroComponent, StreamCardComponent, PageHeaderComponent, EmptyStateComponent, AdSlotComponent],
   templateUrl: './transmisiones-page.component.html',
   styleUrl: './transmisiones-page.component.scss'
 })
@@ -58,17 +57,20 @@ export class TransmisionesPageComponent implements OnInit {
     return marcadas.length > 0 ? marcadas : this.transmisiones();
   });
 
-  /** Grilla principal: canales reales (en vivo primero) + relleno. */
-  readonly seccionCanales = computed<SeccionGrid>(() => {
-    const reales: TarjetaTransmision[] = [...this.transmisiones()]
+  /**
+   * Grilla principal: solo los canales reales, en vivo primero.
+   *
+   * Antes se rellenaba hasta un mínimo con tarjetas "Próximamente". La grilla
+   * quedaba pareja, pero prometía transmisiones de la comunidad que no existen:
+   * la plataforma emite por su propio canal. Una fila corta describe mejor lo
+   * que hay que tres huecos anunciando algo que no va a llegar.
+   */
+  readonly seccionCanales = computed<SeccionGrid>(() => ({
+    titulo: 'Canales en vivo',
+    tarjetas: [...this.transmisiones()]
       .sort((a, b) => Number(b.estado === 'EN_VIVO') - Number(a.estado === 'EN_VIVO'))
-      .map((t) => ({ tipo: 'real', transmision: t }));
-    const relleno = Math.max(0, TARJETAS_MINIMAS - reales.length);
-    return {
-      titulo: 'Canales en vivo',
-      tarjetas: [...reales, ...Array.from({ length: relleno }, () => ({ tipo: 'proximamente' as const }))]
-    };
-  });
+      .map((t) => ({ tipo: 'real', transmision: t }))
+  }));
 
   /** Secciones agrupadas desde la misma estructura de datos. */
   readonly seccionesPorJuego = computed<SeccionGrid[]>(() =>

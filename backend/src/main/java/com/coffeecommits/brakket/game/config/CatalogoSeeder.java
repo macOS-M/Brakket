@@ -10,41 +10,48 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 /**
- * Puebla el catálogo con los títulos más populares de RAWG al arrancar,
- * para que la página de Juegos nunca esté vacía (referencia Challenger
- * Mode: el catálogo se despliega solo, nadie lo carga a mano).
+ * Puebla el catálogo con los títulos competitivos del proveedor externo al
+ * arrancar, para que la página de Juegos nunca esté vacía (referencia
+ * Challenger Mode: el catálogo se despliega solo, nadie lo carga a mano).
  *
- * <p>Solo corre si hay API key configurada y el catálogo activo es chico;
- * es idempotente por nombre y nunca tumba el arranque: si RAWG no responde
- * se registra y la app sigue.</p>
+ * <p>Habla contra {@link ExternalGameSearchService}, así que le da igual si
+ * detrás está RAWG o IGDB (brakket.catalogo.proveedor). Solo corre si hay
+ * credenciales configuradas y el catálogo activo es chico; es idempotente por
+ * nombre y nunca tumba el arranque: si el proveedor no responde se registra y
+ * la app sigue.</p>
  */
 @Component
-public class RawgCatalogSeeder implements ApplicationRunner {
+public class CatalogoSeeder implements ApplicationRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(RawgCatalogSeeder.class);
+    private static final Logger log = LoggerFactory.getLogger(CatalogoSeeder.class);
 
     /** Por debajo de este número de juegos activos se completa el catálogo. */
     private static final int MINIMO_CATALOGO = 8;
 
     /**
      * Catálogo curado: los títulos competitivos reales (guía: el catálogo
-     * de Challenger Mode). El "-added" de RAWG traía juegos populares pero
-     * no competitivos (Skyrim, Portal, The Witcher…).
+     * de Challenger Mode). El "más popular" de los proveedores traía juegos
+     * populares pero no competitivos (Skyrim, Portal, The Witcher…).
+     *
+     * <p>Los nombres tienen que ser los que usa el proveedor: la búsqueda es
+     * por texto y un título que no calza vuelve vacío, dejando ese juego sin
+     * portada. "Rainbow Six Siege" y "Fall Guys" van sin sus prefijos y
+     * subtítulos porque así los llama IGDB (RAWG también los encuentra).</p>
      */
     private static final java.util.List<String> CURADOS = java.util.List.of(
             "League of Legends", "Valorant", "Counter-Strike 2", "Dota 2",
             "Fortnite", "Rocket League", "Overwatch 2", "Apex Legends",
-            "Tom Clancy's Rainbow Six Siege", "PUBG: Battlegrounds",
+            "Rainbow Six Siege", "PUBG: Battlegrounds",
             "Call of Duty: Warzone", "Street Fighter 6", "Tekken 8",
             "Mortal Kombat 1", "EA Sports FC 25", "Brawlhalla",
-            "Hearthstone", "Halo Infinite", "Fall Guys: Ultimate Knockout",
+            "Hearthstone", "Halo Infinite", "Fall Guys",
             "Clash Royale");
 
     private final JuegoRepository juegoRepository;
     private final ExternalGameSearchService externalGameSearchService;
 
-    public RawgCatalogSeeder(JuegoRepository juegoRepository,
-                             ExternalGameSearchService externalGameSearchService) {
+    public CatalogoSeeder(JuegoRepository juegoRepository,
+                          ExternalGameSearchService externalGameSearchService) {
         this.juegoRepository = juegoRepository;
         this.externalGameSearchService = externalGameSearchService;
     }
@@ -59,15 +66,15 @@ public class RawgCatalogSeeder implements ApplicationRunner {
             return;
         }
 
-        // Try por título: un fallo de RAWG (rate limit, timeout) no debe
-        // abortar el resto del catálogo.
+        // Try por título: un fallo del proveedor (rate limit, timeout) no
+        // debe abortar el resto del catálogo.
         int importados = 0;
         for (String nombre : CURADOS) {
             try {
                 var existente = juegoRepository.findByNombreIgnoreCase(nombre).orElse(null);
                 if (existente != null) {
                     // Curado ya presente: se reactiva y, si su arte era el
-                    // stock de las migraciones viejas, se refresca con RAWG.
+                    // stock de las migraciones viejas, se refresca.
                     // Tradeoff asumido: con el catálogo bajo el mínimo, la
                     // garantía de demo pesa más que una desactivación ADMIN
                     // previa (DD-01); con >= MINIMO_CATALOGO activos este
@@ -113,18 +120,20 @@ public class RawgCatalogSeeder implements ApplicationRunner {
                         juego.setEtiquetas(detalle.etiquetas().isEmpty()
                                 ? null : String.join(", ", detalle.etiquetas()));
                         juego.setCapturas(detalle.capturas());
+                        juego.setTrailerId(detalle.trailerId());
+                        juego.setTrailerConsultado(true);
                     }
                 } catch (Exception e) {
-                    log.debug("Sin ficha RAWG para {}: {}", externo.nombre(), e.getMessage());
+                    log.debug("Sin ficha externa para {}: {}", externo.nombre(), e.getMessage());
                 }
                 juegoRepository.save(juego);
                 importados++;
             } catch (Exception e) {
-                log.warn("No se pudo sembrar '{}' desde RAWG: {}", nombre, e.getMessage());
+                log.warn("No se pudo sembrar '{}' desde el catálogo externo: {}", nombre, e.getMessage());
             }
         }
         if (importados > 0) {
-            log.info("Catálogo sembrado con {} juegos competitivos de RAWG", importados);
+            log.info("Catálogo sembrado con {} juegos competitivos", importados);
         }
         completarFichasFaltantes();
     }
@@ -142,7 +151,7 @@ public class RawgCatalogSeeder implements ApplicationRunner {
         try {
             int completados = 0;
             for (Juego juego : juegoRepository.findByActivoTrue()) {
-                if (juego.getRating() != null || completados >= 30) {
+                if ((juego.getRating() != null && juego.isTrailerConsultado()) || completados >= 30) {
                     continue;
                 }
                 String slug = juego.getRawgSlug();
@@ -168,14 +177,16 @@ public class RawgCatalogSeeder implements ApplicationRunner {
                 juego.setEtiquetas(detalle.etiquetas().isEmpty()
                         ? null : String.join(", ", detalle.etiquetas()));
                 juego.setCapturas(detalle.capturas());
+                juego.setTrailerId(detalle.trailerId());
+                juego.setTrailerConsultado(true);
                 juegoRepository.save(juego);
                 completados++;
             }
             if (completados > 0) {
-                log.info("Ficha RAWG completada para {} juegos del catálogo", completados);
+                log.info("Ficha completada para {} juegos del catálogo", completados);
             }
         } catch (Exception e) {
-            log.warn("No se pudieron completar fichas desde RAWG: {}", e.getMessage());
+            log.warn("No se pudieron completar fichas del catálogo externo: {}", e.getMessage());
         }
     }
 }

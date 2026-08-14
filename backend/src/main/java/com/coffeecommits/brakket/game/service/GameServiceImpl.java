@@ -185,6 +185,8 @@ public class GameServiceImpl implements GameService {
         juego.setEtiquetas(detalle.etiquetas().isEmpty()
                 ? null : String.join(", ", detalle.etiquetas()));
         juego.setCapturas(detalle.capturas());
+        juego.setTrailerId(detalle.trailerId());
+        juego.setTrailerConsultado(true);
     }
 
     @Override

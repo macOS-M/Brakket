@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 
+import { ahoraCostaRica } from '../../shared/utils/hora-costa-rica';
+
 /**
  * Pie de pagina global.
  */
@@ -11,5 +13,5 @@ import { Component } from '@angular/core';
   styleUrl: './footer.component.scss'
 })
 export class FooterComponent {
-  readonly year = new Date().getFullYear();
+  readonly year = ahoraCostaRica().getFullYear();
 }

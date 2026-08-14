@@ -12,7 +12,9 @@ import {
   output,
   signal
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
+import { FechaInputComponent } from '../../../../shared/components/fecha-input/fecha-input.component';
 import { AjustePartida, CrearTorneoRequest, Torneo } from '../../../../models/tournament.model';
 import { Juego } from '../../../../models/juego.model';
 import { League, Season } from '../../../../models/league.model';
@@ -21,6 +23,7 @@ import { GamesService } from '../../../games/services/games.service';
 import { LeaguesService } from '../../../leagues/services/leagues.service';
 import { CompetitiveProfileService } from '../../../../core/services/competitive-profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ahoraCostaRica } from '../../../../shared/utils/hora-costa-rica';
 
 /**
  * Wizard de creación de torneo (RF-24), 3 pasos como la referencia
@@ -32,7 +35,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-tournament-wizard',
   standalone: true,
-  imports: [],
+  imports: [FormsModule, FechaInputComponent],
   templateUrl: './tournament-wizard.component.html',
   styleUrl: './tournament-wizard.component.scss'
 })
@@ -142,12 +145,36 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
   readonly formatos = signal<string[]>([
     'Eliminación directa',
     'Doble eliminación',
-    'Round robin',
+    'Todos contra todos',
     'Fase de grupos y eliminación',
     'Suizo'
   ]);
   readonly tamanosPermitidos = signal<number[]>([1, 2, 3, 4, 5]);
   readonly cupos = [2, 4, 8, 16, 32, 64];
+
+  /** Tope de cupo que impone la temporada elegida; sin temporada, sin tope. */
+  readonly cupoMaxTemporada = computed(() => {
+    const id = this.temporadaId();
+    if (id === null) return Infinity;
+    const temporada = this.temporadas().find((t) => t.id === id);
+    return temporada ? temporada.cupoEquipos : Infinity;
+  });
+
+  /** Opciones de cupo del torneo, acotadas al tope de la temporada. */
+  readonly cuposDisponibles = computed(() =>
+    this.cupos.filter((c) => c <= this.cupoMaxTemporada()));
+
+  /**
+   * Formato que impone la temporada elegida (código del catálogo, p. ej.
+   * DOBLE_ELIMINACION). null si no hay temporada o si es una temporada vieja
+   * sin formato: en ese caso el usuario elige libremente.
+   */
+  readonly formatoTemporada = computed(() => {
+    const id = this.temporadaId();
+    if (id === null) return null;
+    const temporada = this.temporadas().find((t) => t.id === id);
+    return temporada && temporada.formatoId != null ? temporada.formatoNombre : null;
+  });
 
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
@@ -161,7 +188,9 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
   // grupo/robin/suizo antes que doble, por los nombres compuestos.
   private static readonly DESCRIPCIONES: [RegExp, string][] = [
     [/grupo/i, 'Fase de grupos y los mejores avanzan a una llave eliminatoria.'],
-    [/robin/i, 'Todos contra todos: cada equipo enfrenta al resto de su grupo.'],
+    // "robin" sigue contemplado: los torneos creados antes de traducir el
+    // nombre guardaron "Round robin" como texto.
+    [/robin|todos contra/i, 'Cada equipo enfrenta al resto de su grupo.'],
     [/suizo/i, 'Sin eliminación: cada ronda empareja rivales con marcas similares.'],
     [/doble/i, 'Los perdedores siguen en la llave inferior; se queda fuera quien pierde dos veces.'],
     [/elim/i, 'El formato clásico: quien pierde queda eliminado, hasta coronar al campeón.']
@@ -185,7 +214,9 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
    */
   soportado(formato: string): boolean {
     const plano = formato.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase();
-    return /DOBLE|GRUPO|ROBIN|SUIZO|SWISS|ELIMINACION|DIRECTA/.test(plano);
+    // Mismas claves que FormatoTorneo.interpretar en el backend: si acá no
+    // coincide, el formato se marcaría "Pronto" aunque el motor sí lo genere.
+    return /DOBLE|GRUPO|ROBIN|TODOS CONTRA TODOS|SUIZO|SWISS|ELIMINACION|DIRECTA/.test(plano);
   }
 
   /** La fase de grupos necesita cupo para armar grupos y llave (≥ 4). */
@@ -203,7 +234,9 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
         return !!this.formato() && this.tamano() > 0 && this.cupo() >= 2
           && (!this.esFormatoGrupos() || this.cupo() >= 4);
       case 3:
-        return !!this.fechaInicio() && new Date(this.fechaInicio()) > new Date();
+        // "Futura" respecto a Costa Rica: si no, desde otro huso el wizard
+        // rechazaba horas válidas o aceptaba horas ya pasadas allá.
+        return !!this.fechaInicio() && new Date(this.fechaInicio()) > ahoraCostaRica();
     }
   });
 
@@ -277,6 +310,24 @@ export class TournamentWizardComponent implements OnInit, AfterViewInit, OnDestr
         next: (temporadas) => this.temporadas.set(temporadas),
         error: () => this.temporadas.set([])
       });
+    }
+  }
+
+  /**
+   * Al elegir temporada, si el cupo actual del torneo supera el tope de esa
+   * temporada, se baja a la mayor opción permitida. Así el torneo nunca queda
+   * con más cupos que su temporada (regla que el backend también valida).
+   */
+  elegirTemporada(valor: string): void {
+    this.temporadaId.set(valor ? Number(valor) : null);
+    const disponibles = this.cuposDisponibles();
+    if (disponibles.length && !disponibles.includes(this.cupo())) {
+      this.cupo.set(disponibles[disponibles.length - 1]);
+    }
+    // Si la temporada tiene formato, el torneo queda fijado a ese formato.
+    const formato = this.formatoTemporada();
+    if (formato) {
+      this.formato.set(formato);
     }
   }
 

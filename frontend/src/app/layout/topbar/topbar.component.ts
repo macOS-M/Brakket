@@ -7,10 +7,14 @@ import { catchError, debounceTime, distinctUntilChanged, map, switchMap, tap } f
 import { AuthService } from '../../core/services/auth.service';
 import { GamesService } from '../../features/games/services/games.service';
 import { LeaguesService } from '../../features/leagues/services/leagues.service';
+import { NotificationsService } from '../../features/notifications/services/notifications.service';
 import { TeamsService } from '../../features/teams/services/teams.service';
 import { Juego } from '../../models/juego.model';
 import { League } from '../../models/league.model';
+import { Notificacion, TipoNotificacion } from '../../models/notificacion.model';
+import { diaMes } from '../../shared/utils/formato-fecha';
 import { EquipoResumenPublico } from '../../models/perfil-equipo-publico.model';
+import { EtiquetaPipe } from '../../shared/pipes/etiqueta.pipe';
 
 interface ResultadosBusqueda {
   juegos: Juego[];
@@ -29,7 +33,7 @@ interface ResultadosBusqueda {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, EtiquetaPipe],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss'
 })
@@ -38,6 +42,7 @@ export class TopbarComponent {
   private readonly gamesService = inject(GamesService);
   private readonly leaguesService = inject(LeaguesService);
   private readonly teamsService = inject(TeamsService);
+  private readonly notificationsService = inject(NotificationsService);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -47,6 +52,10 @@ export class TopbarComponent {
   readonly abierto = signal(false);
   readonly buscando = signal(false);
   readonly resultados = signal<ResultadosBusqueda | null>(null);
+  readonly notificacionesNoLeidas = signal(0);
+  readonly panelNotificacionesAbierto = signal(false);
+  readonly cargandoNotificaciones = signal(false);
+  readonly notificacionesRecientes = signal<Notificacion[]>([]);
 
   private readonly consulta$ = new Subject<string>();
   private cacheJuegos: Juego[] | null = null;
@@ -94,6 +103,91 @@ export class TopbarComponent {
         this.resultados.set(res);
         this.abierto.set(res !== null);
       });
+
+    if (this.authService.isAuthenticated()) {
+      this.actualizarContador();
+      this.notificationsService.cambios$
+        .pipe(takeUntilDestroyed())
+        .subscribe(() => {
+          this.actualizarContador();
+          if (this.panelNotificacionesAbierto()) this.cargarNotificaciones();
+        });
+    }
+  }
+
+  private actualizarContador(): void {
+    this.notificationsService.unreadCount()
+      .pipe(catchError(() => of(0)))
+      .subscribe((total) => this.notificacionesNoLeidas.set(total));
+  }
+
+  alternarNotificaciones(evento: Event): void {
+    evento.stopPropagation();
+    const abrir = !this.panelNotificacionesAbierto();
+    this.panelNotificacionesAbierto.set(abrir);
+    this.abierto.set(false);
+    if (abrir) {
+      this.actualizarContador();
+      this.cargarNotificaciones();
+    }
+  }
+
+  cerrarNotificaciones(): void {
+    this.panelNotificacionesAbierto.set(false);
+  }
+
+  marcarNotificacionLeida(notificacion: Notificacion, evento: Event): void {
+    evento.stopPropagation();
+    if (!notificacion.leida) {
+      this.notificationsService.markRead(notificacion.id).subscribe({
+        next: (actualizada) => this.notificacionesRecientes.update((items) =>
+          items.map((item) => item.id === actualizada.id ? actualizada : item)
+        )
+      });
+    }
+    this.cerrarNotificaciones();
+    this.router.navigate(this.notificationsService.destination(notificacion));
+  }
+
+  etiquetaNotificacion(tipo: TipoNotificacion): string {
+    if (tipo.startsWith('INVITACION') || tipo.startsWith('SOLICITUD_')) return 'Invitación';
+    if (tipo.startsWith('TRANSFERENCIA')) return 'Transferencia';
+    return ({
+      RESULTADO: 'Resultado',
+      DISPUTA: 'Disputa',
+      CAMBIO_TORNEO: 'Torneo',
+      TRANSMISION: 'Transmisión',
+      ADMINISTRATIVA: 'Sistema',
+      EXPULSION_EQUIPO: 'Equipo',
+      CORRECCION: 'Corrección',
+      INVITACION: 'Invitación',
+      TRANSFERENCIA: 'Transferencia'
+    } as Partial<Record<TipoNotificacion, string>>)[tipo] ?? 'Actividad';
+  }
+
+  fechaNotificacion(valor: string): string {
+    const fecha = new Date(valor);
+    const minutos = Math.max(0, Math.floor((Date.now() - fecha.getTime()) / 60_000));
+    if (minutos < 1) return 'Ahora';
+    if (minutos < 60) return `Hace ${minutos} min`;
+    if (minutos < 1440) return `Hace ${Math.floor(minutos / 60)} h`;
+    return diaMes(fecha);
+  }
+
+  private cargarNotificaciones(): void {
+    this.cargandoNotificaciones.set(true);
+    this.notificationsService.list(5)
+      .pipe(
+        catchError(() => of([] as Notificacion[])),
+        tap(() => this.cargandoNotificaciones.set(false))
+      )
+      .subscribe((items) => this.notificacionesRecientes.set(items));
+  }
+
+  @HostListener('document:keydown.escape')
+  alPresionarEscape(): void {
+    this.cerrar();
+    this.cerrarNotificaciones();
   }
 
   alEscribir(valor: string): void {
@@ -132,6 +226,7 @@ export class TopbarComponent {
   alClickGlobal(evento: MouseEvent): void {
     if (!this.host.nativeElement.contains(evento.target as Node)) {
       this.cerrar();
+      this.cerrarNotificaciones();
     }
   }
 

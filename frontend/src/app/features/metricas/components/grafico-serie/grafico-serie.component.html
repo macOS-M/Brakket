@@ -1,0 +1,69 @@
+<div class="lienzo" [style.height.px]="alto()">
+  <div class="ejes" aria-hidden="true">
+    @for (tick of ticks(); track $index) {
+      <span class="tick" [style.top.px]="tick.y">{{ tick.etiqueta }}</span>
+    }
+  </div>
+
+  <svg
+    [attr.viewBox]="'0 0 ' + ancho + ' ' + alto()"
+    preserveAspectRatio="none"
+    role="img"
+    tabindex="0"
+    (pointermove)="alSenalar($event)"
+    (pointerleave)="alSalir()"
+    (keydown)="alTeclear($event)"
+  >
+    <title>{{ series().length ? series()[0].etiqueta : 'Serie sin datos' }}</title>
+
+    @for (tick of ticks(); track $index) {
+      <line
+        class="grilla"
+        [attr.x1]="pad.left"
+        [attr.x2]="ancho - pad.right"
+        [attr.y1]="tick.y"
+        [attr.y2]="tick.y"
+        vector-effect="non-scaling-stroke"
+      />
+    }
+
+    @for (trazo of trazos(); track trazo.clave) {
+      @if (trazo.area) {
+        <path class="area {{ trazo.clase }}" [attr.d]="trazo.area" />
+      }
+      <path
+        class="serie {{ trazo.clase }}"
+        [attr.d]="trazo.linea"
+        vector-effect="non-scaling-stroke"
+      />
+      @for (marca of trazo.marcas; track $index) {
+        <circle
+          class="marca {{ trazo.clase }}"
+          [attr.cx]="marca.cx"
+          [attr.cy]="marca.cy"
+          r="3"
+          vector-effect="non-scaling-stroke"
+        />
+      }
+    }
+
+    @if (xGuia() !== null) {
+      <line
+        class="guia"
+        [attr.x1]="xGuia()"
+        [attr.x2]="xGuia()"
+        [attr.y1]="pad.top"
+        [attr.y2]="pad.top + altoUtil()"
+        vector-effect="non-scaling-stroke"
+      />
+    }
+
+    <rect
+      class="captura"
+      [attr.x]="pad.left"
+      [attr.y]="pad.top"
+      [attr.width]="ancho - pad.left - pad.right"
+      [attr.height]="altoUtil()"
+    />
+  </svg>
+</div>

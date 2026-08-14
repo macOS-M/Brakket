@@ -1,2 +1,4 @@
 /* Estilos globales de Brakket: tema oscuro con acentos de marca. */
 @use './assets/styles/theme';
+/* Layout compartido de los formularios (ancho, rejilla y controles). */
+@use './assets/styles/forms';

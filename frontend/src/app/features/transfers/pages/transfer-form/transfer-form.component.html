@@ -1,4 +1,4 @@
-<section class="page">
+<section class="page form-page">
   <app-page-header
     titulo="Solicitar transferencia"
     subtitulo="Incorporá a un jugador de otro equipo a tu plantilla"
@@ -20,7 +20,7 @@
       </p>
     </header>
 
-    <form class="formulario" [formGroup]="form" (ngSubmit)="guardar()">
+    <form class="formulario form-brakket" [formGroup]="form" (ngSubmit)="guardar()">
       <label class="campo">
         <span class="etiqueta">Equipo de origen</span>
         <select formControlName="equipoOrigenId">
@@ -41,7 +41,7 @@
             {{ cargandoMiembros() ? 'Cargando integrantes...' : 'Seleccionar jugador...' }}
           </option>
           @for (miembro of miembrosOrigen(); track miembro.id) {
-          <option [value]="miembro.usuarioId">{{ miembro.nombreUsuario }} ({{ miembro.rol }})</option>
+          <option [value]="miembro.usuarioId">{{ miembro.nombreUsuario }} ({{ miembro.rol | rolEquipo }})</option>
           }
         </select>
         @if (form.controls.equipoOrigenId.value && !cargandoMiembros() && miembrosOrigen().length === 0) {
@@ -55,11 +55,13 @@
         <span class="etiqueta">Equipo destino <em class="apunte">(debés ser su capitán)</em></span>
         <select formControlName="equipoDestinoId">
           <option value="">Seleccionar equipo...</option>
-          @for (equipo of equipos(); track equipo.id) {
+          @for (equipo of misEquipos(); track equipo.id) {
           <option [value]="equipo.id">{{ equipo.nombre }}</option>
           }
         </select>
-        @if (form.controls.equipoDestinoId.touched && form.controls.equipoDestinoId.invalid) {
+        @if (misEquipos().length === 0) {
+        <small class="nota">No pertenecés a ningún equipo, así que no hay destino posible.</small>
+        } @else if (form.controls.equipoDestinoId.touched && form.controls.equipoDestinoId.invalid) {
         <small class="error-campo">Seleccioná el equipo destino.</small>
         }
       </label>
@@ -68,12 +70,12 @@
         <span class="etiqueta">Rol propuesto</span>
         <select formControlName="rolPropuesto">
           @for (rol of rolesPropuestos; track rol) {
-          <option [value]="rol">{{ rol }}</option>
+          <option [value]="rol">{{ rol | rolEquipo }}</option>
           }
         </select>
       </label>
 
-      <label class="campo">
+      <label class="campo campo-ancho">
         <span class="etiqueta">Justificación <em class="apunte">(opcional)</em></span>
         <textarea
           formControlName="justificacion"

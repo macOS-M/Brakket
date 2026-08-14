@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "logro_jugador")
@@ -33,4 +34,14 @@ public class LogroJugador {
 
     @Column(name = "fecha_desbloqueo", nullable = false)
     private LocalDate fechaDesbloqueo;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
+
+    @Column(name = "referencia_sistema", length = 180)
+    private String referenciaSistema;
+
+    @Column(name = "fecha_reversion")
+    private LocalDateTime fechaReversion;
 }

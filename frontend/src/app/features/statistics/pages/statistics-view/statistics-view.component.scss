@@ -1,15 +1,448 @@
-.page {
-  padding: 1.5rem 0;
+// Esta pantalla se escribió con colores fijos (#17171b, #101013, #f05a1a, …)
+// en lugar de los tokens del tema. Dos consecuencias visibles:
+//
+//   · la paleta fija es gris neutro y la de la app es azul marino, así que la
+//     tarjeta de filtros desentonaba del resto del shell — y dentro de la
+//     propia tarjeta los selects (#101013) no coincidían con los campos de
+//     fecha, que sí usan tokens (--surface-2);
+//   · en tema claro no cambiaba nada: la tarjeta seguía negra sobre el fondo
+//     blanco y el texto del estado vacío quedaba ilegible.
+//
+// Todo el archivo pasa a var(--token) con los mismos valores que la barra de
+// filtros de Termómetro y Calendario, que es el patrón ya establecido.
+
+:host {
+  display: block;
+}
+
+// Sin tope propio: el ancho y el padding lateral los pone el shell
+// (--content-max = 1280px más 2rem en .content). El max-width de 1180px y el
+// padding de 28px que había acá se sumaban al del shell y dejaban esta
+// pantalla más angosta que todas las demás.
+.stats-page {
+  padding: 1.5rem 0 3rem;
+  color: var(--text, #e2e8f0);
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
 
   h1 {
-    margin: 0 0 0.75rem;
+    margin: 0.3rem 0 0.4rem;
+    font-size: 2rem;
   }
 
-  .placeholder {
-    display: inline-block;
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--accent-text, #ff6a1f);
-    border-radius: 8px;
+  p {
+    margin: 0;
     color: var(--text-muted, #94a3b8);
+  }
+}
+
+.eyebrow {
+  color: var(--accent-text, #ff6a1f);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+// ----- Barra de filtros -----
+
+// Cuatro columnas y no flex-wrap como en Termómetro: son siete campos más la
+// fila de botones, que en cuatro columnas cierran dos filas exactas.
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  align-items: end;
+  gap: 0.9rem 1.25rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// `background-color` y no el atajo `background`: el atajo también resetea
+// background-image, que es donde vive el chevron que _theme.scss le dibuja a
+// todos los <select>. Por eso los cuatro selectores de esta barra se veían
+// como cajas de texto sin flecha, al lado de dos campos de fecha que sí
+// mostraban su icono.
+select,
+input {
+  padding: 0.55rem 0.75rem;
+  background-color: var(--surface-2, #1f2937);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text, #e2e8f0);
+  font-family: inherit;
+  font-size: 0.875rem;
+
+  &::placeholder {
+    color: var(--text-subtle, #8496ad);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent, #ff5500);
+  }
+}
+
+.subject-search {
+  position: relative;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  left: 0;
+  padding: 0.3rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-modal, 0 24px 80px rgba(0, 0, 0, 0.55));
+  overflow: hidden;
+
+  button {
+    display: block;
+    width: 100%;
+    min-height: 2.375rem;
+    padding: 0.5rem 0.6rem;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text, #e2e8f0);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface-2, #1f2937);
+    }
+  }
+}
+
+.no-results {
+  display: block;
+  padding: 0.65rem 0.6rem;
+  color: var(--text-subtle, #8496ad);
+  font-weight: 500;
+}
+
+.search-status {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.7rem;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.6875rem;
+}
+
+// ----- Acciones -----
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+// Mismo par de colores que los botones del sistema de formularios: naranja de
+// marca con tinta oscura. Antes eran #f05a1a con texto blanco.
+.actions button {
+  padding: 0.55rem 1.1rem;
+  background: var(--accent, #ff5500);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  color: var(--accent-ink, #0b1120);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  // Iguala el alto de los botones al de los campos (36.6px): con la altura de
+  // línea automática quedaban 1px más altos y desalineaban su fila.
+  line-height: 1.25;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-hover, #ff6a1f);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+// Secundario transparente con borde, igual que .btn-secondary: el gris fijo
+// que tenía antes se veía como un botón negro sobre el tema claro.
+.actions button.secondary {
+  background: transparent;
+  border-color: var(--border, #334155);
+  color: var(--text, #e2e8f0);
+
+  &:hover {
+    background: var(--surface-3, #263041);
+  }
+}
+
+// ----- Avisos -----
+
+.notice {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--warning-bg, rgba(245, 158, 11, 0.12));
+  border: 1px solid var(--warning, #f59e0b);
+  border-radius: var(--radius-md, 12px);
+  color: var(--warning-text, #fbbf24);
+}
+
+.notice.error {
+  background: var(--danger-bg, rgba(239, 68, 68, 0.12));
+  border-color: var(--danger, #ef4444);
+  color: var(--danger-text, #f87171);
+}
+
+// ----- Resultados -----
+
+.result-heading,
+.game-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.result-heading {
+  margin: 2rem 0 0.75rem;
+
+  h2 {
+    margin: 0.25rem 0;
+    font-size: 1.625rem;
+  }
+}
+
+.official {
+  color: var(--success-text, #4ade80);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.game-section {
+  margin-top: 1.15rem;
+  padding: 1.4rem;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+}
+
+.game-title {
+  h3 {
+    margin: 0.25rem 0;
+    font-size: 1.4375rem;
+  }
+
+  strong {
+    color: var(--accent-text, #ff6a1f);
+    font-size: 1.625rem;
+  }
+}
+
+// Las celdas se separan con el hueco de 1px de la rejilla, que deja ver el
+// fondo: por eso el contenedor se pinta con el color de borde.
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin: 1.15rem 0;
+  background: var(--border, #334155);
+  border: 1px solid var(--border, #334155);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+
+  article {
+    display: grid;
+    gap: 0.35rem;
+    padding: 1rem;
+    background: var(--bg, #0b1120);
+  }
+
+  span {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  b {
+    font-size: 1.5rem;
+  }
+
+  .win {
+    color: var(--success-text, #4ade80);
+  }
+}
+
+.bar {
+  height: 6px;
+  margin-bottom: 1.5rem;
+  background: var(--border, #334155);
+  border-radius: var(--radius-pill, 999px);
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent, #ff5500), var(--accent-hover, #ff6a1f));
+  }
+}
+
+h4 {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+// ----- Línea de tiempo -----
+
+.timeline {
+  margin-left: 0.4rem;
+}
+
+.timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.75rem;
+  padding: 0 0 1.15rem 1.5rem;
+  border-left: 1px solid var(--border, #334155);
+
+  &:last-child {
+    padding-bottom: 0;
+    border-left-color: transparent;
+  }
+}
+
+.dot {
+  position: absolute;
+  top: 4px;
+  left: -6px;
+  width: 9px;
+  height: 9px;
+  background: var(--surface, #111827);
+  border: 2px solid var(--accent, #ff5500);
+  border-radius: 50%;
+}
+
+time {
+  padding-top: 3px;
+  color: var(--text-subtle, #8496ad);
+  font-size: 0.75rem;
+}
+
+.event {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.95rem;
+  background: var(--bg, #0b1120);
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: var(--radius-md, 12px);
+
+  > div:first-child {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  small {
+    color: var(--text-muted, #94a3b8);
+  }
+
+  small span {
+    padding: 0 0.4rem;
+  }
+}
+
+.record {
+  display: grid;
+  gap: 0.2rem;
+  text-align: right;
+
+  span {
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.6875rem;
+  }
+}
+
+// ----- Estados vacíos -----
+
+.empty {
+  margin-top: 1.25rem;
+  padding: 3rem 1.25rem;
+  border: 1px dashed var(--border, #334155);
+  border-radius: var(--radius-lg, 16px);
+  color: var(--text-muted, #94a3b8);
+  text-align: center;
+
+  span {
+    color: var(--accent-text, #ff6a1f);
+    font-size: 1.6875rem;
+  }
+
+  h3 {
+    margin: 0.6rem 0 0.3rem;
+    color: var(--text, #e2e8f0);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.intro {
+  margin-top: 1.75rem;
+}
+
+@media (max-width: 900px) {
+  .filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .filters {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .timeline-item {
+    grid-template-columns: 1fr;
+  }
+
+  .event {
+    flex-direction: column;
+  }
+
+  .record {
+    text-align: left;
+  }
+
+  .result-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
   }
 }

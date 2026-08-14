@@ -1,5 +1,12 @@
 package com.coffeecommits.brakket.twitch.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.coffeecommits.brakket.common.exception.BusinessException;
 import com.coffeecommits.brakket.common.exception.ResourceNotFoundException;
 import com.coffeecommits.brakket.config.TwitchProperties;
@@ -7,14 +14,21 @@ import com.coffeecommits.brakket.tournament.model.Partida;
 import com.coffeecommits.brakket.tournament.model.Torneo;
 import com.coffeecommits.brakket.tournament.repository.PartidaRepository;
 import com.coffeecommits.brakket.tournament.repository.TorneoRepository;
-import com.coffeecommits.brakket.twitch.dto.*;
-import com.coffeecommits.brakket.twitch.model.*;
-import com.coffeecommits.brakket.twitch.repository.*;
+import com.coffeecommits.brakket.twitch.dto.AsociarTransmisionRequest;
+import com.coffeecommits.brakket.twitch.dto.CanalTwitchResponse;
+import com.coffeecommits.brakket.twitch.dto.ConfigurarCanalTwitchRequest;
+import com.coffeecommits.brakket.twitch.dto.MetricasTransmisionResponse;
+import com.coffeecommits.brakket.twitch.dto.TransmisionTwitchResponse;
+import com.coffeecommits.brakket.twitch.model.CanalOficialTwitch;
+import com.coffeecommits.brakket.twitch.model.EstadoIntegracionTwitch;
+import com.coffeecommits.brakket.twitch.model.IncidenteIntegracionTwitch;
+import com.coffeecommits.brakket.twitch.model.TransmisionTwitch;
+import com.coffeecommits.brakket.twitch.repository.CanalOficialTwitchRepository;
+import com.coffeecommits.brakket.twitch.repository.IncidenteIntegracionTwitchRepository;
+import com.coffeecommits.brakket.twitch.repository.MetricaAudienciaRepository;
+import com.coffeecommits.brakket.twitch.repository.TransmisionTwitchRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -80,6 +94,15 @@ public class CanalTwitchService {
         if (partida != null && torneo != null && !partida.getTorneo().getId().equals(torneo.getId()))
             throw new BusinessException("La partida no pertenece al torneo indicado.");
         TwitchGateway.StreamInfo live = twitchGateway.findLiveStream(canal.getLoginCanal());
+        if (live != null) {
+            // Sin esto el choque contra el índice único salía como un error de
+            // integridad genérico, imposible de interpretar desde el panel.
+            transmisionRepository.findByTwitchStreamIdAndFinalizadaEnIsNull(live.id())
+                    .ifPresent(abierta -> {
+                        throw new BusinessException("Ya hay una transmisión abierta siguiendo este directo"
+                                + " (#" + abierta.getId() + "). Finalizala antes de asociar otra.");
+                    });
+        }
         TransmisionTwitch entity = transmisionRepository.save(TransmisionTwitch.builder()
                 .canal(canal).torneo(torneo).partida(partida)
                 .loginCanal(canal.getLoginCanal())
@@ -119,6 +142,41 @@ public class CanalTwitchService {
                     .tipo("CONEXION").detalle(ex.getMessage()).ocurridoEn(LocalDateTime.now()).build());
             return response(canal);
         }
+    }
+
+    /** RF-34: transmisiones con periodo de captura abierto (las que el muestreo sigue). */
+    @Transactional(readOnly = true)
+    public List<TransmisionTwitchResponse> listarAbiertas() {
+        return transmisionRepository.findAbiertasParaMuestreo().stream()
+                .map(t -> new TransmisionTwitchResponse(
+                        t.getId(), t.getTwitchStreamId(),
+                        t.getTorneo() == null ? null : t.getTorneo().getId(),
+                        t.getPartida() == null ? null : t.getPartida().getId(),
+                        t.getEstado(), t.getIniciadaEn()))
+                .toList();
+    }
+
+    /**
+     * Cierra el período de captura a mano. Hasta ahora solo se cerraba solo,
+     * cuando el muestreo detectaba que el directo había terminado, así que una
+     * transmisión asociada por error seguía consumiendo Helix y chat sin forma
+     * de detenerla. Cerrarla no borra nada: las métricas capturadas se siguen
+     * consultando.
+     */
+    @Transactional
+    public TransmisionTwitchResponse finalizar(Long transmisionId) {
+        TransmisionTwitch transmision = transmisionRepository.findById(transmisionId)
+                .orElseThrow(() -> new ResourceNotFoundException("La transmisión no existe."));
+        if (transmision.getFinalizadaEn() != null) {
+            throw new BusinessException("La transmisión ya está finalizada.");
+        }
+        transmision.setFinalizadaEn(LocalDateTime.now());
+        transmision.setEstado("FINALIZADA");
+        transmisionRepository.save(transmision);
+        return new TransmisionTwitchResponse(transmision.getId(), transmision.getTwitchStreamId(),
+                transmision.getTorneo() == null ? null : transmision.getTorneo().getId(),
+                transmision.getPartida() == null ? null : transmision.getPartida().getId(),
+                transmision.getEstado(), transmision.getIniciadaEn());
     }
 
     /**

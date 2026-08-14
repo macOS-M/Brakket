@@ -77,7 +77,7 @@
       <label for="w-temporada">Temporada *</label>
       <select
         id="w-temporada"
-        (change)="temporadaId.set($any($event.target).value ? +$any($event.target).value : null)"
+        (change)="elegirTemporada($any($event.target).value)"
       >
         <option value="" [selected]="temporadaId() === null" disabled>Elegí una temporada…</option>
         @for (temporada of temporadas(); track temporada.id) {
@@ -130,6 +130,15 @@
 
     <div class="campo">
       <label>Formato *</label>
+      @if (formatoTemporada(); as fmt) {
+      <!-- La temporada impone su formato: el torneo no puede elegir otro. -->
+      <div class="formatos">
+        <div class="formato-opcion activo" aria-disabled="true">
+          <span class="formato-nombre">{{ etiquetaDe(fmt) }}</span>
+          <span class="formato-descripcion">Definido por la temporada: todos sus torneos usan este formato.</span>
+        </div>
+      </div>
+      } @else {
       <!-- Tarjetas con descripción, como el "Select bracket template". -->
       <div class="formatos" role="radiogroup" aria-label="Formato del torneo">
         @for (f of formatos(); track f) {
@@ -157,12 +166,13 @@
         </button>
         }
       </div>
+      }
     </div>
 
     <div class="campo">
       <label for="w-cupo">Cupo de equipos *</label>
       <select id="w-cupo" (change)="cupo.set(+$any($event.target).value)">
-        @for (c of cupos; track c) {
+        @for (c of cuposDisponibles(); track c) {
         <option [value]="c" [selected]="cupo() === c">{{ c }} equipos</option>
         }
       </select>
@@ -172,29 +182,26 @@
     </div>
     } @case (3) {
     <div class="campo">
-      <label for="w-fecha">Fecha y hora de inicio *</label>
-      <input
-        id="w-fecha"
-        type="datetime-local"
-        [value]="fechaInicio()"
-        (input)="fechaInicio.set($any($event.target).value)"
+      <span class="etiqueta-fecha" id="w-fecha">Fecha y hora de inicio *</span>
+      <!-- Incrustado y no desplegable: el modal recorta cualquier panel
+           flotante (overflow-y + transform). -->
+      <app-fecha-input
+        etiqueta="Fecha y hora de inicio"
+        marcador="Todavía sin fecha"
+        [conHora]="true"
+        [incrustado]="true"
+        [ngModel]="fechaInicio()"
+        (ngModelChange)="fechaInicio.set($event)"
+        [ngModelOptions]="{ standalone: true }"
       />
       @if (fechaInicio() && !pasoValido()) {
       <span class="error-campo">La fecha debe ser futura.</span>
       }
     </div>
 
-    <!-- Configuración avanzada (referencia CM): visibilidad y premio. -->
+    <!-- Configuración avanzada (referencia CM): premio y ajustes de partida. -->
     <details class="avanzada">
       <summary>Configuración avanzada</summary>
-      <label class="check">
-        <input
-          type="checkbox"
-          [checked]="!publico()"
-          (change)="publico.set(!$any($event.target).checked)"
-        />
-        No listado (oculto: solo vos lo ves; las invitaciones llegan pronto)
-      </label>
       <div class="campo">
         <label for="w-premio">Premio personalizado</label>
         <input
@@ -256,7 +263,7 @@
 
     <p class="resumen">
       <strong>{{ nombre() }}</strong> · {{ tamano() }}v{{ tamano() }} · {{ etiquetaDe(formato()) }} ·
-      {{ cupo() }} equipos · {{ publico() ? 'Público' : 'No listado' }}
+      {{ cupo() }} equipos
       @if (premio().trim()) { · 🏆 {{ premio() }} }
     </p>
     } }

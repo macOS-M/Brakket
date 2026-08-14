@@ -1,0 +1,80 @@
+<section class="page">
+  <a class="volver" routerLink="/sponsorships/asociaciones">← Volver a asociaciones</a>
+
+  <app-page-header titulo="Espacios publicitarios" subtitulo="Banners activos para esta asociación de patrocinio">
+    @if (puedeGestionar()) {
+    <a class="btn-primary" [routerLink]="['/sponsorships/asociaciones', patrocinioId, 'espacios', 'nuevo']">
+      + Nuevo espacio
+    </a>
+    }
+  </app-page-header>
+
+  @if (cargando()) {
+  <app-empty-state modo="cargando" mensaje="Cargando espacios…" />
+  } @else if (error()) {
+  <app-empty-state modo="error" titulo="No se pudo cargar" [mensaje]="error()">
+    <button class="btn-secondary" type="button" (click)="cargar()">Reintentar</button>
+  </app-empty-state>
+  } @else if (espacios().length === 0) {
+  <app-empty-state titulo="Sin espacios" mensaje="Todavía no hay espacios publicitarios para esta asociación.">
+    @if (puedeGestionar()) {
+    <a class="btn-secondary" [routerLink]="['/sponsorships/asociaciones', patrocinioId, 'espacios', 'nuevo']">
+      + Nuevo espacio
+    </a>
+    }
+  </app-empty-state>
+  } @else {
+  <div class="seccion-titulo">
+    <h2>Espacios</h2>
+    <span class="conteo">{{ espacios().length }}</span>
+  </div>
+
+  <div class="grid">
+    @for (e of espacios(); track e.id) {
+    <article class="espacio-card">
+      <div class="banda">
+        <img [src]="e.imagenUrl" [alt]="e.ubicacion" loading="lazy" />
+        <span class="badge" [class.inactivo]="e.estado !== 'ACTIVO'">{{ e.estado | etiqueta }}</span>
+      </div>
+
+      <div class="cuerpo">
+        <p class="ubicacion">{{ e.ubicacion | etiqueta }}</p>
+
+        <p class="fechas">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5h16V20H4zM4 10h16M8 3v4.5M16 3v4.5" />
+          </svg>
+          {{ e.fechaInicio | date: 'dd/MM/yyyy' }} — {{ e.fechaFin | date: 'dd/MM/yyyy' }}
+        </p>
+
+        @if (e.enlaceUrl) {
+        <p class="enlace">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 15l6-6M10 6h5a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3h-1M14 18H9a3 3 0 0 1-3-3v0a3 3 0 0 1 3-3h1" />
+          </svg>
+          <span>{{ e.enlaceUrl }}</span>
+        </p>
+        }
+      </div>
+
+      @if (puedeGestionar()) {
+      <div class="acciones">
+        <a class="btn-icono" [routerLink]="['/sponsorships/asociaciones', patrocinioId, 'espacios', e.id, 'editar']" title="Editar espacio">
+          ✎ Editar
+        </a>
+        <button
+          type="button"
+          class="btn-icono btn-eliminar"
+          (click)="eliminar(e)"
+          [disabled]="eliminandoId() === e.id"
+          title="Eliminar espacio"
+        >
+          {{ eliminandoId() === e.id ? 'Eliminando…' : '🗑 Eliminar' }}
+        </button>
+      </div>
+      }
+    </article>
+    }
+  </div>
+  }
+</section>
