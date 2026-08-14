@@ -9,29 +9,29 @@
 >
   <div class="pantalla">
     @switch (t.estado) {
-      @case ('EN_VIVO') {
-        <app-twitch-player [canal]="t.loginCanal" [titulo]="'Directo de ' + t.nombreCanal" />
+    @case ('EN_VIVO') {
+    <app-twitch-player [canal]="t.loginCanal" [titulo]="'Directo de ' + t.nombreCanal" />
+    }
+    @case ('OFFLINE') {
+    @if (t.vod) {
+    <app-twitch-player [videoId]="t.vod.id" [titulo]="'Última grabación de ' + t.nombreCanal" />
+    } @else {
+    <div class="pantalla-offline">
+      @if (t.thumbnailUrl) {
+      <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
       }
-      @case ('OFFLINE') {
-        @if (t.vod) {
-        <app-twitch-player [videoId]="t.vod.id" [titulo]="'Última grabación de ' + t.nombreCanal" />
-        } @else {
-        <div class="pantalla-offline">
-          @if (t.thumbnailUrl) {
-          <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
-          }
-          <p>El canal no está transmitiendo. Seguilo en Twitch para no perderte la próxima transmisión.</p>
-        </div>
-        }
+      <p>El canal no está transmitiendo. Seguilo en Twitch para no perderte la próxima transmisión.</p>
+    </div>
+    }
+    }
+    @case ('DESCONOCIDO') {
+    <div class="pantalla-offline">
+      @if (t.thumbnailUrl) {
+      <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
       }
-      @case ('DESCONOCIDO') {
-        <div class="pantalla-offline">
-          @if (t.thumbnailUrl) {
-          <img [src]="t.thumbnailUrl" [alt]="'Imagen del canal ' + t.nombreCanal" />
-          }
-          <p>No pudimos consultar el estado del canal. Probá abrirlo directamente en Twitch.</p>
-        </div>
-      }
+      <p>No pudimos consultar el estado del canal. Probá abrirlo directamente en Twitch.</p>
+    </div>
+    }
     }
   </div>
 
@@ -45,49 +45,45 @@
       <div>
         <h2>{{ t.nombreCanal }}</h2>
         @switch (t.estado) {
-          @case ('EN_VIVO') { <span class="chip chip-vivo">EN VIVO</span> }
-          @case ('OFFLINE') { <span class="chip chip-offline">Fuera de línea</span> }
-          @case ('DESCONOCIDO') { <span class="chip chip-desconocido">Estado desconocido</span> }
+        @case ('EN_VIVO') { <span class="chip chip-vivo">EN VIVO</span> }
+        @case ('OFFLINE') { <span class="chip chip-offline">Fuera de línea</span> }
+        @case ('DESCONOCIDO') { <span class="chip chip-desconocido">Estado desconocido</span> }
         }
       </div>
     </header>
 
     @switch (t.estado) {
-      @case ('EN_VIVO') {
-        <p class="titulo">{{ t.titulo }}</p>
-        @if (t.categoria) {
-        <p class="dato">{{ t.categoria }}</p>
-        }
-        <p class="dato espectadores" aria-live="polite" aria-atomic="true">
-          <span class="punto" aria-hidden="true"></span>
-          {{ t.espectadores | number }} espectadores
-        </p>
-        @if (t.iniciadaEn) {
-        <p class="dato">{{ t.iniciadaEn | fechaRelativa }}</p>
-        }
-      }
-      @case ('OFFLINE') {
-        @if (t.vod) {
-        <p class="titulo">Reproduciendo la última grabación: {{ t.vod.titulo }}</p>
-        @if (t.vod.duracion) {
-        <p class="dato">Duración: {{ t.vod.duracion }}</p>
-        }
-        } @else {
-        <p class="titulo">Sin transmisión activa</p>
-        }
-        <p class="dato">La próxima transmisión se anunciará en el canal.</p>
-      }
-      @case ('DESCONOCIDO') {
-        <p class="titulo">No hay información en vivo disponible</p>
-      }
+    @case ('EN_VIVO') {
+    <p class="titulo">{{ t.titulo }}</p>
+    @if (t.categoria) {
+    <p class="dato">{{ t.categoria }}</p>
+    }
+    <p class="dato espectadores" aria-live="polite" aria-atomic="true">
+      <span class="punto" aria-hidden="true"></span>
+      {{ t.espectadores | number }} espectadores
+    </p>
+    @if (t.iniciadaEn) {
+    <p class="dato">{{ t.iniciadaEn | fechaRelativa }}</p>
+    }
+    }
+    @case ('OFFLINE') {
+    @if (t.vod) {
+    <p class="titulo">Reproduciendo la última grabación: {{ t.vod.titulo }}</p>
+    @if (t.vod.duracion) {
+    <p class="dato">Duración: {{ t.vod.duracion }}</p>
+    }
+    } @else {
+    <p class="titulo">Sin transmisión activa</p>
+    }
+    <p class="dato">La próxima transmisión se anunciará en el canal.</p>
+    }
+    @case ('DESCONOCIDO') {
+    <p class="titulo">No hay información en vivo disponible</p>
+    }
     }
 
     @if (t.nombreTorneo) {
     <p class="dato">Torneo: {{ t.nombreTorneo }}</p>
-    }
-
-    @if (t.torneoId) {
-    <app-ad-slot ubicacion="TRANSMISION_INFERIOR" [torneoId]="t.torneoId" />
     }
 
     <a class="accion" [href]="t.urlCanal" target="_blank" rel="noopener noreferrer">

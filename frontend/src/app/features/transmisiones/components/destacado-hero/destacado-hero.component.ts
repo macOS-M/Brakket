@@ -4,7 +4,6 @@ import { DecimalPipe } from '@angular/common';
 import { Transmision } from '../../../../models/transmision.model';
 import { TwitchPlayerComponent } from '../twitch-player/twitch-player.component';
 import { FechaRelativaPipe } from '../../../../shared/pipes/fecha-relativa.pipe';
-import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.component';
 
 /**
  * Carrusel destacado de la página de transmisiones, estilo home de Twitch:
@@ -20,7 +19,7 @@ import { AdSlotComponent } from '../../../../shared/components/ad-slot/ad-slot.c
 @Component({
   selector: 'app-destacado-hero',
   standalone: true,
-  imports: [DecimalPipe, TwitchPlayerComponent, FechaRelativaPipe, AdSlotComponent],
+  imports: [DecimalPipe, TwitchPlayerComponent, FechaRelativaPipe],
   templateUrl: './destacado-hero.component.html',
   styleUrl: './destacado-hero.component.scss'
 })
