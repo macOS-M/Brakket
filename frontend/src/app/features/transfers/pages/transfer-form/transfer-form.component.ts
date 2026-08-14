@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
+import { EquipoBusqueda } from '../../../../models/equipo.model';
 import { EquipoResumenPublico } from '../../../../models/perfil-equipo-publico.model';
 import { MiembroEquipo } from '../../../../models/miembro-equipo.model';
 import { ROLES_PROPUESTOS } from '../../../../models/transferencia.model';
@@ -38,7 +39,16 @@ export class TransferFormComponent implements OnInit {
     justificacion: ['', Validators.maxLength(500)]
   });
 
+  /** Todos los equipos: de cualquiera puede salir el jugador que se pide. */
   readonly equipos = signal<EquipoResumenPublico[]>([]);
+
+  /**
+   * Equipos propios, para el destino. Antes el desplegable ofrecía todos los
+   * de la plataforma: se podía elegir uno ajeno y el backend recién ahí
+   * rechazaba la solicitud por no ser su capitán.
+   */
+  readonly misEquipos = signal<EquipoBusqueda[]>([]);
+
   readonly miembrosOrigen = signal<MiembroEquipo[]>([]);
   readonly cargandoMiembros = signal(false);
   readonly enviando = signal(false);
@@ -48,6 +58,11 @@ export class TransferFormComponent implements OnInit {
     this.teamsService.listarPublicos().subscribe({
       next: (equipos) => this.equipos.set(equipos),
       error: () => this.error.set('No se pudo cargar la lista de equipos.')
+    });
+
+    this.teamsService.misEquipos().subscribe({
+      next: (equipos) => this.misEquipos.set(equipos),
+      error: () => this.error.set('No se pudo cargar la lista de tus equipos.')
     });
 
     this.form.controls.equipoOrigenId.valueChanges.subscribe((equipoId) => {
