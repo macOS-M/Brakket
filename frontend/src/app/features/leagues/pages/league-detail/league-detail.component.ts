@@ -36,6 +36,9 @@ export class LeagueDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  // Mismas opciones que el cupo del torneo, para que el tope de la temporada
+  // hable el mismo idioma que sus torneos (potencias de 2 hasta 64).
+  readonly cuposEquipos = [2, 4, 8, 16, 32, 64];
   readonly league = signal<League | null>(null);
   readonly seasons = signal<Season[]>([]);
   readonly formats = signal<FormatOption[]>([]);
